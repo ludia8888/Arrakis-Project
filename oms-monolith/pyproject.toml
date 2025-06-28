@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "oms-monolith"
+name = "ontology-management-system"
 version = "3.0.0"
 description = "Ontology Management System - Ultimate Monolith"
-authors = ["OMS Team"]
+authors = ["Ontology Management System Team"]
 
 [tool.poetry.dependencies]
 python = "^3.9"

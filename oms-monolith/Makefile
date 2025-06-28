@@ -1,8 +1,8 @@
-# Makefile for OMS Integration Testing
+# Makefile for Ontology Management System Integration Testing
 
 .PHONY: help
 help:
-	@echo "OMS Integration Test Commands:"
+	@echo "Ontology Management System Integration Test Commands:"
 	@echo "  make integration-up      - Start all services for integration testing"
 	@echo "  make integration-test    - Run integration tests"
 	@echo "  make integration-down    - Stop and clean up all services"

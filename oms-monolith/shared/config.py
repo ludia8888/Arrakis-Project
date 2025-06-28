@@ -10,34 +10,34 @@ class SharedConfig:
     
     def __init__(self):
         # 환경 설정
-        self.environment = os.getenv("OMS_ENVIRONMENT", "development")
-        self.debug = os.getenv("OMS_DEBUG", "true").lower() == "true"
+        self.environment = os.getenv("ONTOLOGY_ENVIRONMENT", "development")
+        self.debug = os.getenv("ONTOLOGY_DEBUG", "true").lower() == "true"
         
         # 서비스 설정
-        self.service_name = os.getenv("OMS_SERVICE_NAME", "oms")
-        self.service_version = os.getenv("OMS_SERVICE_VERSION", "2.0.0")
+        self.service_name = os.getenv("ONTOLOGY_SERVICE_NAME", "ontology-management-system")
+        self.service_version = os.getenv("ONTOLOGY_SERVICE_VERSION", "2.0.0")
         
         # 보안 설정
-        self.secret_key = os.getenv("OMS_SECRET_KEY", "default-secret-key")
-        self.jwt_algorithm = os.getenv("OMS_JWT_ALGORITHM", "HS256")
-        self.jwt_expiration_minutes = int(os.getenv("OMS_JWT_EXPIRATION_MINUTES", "30"))
+        self.secret_key = os.getenv("ONTOLOGY_SECRET_KEY", "default-secret-key")
+        self.jwt_algorithm = os.getenv("ONTOLOGY_JWT_ALGORITHM", "HS256")
+        self.jwt_expiration_minutes = int(os.getenv("ONTOLOGY_JWT_EXPIRATION_MINUTES", "30"))
         
         # 데이터베이스 설정
-        self.database_url = os.getenv("OMS_DATABASE_URL", "http://localhost:6363")
-        self.database_username = os.getenv("OMS_DATABASE_USERNAME", "admin")
-        self.database_password = os.getenv("OMS_DATABASE_PASSWORD", "root")
+        self.database_url = os.getenv("ONTOLOGY_DATABASE_URL", "http://localhost:6363")
+        self.database_username = os.getenv("ONTOLOGY_DATABASE_USERNAME", "admin")
+        self.database_password = os.getenv("ONTOLOGY_DATABASE_PASSWORD", "root")
         
         # Redis 설정
-        self.redis_url = os.getenv("OMS_REDIS_URL", "redis://localhost:6379")
-        self.redis_prefix = os.getenv("OMS_REDIS_PREFIX", "oms:")
+        self.redis_url = os.getenv("ONTOLOGY_REDIS_URL", "redis://localhost:6379")
+        self.redis_prefix = os.getenv("ONTOLOGY_REDIS_PREFIX", "ontology:")
         
         # 이벤트 설정
-        self.event_retention_days = int(os.getenv("OMS_EVENT_RETENTION_DAYS", "30"))
-        self.event_batch_size = int(os.getenv("OMS_EVENT_BATCH_SIZE", "100"))
+        self.event_retention_days = int(os.getenv("ONTOLOGY_EVENT_RETENTION_DAYS", "30"))
+        self.event_batch_size = int(os.getenv("ONTOLOGY_EVENT_BATCH_SIZE", "100"))
         
         # 로깅 설정
-        self.log_level = os.getenv("OMS_LOG_LEVEL", "INFO")
-        self.log_format = os.getenv("OMS_LOG_FORMAT", "json")
+        self.log_level = os.getenv("ONTOLOGY_LOG_LEVEL", "INFO")
+        self.log_format = os.getenv("ONTOLOGY_LOG_FORMAT", "json")
 
 # 전역 설정 인스턴스
 _config = None

@@ -1,5 +1,5 @@
 """
-OMS Enterprise - DB 연결 문제 해결 버전
+Ontology Management System Enterprise - DB 연결 문제 해결 버전
 SimpleTerminusDBClient 사용으로 실제 데이터 반환
 """
 import asyncio
