@@ -10,7 +10,7 @@ IMPORTANT: Per Foundry constraints, nested structs are NOT supported.
 from typing import Dict, Any, Optional, List, Union
 from pydantic import BaseModel, Field, validator, model_validator
 from enum import Enum
-from datetime import datetime
+from datetime import datetime, timezone
 
 from models.data_types import DataType
 
@@ -66,7 +66,7 @@ class StructType(BaseModel):
     tags: List[str] = Field(default_factory=list, description="Tags for categorization")
     
     # Audit fields
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     created_by: str
     modified_at: Optional[datetime] = None
     modified_by: Optional[str] = None

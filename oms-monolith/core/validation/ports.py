@@ -73,6 +73,62 @@ class TerminusPort(Protocol):
     async def health_check(self) -> bool:
         """헬스 체크"""
         ...
+    
+    async def get_branch_diff(
+        self,
+        branch: str,
+        base_branch: str,
+        db: str = "oms"
+    ) -> Dict[str, Any]:
+        """브랜치 간 차이점 조회"""
+        ...
+    
+    async def get_branch_entities(
+        self,
+        branch: str,
+        db: str = "oms"
+    ) -> List[str]:
+        """브랜치의 모든 엔티티 조회"""
+        ...
+    
+    async def traverse_graph(
+        self,
+        start_nodes: List[str],
+        relations: List[str],
+        max_depth: int = 5,
+        branch: str = "main",
+        db: str = "oms"
+    ) -> Dict[str, Any]:
+        """그래프 탐색 수행"""
+        ...
+    
+    # Native TerminusDB validation methods - reduce duplication
+    async def validate_schema_changes(
+        self,
+        schema_changes: Dict[str, Any],
+        db: str = "oms",
+        branch: str = "main"
+    ) -> Dict[str, Any]:
+        """TerminusDB 내장 스키마 검증 사용"""
+        ...
+    
+    async def detect_circular_dependencies(
+        self,
+        db: str = "oms",
+        branch: str = "main"
+    ) -> List[Dict[str, Any]]:
+        """TerminusDB path() 쿼리로 순환 의존성 탐지"""
+        ...
+    
+    async def detect_merge_conflicts(
+        self,
+        source_branch: str,
+        target_branch: str,
+        base_branch: str = "main",
+        db: str = "oms"
+    ) -> List[Dict[str, Any]]:
+        """TerminusDB 내장 머지 충돌 탐지"""
+        ...
 
 @runtime_checkable
 class EventPort(Protocol):
@@ -91,6 +147,52 @@ class EventPort(Protocol):
         """배치 이벤트 발행"""
         ...
 
+@runtime_checkable  
+class PolicyServerPort(Protocol):
+    """외부 정책 서버 인터페이스 - 기업 정책 검증과의 계약"""
+    
+    async def validate_policy(
+        self,
+        entity_type: str,
+        entity_data: Dict[str, Any],
+        operation: str,
+        context: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """정책 검증 요청"""
+        ...
+    
+    async def get_policies(
+        self,
+        entity_type: Optional[str] = None,
+        active_only: bool = True
+    ) -> List[Dict[str, Any]]:
+        """정책 목록 조회"""
+        ...
+    
+    async def health_check(self) -> bool:
+        """정책 서버 헬스 체크"""
+        ...
+
+@runtime_checkable
+class RuleLoaderPort(Protocol):
+    """동적 규칙 로더 인터페이스 - 플러그인 시스템과의 계약"""
+    
+    async def load_rules(
+        self,
+        rule_type: Optional[str] = None,
+        entity_type: Optional[str] = None
+    ) -> List[Any]:
+        """규칙 동적 로딩"""
+        ...
+    
+    async def reload_rules(self) -> None:
+        """규칙 재로딩"""
+        ...
+    
+    def get_available_rules(self) -> List[Dict[str, Any]]:
+        """사용 가능한 규칙 정보 조회"""
+        ...
+
 class ValidationContext:
     """
     검증 컨텍스트 - 규칙 실행에 필요한 모든 정보를 담는 컨테이너
@@ -105,6 +207,8 @@ class ValidationContext:
         cache: Optional[CachePort] = None,
         terminus_client: Optional[TerminusPort] = None,
         event_publisher: Optional[EventPort] = None,
+        policy_server: Optional[PolicyServerPort] = None,
+        rule_loader: Optional[RuleLoaderPort] = None,
         metadata: Optional[Dict[str, Any]] = None
     ):
         self.source_branch = source_branch
@@ -113,6 +217,8 @@ class ValidationContext:
         self.cache = cache
         self.terminus_client = terminus_client
         self.event_publisher = event_publisher
+        self.policy_server = policy_server
+        self.rule_loader = rule_loader
         self.metadata = metadata or {}
         
     def with_metadata(self, **kwargs) -> 'ValidationContext':
@@ -125,6 +231,8 @@ class ValidationContext:
             cache=self.cache,
             terminus_client=self.terminus_client,
             event_publisher=self.event_publisher,
+            policy_server=self.policy_server,
+            rule_loader=self.rule_loader,
             metadata=new_metadata
         )
 

@@ -8,7 +8,7 @@ import os
 from typing import Any, Dict, List, Optional
 from datetime import datetime
 
-# Add database path for simple client
+# Add database path for simple clie
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../database'))
 
 from .models import ActionTypeModel, ActionDefinition
@@ -97,9 +97,9 @@ class ActionMetadataService:
             status=action_data.get('status', 'active'),
             versionHash=action_data.get('versionHash', 'v1'),
             createdBy=action_data.get('createdBy', 'system'),
-            createdAt=datetime.utcnow(),
+            createdAt=datetime.now(timezone.utc),
             modifiedBy=action_data.get('modifiedBy', 'system'),
-            modifiedAt=datetime.utcnow()
+            modifiedAt=datetime.now(timezone.utc)
         )
         
         # 초기화 확인
@@ -146,7 +146,7 @@ class ActionMetadataService:
             if hasattr(action_type, key):
                 setattr(action_type, key, value)
         
-        action_type.modifiedAt = datetime.utcnow()
+        action_type.modifiedAt = datetime.now(timezone.utc)
         
         # 저장
         if self.tdb and self._initialized:
@@ -264,7 +264,7 @@ class ActionMetadataService:
                 
                 # ISO 문자열을 datetime 객체로 변환
                 from datetime import datetime
-                if 'createdAt' in clean_doc and isinstance(clean_doc['createdAt'], str):
+                if 'createdAt' i clean_doc and isinstance(clean_doc['createdAt'], str):
                     clean_doc['createdAt'] = datetime.fromisoformat(clean_doc['createdAt'].replace('Z', '+00:00'))
                 if 'modifiedAt' in clean_doc and isinstance(clean_doc['modifiedAt'], str):
                     clean_doc['modifiedAt'] = datetime.fromisoformat(clean_doc['modifiedAt'].replace('Z', '+00:00'))

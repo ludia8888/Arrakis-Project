@@ -160,7 +160,7 @@ class SecureMSAAuthMiddleware(BaseHTTPMiddleware):
         
         if cache_key in self._token_cache:
             user_context, expires_at = self._token_cache[cache_key]
-            if datetime.utcnow() < expires_at:
+            if datetime.now(timezone.utc) < expires_at:
                 return user_context
             else:
                 del self._token_cache[cache_key]
@@ -170,7 +170,7 @@ class SecureMSAAuthMiddleware(BaseHTTPMiddleware):
             user_context = await self.iam_integration.validate_jwt_enhanced(token)
             
             # Cache the result
-            expires_at = datetime.utcnow() + timedelta(seconds=self.cache_ttl)
+            expires_at = datetime.now(timezone.utc) + timedelta(seconds=self.cache_ttl)
             self._token_cache[cache_key] = (user_context, expires_at)
             
             # Clean old cache entries periodically
@@ -188,7 +188,7 @@ class SecureMSAAuthMiddleware(BaseHTTPMiddleware):
     
     def _clean_cache(self):
         """Remove expired cache entries"""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         expired_keys = [
             key for key, (_, expires_at) in self._token_cache.items()
             if expires_at < now

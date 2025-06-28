@@ -10,15 +10,16 @@ from typing import List, Type, Optional, Dict, Any
 from pathlib import Path
 from datetime import datetime, timedelta
 
-from core.validation.ports import CachePort, TerminusPort, EventPort
+from core.validation.ports import CachePort, TerminusPort, EventPort, RuleLoaderPort
 from core.validation.interfaces import BreakingChangeRule
+from core.validation.config import get_validation_config
 
 logger = logging.getLogger(__name__)
 
-# 규칙 로딩 캐시
+# 규칙 로딩 캐시 (통합 설정 사용)
 _rule_cache: Dict[str, List[BreakingChangeRule]] = {}
 _cache_timestamp: Dict[str, datetime] = {}
-CACHE_TTL = timedelta(minutes=5)  # 5분 캐시
+# CACHE_TTL은 이제 ValidationConfig에서 가져옴
 
 class RuleRegistry:
     """규칙 레지스트리 - 동적으로 규칙을 로드하고 관리"""
@@ -27,28 +28,75 @@ class RuleRegistry:
         self,
         cache: Optional[CachePort] = None,
         tdb: Optional[TerminusPort] = None,
-        event: Optional[EventPort] = None
+        event: Optional[EventPort] = None,
+        rule_loader: Optional[RuleLoaderPort] = None
     ):
         self.cache = cache
         self.tdb = tdb
         self.event = event
+        self.rule_loader = rule_loader
         self._rules: Dict[str, BreakingChangeRule] = {}
         self._rule_classes: Dict[str, Type[BreakingChangeRule]] = {}
+        
+        # 동적 규칙 로더가 있으면 Entry-point 방식 사용
+        self._use_entry_points = rule_loader is not None
     
-    def load_rules_from_package(self, package_name: str = "core.validation.rules") -> List[BreakingChangeRule]:
+    async def load_rules_from_package(self, package_name: str = "core.validation.rules") -> List[BreakingChangeRule]:
         """
         패키지에서 모든 규칙을 동적으로 로드
-        서비스가 규칙을 직접 import하지 않으므로 순환 참조 방지
-        캐싱을 통해 성능 최적화
+        Entry-point 플러그인 시스템 지원으로 확장성 강화
         """
-        # 캐시 확인
-        cache_key = f"{package_name}:{self.cache}:{self.tdb}:{self.event}"
+        # 캐시 확인 (통합 설정 사용)
+        config = get_validation_config()
+        cache_ttl = timedelta(seconds=config.rule_cache_ttl_seconds)
+        
+        cache_key = f"{package_name}:{self.cache}:{self.tdb}:{self.event}:{self._use_entry_points}"
         if cache_key in _rule_cache:
             timestamp = _cache_timestamp.get(cache_key)
-            if timestamp and datetime.now() - timestamp < CACHE_TTL:
+            if timestamp and datetime.now() - timestamp < cache_ttl:
                 logger.debug(f"Returning cached rules for {package_name}")
                 return _rule_cache[cache_key]
         
+        rules = []
+        
+        # Entry-point 방식 우선 시도
+        if self._use_entry_points and self.rule_loader:
+            try:
+                logger.info("Loading rules via Entry-point system")
+                entry_point_rules = await self.rule_loader.load_rules(
+                    rule_type='validation_rules',
+                    entity_type=None
+                )
+                
+                # Entry-point에서 로드된 규칙들을 BreakingChangeRule로 변환
+                for rule_info in entry_point_rules:
+                    rule_instance = rule_info.get('instance')
+                    if rule_instance and isinstance(rule_instance, BreakingChangeRule):
+                        rule_id = getattr(rule_instance, 'rule_id', rule_info.get('name', 'unknown'))
+                        self._rules[rule_id] = rule_instance
+                        rules.append(rule_instance)
+                        logger.info(f"Loaded rule via entry-point: {rule_id}")
+                
+                logger.info(f"Loaded {len(rules)} rules via Entry-point system")
+                
+            except Exception as e:
+                logger.error(f"Failed to load rules via Entry-point: {e}")
+                # Entry-point 실패시 폴백으로 패키지 스캔 방식 사용
+                rules = await self._load_rules_fallback(package_name)
+        else:
+            # 기본 패키지 스캔 방식
+            rules = await self._load_rules_fallback(package_name)
+        
+        # 캐시에 저장
+        _rule_cache[cache_key] = rules
+        _cache_timestamp[cache_key] = datetime.now()
+        
+        return rules
+    
+    async def _load_rules_fallback(self, package_name: str) -> List[BreakingChangeRule]:
+        """
+        폴백 규칙 로딩 - 기존 패키지 스캔 방식
+        """
         rules = []
         
         try:
@@ -99,12 +147,7 @@ class RuleRegistry:
         except Exception as e:
             logger.error(f"Failed to load rules package {package_name}: {e}")
             
-        logger.info(f"Loaded {len(rules)} validation rules")
-        
-        # 캐시에 저장
-        _rule_cache[cache_key] = rules
-        _cache_timestamp[cache_key] = datetime.now()
-        
+        logger.info(f"Loaded {len(rules)} validation rules via fallback")
         return rules
     
     def _create_rule_instance(self, rule_class: Type[BreakingChangeRule]) -> Optional[BreakingChangeRule]:
@@ -118,7 +161,10 @@ class RuleRegistry:
             params = list(sig.parameters.keys())
             
             # self를 제외한 파라미터 확인
-            if len(params) == 1:  # only self
+            # TerminusDB native rules require terminus_port parameter
+            if 'terminus_port' in params:
+                return rule_class(terminus_port=self.tdb)
+            elif len(params) == 1:  # only self
                 return rule_class()
             elif 'cache' in params and 'tdb' in params:
                 return rule_class(cache=self.cache, tdb=self.tdb)
@@ -153,7 +199,7 @@ class RuleRegistry:
             del self._rules[rule_id]
             logger.info(f"Unregistered rule: {rule_id}")
     
-    def reload_rules(self) -> List[BreakingChangeRule]:
+    async def reload_rules(self) -> List[BreakingChangeRule]:
         """모든 규칙 재로드 (캐시 무효화)"""
         self._rules.clear()
         self._rule_classes.clear()
@@ -162,7 +208,15 @@ class RuleRegistry:
         _rule_cache.clear()
         _cache_timestamp.clear()
         
-        return self.load_rules_from_package()
+        # Entry-point 방식을 사용하는 경우 rule_loader에도 재로드 요청
+        if self._use_entry_points and self.rule_loader:
+            try:
+                await self.rule_loader.reload_rules()
+                logger.info("Rule loader reloaded successfully")
+            except Exception as e:
+                logger.error(f"Failed to reload rule loader: {e}")
+        
+        return await self.load_rules_from_package()
     
     def get_rule_info(self) -> Dict[str, Dict[str, Any]]:
         """로드된 규칙 정보 반환"""
@@ -182,24 +236,37 @@ _global_registry: Optional[RuleRegistry] = None
 def get_global_registry(
     cache: Optional[CachePort] = None,
     tdb: Optional[TerminusPort] = None,
-    event: Optional[EventPort] = None
+    event: Optional[EventPort] = None,
+    rule_loader: Optional[RuleLoaderPort] = None
 ) -> RuleRegistry:
     """전역 레지스트리 가져오기 또는 생성"""
     global _global_registry
     if _global_registry is None:
-        _global_registry = RuleRegistry(cache=cache, tdb=tdb, event=event)
-        _global_registry.load_rules_from_package()
+        _global_registry = RuleRegistry(
+            cache=cache, 
+            tdb=tdb, 
+            event=event,
+            rule_loader=rule_loader
+        )
+        # 비동기 메서드이므로 여기서는 호출하지 않음
+        # 사용하는 곳에서 load_rules_from_package()를 호출해야 함
     return _global_registry
 
-def load_rules(
+async def load_rules(
     cache: Optional[CachePort] = None,
     tdb: Optional[TerminusPort] = None,
     event: Optional[EventPort] = None,
+    rule_loader: Optional[RuleLoaderPort] = None,
     package_name: str = "core.validation.rules"
 ) -> List[BreakingChangeRule]:
     """
     간편한 규칙 로드 함수
     서비스에서 이 함수만 호출하면 모든 규칙이 로드됨
     """
-    registry = RuleRegistry(cache=cache, tdb=tdb, event=event)
-    return registry.load_rules_from_package(package_name)
+    registry = RuleRegistry(
+        cache=cache, 
+        tdb=tdb, 
+        event=event,
+        rule_loader=rule_loader
+    )
+    return await registry.load_rules_from_package(package_name)

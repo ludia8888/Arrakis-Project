@@ -8,7 +8,7 @@ conflict type and severity grades.
 from typing import Dict, List, Optional, Any, Tuple
 from datetime import datetime
 from dataclasses import dataclass
-import json
+import jso
 
 from utils.logger import get_logger
 
@@ -106,7 +106,7 @@ class ConflictResolver:
                 self.resolution_history.append({
                     "conflict_id": conflict.id,
                     "strategy": strategy.name,
-                    "timestamp": datetime.utcnow(),
+                    "timestamp": datetime.now(timezone.utc),
                     "success": True
                 })
                 
@@ -117,7 +117,7 @@ class ConflictResolver:
             self.resolution_history.append({
                 "conflict_id": conflict.id,
                 "strategy": strategy.name,
-                "timestamp": datetime.utcnow(),
+                "timestamp": datetime.now(timezone.utc),
                 "success": False,
                 "error": str(e)
             })

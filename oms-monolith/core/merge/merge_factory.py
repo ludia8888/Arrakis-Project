@@ -30,30 +30,21 @@ class MergeEngineFactory:
         if cls._instance is not None and not force_new:
             return cls._instance
         
-        # Check feature flag
-        use_unified = getattr(settings, 'USE_UNIFIED_MERGE_ENGINE', True)
+        # Always use Unified Merge Engine (legacy code removed)
+        logger.info("Creating Unified Merge Engine")
+        from core.merge.unified_engine import UnifiedMergeEngine
         
-        if use_unified:
-            logger.info("Creating Unified Merge Engine")
-            from core.merge.unified_engine import UnifiedMergeEngine
-            
-            # Get TerminusDB client if using native branch service
-            terminus_client = None
-            if getattr(settings, 'USE_TERMINUS_NATIVE_BRANCH', False):
-                try:
-                    from core.branch.service_factory import get_branch_service
-                    branch_service = get_branch_service()
-                    if hasattr(branch_service, 'client'):
-                        terminus_client = branch_service.client
-                except:
-                    pass
-            
-            cls._instance = UnifiedMergeEngine(terminus_client)
-        else:
-            logger.info("Creating Legacy Three-Way Merge Engine")
-            from core.merge.legacy_adapter import LegacyMergeAdapter
-            
-            cls._instance = LegacyMergeAdapter()
+        # Get TerminusDB client from branch service
+        terminus_client = None
+        try:
+            from core.branch.service_factory import get_branch_service
+            branch_service = get_branch_service()
+            if hasattr(branch_service, 'client'):
+                terminus_client = branch_service.client
+        except:
+            pass
+        
+        cls._instance = UnifiedMergeEngine(terminus_client)
         
         return cls._instance
     

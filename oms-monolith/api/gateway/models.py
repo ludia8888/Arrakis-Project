@@ -2,7 +2,7 @@
 API Gateway 도메인 모델
 API Gateway 관련 모델 정의
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Dict, List, Optional
 
@@ -79,7 +79,7 @@ class RequestContext(BaseModel):
     client_ip: str
     user_agent: Optional[str] = None
     auth_method: Optional[AuthMethod] = None
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     headers: Dict[str, str] = Field(default_factory=dict)
 
 
@@ -93,4 +93,4 @@ class GatewayMetrics(BaseModel):
     requests_by_method: Dict[str, int] = Field(default_factory=dict)
     rate_limit_hits: int = 0
     auth_failures: int = 0
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

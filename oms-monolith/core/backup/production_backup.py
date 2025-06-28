@@ -102,8 +102,8 @@ class IncrementalBackupTracker:
 
     async def record_change(self, component: str, entity_type: str, entity_id: str, operation: str):
         """Record a change for incremental backup tracking"""
-        timestamp = datetime.utcnow().isoformat()
-        change_key = f"{self.change_log_prefix}{component}:{datetime.utcnow().strftime('%Y%m%d')}"
+        timestamp = datetime.now(timezone.utc).isoformat()
+        change_key = f"{self.change_log_prefix}{component}:{datetime.now(timezone.utc).strftime('%Y%m%d')}"
 
         change_record = {
             'entity_type': entity_type,
@@ -118,7 +118,7 @@ class IncrementalBackupTracker:
     async def get_changes_since(self, component: str, since: datetime) -> List[Dict]:
         """Get all changes since specified time"""
         changes = []
-        current = datetime.utcnow()
+        current = datetime.now(timezone.utc)
 
         while current >= since:
             change_key = f"{self.change_log_prefix}{component}:{current.strftime('%Y%m%d')}"
@@ -213,7 +213,7 @@ class ProductionBackupOrchestrator:
     async def perform_terminusdb_backup(self, backup_type: str = 'full',
                                       parent_backup_id: Optional[str] = None) -> BackupMetadata:
         """Perform TerminusDB backup with incremental support"""
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         backup_id = self._generate_backup_id('terminusdb', backup_type, start_time)
         key_id = self._generate_key_id(start_time)
 
@@ -368,7 +368,7 @@ class ProductionBackupOrchestrator:
             chunks=chunk_ids,
             checksum=checksum,
             encryption_key_id=key_id,
-            duration_seconds=(datetime.utcnow() - start_time).total_seconds(),
+            duration_seconds=(datetime.now(timezone.utc) - start_time).total_seconds(),
             component='terminusdb',
             branch='main',
             version='1.0',
@@ -441,7 +441,7 @@ class ProductionBackupOrchestrator:
 
     async def restore_backup(self, backup_id: str, target_branch: Optional[str] = None) -> Dict:
         """Restore from backup with validation"""
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
 
         try:
             metadata = await self.get_backup_metadata(backup_id)
@@ -486,7 +486,7 @@ class ProductionBackupOrchestrator:
 
             return {
                 'backup_id': backup_id,
-                'restore_duration': (datetime.utcnow() - start_time).total_seconds(),
+                'restore_duration': (datetime.now(timezone.utc) - start_time).total_seconds(),
                 'validation': 'passed' if is_valid else 'failed',
                 'results': results
             }
@@ -545,7 +545,7 @@ class ProductionBackupOrchestrator:
 
     async def cleanup_old_backups(self, retention_days: int = 30):
         """Clean up backups older than retention period"""
-        cutoff_time = datetime.utcnow() - timedelta(days=retention_days)
+        cutoff_time = datetime.now(timezone.utc) - timedelta(days=retention_days)
 
         for component in ['terminusdb', 'redis']:
             backups = await self.list_backups(component, limit=1000)
@@ -569,7 +569,7 @@ class ProductionBackupOrchestrator:
     async def get_restore_point_objective_status(self) -> Dict:
         """Check RPO compliance across all components"""
         rpo_target = int(os.getenv('RPO_TARGET_MINUTES', '60'))
-        current_time = datetime.utcnow()
+        current_time = datetime.now(timezone.utc)
 
         status = {}
         for component in ['terminusdb', 'redis']:

@@ -1,0 +1,12 @@
+{
+  "@type": "Class",
+  "@id": "Property",
+  "@key": { "@type": "Lexical", "@fields": ["objectType", "name"] },
+  "name": "xsd:string",
+  "displayName": "xsd:string",
+  "description": "xsd:string",
+  "dataType": "xsd:string",
+  "objectType": "ObjectType",
+  "required": "xsd:boolean",
+  "indexed": "xsd:boolean"
+}

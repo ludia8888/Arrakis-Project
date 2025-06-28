@@ -179,7 +179,7 @@ class GraphQLCache:
         
         # Check expiration
         metadata = CacheMetadata.parse_raw(data.get("metadata", "{}"))
-        if datetime.utcnow() > metadata.expires_at:
+        if datetime.now(timezone.utc) > metadata.expires_at:
             await self.redis.delete(key)
             self._metrics["misses"] += 1
             return None
@@ -207,7 +207,7 @@ class GraphQLCache:
             return  # Don't cache realtime data
         
         ttl = self.ttl_config[cache_level]
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         
         # Create metadata
         metadata = CacheMetadata(

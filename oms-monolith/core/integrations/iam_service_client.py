@@ -94,13 +94,13 @@ class IAMServiceClient:
     async def _ensure_service_auth(self) -> str:
         """Ensure we have a valid service token"""
         if self._service_token and self._service_token_expires:
-            if datetime.utcnow() < self._service_token_expires:
+            if datetime.now(timezone.utc) < self._service_token_expires:
                 return self._service_token
         
         # Get new service token
         auth_response = await self.authenticate_service()
         self._service_token = auth_response.access_token
-        self._service_token_expires = datetime.utcnow() + timedelta(
+        self._service_token_expires = datetime.now(timezone.utc) + timedelta(
             seconds=auth_response.expires_in - 60  # Refresh 1 minute early
         )
         return self._service_token
@@ -340,7 +340,7 @@ class IAMServiceClient:
             return IAMHealthResponse(
                 status="unhealthy",
                 version="unknown",
-                timestamp=datetime.utcnow().isoformat()
+                timestamp=datetime.now(timezone.utc).isoformat()
             )
     
     def create_user_context(self, validation_response: TokenValidationResponse) -> UserContext:

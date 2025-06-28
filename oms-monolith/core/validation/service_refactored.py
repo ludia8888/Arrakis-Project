@@ -128,7 +128,7 @@ class ValidationServiceRefactored:
                 impact_analysis=impact_analysis,
                 suggested_migrations=[],  # MigrationOptions 리스트여야 함
                 performance_metrics=performance_metrics,
-                validated_at=datetime.utcnow(),
+                validated_at=datetime.now(timezone.utc),
                 rule_execution_results=rule_results_dict
             )
 

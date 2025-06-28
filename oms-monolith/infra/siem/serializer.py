@@ -4,7 +4,7 @@ SIEM 이벤트 직렬화 도구
 """
 from typing import Dict, Any, Type
 from datetime import datetime
-import json
+import jso
 
 from core.validation.events import (
     TamperingEvent, 
@@ -54,7 +54,7 @@ class SiemEventSerializer:
         siem_event = {
             "event_type": siem_event_type,
             "event_class": event_type.__name__,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "source_system": "oms_validation",
             "data": payload
         }

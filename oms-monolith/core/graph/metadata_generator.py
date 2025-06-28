@@ -11,7 +11,7 @@ that other services (Object Set Service, Object Storage, Vertex) use to operate 
 import hashlib
 import json
 from typing import Dict, List, Optional, Set, Tuple, Any
-from datetime import datetime
+from datetime import datetime, timezone
 from pydantic import BaseModel, Field
 
 from models.domain import LinkType, ObjectType, Directionality, Cardinality
@@ -51,7 +51,7 @@ class GraphIndexMetadata(BaseModel):
     )
     
     # Metadata
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     created_by: str
     description: Optional[str] = None
 
@@ -326,7 +326,7 @@ class GraphMetadataGenerator:
             return {
                 "indexes": [idx.dict() for idx in self.index_metadata.values()],
                 "version": "1.0",
-                "generated_at": datetime.utcnow().isoformat()
+                "generated_at": datetime.now(timezone.utc).isoformat()
             }
         
         elif service_name == "ObjectSetService":
@@ -337,7 +337,7 @@ class GraphMetadataGenerator:
                     for idx in self.index_metadata.values()
                 },
                 "version": "1.0",
-                "generated_at": datetime.utcnow().isoformat()
+                "generated_at": datetime.now(timezone.utc).isoformat()
             }
         
         elif service_name == "ActionService":
@@ -345,7 +345,7 @@ class GraphMetadataGenerator:
                 "permission_rules": [rule.dict() for rule in self.permission_rules.values()],
                 "state_rules": [rule.dict() for rule in self.state_rules.values()],
                 "version": "1.0",
-                "generated_at": datetime.utcnow().isoformat()
+                "generated_at": datetime.now(timezone.utc).isoformat()
             }
         
         elif service_name == "VertexUI":
@@ -353,7 +353,7 @@ class GraphMetadataGenerator:
                 "graph_schema": self._generate_graph_schema(),
                 "traversal_rules": [rule.dict() for rule in self.traversal_rules.values()],
                 "version": "1.0",
-                "generated_at": datetime.utcnow().isoformat()
+                "generated_at": datetime.now(timezone.utc).isoformat()
             }
         
         else:

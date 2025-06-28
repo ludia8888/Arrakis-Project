@@ -8,7 +8,7 @@ import os
 import asyncio
 from typing import Any, Dict, List, Optional, Callable
 from datetime import datetime, timedelta
-import json
+import jso
 import hashlib
 
 logger = logging.getLogger(__name__)
@@ -109,9 +109,9 @@ class TerminusDBCacheManager:
         # Try memory cache first
         if cache_key in self._memory_cache:
             entry = self._memory_cache[cache_key]
-            if datetime.fromisoformat(entry["expires_at"]) > datetime.utcnow():
+            if datetime.fromisoformat(entry["expires_at"]) > datetime.now(timezone.utc):
                 entry["access_count"] += 1
-                entry["last_accessed"] = datetime.utcnow().isoformat()
+                entry["last_accessed"] = datetime.now(timezone.utc).isoformat()
                 return self._deserialize_value(entry["value"])
             else:
                 # Remove expired entry
@@ -141,10 +141,10 @@ class TerminusDBCacheManager:
                     
                     # Check expiration
                     expires_at = datetime.fromisoformat(entry["expires_at"])
-                    if expires_at > datetime.utcnow():
+                    if expires_at > datetime.now(timezone.utc):
                         # Update access stats
                         entry["access_count"] = entry.get("access_count", 0) + 1
-                        entry["last_accessed"] = datetime.utcnow().isoformat()
+                        entry["last_accessed"] = datetime.now(timezone.utc).isoformat()
                         
                         await self.db_client.replace_document(
                             entry,
@@ -182,7 +182,7 @@ class TerminusDBCacheManager:
         cache_key = self._generate_cache_key(key)
         serialized_value = self._serialize_value(value)
         
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         expires_at = now + timedelta(seconds=ttl)
         
         # Cache in memory
@@ -261,7 +261,7 @@ class TerminusDBCacheManager:
             "value": value,
             "expires_at": expires_at,
             "access_count": 0,
-            "last_accessed": datetime.utcnow().isoformat()
+            "last_accessed": datetime.now(timezone.utc).isoformat()
         }
     
     async def delete(self, key: str) -> bool:

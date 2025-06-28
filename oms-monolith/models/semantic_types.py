@@ -9,7 +9,7 @@ from typing import Dict, Any, Optional, List, Pattern, Union
 from pydantic import BaseModel, Field, validator
 from enum import Enum
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 
 class ConstraintType(str, Enum):
     """Types of constraints that can be applied to semantic types"""
@@ -110,7 +110,7 @@ class SemanticType(BaseModel):
     examples: List[Any] = Field(default_factory=list, description="Example valid values")
     
     # Audit fields
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     created_by: str
     modified_at: Optional[datetime] = None
     modified_by: Optional[str] = None

@@ -433,7 +433,7 @@ type {object_type.name}Edge {{
         the link structure and implement resolvers.
         """
         return {
-            "generated_at": datetime.utcnow().isoformat(),
+            "generated_at": datetime.now(timezone.utc).isoformat(),
             "version": "1.0",
             "link_fields": {
                 type_id: [field.dict() for field in fields]

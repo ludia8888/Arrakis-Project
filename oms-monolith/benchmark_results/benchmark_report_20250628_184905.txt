@@ -1,0 +1,154 @@
+================================================================================
+TERMINUS NATIVE PERFORMANCE BENCHMARK REPORT
+================================================================================
+Generated: 2025-06-28T09:48:23.262920
+
+PERFORMANCE IMPROVEMENTS SUMMARY
+----------------------------------------
+
+BRANCH_OPS:
+  create_branch:
+    Legacy: 275.96ms
+    Native: 158.97ms
+    Improvement: 42.4%
+    Speedup: 1.74x faster
+  list_branches:
+    Legacy: 0.05ms
+    Native: 0.03ms
+    Improvement: 49.8%
+    Speedup: 1.99x faster
+  get_diff:
+    Legacy: 26.29ms
+    Native: 36.10ms
+    Improvement: -37.3%
+    Speedup: 0.73x faster
+
+MERGE_OPS:
+  fast_forward_merge:
+    Legacy: 104.32ms
+    Native: 132.84ms
+    Improvement: -27.3%
+    Speedup: 0.79x faster
+  conflict_detection:
+    Legacy: 29.74ms
+    Native: 37.67ms
+    Improvement: -26.7%
+    Speedup: 0.79x faster
+
+================================================================================
+DETAILED STATISTICS
+================================================================================
+
+LEGACY IMPLEMENTATION:
+----------------------------------------
+
+branch_ops:
+  create_branch:
+    Samples: 50
+    Errors: 0
+    Mean: 275.96ms
+    Median: 131.67ms
+    Min: 114.50ms
+    Max: 1332.96ms
+    StdDev: 332.94ms
+    P95: 1197.19ms
+    P99: 1332.96ms
+  list_branches:
+    Samples: 100
+    Errors: 0
+    Mean: 0.05ms
+    Median: 0.01ms
+    Min: 0.01ms
+    Max: 1.83ms
+    StdDev: 0.21ms
+    P95: 0.10ms
+    P99: 1.83ms
+  get_diff:
+    Samples: 50
+    Errors: 0
+    Mean: 26.29ms
+    Median: 25.82ms
+    Min: 23.37ms
+    Max: 33.25ms
+    StdDev: 2.27ms
+    P95: 31.80ms
+    P99: 33.25ms
+
+merge_ops:
+  fast_forward_merge:
+    Samples: 30
+    Errors: 0
+    Mean: 104.32ms
+    Median: 103.41ms
+    Min: 96.65ms
+    Max: 116.86ms
+    StdDev: 5.72ms
+    P95: 114.37ms
+    P99: 116.86ms
+  conflict_detection:
+    Samples: 50
+    Errors: 0
+    Mean: 29.74ms
+    Median: 28.03ms
+    Min: 25.20ms
+    Max: 71.46ms
+    StdDev: 7.02ms
+    P95: 37.35ms
+    P99: 71.46ms
+
+NATIVE IMPLEMENTATION:
+----------------------------------------
+
+branch_ops:
+  create_branch:
+    Samples: 50
+    Errors: 0
+    Mean: 158.97ms
+    Median: 157.35ms
+    Min: 144.84ms
+    Max: 193.03ms
+    StdDev: 10.21ms
+    P95: 176.61ms
+    P99: 193.03ms
+  list_branches:
+    Samples: 100
+    Errors: 0
+    Mean: 0.03ms
+    Median: 0.03ms
+    Min: 0.01ms
+    Max: 0.36ms
+    StdDev: 0.04ms
+    P95: 0.06ms
+    P99: 0.36ms
+  get_diff:
+    Samples: 50
+    Errors: 0
+    Mean: 36.10ms
+    Median: 34.73ms
+    Min: 32.34ms
+    Max: 50.03ms
+    StdDev: 3.74ms
+    P95: 42.71ms
+    P99: 50.03ms
+
+merge_ops:
+  fast_forward_merge:
+    Samples: 30
+    Errors: 0
+    Mean: 132.84ms
+    Median: 131.24ms
+    Min: 122.07ms
+    Max: 184.70ms
+    StdDev: 11.67ms
+    P95: 152.00ms
+    P99: 184.70ms
+  conflict_detection:
+    Samples: 50
+    Errors: 0
+    Mean: 37.67ms
+    Median: 37.32ms
+    Min: 34.99ms
+    Max: 43.85ms
+    StdDev: 1.80ms
+    P95: 40.35ms
+    P99: 43.85ms

@@ -138,7 +138,7 @@ class RequestRouter:
         forward_headers.update({
             "X-Request-ID": context.request_id,
             "X-Forwarded-For": context.client_ip,
-            "X-Gateway-Time": datetime.utcnow().isoformat()
+            "X-Gateway-Time": datetime.now(timezone.utc).isoformat()
         })
 
         if context.user_id:

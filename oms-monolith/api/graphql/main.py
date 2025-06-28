@@ -214,7 +214,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     connection.update_last_ping()
                     await connection.send_message({
                         "type": "pong",
-                        "timestamp": datetime.utcnow().isoformat()
+                        "timestamp": datetime.now(timezone.utc).isoformat()
                     })
 
                 elif message_type == "pong":

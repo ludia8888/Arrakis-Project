@@ -1,280 +1,322 @@
 """
-Migration Monitoring
-Tracks the progress of TerminusDB native migration
+Migration Monitoring System
+Tracks and reports on TerminusDB native migration progress
 """
-import logging
-from datetime import datetime
-from typing import Dict, Any, Optional
+import time
+from datetime import datetime, timezone
+from typing import Dict, List, Optional, Any, Tuple
 from collections import defaultdict
-import asyncio
+import json
+import os
 
-from prometheus_client import Counter, Gauge, Histogram
-from shared.config import settings
+import logging
 
 logger = logging.getLogger(__name__)
-
-# Prometheus metrics
-operation_counter = Counter(
-    'oms_branch_operations_total',
-    'Total number of branch operations',
-    ['operation', 'implementation']
-)
-
-operation_duration = Histogram(
-    'oms_branch_operation_duration_seconds',
-    'Duration of branch operations',
-    ['operation', 'implementation']
-)
-
-native_usage_gauge = Gauge(
-    'oms_terminus_native_usage_percentage',
-    'Percentage of operations using TerminusDB native'
-)
-
-error_counter = Counter(
-    'oms_branch_operation_errors_total',
-    'Total number of operation errors',
-    ['operation', 'implementation', 'error_type']
-)
 
 
 class MigrationMonitor:
     """
-    Monitors the migration from legacy to TerminusDB native implementation
+    Monitors the gradual migration from legacy to native TerminusDB implementation
     """
     
     def __init__(self):
-        self.metrics = defaultdict(int)
-        self.start_time = datetime.utcnow()
-        self.operation_times = defaultdict(list)
+        self.start_time = time.time()
+        self.operation_counts = defaultdict(lambda: defaultdict(int))
+        self.error_counts = defaultdict(lambda: defaultdict(int))
+        self.operation_times = defaultdict(lambda: defaultdict(list))
+        self.checkpoints = []
         
-    async def track_operation(
-        self, 
-        operation: str, 
+    def track_operation(
+        self,
+        operation: str,
         implementation: str,
-        duration_ms: Optional[float] = None,
+        duration: Optional[float] = None,
         success: bool = True,
-        error_type: Optional[str] = None
+        metadata: Optional[Dict[str, Any]] = None
     ):
         """
-        Track a branch operation
+        Track a single operation execution
         
         Args:
-            operation: Operation name (create_branch, merge, etc.)
-            implementation: Implementation used (native or legacy)
-            duration_ms: Operation duration in milliseconds
+            operation: Operation name (e.g., 'create_branch', 'merge')
+            implementation: 'legacy' or 'native'
+            duration: Operation duration in seconds
             success: Whether operation succeeded
-            error_type: Type of error if failed
+            metadata: Additional context
         """
-        # Update counters
-        key = f"{operation}:{implementation}"
-        self.metrics[key] += 1
+        # Update counts
+        self.operation_counts[operation][implementation] += 1
         
-        # Update Prometheus metrics
-        operation_counter.labels(
-            operation=operation,
-            implementation=implementation
-        ).inc()
-        
-        if duration_ms is not None:
-            self.operation_times[key].append(duration_ms)
-            operation_duration.labels(
-                operation=operation,
-                implementation=implementation
-            ).observe(duration_ms / 1000.0)  # Convert to seconds
-        
-        if not success and error_type:
-            error_counter.labels(
-                operation=operation,
-                implementation=implementation,
-                error_type=error_type
-            ).inc()
-        
-        # Update native usage percentage
-        self._update_native_percentage()
-        
-        logger.info(
-            f"Tracked operation: {operation} using {implementation} "
-            f"(duration: {duration_ms}ms, success: {success})"
-        )
-    
-    def _update_native_percentage(self):
-        """Update the native usage percentage gauge"""
-        total = sum(self.metrics.values())
-        if total == 0:
-            return
-        
-        native = sum(
-            count for key, count in self.metrics.items() 
-            if "native" in key.lower()
-        )
-        
-        percentage = (native / total) * 100
-        native_usage_gauge.set(percentage)
-    
+        if duration is not None:
+            self.operation_times[operation][implementation].append(duration)
+            
+        if not success:
+            self.error_counts[operation][implementation] += 1
+            
+        # Log significant events
+        if implementation == "native" and success:
+            logger.info(
+                f"Native operation successful: {operation} "
+                f"(duration: {duration:.3f}s)" if duration else ""
+            )
+            
     def get_migration_progress(self) -> Dict[str, Any]:
-        """
-        Get current migration progress statistics
+        """Get current migration progress statistics"""
+        total_ops = 0
+        native_ops = 0
+        legacy_ops = 0
         
-        Returns:
-            Dictionary with migration statistics
-        """
-        total = sum(self.metrics.values())
-        native = sum(
-            count for key, count in self.metrics.items() 
-            if "native" in key.lower()
-        )
-        legacy = total - native
+        operations_by_type = defaultdict(lambda: {"native": 0, "legacy": 0})
+        
+        for operation, implementations in self.operation_counts.items():
+            for impl, count in implementations.items():
+                operations_by_type[operation][impl] = count
+                total_ops += count
+                
+                if impl == "native":
+                    native_ops += count
+                else:
+                    legacy_ops += count
+                    
+        # Calculate percentages
+        native_percentage = (native_ops / total_ops * 100) if total_ops > 0 else 0
         
         # Calculate average operation times
         avg_times = {}
-        for key, times in self.operation_times.items():
-            if times:
-                avg_times[key] = sum(times) / len(times)
-        
+        for operation, implementations in self.operation_times.items():
+            avg_times[operation] = {}
+            for impl, times in implementations.items():
+                if times:
+                    avg_times[operation][impl] = sum(times) / len(times)
+                    
+        # Error rates
+        error_rates = {}
+        for operation, implementations in self.error_counts.items():
+            error_rates[operation] = {}
+            for impl, error_count in implementations.items():
+                total = self.operation_counts[operation][impl]
+                error_rates[operation][impl] = (error_count / total * 100) if total > 0 else 0
+                
         return {
-            "start_time": self.start_time.isoformat(),
-            "duration_hours": (datetime.utcnow() - self.start_time).total_seconds() / 3600,
-            "total_operations": total,
-            "native_operations": native,
-            "legacy_operations": legacy,
-            "native_percentage": (native / total * 100) if total > 0 else 0,
-            "operations_by_type": dict(self.metrics),
-            "average_duration_ms": avg_times,
-            "current_flags": {
-                "USE_TERMINUS_NATIVE_BRANCH": settings.USE_TERMINUS_NATIVE_BRANCH,
-                "USE_TERMINUS_NATIVE_MERGE": settings.USE_TERMINUS_NATIVE_MERGE,
-                "USE_TERMINUS_NATIVE_DIFF": settings.USE_TERMINUS_NATIVE_DIFF,
+            "total_operations": total_ops,
+            "native_operations": native_ops,
+            "legacy_operations": legacy_ops,
+            "native_percentage": native_percentage,
+            "operations_by_type": dict(operations_by_type),
+            "average_operation_times": avg_times,
+            "error_rates": error_rates,
+            "uptime_seconds": time.time() - self.start_time
+        }
+        
+    def create_checkpoint(self, name: str, metadata: Optional[Dict[str, Any]] = None):
+        """Create a migration checkpoint for tracking progress over time"""
+        checkpoint = {
+            "name": name,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "progress": self.get_migration_progress(),
+            "metadata": metadata or {}
+        }
+        
+        self.checkpoints.append(checkpoint)
+        
+        # Save checkpoint to file
+        self._save_checkpoint(checkpoint)
+        
+        logger.info(f"Migration checkpoint created: {name}")
+        
+    def get_operation_comparison(self, operation: str) -> Dict[str, Any]:
+        """Compare legacy vs native performance for a specific operation"""
+        comparison = {
+            "operation": operation,
+            "executions": {
+                "legacy": self.operation_counts[operation].get("legacy", 0),
+                "native": self.operation_counts[operation].get("native", 0)
+            },
+            "errors": {
+                "legacy": self.error_counts[operation].get("legacy", 0),
+                "native": self.error_counts[operation].get("native", 0)
             }
         }
-    
-    def get_comparison_report(self) -> Dict[str, Any]:
+        
+        # Calculate average times
+        legacy_times = self.operation_times[operation].get("legacy", [])
+        native_times = self.operation_times[operation].get("native", [])
+        
+        if legacy_times:
+            comparison["avg_time_legacy"] = sum(legacy_times) / len(legacy_times)
+        if native_times:
+            comparison["avg_time_native"] = sum(native_times) / len(native_times)
+            
+        # Calculate improvement
+        if legacy_times and native_times:
+            avg_legacy = sum(legacy_times) / len(legacy_times)
+            avg_native = sum(native_times) / len(native_times)
+            comparison["improvement_percent"] = ((avg_legacy - avg_native) / avg_legacy) * 100
+            comparison["speedup"] = avg_legacy / avg_native
+            
+        return comparison
+        
+    def should_rollback(self) -> Tuple[bool, Optional[str]]:
         """
-        Get detailed comparison between implementations
+        Determine if we should rollback to legacy implementation
         
         Returns:
-            Comparison report with performance metrics
+            (should_rollback, reason)
         """
-        report = {
-            "performance_comparison": {},
-            "error_rates": {},
-            "feature_adoption": {}
-        }
-        
-        # Compare performance by operation
-        operations = set()
-        for key in self.operation_times.keys():
-            operation = key.split(":")[0]
-            operations.add(operation)
-        
-        for operation in operations:
-            native_key = f"{operation}:native"
-            legacy_key = f"{operation}:legacy"
-            
-            native_times = self.operation_times.get(native_key, [])
-            legacy_times = self.operation_times.get(legacy_key, [])
-            
-            if native_times and legacy_times:
-                report["performance_comparison"][operation] = {
-                    "native_avg_ms": sum(native_times) / len(native_times),
-                    "legacy_avg_ms": sum(legacy_times) / len(legacy_times),
-                    "improvement_percentage": (
-                        (sum(legacy_times) / len(legacy_times) - 
-                         sum(native_times) / len(native_times)) / 
-                        (sum(legacy_times) / len(legacy_times)) * 100
-                    ) if legacy_times else 0
-                }
-        
-        return report
-    
-    async def generate_migration_report(self, output_file: str = "migration_report.json"):
-        """Generate and save a detailed migration report"""
-        import json
-        
-        report = {
-            "generated_at": datetime.utcnow().isoformat(),
-            "progress": self.get_migration_progress(),
-            "comparison": self.get_comparison_report(),
-            "recommendations": self._generate_recommendations()
-        }
-        
-        with open(output_file, 'w') as f:
-            json.dump(report, f, indent=2)
-        
-        logger.info(f"Migration report generated: {output_file}")
-        return report
-    
-    def _generate_recommendations(self) -> list:
-        """Generate recommendations based on current metrics"""
-        recommendations = []
-        
         progress = self.get_migration_progress()
-        native_pct = progress["native_percentage"]
         
-        if native_pct == 0:
-            recommendations.append({
-                "priority": "HIGH",
-                "message": "Native implementation not yet enabled. Consider enabling USE_TERMINUS_NATIVE_BRANCH for testing."
-            })
-        elif native_pct < 50:
-            recommendations.append({
-                "priority": "MEDIUM",
-                "message": f"Native adoption at {native_pct:.1f}%. Consider increasing native usage for more operations."
-            })
-        elif native_pct >= 90:
-            recommendations.append({
-                "priority": "LOW",
-                "message": "High native adoption achieved. Consider completing migration and removing legacy code."
-            })
+        # Check error rates
+        for operation, rates in progress["error_rates"].items():
+            native_error_rate = rates.get("native", 0)
+            legacy_error_rate = rates.get("legacy", 0)
+            
+            # Rollback if native error rate is significantly higher
+            if native_error_rate > 5 and native_error_rate > legacy_error_rate * 2:
+                return True, f"High error rate in {operation}: {native_error_rate:.1f}%"
+                
+        # Check performance degradation
+        for operation, times in progress["average_operation_times"].items():
+            native_time = times.get("native")
+            legacy_time = times.get("legacy")
+            
+            if native_time and legacy_time:
+                # Rollback if native is significantly slower
+                if native_time > legacy_time * 2:
+                    return True, f"Performance degradation in {operation}: {native_time/legacy_time:.1f}x slower"
+                    
+        return False, None
         
-        # Check performance
-        comparison = self.get_comparison_report()
-        for op, metrics in comparison.get("performance_comparison", {}).items():
-            if metrics["improvement_percentage"] < 0:
-                recommendations.append({
-                    "priority": "MEDIUM",
-                    "message": f"Native {op} is slower than legacy. Investigate performance issues."
-                })
+    def generate_report(self) -> str:
+        """Generate a human-readable migration report"""
+        progress = self.get_migration_progress()
         
-        return recommendations
+        report = []
+        report.append("="*60)
+        report.append("TERMINUS NATIVE MIGRATION REPORT")
+        report.append("="*60)
+        report.append(f"Generated: {datetime.now(timezone.utc).isoformat()}")
+        report.append(f"Uptime: {progress['uptime_seconds']/3600:.1f} hours")
+        report.append("")
+        
+        # Overall progress
+        report.append("OVERALL PROGRESS")
+        report.append("-"*30)
+        report.append(f"Total Operations: {progress['total_operations']:,}")
+        report.append(f"Native Operations: {progress['native_operations']:,} ({progress['native_percentage']:.1f}%)")
+        report.append(f"Legacy Operations: {progress['legacy_operations']:,}")
+        report.append("")
+        
+        # Operations breakdown
+        report.append("OPERATIONS BREAKDOWN")
+        report.append("-"*30)
+        for operation, counts in progress['operations_by_type'].items():
+            total = counts['native'] + counts['legacy']
+            native_pct = (counts['native'] / total * 100) if total > 0 else 0
+            report.append(f"{operation}:")
+            report.append(f"  Native: {counts['native']:,} ({native_pct:.1f}%)")
+            report.append(f"  Legacy: {counts['legacy']:,}")
+            
+        # Performance comparison
+        report.append("\nPERFORMANCE COMPARISON")
+        report.append("-"*30)
+        for operation in self.operation_counts:
+            comparison = self.get_operation_comparison(operation)
+            if "improvement_percent" in comparison:
+                report.append(f"{operation}:")
+                report.append(f"  Improvement: {comparison['improvement_percent']:.1f}%")
+                report.append(f"  Speedup: {comparison['speedup']:.2f}x")
+                
+        # Error rates
+        report.append("\nERROR RATES")
+        report.append("-"*30)
+        for operation, rates in progress['error_rates'].items():
+            if rates:
+                report.append(f"{operation}:")
+                for impl, rate in rates.items():
+                    report.append(f"  {impl}: {rate:.2f}%")
+                    
+        # Rollback check
+        should_rollback, reason = self.should_rollback()
+        report.append("\nROLLBACK STATUS")
+        report.append("-"*30)
+        if should_rollback:
+            report.append(f"⚠️  ROLLBACK RECOMMENDED: {reason}")
+        else:
+            report.append("✅ No rollback needed")
+            
+        return "\n".join(report)
+        
+    def _save_checkpoint(self, checkpoint: Dict[str, Any]):
+        """Save checkpoint to file for persistence"""
+        checkpoint_dir = "migration_checkpoints"
+        os.makedirs(checkpoint_dir, exist_ok=True)
+        
+        filename = f"checkpoint_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{checkpoint['name']}.json"
+        filepath = os.path.join(checkpoint_dir, filename)
+        
+        with open(filepath, 'w') as f:
+            json.dump(checkpoint, f, indent=2)
+            
+        logger.info(f"Checkpoint saved to {filepath}")
 
 
 # Global instance
 migration_monitor = MigrationMonitor()
 
 
-# Decorator for tracking operations
-def track_migration(operation: str):
-    """Decorator to track migration metrics"""
+# Context manager for tracking operations
+class track_operation:
+    """Context manager for automatically tracking operation execution"""
+    
+    def __init__(self, operation: str, implementation: str):
+        self.operation = operation
+        self.implementation = implementation
+        self.start_time = None
+        self.success = True
+        self.metadata = {}
+        
+    def __enter__(self):
+        self.start_time = time.time()
+        return self
+        
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        duration = time.time() - self.start_time
+        
+        if exc_type is not None:
+            self.success = False
+            self.metadata["error_type"] = exc_type.__name__
+            self.metadata["error_message"] = str(exc_val)
+            
+        migration_monitor.track_operation(
+            self.operation,
+            self.implementation,
+            duration,
+            self.success,
+            self.metadata
+        )
+        
+        # Don't suppress exceptions
+        return False
+
+
+# Decorators for automatic tracking
+def track_native_operation(operation: str):
+    """Decorator to track native implementation operations"""
     def decorator(func):
         async def wrapper(*args, **kwargs):
-            # Determine implementation from class name
-            if args and hasattr(args[0], '__class__'):
-                class_name = args[0].__class__.__name__
-                implementation = "native" if "Native" in class_name else "legacy"
-            else:
-                implementation = "unknown"
-            
-            start_time = datetime.utcnow()
-            error_type = None
-            success = True
-            
-            try:
+            with track_operation(operation, "native") as tracker:
                 result = await func(*args, **kwargs)
                 return result
-            except Exception as e:
-                success = False
-                error_type = type(e).__name__
-                raise
-            finally:
-                duration_ms = (datetime.utcnow() - start_time).total_seconds() * 1000
-                await migration_monitor.track_operation(
-                    operation=operation,
-                    implementation=implementation,
-                    duration_ms=duration_ms,
-                    success=success,
-                    error_type=error_type
-                )
-        
+        return wrapper
+    return decorator
+
+
+def track_legacy_operation(operation: str):
+    """Decorator to track legacy implementation operations"""
+    def decorator(func):
+        async def wrapper(*args, **kwargs):
+            with track_operation(operation, "legacy") as tracker:
+                result = await func(*args, **kwargs)
+                return result
         return wrapper
     return decorator

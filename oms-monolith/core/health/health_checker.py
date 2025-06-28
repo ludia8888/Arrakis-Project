@@ -7,7 +7,7 @@ import asyncio
 import psutil
 import time
 from typing import Dict, Any, Optional, List, Tuple
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 import logging
 import redis.asyncio as aioredis
@@ -34,7 +34,7 @@ class HealthCheck:
         self.message = message
         self.response_time_ms = response_time_ms
         self.metadata = metadata or {}
-        self.timestamp = datetime.utcnow()
+        self.timestamp = datetime.now(timezone.utc)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -332,7 +332,7 @@ class HealthChecker:
         # Build response
         response = {
             "status": overall_status.value,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "response_time_ms": total_time,
             "checks": {
                 name: {
@@ -358,7 +358,7 @@ class HealthChecker:
 
     def _add_to_history(self, check_result: Dict[str, Any]):
         """Add check result to history for trend analysis."""
-        self.check_history.append((datetime.utcnow(), check_result))
+        self.check_history.append((datetime.now(timezone.utc), check_result))
         
         # Trim history if too large
         if len(self.check_history) > self.max_history_size:

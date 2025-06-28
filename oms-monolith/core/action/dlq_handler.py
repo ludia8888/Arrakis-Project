@@ -105,7 +105,7 @@ class RetryPolicy:
             import random
             delay = delay * (0.5 + random.random())
 
-        return datetime.utcnow() + timedelta(seconds=delay)
+        return datetime.now(timezone.utc) + timedelta(seconds=delay)
 
 class DLQHandler:
     """Dead Letter Queue handler with advanced features"""
@@ -149,7 +149,7 @@ class DLQHandler:
         """Send message to DLQ"""
         try:
             # Create DLQ message
-            message_id = f"{queue_name}:{datetime.utcnow().timestamp()}:{hash(str(original_message))}"
+            message_id = f"{queue_name}:{datetime.now(timezone.utc).timestamp()}:{hash(str(original_message))}"
 
             dlq_message = DLQMessage(
                 message_id=message_id,
@@ -160,8 +160,8 @@ class DLQHandler:
                 stack_trace=traceback.format_exc() if error else None,
                 retry_count=retry_count,
                 max_retries=self.get_retry_policy(queue_name).max_retries,
-                first_failure_time=datetime.utcnow(),
-                last_failure_time=datetime.utcnow(),
+                first_failure_time=datetime.now(timezone.utc),
+                last_failure_time=datetime.now(timezone.utc),
                 next_retry_time=self.get_retry_policy(queue_name).get_next_retry_time(retry_count),
                 metadata=metadata or {}
             )
@@ -177,7 +177,7 @@ class DLQHandler:
             # Add to queue index
             await self.redis.zadd(
                 f"dlq:index:{queue_name}",
-                {message_id: datetime.utcnow().timestamp()}
+                {message_id: datetime.now(timezone.utc).timestamp()}
             )
 
             # Update metrics
@@ -192,7 +192,7 @@ class DLQHandler:
                         'message_id': message_id,
                         'reason': reason.value,
                         'retry_count': retry_count,
-                        'timestamp': datetime.utcnow().isoformat()
+                        'timestamp': datetime.now(timezone.utc).isoformat()
                     }
                 )
 
@@ -228,7 +228,7 @@ class DLQHandler:
 
             # Update retry count
             dlq_message.retry_count += 1
-            dlq_message.last_failure_time = datetime.utcnow()
+            dlq_message.last_failure_time = datetime.now(timezone.utc)
 
             try:
                 # Execute handler
@@ -306,7 +306,7 @@ class DLQHandler:
         # Add to poison index
         await self.redis.zadd(
             f"poison:index:{dlq_message.queue_name}",
-            {dlq_message.message_id: datetime.utcnow().timestamp()}
+            {dlq_message.message_id: datetime.now(timezone.utc).timestamp()}
         )
 
         # Alert operations team
@@ -319,7 +319,7 @@ class DLQHandler:
                     'original_message': dlq_message.original_message,
                     'error_details': dlq_message.error_details,
                     'retry_count': dlq_message.retry_count,
-                    'timestamp': datetime.utcnow().isoformat()
+                    'timestamp': datetime.now(timezone.utc).isoformat()
                 }
             )
 
@@ -339,7 +339,7 @@ class DLQHandler:
             )
         else:
             # Only get messages ready for retry
-            max_score = datetime.utcnow().timestamp()
+            max_score = datetime.now(timezone.utc).timestamp()
             message_ids = await self.redis.zrangebyscore(
                 f"dlq:index:{queue_name}",
                 0,
@@ -358,7 +358,7 @@ class DLQHandler:
                     dlq_message = DLQMessage.from_dict(json.loads(message_data))
 
                     # Calculate message age
-                    age = (datetime.utcnow() - dlq_message.first_failure_time).total_seconds()
+                    age = (datetime.now(timezone.utc) - dlq_message.first_failure_time).total_seconds()
                     dlq_age.labels(queue=queue_name).observe(age)
 
                     messages.append(dlq_message)
@@ -405,7 +405,7 @@ class DLQHandler:
                 messages = await self.get_dlq_messages(queue_name, limit=10, include_expired=False)
 
                 for message in messages:
-                    if message.next_retry_time and message.next_retry_time <= datetime.utcnow():
+                    if message.next_retry_time and message.next_retry_time <= datetime.now(timezone.utc):
                         # Retry the message
                         asyncio.create_task(self.retry_message(queue_name, message.message_id))
 

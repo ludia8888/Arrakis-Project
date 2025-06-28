@@ -106,7 +106,7 @@ class NATSEventPublisher(EventPublisher):
             "type": event.event_type,
             "source": f"oms/{event.source}",
             "id": str(uuid.uuid4()),
-            "time": datetime.utcnow().isoformat() + "Z",
+            "time": datetime.now(timezone.utc).isoformat() + "Z",
             "datacontenttype": "application/json",
             "data": event.data,
             "subject": event.data.get("object_id", "unknown"),

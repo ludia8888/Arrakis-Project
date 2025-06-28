@@ -1,0 +1,116 @@
+{
+  "implemented_schema": {
+    "ActionType": {
+      "type": "Class",
+      "properties": [
+        "description",
+        "displayName",
+        "name",
+        "operations",
+        "permissions",
+        "sideEffects",
+        "targetTypes"
+      ]
+    },
+    "Interface": {
+      "type": "Class",
+      "properties": [
+        "actions",
+        "description",
+        "displayName",
+        "name",
+        "properties",
+        "sharedProperties"
+      ]
+    },
+    "LinkType": {
+      "type": "Class",
+      "properties": [
+        "cardinality",
+        "description",
+        "displayName",
+        "name",
+        "sourceObjectType",
+        "targetObjectType"
+      ]
+    },
+    "ObjectType": {
+      "type": "Class",
+      "properties": [
+        "description",
+        "displayName",
+        "name"
+      ]
+    },
+    "Property": {
+      "type": "Class",
+      "properties": [
+        "dataType",
+        "description",
+        "displayName",
+        "indexed",
+        "name",
+        "objectType",
+        "required"
+      ]
+    },
+    "SemanticType": {
+      "type": "Class",
+      "properties": [
+        "baseType",
+        "constraints",
+        "description",
+        "displayName",
+        "examples",
+        "name",
+        "validationRules"
+      ]
+    },
+    "SharedProperty": {
+      "type": "Class",
+      "properties": [
+        "constraints",
+        "dataType",
+        "defaultValue",
+        "description",
+        "displayName",
+        "name"
+      ]
+    },
+    "StructField": {
+      "type": "Class",
+      "properties": [
+        "displayName",
+        "fieldType",
+        "name",
+        "required",
+        "structType"
+      ]
+    },
+    "StructType": {
+      "type": "Class",
+      "properties": [
+        "description",
+        "displayName",
+        "fields",
+        "name"
+      ]
+    }
+  },
+  "data_counts": {
+    "ObjectType": 3,
+    "Property": 0,
+    "LinkType": 0
+  },
+  "required_types": [
+    "Object Type",
+    "Property",
+    "Shared Property",
+    "Link Type",
+    "Action Type",
+    "Interface",
+    "Semantic Type",
+    "Struct Type"
+  ],
+  "implementation_gaps": []
+}

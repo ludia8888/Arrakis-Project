@@ -6,7 +6,7 @@ import asyncio
 import asyncpg
 import argon2
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 
 
@@ -62,7 +62,7 @@ async def create_test_user():
             json.dumps(['engineering']),
             False,
             0,
-            datetime.utcnow(),
+            datetime.now(timezone.utc),
             'system'
         )
         
@@ -101,7 +101,7 @@ async def create_test_user():
                 json.dumps(['admin']),
                 False,
                 0,
-                datetime.utcnow(),
+                datetime.now(timezone.utc),
                 'system'
             )
             print(f"Created admin user: {admin_id}")

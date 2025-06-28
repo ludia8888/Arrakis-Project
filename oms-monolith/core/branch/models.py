@@ -140,10 +140,30 @@ class BranchDiff(BaseModel):
     entries: List[DiffEntry] = Field(default_factory=list)
     has_conflicts: bool = False
     conflicts: List[Conflict] = Field(default_factory=list)
+    
+    # Legacy compatibility - changes is an alias for entries
+    @property
+    def changes(self) -> List[Dict[str, Any]]:
+        """Legacy compatibility: return entries as dict format"""
+        return [
+            {
+                'operation': entry.operation,
+                'resource_type': entry.resource_type,
+                'resource_id': entry.resource_id,
+                'resource_name': entry.resource_name,
+                'path': entry.path,
+                'old_value': entry.old_value,
+                'new_value': entry.new_value
+            }
+            for entry in self.entries
+        ]
 
 
 class MergeResult(BaseModel):
     """머지 결과"""
+    status: str = Field(default="success", description="Merge status: success, conflict, no_changes, error")
+    message: Optional[str] = None
+    commit_id: Optional[str] = None
     merged_schemas: Dict[str, Any] = Field(default_factory=dict)
     conflicts: List[Conflict] = Field(default_factory=list)
     statistics: Optional['MergeStatistics'] = None

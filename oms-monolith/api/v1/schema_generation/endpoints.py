@@ -126,11 +126,11 @@ async def generate_graphql_schema(
         
         # Prepare response
         from datetime import datetime
-        response = SchemaGenerationResponse(
+        respo = SchemaGenerationResponse(
             format="graphql",
             schema=sdl,
             metadata=graphql_generator.export_schema_metadata() if request.export_metadata else None,
-            generated_at=datetime.utcnow().isoformat(),
+            generated_at=datetime.now(timezone.utc).isoformat(),
             object_types_included=[t.id for t in object_types],
             link_types_included=[lt.id for lt in relevant_link_types]
         )
@@ -203,11 +203,11 @@ async def generate_openapi_schema(
         
         # Prepare response
         from datetime import datetime
-        response = SchemaGenerationResponse(
+        respo = SchemaGenerationResponse(
             format="openapi",
             schema=spec_json,
             metadata=None,  # OpenAPI spec is self-contained
-            generated_at=datetime.utcnow().isoformat(),
+            generated_at=datetime.now(timezone.utc).isoformat(),
             object_types_included=[t.id for t in object_types],
             link_types_included=[lt.id for lt in relevant_link_types]
         )
@@ -291,7 +291,7 @@ async def export_schema(
         
         # Generate schema based on format
         from datetime import datetime
-        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.(timezone.utc).strftime("%Y%m%d_%H%M%S")
         
         if format == "graphql":
             schema_content = graphql_generator.generate_complete_schema(
@@ -333,7 +333,7 @@ async def export_schema(
             "format": format,
             "content_type": content_type,
             "size_bytes": str(len(schema_content)),
-            "exported_at": datetime.utcnow().isoformat()
+            "exported_at": datetime.now(timezone.utc).isoformat()
         }
         
     except Exception as e:

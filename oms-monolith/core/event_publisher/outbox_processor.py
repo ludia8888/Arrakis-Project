@@ -168,7 +168,7 @@ class OutboxProcessor:
                 for platform, result in platform_results.items():
                     if result.success:
                         latency = result.latency_ms or (
-                            (datetime.utcnow() - datetime.fromisoformat(event["created_at"])).total_seconds() * 1000
+                            (datetime.now(timezone.utc) - datetime.fromisoformat(event["created_at"])).total_seconds() * 1000
                         )
                         self.metrics.record_event_latency(str(cloud_event.type), latency / 1000)
                         break
@@ -208,7 +208,7 @@ class OutboxProcessor:
         logger.debug(f"Published CloudEvent {cloud_event.id} directly to NATS subject {subject}")
         
         # 5. 메트릭 기록
-        latency = (datetime.utcnow() -
+        latency = (datetime.now(timezone.utc) -
                   datetime.fromisoformat(original_event["created_at"])).total_seconds()
         
         self.metrics.record_event_latency(str(cloud_event.type), latency)

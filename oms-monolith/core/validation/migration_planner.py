@@ -79,7 +79,7 @@ class MigrationPlanner:
             estimated_duration=total_duration,
             requires_downtime=requires_downtime,
             downtime_windows=downtime_windows,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
             status="draft"
         )
 
@@ -437,7 +437,7 @@ class MigrationPlanner:
             execution_order=[],
             estimated_duration=0,
             requires_downtime=False,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
             status="completed"
         )
 

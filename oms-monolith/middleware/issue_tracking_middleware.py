@@ -287,6 +287,17 @@ class IssueTrackingMiddleware:
 
 def configure_issue_tracking(app):
     """Configure issue tracking middleware for the application"""
+    import os
+    
+    # Check if issue tracking is enabled
+    if os.getenv("ISSUE_TRACKING_ENABLED", "true").lower() == "false":
+        logger.info("Issue tracking middleware DISABLED for development")
+        # Add a no-op middleware
+        @app.middleware("http")
+        async def noop_middleware(request: Request, call_next: Callable) -> Response:
+            return await call_next(request)
+        return
+    
     middleware = IssueTrackingMiddleware()
     
     @app.middleware("http")

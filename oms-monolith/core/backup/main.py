@@ -64,7 +64,7 @@ class BackupOrchestrator:
 
     async def backup_terminusdb(self, backup_type: str = 'full') -> Dict:
         """Backup TerminusDB"""
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
 
         try:
             async with httpx.AsyncClient() as client:
@@ -114,7 +114,7 @@ class BackupOrchestrator:
                 backup_operations.labels(type='terminusdb', status='success').inc()
                 backup_size.labels(type='terminusdb').set(len(backup_json))
                 backup_duration.labels(type='terminusdb').observe(
-                    (datetime.utcnow() - start_time).total_seconds()
+                    (datetime.now(timezone.utc) - start_time).total_seconds()
                 )
 
                 # Check RPO compliance
@@ -124,7 +124,7 @@ class BackupOrchestrator:
                     'status': 'success',
                     'backup_key': backup_key,
                     'size_bytes': len(backup_json),
-                    'duration_seconds': (datetime.utcnow() - start_time).total_seconds()
+                    'duration_seconds': (datetime.now(timezone.utc) - start_time).total_seconds()
                 }
 
         except Exception as e:
@@ -134,7 +134,7 @@ class BackupOrchestrator:
 
     async def backup_redis(self, backup_type: str = 'full') -> Dict:
         """Backup Redis data"""
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
 
         try:
             # Get all keys
@@ -191,14 +191,14 @@ class BackupOrchestrator:
             backup_operations.labels(type='redis', status='success').inc()
             backup_size.labels(type='redis').set(len(backup_json))
             backup_duration.labels(type='redis').observe(
-                (datetime.utcnow() - start_time).total_seconds()
+                (datetime.now(timezone.utc) - start_time).total_seconds()
             )
 
             return {
                 'status': 'success',
                 'backup_key': backup_key,
                 'size_bytes': len(backup_json),
-                'duration_seconds': (datetime.utcnow() - start_time).total_seconds()
+                'duration_seconds': (datetime.now(timezone.utc) - start_time).total_seconds()
             }
 
         except Exception as e:
@@ -211,7 +211,7 @@ class BackupOrchestrator:
         logger.info("Starting full backup")
 
         results = {
-            'timestamp': datetime.utcnow().isoformat(),
+            'timestamp': datetime.now(timezone.utc).isoformat(),
             'type': 'full',
             'components': {}
         }
@@ -231,7 +231,7 @@ class BackupOrchestrator:
         # Store backup metadata
         await self.redis_client.hset(
             'backup:metadata',
-            f"full:{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}",
+            f"full:{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}",
             json.dumps(results)
         )
 
@@ -243,7 +243,7 @@ class BackupOrchestrator:
         logger.info("Starting incremental backup")
 
         results = {
-            'timestamp': datetime.utcnow().isoformat(),
+            'timestamp': datetime.now(timezone.utc).isoformat(),
             'type': 'incremental',
             'components': {}
         }
@@ -263,7 +263,7 @@ class BackupOrchestrator:
         # Store backup metadata
         await self.redis_client.hset(
             'backup:metadata',
-            f"incremental:{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}",
+            f"incremental:{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}",
             json.dumps(results)
         )
 
@@ -281,7 +281,7 @@ class BackupOrchestrator:
                 [json.loads(v)['timestamp'] for v in metadata.values()]
             )
             latest_time = datetime.fromisoformat(latest_backup)
-            time_since_backup = (datetime.utcnow() - latest_time).total_seconds() / 60
+            time_since_backup = (datetime.now(timezone.utc) - latest_time).total_seconds() / 60
 
             if time_since_backup <= rpo_minutes:
                 rpo_status.set(1)
@@ -310,7 +310,7 @@ class BackupOrchestrator:
 
     async def restore_backup(self, backup_key: str) -> Dict:
         """Restore from a specific backup"""
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
 
         try:
             # Get backup data
@@ -340,7 +340,7 @@ class BackupOrchestrator:
     def _initialize_restore_results(self, backup_key: str) -> Dict:
         """Initialize restore results structure"""
         return {
-            'timestamp': datetime.utcnow().isoformat(),
+            'timestamp': datetime.now(timezone.utc).isoformat(),
             'backup_key': backup_key,
             'components': {}
         }
@@ -397,7 +397,7 @@ class BackupOrchestrator:
         restore_operations.labels(status='success').inc()
 
         # Calculate duration and check RTO
-        duration = (datetime.utcnow() - start_time).total_seconds() / 60
+        duration = (datetime.now(timezone.utc) - start_time).total_seconds() / 60
         rto_minutes = int(os.getenv('RTO_TARGET_MINUTES', '240'))
 
         if duration <= rto_minutes:

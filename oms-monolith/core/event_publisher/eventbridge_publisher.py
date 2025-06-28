@@ -123,7 +123,7 @@ class EventBridgeCloudEventsPublisher:
     
     async def _publish_batch(self, events: List[EnhancedCloudEvent]) -> List[PublishResult]:
         """EventBridge 배치 발행"""
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         
         try:
             # CloudEvents를 EventBridge 엔트리로 변환
@@ -144,7 +144,7 @@ class EventBridgeCloudEventsPublisher:
                 
                 if 'EventId' in entry_response:
                     # 성공
-                    latency = (datetime.utcnow() - start_time).total_seconds() * 1000
+                    latency = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
                     results.append(PublishResult(
                         event_id=event.id,
                         success=True,
@@ -283,7 +283,7 @@ class EventBridgeCloudEventsPublisher:
         
         # EventBridge 메타데이터
         detail['eventBridge'] = {
-            'publishedAt': datetime.utcnow().isoformat(),
+            'publishedAt': datetime.now(timezone.utc).isoformat(),
             'eventBusName': self.config.event_bus_name,
             'publisher': 'oms-monolith',
             'version': '1.0'
@@ -302,7 +302,7 @@ class EventBridgeCloudEventsPublisher:
                 'event_bus_name': self.config.event_bus_name,
                 'event_bus_arn': response.get('Arn'),
                 'region': self.config.aws_region,
-                'timestamp': datetime.utcnow().isoformat()
+                'timestamp': datetime.now(timezone.utc).isoformat()
             }
         except Exception as e:
             return {
@@ -310,7 +310,7 @@ class EventBridgeCloudEventsPublisher:
                 'error': str(e),
                 'event_bus_name': self.config.event_bus_name,
                 'region': self.config.aws_region,
-                'timestamp': datetime.utcnow().isoformat()
+                'timestamp': datetime.now(timezone.utc).isoformat()
             }
 
 

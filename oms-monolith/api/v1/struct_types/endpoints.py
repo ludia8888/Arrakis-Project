@@ -248,7 +248,7 @@ async def update_struct_type(
     
     # Update audit fields
     from datetime import datetime
-    struct_type.modified_at = datetime.utcnow()
+    struct_type.modified_at = datetime.(timezone.utc)
     struct_type.modified_by = current_user
     
     # Re-validate and compute

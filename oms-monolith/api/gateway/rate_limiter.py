@@ -55,14 +55,14 @@ class RateLimiter:
 
         # 일일 요청 수 확인
         if self.policy.requests_per_day:
-            day_key = f"{key}:day:{datetime.utcnow().strftime('%Y%m%d')}"
+            day_key = f"{key}:day:{datetime.now(timezone.utc).strftime('%Y%m%d')}"
             day_count = await self._increment_counter(day_key, 86400)
 
             if day_count > self.policy.requests_per_day:
                 return False, {
                     "limit": self.policy.requests_per_day,
                     "window": "day",
-                    "retry_after": int((datetime.utcnow().replace(hour=0, minute=0, second=0) + timedelta(days=1) - datetime.utcnow()).total_seconds())
+                    "retry_after": int((datetime.now(timezone.utc).replace(hour=0, minute=0, second=0) + timedelta(days=1) - datetime.now(timezone.utc)).total_seconds())
                 }
 
         # Burst 확인

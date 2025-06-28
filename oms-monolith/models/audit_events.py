@@ -213,7 +213,7 @@ class AuditEventV1(BaseModel):
             "type": self.type,
             "source": self.source,
             "id": audit_id,
-            "time": (self.time or datetime.utcnow()).isoformat(),
+            "time": (self.time or datetime.now(timezone.utc)).isoformat(),
             "datacontenttype": "application/json",
             "data": {
                 "action": self.action.value,

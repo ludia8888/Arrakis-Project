@@ -254,13 +254,13 @@ async def health_check():
     Returns detailed status of each component with actionable information
     """
     from datetime import datetime
-    monitor = get_monitor()
+    mo = get_monitor()
     
     health_status = {
         "status": "healthy",
         "service": "enhanced-graphql-service",
         "version": "2.0.0",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "components": {},
         "metrics": {},
         "checks_passed": 0,
@@ -270,9 +270,9 @@ async def health_check():
     # Check Redis connectivity and performance
     if redis_client:
         try:
-            start = datetime.utcnow()
+            start = datetime.now(timezone.utc)
             await redis_client.ping()
-            latency_ms = (datetime.utcnow() - start).total_seconds() * 1000
+            latency_ms = (datetime.now(timezone.utc) - start).total_seconds() * 1000
             
             health_status["components"]["redis"] = {
                 "status": "healthy",
@@ -473,7 +473,7 @@ async def readiness_check():
     response = {
         "ready": ready,
         "details": details,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }
     
     if not ready:
@@ -495,7 +495,7 @@ async def graphql_metrics():
     monitor = get_monitor()
     
     metrics = {
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "dataloader": {},
         "cache": {},
         "queries": {},

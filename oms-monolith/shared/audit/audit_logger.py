@@ -36,7 +36,7 @@ class AuditLogger:
     ):
         """감사 이벤트 로그 기록"""
         audit_entry = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "event_type": event_type.value,
             "resource_type": resource_type,
             "resource_id": resource_id,
@@ -59,7 +59,7 @@ class AuditLogger:
     ):
         """동기식 감사 로그 기록"""
         audit_entry = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "event_type": event_type.value,
             "resource_type": resource_type,
             "resource_id": resource_id,

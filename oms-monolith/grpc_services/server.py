@@ -32,7 +32,7 @@ except ImportError:
 
 # Import service implementations
 from core.schema.service import SchemaService
-from core.branch.service import BranchService
+from core.branch.service_factory import get_branch_service
 from models import UserContext
 from utils.logger import get_logger
 
@@ -227,7 +227,7 @@ class SchemaServicer(schema_service_pb2_grpc.SchemaServiceServicer):
 class BranchServicer(branch_service_pb2_grpc.BranchServiceServicer):
     """Enterprise Branch Service gRPC implementation"""
     
-    def __init__(self, branch_service: BranchService):
+    def __init__(self, branch_service):
         self.branch_service = branch_service
         
     async def CreateBranch(self, request, context):
@@ -311,7 +311,7 @@ class EnterpriseGrpcServer:
     def __init__(
         self,
         schema_service: SchemaService,
-        branch_service: BranchService,
+        branch_service,
         port: int = 50051,
         max_workers: int = 10,
         enable_reflection: bool = True,

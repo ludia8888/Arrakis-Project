@@ -1,26 +1,33 @@
 """
-Ontology Management System Enterprise - DB 연결 문제 해결 버전
-SimpleTerminusDBClient 사용으로 실제 데이터 반환
+Ontology Management System Enterprise - TerminusDB Native Migration Complete
+Using production TerminusDBClient with native features
 """
 import asyncio
 import logging
 import os
+import uuid
 from contextlib import asynccontextmanager
 from typing import Dict, Any
 
 from fastapi import FastAPI, HTTPException, Response, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from datetime import datetime
+from fastapi.exceptions import RequestValidationError
+from starlette import status
+from datetime import datetime, timezone
 
 # 수정된 Schema Service 사용
-from core.schema.service_fixed import SchemaService
+from core.schema.service import SchemaService
 from core.validation import ValidationService
-from core.branch import BranchService
+from core.branch import get_branch_service
 from core.history import HistoryService
 
+# Enterprise Validation
+from core.validation.enterprise_service import EnterpriseValidationService, ValidationLevel
+from core.validation.oms_rules import register_oms_validation_rules
+
 # Database
-from database.simple_terminus_client import SimpleTerminusDBClient
+from database.clients.terminus_db import TerminusDBClient
 
 # Event System
 from core.event_publisher import get_event_publisher, EnhancedEventService
@@ -46,6 +53,7 @@ class ServiceContainer:
         
         # Core Services
         self.schema_service = None
+        self.extended_schema_service = None
         self.validation_service = None
         self.branch_service = None
         self.history_service = None
@@ -56,16 +64,21 @@ class ServiceContainer:
         logger.info("Initializing services with fixed DB connection...")
         
         try:
-            # SimpleTerminusDBClient 사용
-            self.db_client = SimpleTerminusDBClient(
+            # Production TerminusDBClient 사용
+            self.db_client = TerminusDBClient(
                 endpoint="http://localhost:6363",
                 username="admin",
-                password="root",
-                database="oms"
+                password="root"
             )
             
-            # DB 연결
-            connected = await self.db_client.connect(timeout=30)
+            # DB 연결 - official pattern: connect(team, key, user, db)
+            connected = await self.db_client.connect(
+                team="admin",
+                key="root", 
+                user="admin",
+                db="oms",
+                timeout=30
+            )
             if not connected:
                 logger.error("Failed to connect to TerminusDB")
             else:
@@ -85,8 +98,36 @@ class ServiceContainer:
             await self.schema_service.initialize()
             logger.info("✅ Schema Service initialized with real DB connection")
             
-            # 다른 서비스들은 일단 None으로 (나중에 수정)
-            self.validation_service = None
+            # Extended Schema Service for all other types
+            from core.schema.extended_service import ExtendedSchemaService
+            self.extended_schema_service = ExtendedSchemaService(
+                tdb_endpoint="http://localhost:6363",
+                event_publisher=self.event_publisher
+            )
+            await self.extended_schema_service.initialize()
+            logger.info("✅ Extended Schema Service initialized")
+            
+            # Initialize Validation Service
+            from core.validation.service_refactored import ValidationServiceRefactored
+            from core.validation.adapters import (
+                SmartCacheAdapter,
+                TerminusDBAdapter,
+                EventPublisherAdapter
+            )
+            
+            # Create adapters for validation service
+            cache_adapter = SmartCacheAdapter(self.cache) if self.cache else None
+            tdb_adapter = TerminusDBAdapter(self.db_client) if self.db_client else None
+            event_adapter = EventPublisherAdapter(self.event_publisher)
+            
+            self.validation_service = ValidationServiceRefactored(
+                cache=cache_adapter,
+                tdb=tdb_adapter,
+                events=event_adapter
+            )
+            logger.info("✅ Validation Service initialized")
+            
+            # 다른 서비스들은 일단 None으로
             self.branch_service = None
             self.history_service = None
             self.event_service = EnhancedEventService()
@@ -125,20 +166,48 @@ async def lifespan(app: FastAPI):
     # 서비스 초기화
     await services.initialize()
     
+    # Enterprise Validation Service 초기화
+    validation_service = EnterpriseValidationService(
+        cache_manager=None,  # TODO: Add SmartCacheManager
+        event_publisher=services.event_publisher,
+        redis_client=None,  # TODO: Add Redis client if needed
+        default_level=ValidationLevel.STANDARD
+    )
+    register_oms_validation_rules(validation_service)
+    app.state.validation_service = validation_service
+    logger.info("✅ Enterprise Validation Service initialized")
+
+    # 모든 서비스를 app.state에 저장하여 일관된 접근 보장
+    app.state.services = services
+    logger.info(f"✅ Services container attached to app.state (id: {id(services)})")
+
+    # Enterprise Validation Service is now available in app.state
+    logger.info("✅ Enterprise Validation Service available for middleware")
+
     yield
     
     # Shutdown
     logger.info("OMS Enterprise (Fixed) shutting down...")
+    if hasattr(app.state, 'validation_service') and hasattr(app.state.validation_service, 'shutdown'):
+        await app.state.validation_service.shutdown()
     await services.shutdown()
 
 
-# FastAPI 앱 생성
+# FastAPI 앱 생성 - 보안 강화
 app = FastAPI(
     title="OMS Enterprise (Fixed)",
     version="2.0.1",
     description="Ontology Management System - DB Connection Fixed",
-    lifespan=lifespan
+    lifespan=lifespan,
+    # 자동 문서화 비활성화 (프로덕션)
+    docs_url="/docs" if os.getenv("ENVIRONMENT", "development") == "development" else None,
+    redoc_url="/redoc" if os.getenv("ENVIRONMENT", "development") == "development" else None,
+    openapi_url="/openapi.json" if os.getenv("ENVIRONMENT", "development") == "development" else None,
 )
+
+# 보안 예외 처리 시스템 등록 - 가장 먼저!
+from core.security.exception_handler import register_exception_handlers
+register_exception_handlers(app)
 
 # Middleware 설정
 # IMPORTANT: Middleware runs in LIFO order for requests (last added = first to run)
@@ -162,9 +231,7 @@ configure_etag_middleware(app)
 from middleware.issue_tracking_middleware import configure_issue_tracking
 configure_issue_tracking(app)
 
-# 4. Audit Middleware (Issue tracking 이후)
-from core.audit.audit_middleware import AuditMiddleware
-app.add_middleware(AuditMiddleware)
+# 4. Audit Middleware (Removed - legacy)
 
 # 5. Schema Freeze Middleware
 from middleware.schema_freeze_middleware import SchemaFreezeMiddleware
@@ -178,18 +245,31 @@ app.add_middleware(ScopeRBACMiddleware)
 from middleware.rbac_middleware import RBACMiddleware
 app.add_middleware(RBACMiddleware)
 
-# 8. Authentication Middleware (마지막에 추가, 가장 먼저 실행)
+# 8. Enterprise Validation Middleware
+# Note: validation_service will be set in lifespan
+from middleware.enterprise_validation import EnterpriseValidationMiddleware
+app.add_middleware(EnterpriseValidationMiddleware)
+
+# 9. Authentication Middleware (마지막에 추가, 가장 먼저 실행)
 # MUST run first to set request.state.user
-# Use MSA authentication if configured
-USE_MSA_AUTH = os.getenv("USE_MSA_AUTH", "false").lower() == "true"
-if USE_MSA_AUTH:
-    from middleware.auth_middleware_msa import MSAAuthMiddleware
-    logger.info("Using MSA Authentication via IAM Service")
-    app.add_middleware(MSAAuthMiddleware)
+
+# Check if bypass auth is enabled for testing
+BYPASS_AUTH = os.getenv("BYPASS_AUTH", "false").lower() == "true"
+if BYPASS_AUTH:
+    from middleware.mock_auth_middleware import MockAuthMiddleware
+    logger.info("⚠️  BYPASS AUTH ENABLED - Using mock authentication for testing")
+    app.add_middleware(MockAuthMiddleware)
 else:
-    from middleware.auth_middleware import AuthMiddleware
-    logger.info("Using legacy authentication")
-    app.add_middleware(AuthMiddleware)
+    # Use MSA authentication if configured
+    USE_MSA_AUTH = os.getenv("USE_MSA_AUTH", "false").lower() == "true"
+    if USE_MSA_AUTH:
+        from middleware.auth_middleware_msa import MSAAuthMiddleware
+        logger.info("Using MSA Authentication via IAM Service")
+        app.add_middleware(MSAAuthMiddleware)
+    else:
+        from middleware.auth_middleware import AuthMiddleware
+        logger.info("Using legacy authentication")
+        app.add_middleware(AuthMiddleware)
 
 
 # === Health & Status ===
@@ -225,7 +305,7 @@ async def health_check_detailed(request: Request):
 @app.get("/health/live")
 async def liveness_probe():
     """Kubernetes liveness probe - basic check if service is running"""
-    return {"status": "alive", "timestamp": datetime.utcnow().isoformat()}
+    return {"status": "alive", "timestamp": datetime.now(timezone.utc).isoformat()}
 
 @app.get("/health/ready")
 async def readiness_probe():
@@ -260,32 +340,60 @@ async def root():
 # === Metrics Endpoint ===
 @app.get("/metrics")
 async def metrics():
-    """Prometheus metrics endpoint"""
-    from prometheus_client import generate_latest
+    """Prometheus metrics endpoint with graceful fallback"""
+    try:
+        from prometheus_client import generate_latest  # type: ignore
+        prometheus_available = True
+    except ImportError:
+        prometheus_available = False
+
     from middleware.etag_analytics import get_etag_analytics
-    
-    # Get ETag analytics
-    analytics = get_etag_analytics()
-    summary = analytics.get_performance_summary()
-    
-    # Add custom metrics info
-    metrics_content = generate_latest().decode('utf-8')
-    
-    # Add ETag analytics summary as comments
-    etag_summary = f"""
-# ETag Analytics Summary
-# Total Requests: {summary['total_requests']}
-# Cache Hit Rate: {summary['cache_hit_rate']:.2%}
-# Avg Response Time: {summary['avg_response_time_ms']:.2f}ms
-# P95 Response Time: {summary['p95_response_time_ms']:.2f}ms
-# P99 Response Time: {summary['p99_response_time_ms']:.2f}ms
-"""
-    
+
+    # Get ETag analytics safely
+    try:
+        analytics = get_etag_analytics()
+        summary = analytics.get_performance_summary()
+    except Exception as e:
+        logger.warning(f"Failed to gather ETag analytics: {e}")
+        summary = {
+            "total_requests": 0,
+            "cache_hit_rate": 0.0,
+            "avg_response_time_ms": 0.0,
+            "p95_response_time_ms": 0.0,
+            "p99_response_time_ms": 0.0,
+        }
+
+    # Build ETag summary block
+    etag_summary = (
+        "# ETag Analytics Summary\n" \
+        f"# Total Requests: {summary['total_requests']}\n" \
+        f"# Cache Hit Rate: {summary['cache_hit_rate']:.2%}\n" \
+        f"# Avg Response Time: {summary['avg_response_time_ms']:.2f}ms\n" \
+        f"# P95 Response Time: {summary['p95_response_time_ms']:.2f}ms\n" \
+        f"# P99 Response Time: {summary['p99_response_time_ms']:.2f}ms\n"
+    )
+
+    if prometheus_available:
+        try:
+            metrics_content = generate_latest().decode("utf-8")
+        except Exception as e:
+            logger.error(f"Prometheus generate_latest failed: {e}")
+            metrics_content = ""
+    else:
+        # Fallback: dump internal MetricsCollector values as JSON
+        from shared.monitoring.metrics import metrics_collector
+        import json
+        metrics_snapshot = json.dumps(metrics_collector.get_metrics(), ensure_ascii=False, indent=2)
+        metrics_content = "# Prometheus client not installed or failed.\n" + metrics_snapshot
+
     return Response(
         content=etag_summary + metrics_content,
         media_type="text/plain; version=0.0.4; charset=utf-8"
     )
 
+
+# === Enterprise Validation Service ===
+# EnterpriseValidationService와 관련 imports는 파일 상단에 이미 있음
 
 # === Schema Management API (Fixed) ===
 @app.get("/api/v1/schemas/{branch}/object-types")
@@ -335,8 +443,8 @@ async def create_object_type(branch: str, request: Dict[str, Any]):
 
 
 # Include RBAC test routes
-from api.v1.rbac_test_routes import router as rbac_test_router
-app.include_router(rbac_test_router)
+# from api.v1.rbac_test_routes import router as rbac_test_router  # REMOVED: Module not found
+# app.include_router(rbac_test_router)  # REMOVED: Module not found
 
 # Include Branch Lock Management routes
 from api.v1.branch_lock_routes import router as branch_lock_router
@@ -361,6 +469,14 @@ app.include_router(idempotent_router)
 # Include Batch routes for GraphQL DataLoader support
 from api.v1.batch_routes import router as batch_router
 app.include_router(batch_router)
+
+# Include Schema Management routes
+from api.v1.schema_routes import router as schema_router
+app.include_router(schema_router)
+
+# Include Validation routes
+from api.v1.validation_routes import router as validation_router
+app.include_router(validation_router)
 
 
 # === GraphQL Integration ===
@@ -406,6 +522,10 @@ else:
     logger.info("Test routes disabled per environment configuration")
 
 
+# === Custom Exception Handlers ===
+# Exception handler is already registered in app creation
+
+
 if __name__ == "__main__":
     import uvicorn
     
@@ -417,20 +537,5 @@ if __name__ == "__main__":
         log_level="info"
     )
 
-# LIFE-CRITICAL STARTUP TIMEOUT PROTECTION
-import signal
-import sys
-
-def startup_timeout_handler(signum, frame):
-    """Handle startup timeout - prevent infinite hangs during service start"""
-    print("FATAL: Service startup timed out after 60 seconds")
-    print("This indicates a deadlock or infinite loop that could be fatal in production")
-    sys.exit(1)
-
-# Set startup timeout - service MUST start within 60 seconds
-signal.signal(signal.SIGALRM, startup_timeout_handler)
-signal.alarm(60)
-
-def startup_completed():
-    """Call this when startup is complete to disable timeout"""
-    signal.alarm(0)  # Disable startup timeout
+# STARTUP TIMEOUT DISABLED FOR DEVELOPMENT
+# Note: Re-enable for production deployments

@@ -6,13 +6,13 @@ from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 
 from core.auth import UserContext
 from middleware.auth_middleware import get_current_user
-from core.schema.service_fixed import SchemaService
-from core.branch import BranchService
-from database.simple_terminus_client import SimpleTerminusDBClient
+from core.schema.service import SchemaService
+from core.branch import get_branch_service, IBranchService
+from database.clients.terminus_db import TerminusDBClient
 from utils.logger import get_logger
 from shared.cache.smart_cache import SmartCacheManager
 
@@ -54,11 +54,10 @@ async def get_schema_service() -> SchemaService:
     """Get schema service instance"""
     # In production, this would come from the service container
     # For now, we'll create a new instance
-    db_client = SimpleTerminusDBClient(
+    db_client = TerminusDBClient(
         endpoint="http://localhost:6363",
         username="admin", 
-        password="root",
-        database="oms"
+        password="root"
     )
     
     service = SchemaService(
@@ -69,10 +68,10 @@ async def get_schema_service() -> SchemaService:
     return service
 
 
-async def get_branch_service() -> BranchService:
+async def get_branch_service_instance() -> IBranchService:
     """Get branch service instance"""
     # In production, this would come from the service container
-    return BranchService()
+    return get_branch_service()
 
 
 # Schema Batch Endpoints
@@ -127,7 +126,7 @@ async def batch_get_object_types(
         return {
             "data": data,
             "count": len(data),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
     except Exception as e:
@@ -182,7 +181,7 @@ async def batch_get_properties(
                         if request.include_metadata and isinstance(prop_data, dict):
                             # Add metadata if requested
                             prop_data['metadata'] = {
-                                'created_at': datetime.utcnow().isoformat(),
+                                'created_at': datetime.now(timezone.utc).isoformat(),
                                 'indexed': False,
                                 'required': False
                             }
@@ -192,7 +191,7 @@ async def batch_get_properties(
         return {
             "data": data,
             "count": sum(len(props) for props in data.values()),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
     except Exception as e:
@@ -249,7 +248,7 @@ async def batch_get_link_types(
         return {
             "data": data,
             "count": len(data),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
     except Exception as e:
@@ -265,7 +264,7 @@ async def batch_get_link_types(
 async def batch_get_branches(
     request: BatchBranchesRequest,
     current_user: UserContext = Depends(get_current_user),
-    branch_service: BranchService = Depends(get_branch_service)
+    branch_service: IBranchService = Depends(get_branch_service_instance)
 ):
     """
     Batch load multiple branches by IDs.
@@ -273,14 +272,14 @@ async def batch_get_branches(
     try:
         logger.info(f"Batch loading {len(request.ids)} branches")
         
-        # For now, return mock data since BranchService isn't fully implemented
+        # For now, return mock data since IBranchService isn't fully implemented
         # In production, this would call actual branch service methods
         data = {}
         for branch_id in request.ids:
             data[branch_id] = {
                 "id": branch_id,
                 "name": branch_id,
-                "created_at": datetime.utcnow().isoformat(),
+                "created_at": datetime.now(timezone.utc).isoformat(),
                 "created_by": "system",
                 "parent_branch": "main" if branch_id != "main" else None,
                 "is_locked": False
@@ -289,7 +288,7 @@ async def batch_get_branches(
             if request.include_state:
                 data[branch_id]["state"] = {
                     "commit_hash": "abc123",
-                    "last_modified": datetime.utcnow().isoformat(),
+                    "last_modified": datetime.now(timezone.utc).isoformat(),
                     "object_count": 42,
                     "is_dirty": False
                 }
@@ -297,7 +296,7 @@ async def batch_get_branches(
         return {
             "data": data,
             "count": len(data),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
     except Exception as e:
@@ -312,7 +311,7 @@ async def batch_get_branches(
 async def batch_get_branch_states(
     request: BatchRequest,
     current_user: UserContext = Depends(get_current_user),
-    branch_service: BranchService = Depends(get_branch_service)
+    branch_service: IBranchService = Depends(get_branch_service_instance)
 ):
     """
     Batch load branch states for multiple branches.
@@ -326,7 +325,7 @@ async def batch_get_branch_states(
             data[branch_id] = {
                 "branch_id": branch_id,
                 "commit_hash": f"hash_{branch_id}_123",
-                "last_modified": datetime.utcnow().isoformat(),
+                "last_modified": datetime.now(timezone.utc).isoformat(),
                 "object_count": 42,
                 "property_count": 128,
                 "link_count": 64,
@@ -338,7 +337,7 @@ async def batch_get_branch_states(
         return {
             "data": data,
             "count": len(data),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
     except Exception as e:
@@ -379,5 +378,5 @@ async def get_batch_metrics(
                 "avg_response_time_ms": 40.3
             }
         },
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }

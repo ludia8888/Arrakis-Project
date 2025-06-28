@@ -267,7 +267,7 @@ class ChangeDetector:
             "id": event_id,
             "type": event_type,
             "payload": json.dumps(payload),
-            "created_at": datetime.utcnow().isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "status": "pending",
             "retry_count": 0
         }

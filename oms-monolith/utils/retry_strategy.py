@@ -144,7 +144,7 @@ class CircuitBreaker:
     def record_failure(self):
         """Record a failed operation"""
         self.failure_count += 1
-        self.last_failure_time = datetime.utcnow()
+        self.last_failure_time = datetime.now(timezone.utc)
 
         if self.failure_count >= self.config.circuit_breaker_threshold:
             self.state = CircuitState.OPEN
@@ -159,7 +159,7 @@ class CircuitBreaker:
         if self.state == CircuitState.OPEN:
             # Check if timeout has passed
             if self.last_failure_time and \
-               (datetime.utcnow() - self.last_failure_time).total_seconds() > self.config.circuit_breaker_timeout:
+               (datetime.now(timezone.utc) - self.last_failure_time).total_seconds() > self.config.circuit_breaker_timeout:
                 self.state = CircuitState.HALF_OPEN
                 self.half_open_attempts = 0
                 circuit_breaker_state.labels(operation=self.operation).set(CircuitState.HALF_OPEN.value)

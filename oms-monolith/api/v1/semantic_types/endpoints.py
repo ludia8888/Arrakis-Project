@@ -203,8 +203,8 @@ async def update_semantic_type(
         setattr(semantic_type, field, value)
     
     # Update audit fields
-    from datetime import datetime
-    semantic_type.modified_at = datetime.utcnow()
+    from datetime import datetime, timezone
+    semantic_type.modified_at = datetime.now(timezone.utc)
     semantic_type.modified_by = current_user
     
     # Re-register to update

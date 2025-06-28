@@ -51,7 +51,7 @@ class BreakingChange:
 
     def __post_init__(self):
         if self.detected_at is None:
-            self.detected_at = datetime.utcnow()
+            self.detected_at = datetime.now(timezone.utc)
 
 
 @dataclass
@@ -73,7 +73,7 @@ class ValidationResult:
 
     def __post_init__(self):
         if self.timestamp is None:
-            self.timestamp = datetime.utcnow()
+            self.timestamp = datetime.now(timezone.utc)
 
     @property
     def has_critical_changes(self) -> bool:
@@ -164,7 +164,7 @@ class MigrationPlan:
 
     def __post_init__(self):
         if self.created_at is None:
-            self.created_at = datetime.utcnow()
+            self.created_at = datetime.now(timezone.utc)
 
     def add_phase(self, name: str, steps: List[MigrationStep]):
         """Add a migration phase with steps"""

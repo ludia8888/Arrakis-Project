@@ -30,34 +30,15 @@ class BranchServiceFactory:
         if cls._instance is not None and not force_new:
             return cls._instance
         
-        # Check feature flag
-        use_terminus_native = getattr(settings, 'USE_TERMINUS_NATIVE_BRANCH', False)
+        # Always use TerminusDB Native Branch Service (legacy code removed)
+        logger.info("Creating TerminusDB Native Branch Service")
+        from core.branch.terminus_adapter import TerminusNativeBranchService
         
-        if use_terminus_native:
-            logger.info("Creating TerminusDB Native Branch Service")
-            from core.branch.terminus_adapter import TerminusNativeBranchService
-            
-            cls._instance = TerminusNativeBranchService(
-                terminus_url=getattr(settings, 'TERMINUS_SERVER_URL', 'http://localhost:6363'),
-                database=getattr(settings, 'TERMINUS_DB', 'ontology_db'),
-                organization=getattr(settings, 'TERMINUS_ORGANIZATION', 'admin')
-            )
-        else:
-            logger.info("Creating Legacy Branch Service")
-            from core.branch.service import BranchService
-            from core.branch.diff_engine import DiffEngine
-            from core.branch.conflict_resolver import ConflictResolver
-            
-            # Legacy service initialization with required dependencies
-            tdb_endpoint = getattr(settings, 'TERMINUS_SERVER_URL', 'http://localhost:6363')
-            diff_engine = DiffEngine(tdb_endpoint)
-            conflict_resolver = ConflictResolver()
-            
-            cls._instance = BranchService(
-                tdb_endpoint=tdb_endpoint,
-                diff_engine=diff_engine,
-                conflict_resolver=conflict_resolver
-            )
+        cls._instance = TerminusNativeBranchService(
+            terminus_url=getattr(settings, 'TERMINUS_SERVER_URL', 'http://localhost:16363'),
+            database=getattr(settings, 'TERMINUS_DB', 'ontology_db'),
+            organization=getattr(settings, 'TERMINUS_ORGANIZATION', 'admin')
+        )
         
         return cls._instance
     

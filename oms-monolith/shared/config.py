@@ -23,7 +23,7 @@ class SharedConfig:
         self.jwt_expiration_minutes = int(os.getenv("ONTOLOGY_JWT_EXPIRATION_MINUTES", "30"))
         
         # 데이터베이스 설정
-        self.database_url = os.getenv("ONTOLOGY_DATABASE_URL", "http://localhost:6363")
+        self.database_url = os.getenv("ONTOLOGY_DATABASE_URL", "http://localhost:16363")
         self.database_username = os.getenv("ONTOLOGY_DATABASE_USERNAME", "admin")
         self.database_password = os.getenv("ONTOLOGY_DATABASE_PASSWORD", "root")
         
@@ -39,15 +39,15 @@ class SharedConfig:
         self.log_level = os.getenv("ONTOLOGY_LOG_LEVEL", "INFO")
         self.log_format = os.getenv("ONTOLOGY_LOG_FORMAT", "json")
         
-        # TerminusDB Native Feature Flags
-        self.USE_TERMINUS_NATIVE_BRANCH = os.getenv("USE_TERMINUS_NATIVE_BRANCH", "false").lower() == "true"
-        self.USE_TERMINUS_NATIVE_MERGE = os.getenv("USE_TERMINUS_NATIVE_MERGE", "false").lower() == "true"
-        self.USE_TERMINUS_NATIVE_DIFF = os.getenv("USE_TERMINUS_NATIVE_DIFF", "false").lower() == "true"
-        self.USE_UNIFIED_MERGE_ENGINE = os.getenv("USE_UNIFIED_MERGE_ENGINE", "true").lower() == "true"
+        # TerminusDB Native Features - Now Permanently Enabled
+        self.USE_TERMINUS_NATIVE_BRANCH = True  # Legacy code removed, always use native
+        self.USE_TERMINUS_NATIVE_MERGE = True   # Legacy code removed, always use native
+        self.USE_TERMINUS_NATIVE_DIFF = True    # Legacy code removed, always use native
+        self.USE_UNIFIED_MERGE_ENGINE = True    # Consolidated to single engine
         
         # TerminusDB Connection Settings
-        self.TERMINUS_SERVER_URL = os.getenv("TERMINUS_SERVER_URL", "http://localhost:6363")
-        self.TERMINUS_DB = os.getenv("TERMINUS_DB", "ontology_db")
+        self.TERMINUS_SERVER_URL = os.getenv("TERMINUS_SERVER_URL", "http://localhost:16363")
+        self.TERMINUS_DB = os.getenv("TERMINUS_DB", "oms_test")
         self.TERMINUS_ORGANIZATION = os.getenv("TERMINUS_ORGANIZATION", "admin")
 
 # 전역 설정 인스턴스

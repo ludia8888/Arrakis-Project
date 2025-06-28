@@ -46,6 +46,9 @@ class TerminusDBClient:
         self.use_connection_pool = use_connection_pool
         self.client = None
         self.pool_config = None
+        self.connected = False
+        self.team = None
+        self.db = None
 
         # TerminusDB 내부 캐싱 설정
         self.cache_size = int(os.getenv("TERMINUSDB_LRU_CACHE_SIZE", "500000000"))  # 500MB
@@ -89,7 +92,7 @@ class TerminusDBClient:
 
                 self.client = httpx.AsyncClient(
                     verify=ssl_context,
-                    timeout=30.0,
+                    timeout=httpx.Timeout(5.0, connect=3.0),
                     auth=(self.username, self.password),
                     headers={'Content-Type': 'application/json'}
                 )
@@ -105,16 +108,60 @@ class TerminusDBClient:
                 self.use_mtls = False
                 self.client = httpx.AsyncClient(
                     auth=(self.username, self.password),
-                    timeout=30.0,
+                    timeout=httpx.Timeout(5.0, connect=3.0),
                     headers={'Content-Type': 'application/json'}
                 )
         else:
             # HTTP 모드 - 기본 인증 포함
             self.client = httpx.AsyncClient(
                 auth=(self.username, self.password),
-                timeout=30.0,
+                timeout=httpx.Timeout(5.0, connect=3.0),
                 headers={'Content-Type': 'application/json'}
             )
+
+    async def connect(self, team: str = "admin", key: str = "root", user: str = "admin", db: str = "oms", timeout: int = 30) -> bool:
+        """
+        Connect to TerminusDB with the official client pattern
+        Following the pattern from the documentation: client.connect(team="root", key="root", user="root", db="aircargo")
+        """
+        try:
+            if not self.client:
+                await self._initialize_client()
+            
+            # Store connection parameters
+            self.team = team
+            self.db = db
+            self.username = user
+            self.password = key
+            
+            # Test the connection by pinging the server
+            response = await self.client.get(f"{self.endpoint}/api/info", timeout=timeout)
+            if response.status_code == 200:
+                # Try to create database if it doesn't exist
+                try:
+                    await self.create_database(db, f"{db} Database")
+                except Exception as e:
+                    # Database might already exist, that's ok
+                    logger.debug(f"Database creation skipped (might exist): {e}")
+                
+                self.connected = True
+                logger.info(f"✅ Connected to TerminusDB at {self.endpoint} - team: {team}, db: {db}")
+                return True
+            else:
+                logger.error(f"Failed to connect to TerminusDB: HTTP {response.status_code}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"TerminusDB connection failed: {e}")
+            self.connected = False
+            return False
+
+    async def disconnect(self):
+        """Disconnect from TerminusDB"""
+        self.connected = False
+        self.team = None
+        self.db = None
+        await self.close()
 
     async def close(self):
         """클라이언트 종료"""

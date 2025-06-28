@@ -8,7 +8,7 @@ Generates automatic graph indexes for link types to optimize traversal performan
 import hashlib
 import json
 from typing import Dict, List, Optional, Set, Tuple, Any
-from datetime import datetime
+from datetime import datetime, timezone
 from pydantic import BaseModel, Field
 
 from models.domain import LinkType, ObjectType
@@ -24,7 +24,7 @@ class GraphIndex(BaseModel):
     index_type: str = Field(..., description="Type of index (src_dst, dst_src, composite)")
     key_pattern: str = Field(..., description="Key pattern for the index")
     metadata: Dict[str, Any] = Field(default_factory=dict)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     
     # Performance metrics
     estimated_cardinality: Optional[int] = None
@@ -230,7 +230,7 @@ class GraphIndexGenerator:
         # 3. Add bloom filters for existence checks
         index.metadata["cache_enabled"] = True
         index.metadata["bloom_filter"] = True
-        index.last_optimized = datetime.utcnow()
+        index.last_optimized = datetime.now(timezone.utc)
     
     def _optimize_composite_index(self, index: GraphIndex) -> None:
         """Apply composite index optimizations"""
@@ -240,7 +240,7 @@ class GraphIndexGenerator:
         # 3. Implement path caching
         index.metadata["path_materialization"] = True
         index.metadata["path_compression"] = True
-        index.last_optimized = datetime.utcnow()
+        index.last_optimized = datetime.now(timezone.utc)
     
     def get_traversal_path(
         self,
@@ -296,7 +296,7 @@ class GraphIndexGenerator:
             "indexes": [],
             "metadata": {
                 "version": "1.0",
-                "created_at": datetime.utcnow().isoformat(),
+                "created_at": datetime.now(timezone.utc).isoformat(),
                 "index_count": len(self.indexes)
             }
         }

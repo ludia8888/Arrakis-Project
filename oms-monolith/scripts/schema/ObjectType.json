@@ -1,0 +1,8 @@
+{
+  "@type": "Class",
+  "@id": "ObjectType",
+  "@key": { "@type": "Lexical", "@fields": ["name"] },
+  "name": "xsd:string",
+  "displayName": "xsd:string",
+  "description": "xsd:string"
+}

@@ -111,7 +111,7 @@ class Property(BaseModel):
         """설계 의도: DB camelCase → 도메인 snake_case 변환 (Doc 8.1.2 참조)"""
         from datetime import datetime
 
-        # Validate required fields per ADR-007 defensive pattern
+        # Validate required fields per ADR-007 defe pattern
         required_fields = ["id", "objectTypeId", "name", "displayName", "dataTypeId", "versionHash"]
         missing = [f for f in required_fields if f not in doc or doc[f] is None]
         if missing:
@@ -120,11 +120,11 @@ class Property(BaseModel):
         # Parse datetime safely with defensive checks
         def parse_datetime(value: Any) -> datetime:
             if not value:
-                return datetime.utcnow()
+                return datetime.now(timezone.utc)
             if isinstance(value, str):
                 # TerminusDB returns ISO format with Z suffix
                 return datetime.fromisoformat(value.replace("Z", "+00:00"))
-            return datetime.utcnow()
+            return datetime.now(timezone.utc)
 
         return cls(
             id=doc["id"],  # type: ignore[arg-type] # Validated above, TerminusDB returns str
@@ -188,7 +188,7 @@ class ObjectType(BaseModel):
         """설계 의도: DB camelCase → 도메인 snake_case 변환 (Doc 8.1.2 참조)"""
         from datetime import datetime
 
-        # Validate required fields per ADR-007 defensive pattern
+        # Validate required fields per ADR-007 defe pattern
         required_fields = ["id", "name", "displayName", "versionHash", "createdBy", "modifiedBy"]
         missing = [f for f in required_fields if f not in doc or doc[f] is None]
         if missing:
@@ -197,11 +197,11 @@ class ObjectType(BaseModel):
         # Parse datetime safely with defensive checks
         def parse_datetime(value: Any) -> datetime:
             if not value:
-                return datetime.utcnow()
+                return datetime.now(timezone.utc)
             if isinstance(value, str):
                 # TerminusDB returns ISO format with Z suffix
                 return datetime.fromisoformat(value.replace("Z", "+00:00"))
-            return datetime.utcnow()
+            return datetime.now(timezone.utc)
 
         return cls(
             id=doc["id"],  # type: ignore[arg-type] # Validated above, TerminusDB returns str
@@ -251,6 +251,27 @@ class ObjectTypeUpdate(BaseModel):
     is_abstract: Optional[bool] = None
     icon: Optional[str] = None
     color: Optional[str] = None
+
+
+class PropertyCreate(BaseModel):
+    """Property creation model - snake_case for Python convention"""
+    name: str = Field(..., pattern="^[a-zA-Z][a-zA-Z0-9_]*$")
+    display_name: str
+    description: Optional[str] = None
+    data_type_id: str
+    is_required: bool = False
+    is_indexed: bool = False
+    is_unique: bool = False
+    default_value: Optional[Any] = None
+
+
+class PropertyUpdate(BaseModel):
+    """Property update model"""
+    display_name: Optional[str] = None
+    description: Optional[str] = None
+    is_required: Optional[bool] = None
+    is_indexed: Optional[bool] = None
+    default_value: Optional[Any] = None
 
 
 class LinkType(BaseModel):

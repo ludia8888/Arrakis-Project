@@ -2,7 +2,7 @@
 Validation Service 도메인 모델
 섹션 8.3의 Validation Service 명세 구현
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
@@ -91,7 +91,7 @@ class ValidationResult(BaseModel):
     impact_analysis: Optional[Dict[str, Any]] = None
     suggested_migrations: List[str] = Field(default_factory=list)
     performance_metrics: Optional[Dict[str, Any]] = None
-    validated_at: datetime = Field(default_factory=datetime.utcnow)
+    validated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     rule_execution_results: Dict[str, Any] = Field(default_factory=dict)
 
 

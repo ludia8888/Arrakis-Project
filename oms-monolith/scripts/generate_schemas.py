@@ -62,7 +62,7 @@ async def load_schema_data(dry_run: bool = False) -> tuple[list[ObjectType], lis
         object_types = [
             ObjectType(
                 id="User",
-                name="User",
+                ="User",
                 display_name="User",
                 status=Status.ACTIVE,
                 properties=[
@@ -76,8 +76,8 @@ async def load_schema_data(dry_run: bool = False) -> tuple[list[ObjectType], lis
                         is_primary_key=True,
                         visibility="VISIBLE",
                         version_hash="test",
-                        created_at=datetime.utcnow(),
-                        modified_at=datetime.utcnow()
+                        created_at=datetime.now(timezone.utc),
+                        modified_at=datetime.now(timezone.utc)
                     ),
                     Property(
                         id="user_name",
@@ -88,15 +88,15 @@ async def load_schema_data(dry_run: bool = False) -> tuple[list[ObjectType], lis
                         is_required=True,
                         visibility="VISIBLE",
                         version_hash="test",
-                        created_at=datetime.utcnow(),
-                        modified_at=datetime.utcnow()
+                        created_at=datetime.now(timezone.utc),
+                        modified_at=datetime.now(timezone.utc)
                     )
                 ],
                 version_hash="test",
                 created_by="system",
-                created_at=datetime.utcnow(),
+                created_at=datetime.now(timezone.utc),
                 modified_by="system",
-                modified_at=datetime.utcnow()
+                modified_at=datetime.now(timezone.utc)
             ),
             ObjectType(
                 id="Post",
@@ -114,8 +114,8 @@ async def load_schema_data(dry_run: bool = False) -> tuple[list[ObjectType], lis
                         is_primary_key=True,
                         visibility="VISIBLE",
                         version_hash="test",
-                        created_at=datetime.utcnow(),
-                        modified_at=datetime.utcnow()
+                        created_at=datetime.now(timezone.utc),
+                        modified_at=datetime.now(timezone.utc)
                     ),
                     Property(
                         id="post_title",
@@ -126,15 +126,15 @@ async def load_schema_data(dry_run: bool = False) -> tuple[list[ObjectType], lis
                         is_required=True,
                         visibility="VISIBLE",
                         version_hash="test",
-                        created_at=datetime.utcnow(),
-                        modified_at=datetime.utcnow()
+                        created_at=datetime.now(timezone.utc),
+                        modified_at=datetime.now(timezone.utc)
                     )
                 ],
                 version_hash="test",
                 created_by="system",
-                created_at=datetime.utcnow(),
+                created_at=datetime.now(timezone.utc),
                 modified_by="system",
-                modified_at=datetime.utcnow()
+                modified_at=datetime.now(timezone.utc)
             )
         ]
         
@@ -152,9 +152,9 @@ async def load_schema_data(dry_run: bool = False) -> tuple[list[ObjectType], lis
                 status=Status.ACTIVE,
                 versionHash="test",
                 createdBy="system",
-                createdAt=datetime.utcnow(),
+                createdAt=datetime.now(timezone.utc),
                 modifiedBy="system",
-                modifiedAt=datetime.utcnow()
+                modifiedAt=datetime.now(timezone.utc)
             )
         ]
         

@@ -45,7 +45,7 @@ class ETagAnalytics:
         etag: Optional[str] = None
     ):
         """Record an ETag request for analytics"""
-        timestamp = datetime.utcnow()
+        timestamp = datetime.now(timezone.utc)
         
         request_data = {
             "timestamp": timestamp,
@@ -87,7 +87,7 @@ class ETagAnalytics:
     
     def get_performance_summary(self, resource_type: Optional[str] = None) -> Dict:
         """Get comprehensive performance summary"""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         cutoff = now - self.window_size
         
         if resource_type:
@@ -141,7 +141,7 @@ class ETagAnalytics:
             by_resource[resource_type] = self.get_performance_summary(resource_type)
         
         return {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "global": summary,
             "by_resource_type": by_resource,
             "prometheus_metrics": generate_latest().decode('utf-8')

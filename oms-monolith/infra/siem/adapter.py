@@ -40,7 +40,7 @@ class SiemHttpAdapter(ISiemPort):
             
             # SIEM 형식으로 래핑
             siem_event = {
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "event_type": event_type,
                 "source": "oms_validation",
                 "data": payload
@@ -65,7 +65,7 @@ class SiemHttpAdapter(ISiemPort):
             
             # SIEM 배치 형식으로 래핑
             batch_payload = {
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "source": "oms_validation",
                 "events": events
             }
@@ -129,7 +129,7 @@ class MockSiemAdapter(ISiemPort):
         """Mock 이벤트 저장"""
         self.send_count += 1
         self.events.append({
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "event_type": event_type,
             "data": payload
         })
@@ -240,7 +240,7 @@ class BufferedSiemAdapter(ISiemPort):
         event = {
             "type": event_type,
             "payload": payload,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
         self.buffer.append(event)

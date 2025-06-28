@@ -15,7 +15,7 @@ Key Features:
 from typing import Dict, List, Set, Optional, Tuple
 from datetime import datetime
 from dataclasses import dataclass, field
-import asyncio
+import asy
 from collections import defaultdict, deque
 
 from utils.logger import get_logger
@@ -75,7 +75,7 @@ class DAGCompactionEngine:
         - Merge commits
         - Compaction opportunities
         """
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         
         # Build the DAG structure
         visited = set()
@@ -116,7 +116,7 @@ class DAGCompactionEngine:
             if len(chain) > 2:  # Only chains with 3+ nodes are worth compacting
                 linear_chains.append(chain)
         
-        analysis_time = (datetime.utcnow() - start_time).total_seconds() * 1000
+        analysis_time = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
         
         return {
             "total_nodes": len(visited),
@@ -179,7 +179,7 @@ class DAGCompactionEngine:
             Compaction results including statistics
         """
         logger.info(f"Starting DAG compaction from {len(root_commits)} roots")
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         
         # First analyze the DAG
         analysis = await self.analyze_dag(root_commits)
@@ -202,7 +202,7 @@ class DAGCompactionEngine:
         self.compaction_stats["original_nodes"] = analysis["total_nodes"]
         self.compaction_stats["compacted_nodes"] = len(compacted_chains)
         self.compaction_stats["compaction_time_ms"] = (
-            datetime.utcnow() - start_time
+            datetime.now(timezone.utc) - start_time
         ).total_seconds() * 1000
         
         return {
@@ -231,7 +231,7 @@ class DAGCompactionEngine:
             "chain_start": chain[0],
             "chain_end": chain[-1],
             "compacted_commits": chain[1:-1],
-            "timestamp": datetime.utcnow(),
+            "timestamp": datetime.now(timezone.utc),
             "schema_transitions": await self._get_schema_transitions(chain)
         }
         
@@ -362,7 +362,7 @@ class IncrementalCompactor:
         self.engine = compaction_engine
         self.compaction_threshold = 100  # Compact when chain reaches this length
         self.running = False
-        self.last_compaction = datetime.utcnow()
+        self.last_compaction = datetime.now(timezone.utc)
         
     async def start(self):
         """Start incremental compaction background task"""

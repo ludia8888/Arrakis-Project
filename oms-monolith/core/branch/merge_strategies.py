@@ -3,7 +3,7 @@ Advanced Merge Strategies
 섹션 8.2의 Squash/Rebase 머지 전략 구현
 """
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List
 
 from core.branch.models import (
@@ -47,7 +47,7 @@ class MergeStrategyImplementor:
                 raise ValueError("No changes to squash merge")
 
             # 2. 타겟 브랜치에서 새 브랜치 생성 (임시)
-            temp_branch = f"temp_squash_{proposal.id}_{int(datetime.utcnow().timestamp())}"
+            temp_branch = f"temp_squash_{proposal.id}_{int(datetime.now(timezone.utc).timestamp())}"
 
             await self.tdb.create_branch(
                 branch_name=temp_branch,
@@ -125,7 +125,7 @@ class MergeStrategyImplementor:
                 raise ValueError("No commits to rebase")
 
             # 3. 임시 rebase 브랜치 생성
-            rebase_branch = f"temp_rebase_{proposal.id}_{int(datetime.utcnow().timestamp())}"
+            rebase_branch = f"temp_rebase_{proposal.id}_{int(datetime.now(timezone.utc).timestamp())}"
 
             await self.tdb.create_branch(
                 branch_name=rebase_branch,

@@ -5,7 +5,7 @@ Handles events from IAM service for role/permission synchronization
 import asyncio
 import json
 from typing import Dict, Any, Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 
 from shared.events.cloudevents_enhanced import EnhancedCloudEvent
 from utils.logger import get_logger
@@ -85,7 +85,7 @@ class IAMEventHandler:
                 "name": role_name,
                 "permissions": permissions,
                 "scopes": scopes,
-                "updated_at": datetime.utcnow().isoformat()
+                "updated_at": datetime.now(timezone.utc).isoformat()
             }
             await self.cache_service.set(
                 f"role:{role_id}",
@@ -155,7 +155,7 @@ class IAMEventHandler:
             permission_entry = {
                 "permission": permission,
                 "resource": resource,
-                "granted_at": datetime.utcnow().isoformat()
+                "granted_at": datetime.now(timezone.utc).isoformat()
             }
             
             permissions.append(permission_entry)
