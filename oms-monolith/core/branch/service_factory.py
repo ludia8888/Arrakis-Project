@@ -45,9 +45,19 @@ class BranchServiceFactory:
         else:
             logger.info("Creating Legacy Branch Service")
             from core.branch.service import BranchService
+            from core.branch.diff_engine import DiffEngine
+            from core.branch.conflict_resolver import ConflictResolver
             
-            # Legacy service initialization
-            cls._instance = BranchService()
+            # Legacy service initialization with required dependencies
+            tdb_endpoint = getattr(settings, 'TERMINUS_SERVER_URL', 'http://localhost:6363')
+            diff_engine = DiffEngine(tdb_endpoint)
+            conflict_resolver = ConflictResolver()
+            
+            cls._instance = BranchService(
+                tdb_endpoint=tdb_endpoint,
+                diff_engine=diff_engine,
+                conflict_resolver=conflict_resolver
+            )
         
         return cls._instance
     

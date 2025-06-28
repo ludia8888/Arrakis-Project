@@ -9,10 +9,10 @@ from terminusdb_client import WOQLClient
 from terminusdb_client.woqlquery import WOQLQuery as WQ
 
 from core.branch.interfaces import IBranchService
-from models.branch import ChangeProposal, BranchDiff, MergeResult, ProposalStatus
+from core.branch.models import ChangeProposal, BranchDiff, MergeResult, ProposalStatus
 from shared.exceptions import (
-    BranchNotFoundError, 
-    MergeConflictError,
+    NotFoundError,
+    ConflictError,
     ValidationError
 )
 
@@ -166,7 +166,7 @@ class TerminusNativeBranchService(IBranchService):
             branch_info = next((b for b in branches if b['name'] == branch_name), None)
             
             if not branch_info:
-                raise BranchNotFoundError(f"Branch {branch_name} not found")
+                raise NotFoundError(f"Branch {branch_name} not found")
             
             # Try to get metadata
             try:

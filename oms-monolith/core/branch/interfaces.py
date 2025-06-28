@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Any
 from datetime import datetime
 
-from models.branch import ChangeProposal, BranchDiff, MergeResult
+from core.branch.models import ChangeProposal, BranchDiff, MergeResult
 
 
 class IBranchService(ABC):
