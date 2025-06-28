@@ -5,6 +5,11 @@ from .conflict_resolver import ConflictResolver
 from .merge_strategies import MergeStrategyImplementor
 from .three_way_merge import ThreeWayMergeAlgorithm
 
+# New abstractions and adapters
+from .interfaces import IBranchService, ILockService, IMergeEngine
+from .service_factory import BranchServiceFactory, get_branch_service
+from .terminus_adapter import TerminusNativeBranchService
+
 # Lock management components
 from .lock_manager import BranchLockManager, get_lock_manager, initialize_lock_manager
 from .lock_manager_core import LockManagerCore, LockConflictError
@@ -19,6 +24,14 @@ __all__ = [
     "ConflictResolver",
     "MergeStrategyImplementor",
     "ThreeWayMergeAlgorithm",
+    
+    # New abstractions
+    "IBranchService",
+    "ILockService", 
+    "IMergeEngine",
+    "BranchServiceFactory",
+    "get_branch_service",
+    "TerminusNativeBranchService",
     
     # Lock management
     "BranchLockManager",

@@ -38,6 +38,16 @@ class SharedConfig:
         # 로깅 설정
         self.log_level = os.getenv("ONTOLOGY_LOG_LEVEL", "INFO")
         self.log_format = os.getenv("ONTOLOGY_LOG_FORMAT", "json")
+        
+        # TerminusDB Native Feature Flags
+        self.USE_TERMINUS_NATIVE_BRANCH = os.getenv("USE_TERMINUS_NATIVE_BRANCH", "false").lower() == "true"
+        self.USE_TERMINUS_NATIVE_MERGE = os.getenv("USE_TERMINUS_NATIVE_MERGE", "false").lower() == "true"
+        self.USE_TERMINUS_NATIVE_DIFF = os.getenv("USE_TERMINUS_NATIVE_DIFF", "false").lower() == "true"
+        
+        # TerminusDB Connection Settings
+        self.TERMINUS_SERVER_URL = os.getenv("TERMINUS_SERVER_URL", "http://localhost:6363")
+        self.TERMINUS_DB = os.getenv("TERMINUS_DB", "ontology_db")
+        self.TERMINUS_ORGANIZATION = os.getenv("TERMINUS_ORGANIZATION", "admin")
 
 # 전역 설정 인스턴스
 _config = None
@@ -51,3 +61,4 @@ def get_config() -> SharedConfig:
 
 # Convenience exports
 config = get_config()
+settings = config  # Alias for compatibility
