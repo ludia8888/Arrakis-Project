@@ -1,0 +1,243 @@
+name: OMS Validation
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'core/**'
+      - 'api/**'
+      - 'models/**'
+      - 'scripts/**'
+      - 'shared/**'
+      - '**.py'
+      - '**.yaml'
+      - '**.yml'
+      - '**.json'
+  push:
+    branches: [main, develop]
+    paths:
+      - 'core/**'
+      - 'api/**'
+      - 'models/**'
+      - 'scripts/**'
+      - 'shared/**'
+      - '**.py'
+      - '**.yaml'
+      - '**.yml'
+      - '**.json'
+
+env:
+  POLICY_FAIL_FAST: "true"
+  POLICY_MAX_WARNINGS: "10"
+  POLICY_MAX_ALERTS: "5"
+
+jobs:
+  validation:
+    runs-on: ubuntu-latest
+    
+    services:
+      terminusdb:
+        image: terminusdb/terminusdb-server:v11.0.0
+        ports:
+          - 6363:6363
+        env:
+          TERMINUSDB_ADMIN_PASSWD: root
+          TERMINUSDB_SERVER_JWT_PUBLIC_KEY_PATH: ""
+          TERMINUSDB_SERVER_JWT_PUBLIC_KEY_ID: ""
+        options: >-
+          --health-cmd "curl -f http://localhost:6363/api/info || exit 1"
+          --health-interval 30s
+          --health-timeout 10s
+          --health-retries 5
+
+      nats:
+        image: nats:2.9-alpine
+        ports:
+          - 4222:4222
+          - 8222:8222
+        options: >-
+          --health-cmd "wget --no-verbose --tries=1 --spider http://localhost:8222/healthz || exit 1"
+          --health-interval 30s
+          --health-timeout 10s
+          --health-retries 5
+        env:
+          NATS_SERVER_CONFIG: |
+            jetstream: {
+              store_dir: "/data/jetstream"
+            }
+            http_port: 8222
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for git diff
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+        # Install GitHub CLI for PR comments
+        sudo apt-get update
+        sudo apt-get install gh
+
+    - name: Wait for services
+      run: |
+        echo "Waiting for TerminusDB..."
+        for i in {1..30}; do
+          if curl -f http://localhost:6363/api/info; then
+            echo "TerminusDB is ready"
+            break
+          fi
+          echo "Waiting for TerminusDB... ($i/30)"
+          sleep 10
+        done
+        
+        echo "Waiting for NATS..."
+        for i in {1..30}; do
+          if curl -f http://localhost:8222/healthz; then
+            echo "NATS is ready"
+            break
+          fi
+          echo "Waiting for NATS... ($i/30)"
+          sleep 5
+        done
+
+    - name: Run OMS Validation - CI Build
+      if: github.event_name == 'push'
+      env:
+        TERMINUS_SERVER_URL: http://localhost:6363
+        JETSTREAM_URL: nats://localhost:4222
+        ENVIRONMENT: ci
+        CI: true
+      run: |
+        chmod +x scripts/ci/validate_oms_changes.py
+        python scripts/ci/validate_oms_changes.py \
+          --mode ci \
+          --branch ${{ github.sha }} \
+          --base-branch origin/${{ github.event.repository.default_branch }} \
+          --fail-fast \
+          --output-format json > validation_results.json
+
+    - name: Run OMS Validation - PR Review
+      if: github.event_name == 'pull_request'
+      env:
+        TERMINUS_SERVER_URL: http://localhost:6363
+        JETSTREAM_URL: nats://localhost:4222
+        ENVIRONMENT: ci
+        CI: true
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_EVENT_NAME: pull_request
+      run: |
+        chmod +x scripts/ci/validate_oms_changes.py
+        python scripts/ci/validate_oms_changes.py \
+          --mode pr \
+          --branch ${{ github.event.pull_request.head.sha }} \
+          --base-branch origin/${{ github.event.pull_request.base.ref }} \
+          --create-pr-comment \
+          --output-format json > validation_results.json
+
+    - name: Upload validation results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: oms-validation-results
+        path: validation_results.json
+
+    - name: Parse validation results
+      if: always()
+      id: parse_results
+      run: |
+        if [ -f validation_results.json ]; then
+          success=$(jq -r '.success' validation_results.json)
+          exit_code=$(jq -r '.exit_code' validation_results.json)
+          echo "success=$success" >> $GITHUB_OUTPUT
+          echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
+          
+          # Extract summary for step summary
+          jq -r '.summary | to_entries[] | "\(.key): \(.value)"' validation_results.json > summary.txt
+          echo "## OMS Validation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          while IFS=': ' read -r key value; do
+            echo "| $key | $value |" >> $GITHUB_STEP_SUMMARY
+          done < summary.txt
+          
+          # Add messages if any
+          messages=$(jq -r '.messages[]?' validation_results.json 2>/dev/null || echo "")
+          if [ -n "$messages" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Messages" >> $GITHUB_STEP_SUMMARY
+            jq -r '.messages[]' validation_results.json | while read -r msg; do
+              echo "- $msg" >> $GITHUB_STEP_SUMMARY
+            done
+          fi
+        fi
+
+    - name: Check validation results
+      if: always()
+      run: |
+        if [ -f validation_results.json ]; then
+          exit_code=$(jq -r '.exit_code' validation_results.json)
+          if [ "$exit_code" != "0" ]; then
+            echo "❌ OMS validation failed with exit code $exit_code"
+            echo "Check the validation results artifact for details"
+            exit $exit_code
+          else
+            echo "✅ OMS validation passed"
+          fi
+        else
+          echo "❌ No validation results found"
+          exit 1
+        fi
+
+  # Separate job for integration tests that require the validation to pass
+  integration-tests:
+    runs-on: ubuntu-latest
+    needs: validation
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Run integration tests
+      run: |
+        echo "🧪 Running integration tests..."
+        # Add actual integration test commands here
+        echo "✅ Integration tests would run here"
+
+  # Optional: Slack notification on failure
+  notify-on-failure:
+    runs-on: ubuntu-latest
+    needs: [validation]
+    if: failure() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Notify Slack on failure
+      if: env.SLACK_WEBHOOK_URL != ''
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      run: |
+        curl -X POST -H 'Content-type: application/json' \
+          --data "{\"text\":\"❌ OMS validation failed on main branch: ${{ github.event.head_commit.message }} by ${{ github.actor }}\"}" \
+          $SLACK_WEBHOOK_URL

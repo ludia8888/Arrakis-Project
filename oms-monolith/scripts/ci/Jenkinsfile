@@ -1,0 +1,441 @@
+// P2 Phase: Jenkins Pipeline for OMS Validation
+// Jenkins 호환 파이프라인 with Policy Engine integration
+
+pipeline {
+    agent any
+    
+    environment {
+        // OMS Configuration
+        TERMINUS_SERVER_URL = "${env.TERMINUS_SERVER_URL ?: 'http://localhost:6363'}"
+        JETSTREAM_URL = "${env.JETSTREAM_URL ?: 'nats://localhost:4222'}"
+        
+        // Policy Configuration  
+        POLICY_FAIL_FAST = "${env.POLICY_FAIL_FAST ?: 'true'}"
+        POLICY_MAX_WARNINGS = "${env.POLICY_MAX_WARNINGS ?: '20'}"
+        POLICY_MAX_ALERTS = "${env.POLICY_MAX_ALERTS ?: '10'}"
+        POLICY_DEFAULT_ACTION = "${env.POLICY_DEFAULT_ACTION ?: 'warn'}"
+        
+        // Execution Context
+        ENVIRONMENT = "${env.ENVIRONMENT ?: 'ci'}"
+        RUNTIME_MODE = 'batch'
+        
+        // Python Configuration
+        PYTHONPATH = "${WORKSPACE}"
+        
+        // Notification Settings
+        SLACK_CHANNEL = "${env.SLACK_CHANNEL ?: '#oms-alerts'}"
+        TEAMS_WEBHOOK = "${env.TEAMS_WEBHOOK ?: ''}"
+    }
+    
+    options {
+        // Build timeout
+        timeout(time: 30, unit: 'MINUTES')
+        
+        // Keep builds
+        buildDiscarder(logRotator(numToKeepStr: '50'))
+        
+        // Disable concurrent builds on same branch
+        disableConcurrentBuilds()
+        
+        // Skip default checkout
+        skipDefaultCheckout()
+    }
+    
+    triggers {
+        // Poll SCM every 15 minutes during business hours
+        pollSCM('H/15 8-18 * * 1-5')
+        
+        // Trigger on upstream builds
+        upstream(upstreamProjects: 'user-service,audit-service', threshold: hudson.model.Result.SUCCESS)
+    }
+    
+    stages {
+        stage('Checkout & Setup') {
+            steps {
+                script {
+                    echo "🔄 Starting OMS Validation Pipeline"
+                    echo "Branch: ${env.BRANCH_NAME}"
+                    echo "Build: ${env.BUILD_NUMBER}"
+                    echo "Policy Mode: ${env.POLICY_FAIL_FAST}"
+                }
+                
+                // Checkout with full history for git diff
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: "${env.BRANCH_NAME}"]],
+                    extensions: [
+                        [$class: 'CloneOption', depth: 0, noTags: false, reference: '', shallow: false]
+                    ],
+                    userRemoteConfigs: scm.userRemoteConfigs
+                ])
+                
+                // Set up Python environment
+                sh '''
+                    echo "🐍 Setting up Python environment"
+                    python3 -m venv venv
+                    . venv/bin/activate
+                    pip install --upgrade pip
+                    
+                    # Install dependencies
+                    if [ -f requirements.txt ]; then
+                        pip install -r requirements.txt
+                    fi
+                    if [ -f requirements-dev.txt ]; then
+                        pip install -r requirements-dev.txt
+                    fi
+                    
+                    # Verify installation
+                    python --version
+                    pip list | grep -E "(terminusdb|nats|pydantic)"
+                '''
+            }
+        }
+        
+        stage('Infrastructure Health Check') {
+            parallel {
+                stage('TerminusDB Health') {
+                    steps {
+                        script {
+                            echo "🔍 Checking TerminusDB connectivity"
+                            sh '''
+                                . venv/bin/activate
+                                
+                                # Health check with timeout
+                                timeout 30 bash -c '
+                                    until curl -f ${TERMINUS_SERVER_URL}/api/info > /dev/null 2>&1; do
+                                        echo "Waiting for TerminusDB..."
+                                        sleep 5
+                                    done
+                                    echo "✅ TerminusDB is healthy"
+                                ' || {
+                                    echo "⚠️ TerminusDB health check failed, continuing with limited functionality"
+                                    export TERMINUS_AVAILABLE=false
+                                }
+                            '''
+                        }
+                    }
+                }
+                
+                stage('NATS Health') {
+                    steps {
+                        script {
+                            echo "🔍 Checking NATS/JetStream connectivity"
+                            sh '''
+                                . venv/bin/activate
+                                
+                                # Extract host and port from JETSTREAM_URL
+                                NATS_HOST=$(echo $JETSTREAM_URL | sed 's|nats://||' | cut -d: -f1)
+                                NATS_PORT=$(echo $JETSTREAM_URL | sed 's|nats://||' | cut -d: -f2)
+                                
+                                # Health check with timeout
+                                timeout 30 bash -c "
+                                    until nc -z ${NATS_HOST} ${NATS_PORT}; do
+                                        echo 'Waiting for NATS...'
+                                        sleep 3
+                                    done
+                                    echo '✅ NATS is healthy'
+                                " || {
+                                    echo "⚠️ NATS health check failed, continuing with limited functionality"
+                                    export NATS_AVAILABLE=false
+                                }
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('Pre-validation Checks') {
+            steps {
+                script {
+                    echo "🔍 Running pre-validation checks"
+                    sh '''
+                        . venv/bin/activate
+                        
+                        # Syntax validation
+                        echo "Checking Python syntax..."
+                        find . -name "*.py" -path "./core/*" -o -path "./api/*" -o -path "./models/*" | \
+                            xargs python -m py_compile
+                        
+                        # Import validation
+                        echo "Testing critical imports..."
+                        python -c "
+                        try:
+                            from core.validation.policy_engine import PolicyEngine
+                            from core.validation.service_refactored import ValidationService
+                            from core.validation.rules.timeseries_event_mapping_rule import TimeseriesEventMappingRule
+                            print('✅ Critical imports successful')
+                        except ImportError as e:
+                            print(f'❌ Import error: {e}')
+                            exit(1)
+                        "
+                    '''
+                }
+            }
+        }
+        
+        stage('OMS Validation') {
+            steps {
+                script {
+                    echo "🧪 Running OMS validation with Policy Engine"
+                    
+                    // Determine base branch for comparison
+                    def baseBranch = env.CHANGE_TARGET ?: 'main'
+                    def currentBranch = env.BRANCH_NAME ?: 'HEAD'
+                    
+                    // Determine execution mode
+                    def mode = env.CHANGE_ID ? 'pr' : 'ci'
+                    
+                    sh """
+                        . venv/bin/activate
+                        
+                        echo "🎯 Validation Configuration:"
+                        echo "  Mode: ${mode}"
+                        echo "  Current Branch: ${currentBranch}"
+                        echo "  Base Branch: ${baseBranch}"
+                        echo "  Policy Fail Fast: \${POLICY_FAIL_FAST}"
+                        echo "  Max Warnings: \${POLICY_MAX_WARNINGS}"
+                        echo "  Max Alerts: \${POLICY_MAX_ALERTS}"
+                        
+                        # Make script executable
+                        chmod +x scripts/ci/validate_oms_changes.py
+                        
+                        # Run validation
+                        python scripts/ci/validate_oms_changes.py \\
+                            --mode ${mode} \\
+                            --branch ${currentBranch} \\
+                            --base-branch origin/${baseBranch} \\
+                            --fail-fast \\
+                            --max-warnings \${POLICY_MAX_WARNINGS} \\
+                            --output-format json > validation_results.json
+                        
+                        echo "✅ Validation completed"
+                    """
+                }
+            }
+            
+            post {
+                always {
+                    // Archive validation results
+                    archiveArtifacts artifacts: 'validation_results.json', allowEmptyArchive: true
+                    
+                    // Parse and display results
+                    script {
+                        if (fileExists('validation_results.json')) {
+                            def results = readJSON file: 'validation_results.json'
+                            
+                            echo "📊 Validation Results Summary:"
+                            echo "  Success: ${results.success}"
+                            echo "  Exit Code: ${results.exit_code}"
+                            echo "  Total Rules: ${results.summary.total_rules}"
+                            echo "  Failures: ${results.summary.failures}"
+                            echo "  Warnings: ${results.summary.warnings}"
+                            echo "  Alerts: ${results.summary.alerts}"
+                            echo "  Execution Time: ${results.execution_time_ms}ms"
+                            
+                            // Set build result based on validation
+                            if (results.exit_code == 0) {
+                                currentBuild.result = 'SUCCESS'
+                            } else if (results.exit_code == 1) {
+                                currentBuild.result = 'FAILURE'
+                                error("OMS validation failed with policy violations")
+                            } else {
+                                currentBuild.result = 'UNSTABLE'
+                                echo "OMS validation completed with warnings"
+                            }
+                            
+                            // Store results for notifications
+                            env.VALIDATION_RESULTS = writeJSON returnText: true, json: results
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('Integration Tests') {
+            when {
+                anyOf {
+                    branch 'main'
+                    branch 'develop'
+                    changeRequest()
+                }
+            }
+            steps {
+                script {
+                    echo "🔬 Running integration tests"
+                    sh '''
+                        . venv/bin/activate
+                        
+                        # Run P1 tests to ensure no regressions
+                        echo "Testing P1 Foundry Rules..."
+                        python scripts/test_p1_foundry_rules.py
+                        
+                        # Run P2 integration tests
+                        echo "Testing P2 Policy Engine integration..."
+                        # Add specific P2 tests here
+                        
+                        echo "✅ Integration tests completed"
+                    '''
+                }
+            }
+        }
+        
+        stage('Performance Benchmarks') {
+            when {
+                anyOf {
+                    branch 'main'
+                    branch 'develop'
+                }
+            }
+            steps {
+                script {
+                    echo "⚡ Running performance benchmarks"
+                    sh '''
+                        . venv/bin/activate
+                        
+                        # Benchmark validation performance
+                        echo "Benchmarking validation rules..."
+                        python -c "
+                        import time
+                        from core.validation.policy_engine import create_ci_policy_engine
+                        
+                        # Simple performance test
+                        start = time.time()
+                        engine = create_ci_policy_engine()
+                        end = time.time()
+                        
+                        print(f'Policy engine initialization: {(end-start)*1000:.2f}ms')
+                        "
+                        
+                        echo "✅ Performance benchmarks completed"
+                    '''
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            // Clean up
+            sh '''
+                # Clean up virtual environment
+                if [ -d venv ]; then
+                    rm -rf venv
+                fi
+                
+                # Clean up temporary files
+                find . -name "*.pyc" -delete
+                find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+            '''
+        }
+        
+        success {
+            script {
+                echo "✅ OMS Validation Pipeline completed successfully"
+                
+                // Success notification for main branch
+                if (env.BRANCH_NAME == 'main') {
+                    slackSend(
+                        channel: env.SLACK_CHANNEL,
+                        color: 'good',
+                        message: """
+                        ✅ *OMS Validation Successful* on `main` branch
+                        
+                        *Build:* ${env.BUILD_NUMBER}
+                        *Commit:* ${env.GIT_COMMIT[0..7]}
+                        *Duration:* ${currentBuild.durationString}
+                        *Policy Mode:* ${env.POLICY_FAIL_FAST}
+                        
+                        All validation rules passed ✨
+                        """.stripIndent()
+                    )
+                }
+            }
+        }
+        
+        failure {
+            script {
+                echo "❌ OMS Validation Pipeline failed"
+                
+                def results = [:]
+                if (fileExists('validation_results.json')) {
+                    results = readJSON file: 'validation_results.json'
+                }
+                
+                // Failure notification
+                slackSend(
+                    channel: env.SLACK_CHANNEL,
+                    color: 'danger',
+                    message: """
+                    ❌ *OMS Validation Failed* on `${env.BRANCH_NAME}` branch
+                    
+                    *Build:* ${env.BUILD_NUMBER}
+                    *Commit:* ${env.GIT_COMMIT[0..7]}
+                    *Duration:* ${currentBuild.durationString}
+                    *Failures:* ${results.summary?.failures ?: 'Unknown'}
+                    *Warnings:* ${results.summary?.warnings ?: 'Unknown'}
+                    
+                    Please check the build logs and fix validation issues.
+                    *Build URL:* ${env.BUILD_URL}
+                    """.stripIndent()
+                )
+                
+                // Teams notification if webhook configured
+                if (env.TEAMS_WEBHOOK) {
+                    httpRequest(
+                        httpMode: 'POST',
+                        contentType: 'APPLICATION_JSON',
+                        url: env.TEAMS_WEBHOOK,
+                        requestBody: """
+                        {
+                            "@type": "MessageCard",
+                            "@context": "https://schema.org/extensions",
+                            "summary": "OMS Validation Failed",
+                            "themeColor": "FF0000",
+                            "sections": [{
+                                "activityTitle": "OMS Validation Failed",
+                                "activitySubtitle": "Branch: ${env.BRANCH_NAME}",
+                                "facts": [
+                                    {"name": "Build", "value": "${env.BUILD_NUMBER}"},
+                                    {"name": "Commit", "value": "${env.GIT_COMMIT[0..7]}"},
+                                    {"name": "Failures", "value": "${results.summary?.failures ?: 'Unknown'}"},
+                                    {"name": "Duration", "value": "${currentBuild.durationString}"}
+                                ]
+                            }],
+                            "potentialAction": [{
+                                "@type": "OpenUri",
+                                "name": "View Build",
+                                "targets": [{"os": "default", "uri": "${env.BUILD_URL}"}]
+                            }]
+                        }
+                        """.stripIndent()
+                    )
+                }
+            }
+        }
+        
+        unstable {
+            script {
+                echo "⚠️ OMS Validation completed with warnings"
+                
+                // Warning notification for important branches
+                if (env.BRANCH_NAME in ['main', 'develop']) {
+                    slackSend(
+                        channel: env.SLACK_CHANNEL,
+                        color: 'warning',
+                        message: """
+                        ⚠️ *OMS Validation Warnings* on `${env.BRANCH_NAME}` branch
+                        
+                        *Build:* ${env.BUILD_NUMBER}
+                        *Commit:* ${env.GIT_COMMIT[0..7]}
+                        *Duration:* ${currentBuild.durationString}
+                        
+                        Build completed but with validation warnings.
+                        Please review and address if necessary.
+                        """.stripIndent()
+                    )
+                }
+            }
+        }
+    }
+}

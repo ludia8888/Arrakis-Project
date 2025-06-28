@@ -17,8 +17,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, field_validator
-
+from pydantic import BaseModel, Field
 
 class Status(str, Enum):
     """Entity status enumeration"""
@@ -28,7 +27,6 @@ class Status(str, Enum):
     EXAMPLE = "example"
     ARCHIVED = "archived"
 
-
 class TypeClass(str, Enum):
     """Object type classification"""
     OBJECT = "object"
@@ -36,26 +34,22 @@ class TypeClass(str, Enum):
     LINK = "link"
     EMBEDDED = "embedded"
 
-
 class Cardinality(str, Enum):
     """Link cardinality types"""
     ONE_TO_ONE = "one-to-one"
     ONE_TO_MANY = "one-to-many"
     MANY_TO_MANY = "many-to-many"
 
-
 class Directionality(str, Enum):
     """Link directionality types"""
     UNIDIRECTIONAL = "unidirectional"
     BIDIRECTIONAL = "bidirectional"
-
 
 class Visibility(str, Enum):
     """Property visibility enumeration"""
     VISIBLE = "visible"
     HIDDEN = "hidden"
     ADVANCED = "advanced"
-
 
 class PropertyType(str, Enum):
     """Property data types"""
@@ -69,7 +63,6 @@ class PropertyType(str, Enum):
     ENUM = "enum"
     TEXT = "text"
     JSON = "json"
-
 
 class Property(BaseModel):
     """Property domain model - Section 8.1.3 - 설계 의도: snake_case 도메인 모델"""
@@ -96,15 +89,6 @@ class Property(BaseModel):
     version_hash: str
     created_at: datetime
     modified_at: datetime
-
-    @field_validator("name")
-    @classmethod
-    def validate_name(cls, v: str) -> str:
-        if not v or not v[0].isalpha():
-            raise ValueError("Name must start with a letter")
-        if not all(c.isalnum() or c == "_" for c in v):
-            raise ValueError("Name can only contain letters, numbers, and underscores")
-        return v
 
     @classmethod
     def from_document(cls, doc: dict) -> "Property":
@@ -152,7 +136,6 @@ class Property(BaseModel):
             modified_at=parse_datetime(doc.get("modifiedAt"))
         )
 
-
 class ObjectType(BaseModel):
     """ObjectType domain model - Section 8.1.3 - 설계 의도: snake_case 도메인 모델"""
     id: str
@@ -173,15 +156,6 @@ class ObjectType(BaseModel):
     is_abstract: bool = False
     icon: Optional[str] = None
     color: Optional[str] = None
-
-    @field_validator("name")
-    @classmethod
-    def validate_name(cls, v: str) -> str:
-        if not v or not v[0].isalpha():
-            raise ValueError("Name must start with a letter")
-        if not all(c.isalnum() or c == "_" for c in v):
-            raise ValueError("Name can only contain letters, numbers, and underscores")
-        return v
 
     @classmethod
     def from_document(cls, doc: dict) -> "ObjectType":
@@ -224,7 +198,6 @@ class ObjectType(BaseModel):
             color=doc.get("color")
         )
 
-
 class ObjectTypeCreate(BaseModel):
     """ObjectType creation request - Section 10.1.1 - 설계 의도: snake_case 도메인 모델"""
     name: str = Field(..., pattern="^[a-zA-Z][a-zA-Z0-9_]*$")
@@ -239,7 +212,6 @@ class ObjectTypeCreate(BaseModel):
     icon: Optional[str] = None
     color: Optional[str] = None
 
-
 class ObjectTypeUpdate(BaseModel):
     """ObjectType update request - 설계 의도: snake_case 도메인 모델"""
     display_name: Optional[str] = None
@@ -252,7 +224,6 @@ class ObjectTypeUpdate(BaseModel):
     icon: Optional[str] = None
     color: Optional[str] = None
 
-
 class PropertyCreate(BaseModel):
     """Property creation model - snake_case for Python convention"""
     name: str = Field(..., pattern="^[a-zA-Z][a-zA-Z0-9_]*$")
@@ -264,7 +235,6 @@ class PropertyCreate(BaseModel):
     is_unique: bool = False
     default_value: Optional[Any] = None
 
-
 class PropertyUpdate(BaseModel):
     """Property update model"""
     display_name: Optional[str] = None
@@ -272,7 +242,6 @@ class PropertyUpdate(BaseModel):
     is_required: Optional[bool] = None
     is_indexed: Optional[bool] = None
     default_value: Optional[Any] = None
-
 
 class LinkType(BaseModel):
     """LinkType domain model - Section 8.1.3"""
@@ -308,16 +277,6 @@ class LinkType(BaseModel):
         description="Metadata for graph traversal optimization"
     )
 
-    @field_validator("name")
-    @classmethod
-    def validate_name(cls, v: str) -> str:
-        if not v or not v[0].isalpha():
-            raise ValueError("Name must start with a letter")
-        if not all(c.isalnum() or c == "_" for c in v):
-            raise ValueError("Name can only contain letters, numbers, and underscores")
-        return v
-
-
 class LinkTypeCreate(BaseModel):
     """LinkType creation request - 설계 의도: API 호환 camelCase 모델"""
     name: str = Field(..., pattern="^[a-zA-Z][a-zA-Z0-9_]*$")
@@ -331,7 +290,6 @@ class LinkTypeCreate(BaseModel):
     isRequired: bool = False
     status: Optional[Status] = None
 
-
 class LinkTypeUpdate(BaseModel):
     """LinkType update request"""
     displayName: Optional[str] = None
@@ -341,7 +299,6 @@ class LinkTypeUpdate(BaseModel):
     cascadeDelete: Optional[bool] = None
     isRequired: Optional[bool] = None
     status: Optional[Status] = None
-
 
 class Interface(BaseModel):
     """Interface domain model - defines contracts for ObjectTypes"""
@@ -358,16 +315,6 @@ class Interface(BaseModel):
     modifiedBy: str
     modifiedAt: datetime
 
-    @field_validator("name")
-    @classmethod
-    def validate_name(cls, v: str) -> str:
-        if not v or not v[0].isalpha():
-            raise ValueError("Name must start with a letter")
-        if not all(c.isalnum() or c == "_" for c in v):
-            raise ValueError("Name can only contain letters, numbers, and underscores")
-        return v
-
-
 class InterfaceCreate(BaseModel):
     """Interface creation request - 설계 의도: API 호환 camelCase 모델"""
     name: str = Field(..., pattern="^[a-zA-Z][a-zA-Z0-9_]*$")
@@ -376,14 +323,12 @@ class InterfaceCreate(BaseModel):
     extends: Optional[List[str]] = None
     status: Optional[Status] = None
 
-
 class InterfaceUpdate(BaseModel):
     """Interface update request"""
     displayName: Optional[str] = None
     description: Optional[str] = None
     extends: Optional[List[str]] = None
     status: Optional[Status] = None
-
 
 class SharedProperty(BaseModel):
     """SharedProperty domain model - reusable property definitions"""
@@ -405,16 +350,6 @@ class SharedProperty(BaseModel):
     modifiedBy: str
     modifiedAt: datetime
 
-    @field_validator("name")
-    @classmethod
-    def validate_name(cls, v: str) -> str:
-        if not v or not v[0].isalpha():
-            raise ValueError("Name must start with a letter")
-        if not all(c.isalnum() or c == "_" for c in v):
-            raise ValueError("Name can only contain letters, numbers, and underscores")
-        return v
-
-
 class SharedPropertyCreate(BaseModel):
     """SharedProperty creation request"""
     name: str = Field(..., pattern="^[a-zA-Z][a-zA-Z0-9_]*$")
@@ -429,7 +364,6 @@ class SharedPropertyCreate(BaseModel):
     isSearchable: bool = False
     validationRules: Optional[Dict[str, Any]] = None
 
-
 class SharedPropertyUpdate(BaseModel):
     """SharedProperty update request"""
     displayName: Optional[str] = None
@@ -440,7 +374,6 @@ class SharedPropertyUpdate(BaseModel):
     isUnique: Optional[bool] = None
     isSearchable: Optional[bool] = None
     validationRules: Optional[Dict[str, Any]] = None
-
 
 class PropertyCreate(BaseModel):
     """Property creation request - Section 8.1.3 - 설계 의도: snake_case 도메인 모델"""
@@ -463,7 +396,6 @@ class PropertyCreate(BaseModel):
     visibility: Optional[Visibility] = None
     validation_rules: Optional[Dict[str, Any]] = None
 
-
 class PropertyUpdate(BaseModel):
     """Property update request"""
     displayName: Optional[str] = None
@@ -481,7 +413,6 @@ class PropertyUpdate(BaseModel):
     visibility: Optional[Visibility] = None
     validationRules: Optional[Dict[str, Any]] = None
 
-
 class Branch(BaseModel):
     """Branch domain model"""
     id: str
@@ -497,7 +428,6 @@ class Branch(BaseModel):
     versionHash: str
     isActive: bool = True
 
-
 class BranchCreate(BaseModel):
     """Branch creation request"""
     name: str = Field(..., pattern="^[a-zA-Z][a-zA-Z0-9_-]*$")
@@ -506,14 +436,12 @@ class BranchCreate(BaseModel):
     parentBranch: Optional[str] = "main"
     isProtected: Optional[bool] = False
 
-
 class ValidationResult(BaseModel):
     """Validation result model"""
     isValid: bool
     errors: List[Dict[str, Any]] = Field(default_factory=list)
     warnings: List[Dict[str, Any]] = Field(default_factory=list)
     info: List[Dict[str, Any]] = Field(default_factory=list)
-
 
 class ValidationError(BaseModel):
     """Validation error detail"""
@@ -522,7 +450,6 @@ class ValidationError(BaseModel):
     path: str
     severity: str = "error"
     details: Optional[Dict[str, Any]] = None
-
 
 class ChangeProposal(BaseModel):
     """Change Proposal model - Git-style merge request for schema changes"""
@@ -541,7 +468,6 @@ class ChangeProposal(BaseModel):
     reviewers: List[str] = Field(default_factory=list)
     approvals: List[Dict[str, Any]] = Field(default_factory=list)
 
-
 class ChangeEvent(BaseModel):
     """Change event model for event streaming"""
     id: str
@@ -554,7 +480,6 @@ class ChangeEvent(BaseModel):
     changes: Dict[str, Any]
     versionBefore: Optional[str] = None
     versionAfter: Optional[str] = None
-
 
 class MergeRequest(BaseModel):
     """Merge execution request model - API request to execute merge"""

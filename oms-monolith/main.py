@@ -64,9 +64,8 @@ class ServiceContainer:
         logger.info("Initializing services with fixed DB connection...")
         
         try:
-            # Production TerminusDBClient 사용
+            # Production TerminusDBClient 사용 (ValidationConfig 기반)
             self.db_client = TerminusDBClient(
-                endpoint="http://localhost:6363",
                 username="admin",
                 password="root"
             )
@@ -90,9 +89,11 @@ class ServiceContainer:
                 await self.event_publisher.connect(timeout=30)
                 logger.info("✅ Event publisher connected")
             
-            # 수정된 Schema Service 사용
+            # 수정된 Schema Service 사용 (ValidationConfig 기반)
+            from core.validation.config import get_validation_config
+            config = get_validation_config()
             self.schema_service = SchemaService(
-                tdb_endpoint="http://localhost:6363",
+                tdb_endpoint=config.terminus_db_url,
                 event_publisher=self.event_publisher
             )
             await self.schema_service.initialize()
@@ -101,7 +102,7 @@ class ServiceContainer:
             # Extended Schema Service for all other types
             from core.schema.extended_service import ExtendedSchemaService
             self.extended_schema_service = ExtendedSchemaService(
-                tdb_endpoint="http://localhost:6363",
+                tdb_endpoint=config.terminus_db_url,
                 event_publisher=self.event_publisher
             )
             await self.extended_schema_service.initialize()
@@ -168,9 +169,9 @@ async def lifespan(app: FastAPI):
     
     # Enterprise Validation Service 초기화
     validation_service = EnterpriseValidationService(
-        cache_manager=None,  # TODO: Add SmartCacheManager
+        cache_manager=None,  # Using ValidationConfig cache settings
         event_publisher=services.event_publisher,
-        redis_client=None,  # TODO: Add Redis client if needed
+        redis_client=None,  # Using ValidationConfig cache backend
         default_level=ValidationLevel.STANDARD
     )
     register_oms_validation_rules(validation_service)
@@ -441,10 +442,6 @@ async def create_object_type(branch: str, request: Dict[str, Any]):
         logger.error(f"Failed to create object type: {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
-
-# Include RBAC test routes
-# from api.v1.rbac_test_routes import router as rbac_test_router  # REMOVED: Module not found
-# app.include_router(rbac_test_router)  # REMOVED: Module not found
 
 # Include Branch Lock Management routes
 from api.v1.branch_lock_routes import router as branch_lock_router

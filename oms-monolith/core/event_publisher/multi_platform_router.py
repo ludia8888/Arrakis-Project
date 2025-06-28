@@ -145,6 +145,22 @@ class MultiPlatformEventRouter:
             priority=80
         ))
         
+        # P2: Quiver 이벤트 - NATS로 실시간 처리
+        self.add_routing_rule(RoutingRule(
+            event_type_pattern=r"com\.quiver\..*",
+            platforms={Platform.NATS},
+            strategy=RoutingStrategy.PRIMARY_ONLY,
+            priority=95
+        ))
+        
+        # P2: OMS 응답 이벤트 - 모든 플랫폼 (추적 가능성)
+        self.add_routing_rule(RoutingRule(
+            event_type_pattern=r"com\.foundry\.oms\.(entity|event|validation|metadata|alert)\..*",
+            platforms={Platform.NATS, Platform.EVENTBRIDGE},
+            strategy=RoutingStrategy.ALL,
+            priority=85
+        ))
+        
         # 시스템 이벤트 - EventBridge로 모니터링
         self.add_routing_rule(RoutingRule(
             event_type_pattern=r".*\.system\..*",

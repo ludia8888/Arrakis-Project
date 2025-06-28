@@ -48,6 +48,21 @@ class EventType(str, Enum):
     # Branch 관련 이벤트
     BRANCH_CREATED = "com.foundry.oms.branch.created"
     BRANCH_UPDATED = "com.foundry.oms.branch.updated"
+    
+    # P2: Quiver Integration Events (Time Series Data Events)
+    QUIVER_SENSOR_DATA_RECEIVED = "com.quiver.sensor.data.received"
+    QUIVER_SENSOR_ANOMALY_DETECTED = "com.quiver.sensor.anomaly.detected"
+    QUIVER_TIMESERIES_PATTERN_DETECTED = "com.quiver.timeseries.pattern.detected"
+    QUIVER_TIMESERIES_THRESHOLD_EXCEEDED = "com.quiver.timeseries.threshold.exceeded"
+    QUIVER_DATA_QUALITY_CHECK_FAILED = "com.quiver.data.quality.check.failed"
+    QUIVER_PIPELINE_FAILED = "com.quiver.pipeline.failed"
+    
+    # P2: OMS Response Events (Semantic Mapping Results)
+    OMS_ENTITY_STATE_UPDATED = "com.foundry.oms.entity.state.updated"
+    OMS_EVENT_LOG_CREATED = "com.foundry.oms.event.log.created"
+    OMS_VALIDATION_TRIGGERED = "com.foundry.oms.validation.triggered"
+    OMS_METADATA_UPDATED = "com.foundry.oms.metadata.updated" 
+    OMS_ALERT_SENT = "com.foundry.oms.alert.sent"
     BRANCH_DELETED = "com.foundry.oms.branch.deleted"
     BRANCH_MERGED = "com.foundry.oms.branch.merged"
     

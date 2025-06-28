@@ -16,6 +16,7 @@ from shared.exceptions import (
     ValidationError
 )
 from core.monitoring.migration_monitor import track_native_operation
+from core.validation.config import get_validation_config
 
 logger = logging.getLogger(__name__)
 
@@ -30,28 +31,30 @@ class TerminusNativeBranchService(IBranchService):
     
     def __init__(
         self, 
-        terminus_url: str = "http://localhost:6363",
-        database: str = "ontology_db",
+        terminus_url: str = None,
+        database: str = None,
         organization: str = "admin"
     ):
         """Initialize TerminusDB native branch service"""
-        self.terminus_url = terminus_url
-        self.database = database
+        # Use ValidationConfig if not provided
+        config = get_validation_config()
+        self.terminus_url = terminus_url or config.terminus_db_url
+        self.database = database or config.terminus_default_db
         self.organization = organization
         
         # Initialize TerminusDB client
-        self.client = WOQLClient(terminus_url)
+        self.client = WOQLClient(self.terminus_url)
         self.client.connect(
             user="admin",
             key="admin123",
-            db=database,
-            team=organization,
+            db=self.database,
+            team=self.organization,
             use_token=False
         )
         
         logger.info(
             f"TerminusDB Native Branch Service initialized - "
-            f"URL: {terminus_url}, DB: {database}"
+            f"URL: {self.terminus_url}, DB: {self.database}"
         )
     
     @track_native_operation("create_branch")

@@ -8,9 +8,6 @@ import os
 from typing import Any, Dict, List, Optional
 from datetime import datetime
 
-# Add database path for simple clie
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../database'))
-
 from .models import ActionTypeModel, ActionDefinition
 from database.clients.terminus_db_simple import SimpleTerminusDBClient
 
@@ -264,7 +261,7 @@ class ActionMetadataService:
                 
                 # ISO 문자열을 datetime 객체로 변환
                 from datetime import datetime
-                if 'createdAt' i clean_doc and isinstance(clean_doc['createdAt'], str):
+                if 'createdAt' in clean_doc and isinstance(clean_doc['createdAt'], str):
                     clean_doc['createdAt'] = datetime.fromisoformat(clean_doc['createdAt'].replace('Z', '+00:00'))
                 if 'modifiedAt' in clean_doc and isinstance(clean_doc['modifiedAt'], str):
                     clean_doc['modifiedAt'] = datetime.fromisoformat(clean_doc['modifiedAt'].replace('Z', '+00:00'))

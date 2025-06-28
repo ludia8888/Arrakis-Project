@@ -156,6 +156,11 @@ class ValidationContext(BaseModel):
     source_schema: Dict[str, Any]
     target_schema: Dict[str, Any]
     common_ancestor: Optional[Dict[str, Any]] = None
+    
+    # P2: Additional context data
+    request_id: Optional[str] = None
+    user_id: Optional[str] = None
+    additional_data: Dict[str, Any] = Field(default_factory=dict)
 
     # Foundry-specific context
     terminus_client: Optional[Any] = None  # TerminusDBClient instance

@@ -107,9 +107,12 @@ class UnifiedMergeEngine:
                 )
             
             # Step 3: Apply merge strategy
-            if strategy == MergeStrategy.SQUASH:
+            # Handle both string and enum values
+            strategy_value = strategy.value if hasattr(strategy, 'value') else str(strategy)
+            
+            if strategy_value == "squash":
                 return await self._squash_merge(source_branch, target_branch, author, message, domain_conflicts)
-            elif strategy == MergeStrategy.REBASE:
+            elif strategy_value == "rebase":
                 return await self._rebase_merge(source_branch, target_branch, author, message, domain_conflicts)
             else:
                 # Standard merge using TerminusDB native

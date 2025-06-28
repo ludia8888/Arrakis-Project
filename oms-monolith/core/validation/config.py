@@ -146,6 +146,19 @@ class ValidationConfig:
     # 로깅 & 모니터링
     verbose_logging: bool = field(default_factory=lambda: os.getenv("OMS_VALIDATION_VERBOSE", "false").lower() == "true")
     enable_performance_metrics: bool = field(default_factory=lambda: os.getenv("OMS_ENABLE_METRICS", "true").lower() == "true")
+    
+    # Foundry Alerting Configuration
+    enable_foundry_alerting: bool = field(default_factory=lambda: os.getenv("OMS_ENABLE_FOUNDRY_ALERTING", "true").lower() == "true")
+    foundry_alerting_enabled: bool = field(default_factory=lambda: os.getenv("OMS_FOUNDRY_ALERTING_ENABLED", "true").lower() == "true")
+    foundry_alert_severity_threshold: str = field(default_factory=lambda: os.getenv("OMS_FOUNDRY_ALERT_SEVERITY_THRESHOLD", "medium"))
+    foundry_alert_cooldown_minutes: int = field(default_factory=lambda: int(os.getenv("OMS_FOUNDRY_ALERT_COOLDOWN_MINUTES", "60")))
+    foundry_max_alerts_per_hour: int = field(default_factory=lambda: int(os.getenv("OMS_FOUNDRY_MAX_ALERTS_PER_HOUR", "10")))
+    foundry_notification_channels: List[str] = field(default_factory=lambda: 
+        os.getenv("OMS_FOUNDRY_NOTIFICATION_CHANNELS", "email,slack").split(",")
+    )
+    foundry_escalation_threshold: str = field(default_factory=lambda: os.getenv("OMS_FOUNDRY_ESCALATION_THRESHOLD", "critical"))
+    foundry_dataset_size_threshold: int = field(default_factory=lambda: int(os.getenv("OMS_FOUNDRY_DATASET_SIZE_THRESHOLD", "10000")))
+    foundry_compliance_checks_enabled: bool = field(default_factory=lambda: os.getenv("OMS_FOUNDRY_COMPLIANCE_CHECKS", "true").lower() == "true")
 
 
 # 싱글턴 인스턴스

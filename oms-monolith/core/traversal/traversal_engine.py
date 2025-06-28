@@ -10,7 +10,7 @@ import uuid
 import json
 import logging
 from typing import List, Dict, Optional, Set, Any
-from datetime import datetime
+from datetime import datetime, timezone
 
 from terminusdb_client.woqlquery import WOQLQuery as WQ
 from core.traversal.models import (
@@ -70,7 +70,7 @@ class TraversalEngine:
         - Recursive operators (+, *, ?) for flexible depth
         - Variable binding for result collection
         """
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         query_id = str(uuid.uuid4())
         
         try:
@@ -91,7 +91,7 @@ class TraversalEngine:
             )
             
             # Calculate execution metrics
-            execution_time = (datetime.utcnow() - start_time).total_seconds() * 1000
+            execution_time = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
             
             result = TraversalResult(
                 query_id=query_id,

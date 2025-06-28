@@ -27,6 +27,7 @@ from shared.utils import (
     DB_WRITE_CONFIG,
     with_retry,
 )
+from core.validation.config import get_validation_config
 
 logger = logging.getLogger(__name__)
 
@@ -34,12 +35,17 @@ logger = logging.getLogger(__name__)
 class TerminusDBClient:
     """TerminusDB 비동기 클라이언트 - Connection Pool 기반 + 내부 LRU 캐싱 활용"""
 
-    def __init__(self, endpoint: str = "http://localhost:6363",
+    def __init__(self, endpoint: str = None,
                  username: str = "admin",
                  password: str = "changeme-admin-pass",
                  service_name: str = "schema-service",
                  use_connection_pool: bool = True):
-        self.endpoint = endpoint
+        # Use ValidationConfig if endpoint not provided
+        if endpoint is None:
+            config = get_validation_config()
+            self.endpoint = config.terminus_db_url
+        else:
+            self.endpoint = endpoint
         self.username = username
         self.password = password
         self.service_name = service_name

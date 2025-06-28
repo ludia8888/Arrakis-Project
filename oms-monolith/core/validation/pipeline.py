@@ -32,6 +32,7 @@ class ValidationStage(str, Enum):
     POLICY = "policy"
     TERMINUS_CHECK = "terminus_check"
     RULE_ENGINE = "rule_engine"
+    FOUNDRY_ALERTING = "foundry_alerting"
 
 
 @dataclass
@@ -186,6 +187,18 @@ class ValidationPipeline:
                         )
                 else:
                     warnings.extend(result.warnings)
+            
+            # Stage 5: Foundry Alerting (비동기 실행, 실패해도 전체 검증은 성공)
+            if self.config.enable_foundry_alerting and self.event:
+                result = await self._run_foundry_alerting(entity_type, entity_data, operation, context, db, branch)
+                stage_results[ValidationStage.FOUNDRY_ALERTING] = result.details
+                
+                # Foundry 알람은 실패해도 전체 검증에 영향 없음 (non-blocking)
+                if result.success:
+                    warnings.extend(result.warnings)
+                else:
+                    warnings.append("Foundry alerting failed but validation continues")
+                    logger.warning(f"Foundry alerting failed: {result.errors}")
             
             # 모든 단계 성공
             total_time = (time.time() - start_time) * 1000
@@ -495,6 +508,92 @@ class ValidationPipeline:
                 )
         except Exception as e:
             logger.error(f"Failed to publish validation metrics: {e}")
+    
+    async def _run_foundry_alerting(
+        self,
+        entity_type: str,
+        entity_data: Dict[str, Any],
+        operation: str,
+        context: Optional[ValidationContext],
+        db: str,
+        branch: str
+    ) -> StageResult:
+        """Foundry 알람 시스템 실행"""
+        stage_start = time.time()
+        
+        try:
+            # Foundry 알람 규칙 동적 로드
+            from core.validation.rules.foundry_alerting_rule import (
+                FoundryDatasetAlertingRule, AlertConfig
+            )
+            
+            # AlertConfig 생성
+            alert_config = AlertConfig(
+                enabled=getattr(self.config, 'foundry_alerting_enabled', True),
+                severity_threshold=getattr(self.config, 'foundry_alert_severity_threshold', 'medium'),
+                cooldown_period_minutes=getattr(self.config, 'foundry_alert_cooldown_minutes', 60),
+                max_alerts_per_hour=getattr(self.config, 'foundry_max_alerts_per_hour', 10),
+                notification_channels=getattr(self.config, 'foundry_notification_channels', ['email', 'slack'])
+            )
+            
+            # Foundry 알람 규칙 인스턴스 생성
+            foundry_rule = FoundryDatasetAlertingRule(
+                event_port=self.event,
+                terminus_port=self.terminus,
+                alert_config=alert_config
+            )
+            
+            # ValidationContext 확장
+            if not context:
+                context = ValidationContext(
+                    source_branch=branch,
+                    target_branch="main",
+                    cache=self.cache,
+                    terminus_client=self.terminus,
+                    event_publisher=self.event
+                )
+            
+            # 스키마 변경 정보를 context에 추가
+            context.schema_changes = {
+                f"{operation}_{entity_type}": [entity_data]
+            }
+            context.context.update({
+                "entity_type": entity_type,
+                "operation": operation,
+                "db": db,
+                "branch": branch
+            })
+            
+            # Foundry 알람 규칙 실행
+            rule_result = await foundry_rule.execute(context)
+            
+            # 결과 처리
+            alerts_generated = rule_result.metadata.get("alerts_generated", 0)
+            alert_types = rule_result.metadata.get("alert_types", [])
+            
+            return StageResult(
+                stage=ValidationStage.FOUNDRY_ALERTING,
+                success=True,  # 알람은 항상 성공 (non-blocking)
+                time_ms=(time.time() - stage_start) * 1000,
+                details={
+                    "alerts_generated": alerts_generated,
+                    "alert_types": alert_types,
+                    "foundry_alerting_enabled": alert_config.enabled,
+                    "notification_channels": alert_config.notification_channels,
+                    "rule_metadata": rule_result.metadata
+                },
+                warnings=[] if alerts_generated == 0 else [f"Generated {alerts_generated} Foundry alerts"]
+            )
+            
+        except Exception as e:
+            logger.error(f"Foundry alerting error: {e}")
+            return StageResult(
+                stage=ValidationStage.FOUNDRY_ALERTING,
+                success=False,
+                time_ms=(time.time() - stage_start) * 1000,
+                details={"error": str(e), "foundry_alerting_failed": True},
+                errors=[f"Foundry alerting failed: {str(e)}"]
+            )
 
 
 # Factory function

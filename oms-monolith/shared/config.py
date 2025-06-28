@@ -35,15 +35,28 @@ class SharedConfig:
         self.event_retention_days = int(os.getenv("ONTOLOGY_EVENT_RETENTION_DAYS", "30"))
         self.event_batch_size = int(os.getenv("ONTOLOGY_EVENT_BATCH_SIZE", "100"))
         
+        # P2: JetStream Event Configuration
+        self.jetstream_url = os.getenv("JETSTREAM_URL", "nats://localhost:4222")
+        self.jetstream_subject_prefix = os.getenv("JETSTREAM_SUBJECT_PREFIX", "quiver.events")
+        self.jetstream_consumer_name = os.getenv("JETSTREAM_CONSUMER_NAME", "oms-consumer")
+        self.jetstream_max_inflight = int(os.getenv("JETSTREAM_MAX_INFLIGHT", "50"))
+        self.jetstream_ack_timeout_seconds = int(os.getenv("JETSTREAM_ACK_TIMEOUT", "30"))
+        
+        # P2: Event Processing Policy
+        self.enable_event_deduplication = os.getenv("ENABLE_EVENT_DEDUPLICATION", "true").lower() == "true"
+        self.event_cache_ttl_seconds = int(os.getenv("EVENT_CACHE_TTL_SECONDS", "300"))
+        self.event_processing_timeout_seconds = int(os.getenv("EVENT_PROCESSING_TIMEOUT", "60"))
+        
         # 로깅 설정
         self.log_level = os.getenv("ONTOLOGY_LOG_LEVEL", "INFO")
         self.log_format = os.getenv("ONTOLOGY_LOG_FORMAT", "json")
         
         # TerminusDB Native Features - Now Permanently Enabled
-        self.USE_TERMINUS_NATIVE_BRANCH = True  # Legacy code removed, always use native
-        self.USE_TERMINUS_NATIVE_MERGE = True   # Legacy code removed, always use native
-        self.USE_TERMINUS_NATIVE_DIFF = True    # Legacy code removed, always use native
-        self.USE_UNIFIED_MERGE_ENGINE = True    # Consolidated to single engine
+        self.USE_TERMINUS_NATIVE_BRANCH = True  # Keep for rollback compatibility
+        # Removed unused flags:
+        # - USE_TERMINUS_NATIVE_MERGE (only used in config.py)
+        # - USE_TERMINUS_NATIVE_DIFF (only used in config.py)
+        self.USE_UNIFIED_MERGE_ENGINE = True    # Keep for rollback/test compatibility
         
         # TerminusDB Connection Settings
         self.TERMINUS_SERVER_URL = os.getenv("TERMINUS_SERVER_URL", "http://localhost:16363")

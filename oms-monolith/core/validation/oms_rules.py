@@ -90,7 +90,18 @@ class PropertyDataTypeConsistencyRule(ValidationRule):
         return errors
     
     def _validate_value_type(self, value: Any, data_type: str) -> bool:
-        """Check if value matches expected data type"""
+        """
+        Check if value matches expected data type
+        
+        ⚠️ LEGACY WARNING: This duplicates TerminusDB's native type validation.
+        Consider delegating to TerminusDB schema validation per boundary definition.
+        """
+        # Log legacy usage for monitoring
+        logger.debug("LEGACY_TYPE_VALIDATION", extra={
+            "data_type": data_type,
+            "validator": "manual_type_check"
+        })
+        
         type_validators = {
             "string": lambda v: isinstance(v, str),
             "integer": lambda v: isinstance(v, int) and not isinstance(v, bool),

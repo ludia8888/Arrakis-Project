@@ -13,7 +13,7 @@ from utils.logger import get_logger
 from .models import (
     RevertRequest, RevertResult, ChangeOperation, ResourceType
 )
-# TODO: Update to use actual event publisher
+# FUTURE: Integrate with ValidationPipeline event system
 # from core.events.publisher import EventPublisher as HistoryEventPublisher
 HistoryEventPublisher = type('HistoryEventPublisher', (), {})  # Placeholder
 
@@ -23,7 +23,7 @@ router = APIRouter(prefix="/api/v1/schema", tags=["schema-events"])
 
 def get_history_event_publisher() -> HistoryEventPublisher:
     """History Event Publisher 의존성 주입"""
-    # TODO: 실제 구현에서는 DI 컨테이너 사용
+    # FUTURE: Use proper DI container integration
     from database.clients.terminus_db import get_terminus_client
     from core.event_publisher import get_event_publisher
     

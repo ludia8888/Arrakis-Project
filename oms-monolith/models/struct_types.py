@@ -14,7 +14,6 @@ from datetime import datetime, timezone
 
 from models.data_types import DataType
 
-
 class StructFieldDefinition(BaseModel):
     """Definition of a single field within a struct type"""
     name: str = Field(..., description="Field name within the struct")
@@ -36,7 +35,6 @@ class StructFieldDefinition(BaseModel):
         if not all(c.isalnum() or c == "_" for c in v):
             raise ValueError("Field name can only contain letters, numbers, and underscores")
         return v
-
 
 class StructType(BaseModel):
     """
@@ -205,7 +203,6 @@ class StructType(BaseModel):
             datetime: lambda v: v.isoformat()
         }
 
-
 # Predefined Struct Types
 PREDEFINED_STRUCT_TYPES = {
     "address": StructType(
@@ -324,7 +321,6 @@ PREDEFINED_STRUCT_TYPES = {
     )
 }
 
-
 class StructTypeRegistry:
     """Registry for managing struct types"""
     
@@ -371,7 +367,6 @@ class StructTypeRegistry:
     def exists(self, type_id: str) -> bool:
         """Check if a struct type exists"""
         return type_id in self._types
-
 
 # Global registry instance
 struct_type_registry = StructTypeRegistry()

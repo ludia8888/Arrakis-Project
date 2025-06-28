@@ -37,7 +37,10 @@ class BackupOrchestrator:
     def __init__(self):
         self.redis_client: Optional[redis.Redis] = None
         self.minio_client: Optional[Minio] = None
-        self.terminusdb_url = os.getenv('TERMINUSDB_URL', 'http://terminusdb:6363')
+        # Use ValidationConfig for consistency with main system
+        from core.validation.config import get_validation_config
+        config = get_validation_config()
+        self.terminusdb_url = os.getenv('TERMINUSDB_URL', config.terminus_db_url)
         self.terminusdb_user = os.getenv('TERMINUSDB_ADMIN_USER', 'admin')
         self.terminusdb_pass = os.getenv('TERMINUSDB_ADMIN_PASS', 'changeme-admin-pass')
         self.bucket_name = 'oms-backups'
