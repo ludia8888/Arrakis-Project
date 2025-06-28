@@ -43,6 +43,7 @@ class SharedConfig:
         self.USE_TERMINUS_NATIVE_BRANCH = os.getenv("USE_TERMINUS_NATIVE_BRANCH", "false").lower() == "true"
         self.USE_TERMINUS_NATIVE_MERGE = os.getenv("USE_TERMINUS_NATIVE_MERGE", "false").lower() == "true"
         self.USE_TERMINUS_NATIVE_DIFF = os.getenv("USE_TERMINUS_NATIVE_DIFF", "false").lower() == "true"
+        self.USE_UNIFIED_MERGE_ENGINE = os.getenv("USE_UNIFIED_MERGE_ENGINE", "true").lower() == "true"
         
         # TerminusDB Connection Settings
         self.TERMINUS_SERVER_URL = os.getenv("TERMINUS_SERVER_URL", "http://localhost:6363")

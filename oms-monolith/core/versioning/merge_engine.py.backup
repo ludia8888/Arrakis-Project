@@ -42,7 +42,7 @@ class MergeResult:
     duration_ms: float = 0
 
 
-class MergeEngine:
+class FixedMergeEngine:
     """
     Fixed merge engine with proper three-way merge and conflict detection
     """
@@ -451,4 +451,4 @@ class MergeEngine:
 
 
 # Create singleton instance
-merge_engine = MergeEngine()  # Fixed version now replaces the original
+fixed_merge_engine = FixedMergeEngine()

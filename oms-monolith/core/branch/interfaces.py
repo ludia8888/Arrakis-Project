@@ -81,8 +81,10 @@ class IMergeEngine(ABC):
         self,
         source: str,
         target: str,
-        strategy: str = "standard"
-    ) -> Dict[str, Any]:
+        author: str,
+        message: Optional[str] = None,
+        strategy: Any = None
+    ) -> Any:
         """Execute merge with given strategy"""
         pass
     
