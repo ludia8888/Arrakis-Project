@@ -184,7 +184,7 @@ class TestRunner:
             # Import necessary modules
             from models.semantic_types import semantic_type_registry
             from models.struct_types import struct_type_registry
-            from core.api.schema_generator import graphql_generator, openapi_generator
+            from core.api.schema import graphql_generator, openapi_generator
             from models.domain import ObjectType, Property, LinkType, Cardinality
             
             # Create test schema

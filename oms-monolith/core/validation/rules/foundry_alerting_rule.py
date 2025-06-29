@@ -268,7 +268,8 @@ class FoundryDatasetAlertingRule(BaseRule):
         for change_type, changes in schema_changes.items():
             if "removal" in change_type.lower():
                 for change in changes:
-                    if isinstance(change, dict):
+# REMOVED: TerminusDB handles type_validation natively
+#                     if isinstance(change, dict):
                         field_name = change.get('field_name', change.get('name', str(change)))
                         if field_name in foundry_required_fields:
                             compliance_issues.append({

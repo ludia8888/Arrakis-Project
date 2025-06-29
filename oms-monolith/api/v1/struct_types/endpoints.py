@@ -298,8 +298,18 @@ async def delete_struct_type(
             detail="Cannot delete system struct types"
         )
     
-    # TODO: Check if type is in use by any properties
-    # This would require querying properties with data_type_id = struct_type_id
+    # Check if type is in use by any properties
+    # For now, we'll add a basic check placeholder since we don't have the property registry
+    # In a production system, this would query the property store
+    in_use = False
+    if hasattr(struct_type_registry, 'check_type_usage'):
+        in_use = struct_type_registry.check_type_usage(struct_type_id)
+    
+    if in_use:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Cannot delete struct type '{struct_type_id}' as it is in use by properties"
+        )
     
     # Remove from registry
     del struct_type_registry._types[struct_type_id]

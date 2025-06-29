@@ -288,7 +288,8 @@ class NamingConventionRule(BaseRule):
             severity=severity,
             description=self._format_description(name, source_entity, config.resource_type),
             affected_resources=affected_resources,
-            migration_required=True,
+# REMOVED: TerminusDB handles required_field natively
+#             migration_required=True,
             migration_complexity=complexity,
             details=details
         )

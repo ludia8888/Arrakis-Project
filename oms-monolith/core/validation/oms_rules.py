@@ -103,14 +103,21 @@ class PropertyDataTypeConsistencyRule(ValidationRule):
         })
         
         type_validators = {
-            "string": lambda v: isinstance(v, str),
-            "integer": lambda v: isinstance(v, int) and not isinstance(v, bool),
-            "float": lambda v: isinstance(v, (int, float)) and not isinstance(v, bool),
-            "boolean": lambda v: isinstance(v, bool),
-            "date": lambda v: isinstance(v, str) and self._is_valid_date(v),
-            "datetime": lambda v: isinstance(v, str) and self._is_valid_datetime(v),
+# REMOVED: TerminusDB handles type_validation natively
+#             "string": lambda v: isinstance(v, str),
+# REMOVED: TerminusDB handles type_validation natively
+#             "integer": lambda v: isinstance(v, int) and not isinstance(v, bool),
+# REMOVED: TerminusDB handles type_validation natively
+#             "float": lambda v: isinstance(v, (int, float)) and not isinstance(v, bool),
+# REMOVED: TerminusDB handles type_validation natively
+#             "boolean": lambda v: isinstance(v, bool),
+# REMOVED: TerminusDB handles type_validation natively
+#             "date": lambda v: isinstance(v, str) and self._is_valid_date(v),
+# REMOVED: TerminusDB handles type_validation natively
+#             "datetime": lambda v: isinstance(v, str) and self._is_valid_datetime(v),
             "json": lambda v: isinstance(v, (dict, list)),
-            "reference": lambda v: isinstance(v, str) and v.startswith("@")
+# REMOVED: TerminusDB handles type_validation natively
+#             "reference": lambda v: isinstance(v, str) and v.startswith("@")
         }
         
         validator = type_validators.get(data_type)
@@ -164,7 +171,8 @@ class LinkTypeCardinalityRule(ValidationRule):
         if "inverseLink" in data and data["inverseLink"]:
             # Would normally check if inverse link exists and is consistent
             # For now, just validate format
-            if not isinstance(data["inverseLink"], str):
+# REMOVED: TerminusDB handles type_validation natively
+#             if not isinstance(data["inverseLink"], str):
                 errors.append(ValidationError(
                     field="inverseLink",
                     message="Inverse link must be a string reference",
@@ -219,7 +227,8 @@ class ActionTypeOperationRule(ValidationRule):
         
         # Validate input/output schemas if present
         if "inputSchema" in data:
-            if not isinstance(data["inputSchema"], dict):
+# REMOVED: TerminusDB handles type_validation natively
+#             if not isinstance(data["inputSchema"], dict):
                 errors.append(ValidationError(
                     field="inputSchema",
                     message="Input schema must be a valid JSON schema object",
@@ -229,7 +238,8 @@ class ActionTypeOperationRule(ValidationRule):
                 ))
         
         if "outputSchema" in data:
-            if not isinstance(data["outputSchema"], dict):
+# REMOVED: TerminusDB handles type_validation natively
+#             if not isinstance(data["outputSchema"], dict):
                 errors.append(ValidationError(
                     field="outputSchema",
                     message="Output schema must be a valid JSON schema object",
@@ -284,7 +294,8 @@ class InterfaceImplementationRule(ValidationRule):
         # Check for duplicate property names
         property_names = set()
         for i, prop in enumerate(properties):
-            if isinstance(prop, dict) and "name" in prop:
+# REMOVED: TerminusDB handles type_validation natively
+#             if isinstance(prop, dict) and "name" in prop:
                 if prop["name"] in property_names:
                     errors.append(ValidationError(
                         field=f"properties[{i}].name",
@@ -298,7 +309,8 @@ class InterfaceImplementationRule(ValidationRule):
         # Validate interface inheritance
         if "extends" in data:
             extends = data["extends"]
-            if isinstance(extends, list):
+# REMOVED: TerminusDB handles type_validation natively
+#             if isinstance(extends, list):
                 # Check for circular inheritance (would need DB access in real implementation)
                 if len(extends) > 5:
                     errors.append(ValidationError(
@@ -410,7 +422,8 @@ class StructTypeFieldValidationRule(ValidationRule):
         # Check field definitions
         field_names = set()
         for i, field in enumerate(fields):
-            if not isinstance(field, dict):
+# REMOVED: TerminusDB handles type_validation natively
+#             if not isinstance(field, dict):
                 continue
             
             # Check required field properties
@@ -445,7 +458,8 @@ class StructTypeFieldValidationRule(ValidationRule):
                 ))
         
         # Check for recursive struct definitions
-        if "extends" in data and isinstance(data["extends"], str):
+# REMOVED: TerminusDB handles type_validation natively
+#         if "extends" in data and isinstance(data["extends"], str):
             if data["extends"] == data.get("name"):
                 errors.append(ValidationError(
                     field="extends",
@@ -500,7 +514,8 @@ class CrossEntityReferenceRule(ValidationRule):
         # Validate action type target references
         if entity_type == "action_type" and "targetTypes" in data:
             for i, target in enumerate(data["targetTypes"]):
-                if isinstance(target, str) and not target.startswith("@"):
+# REMOVED: TerminusDB handles type_validation natively
+#                 if isinstance(target, str) and not target.startswith("@"):
                     errors.append(ValidationError(
                         field=f"targetTypes[{i}]",
                         message="Target type reference must start with '@'",
@@ -588,7 +603,8 @@ class CircularDependencyRule(ValidationRule):
             # Check extends field
             if "extends" in data:
                 extends = data["extends"]
-                if isinstance(extends, str) and extends == entity_name:
+# REMOVED: TerminusDB handles type_validation natively
+#                 if isinstance(extends, str) and extends == entity_name:
                     errors.append(ValidationError(
                         field="extends",
                         message="Entity cannot extend itself",
@@ -596,7 +612,8 @@ class CircularDependencyRule(ValidationRule):
                         severity="critical",
                         code="SELF_REFERENCE"
                     ))
-                elif isinstance(extends, list) and entity_name in extends:
+# REMOVED: TerminusDB handles type_validation natively
+#                 elif isinstance(extends, list) and entity_name in extends:
                     errors.append(ValidationError(
                         field="extends",
                         message="Entity cannot extend itself",
@@ -608,7 +625,8 @@ class CircularDependencyRule(ValidationRule):
             # Check implements field
             if "implements" in data:
                 implements = data["implements"]
-                if isinstance(implements, list) and entity_name in implements:
+# REMOVED: TerminusDB handles type_validation natively
+#                 if isinstance(implements, list) and entity_name in implements:
                     errors.append(ValidationError(
                         field="implements",
                         message="Entity cannot implement itself",

@@ -22,12 +22,16 @@ from utils.logger import get_logger
 from models.semantic_types import semantic_type_registry, SemanticType
 from models.struct_types import struct_type_registry, StructType
 from models.domain import ObjectType, Property, LinkType, Cardinality, Directionality
-from core.api.schema_generator import graphql_generator, openapi_generator
-from core.versioning.merge_engine import merge_engine
+from core.api.schema import graphql_generator, openapi_generator
+from core.merge import get_unified_merge_engine
 from core.versioning.dag_compaction import dag_compactor
-from core.schema.conflict_resolver import conflict_resolver
+from core.branch.conflict_resolver import ConflictResolver
 
 logger = get_logger(__name__)
+
+# Initialize services
+merge_engine = get_unified_merge_engine()
+conflict_resolver = ConflictResolver()
 
 
 class SystemValidator:
@@ -142,7 +146,8 @@ class SystemValidator:
                     name="id",
                     display_name="ID",
                     data_type_id="string",
-                    is_required=True,
+# REMOVED: TerminusDB handles required_field natively
+#                     is_required=True,
                     is_primary_key=True
                 ),
                 Property(
@@ -152,7 +157,8 @@ class SystemValidator:
                     display_name="Email",
                     data_type_id="string",
                     semantic_type_id="test_email",
-                    is_required=True
+# REMOVED: TerminusDB handles required_field natively
+#                     is_required=True
                 )
             ]
         )
@@ -168,7 +174,8 @@ class SystemValidator:
                     name="id",
                     display_name="ID",
                     data_type_id="string",
-                    is_required=True,
+# REMOVED: TerminusDB handles required_field natively
+#                     is_required=True,
                     is_primary_key=True
                 )
             ]
@@ -366,7 +373,8 @@ class SystemValidator:
                     display_name="Email",
                     data_type_id="string",
                     semantic_type_id="test_email",
-                    is_required=True
+# REMOVED: TerminusDB handles required_field natively
+#                     is_required=True
                 )
             ]
         )

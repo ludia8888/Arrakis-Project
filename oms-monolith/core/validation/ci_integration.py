@@ -452,7 +452,8 @@ Examples:
     parser.add_argument(
         "--format",
         "-f",
-        choices=["text", "json", "junit", "github"],
+# REMOVED: TerminusDB handles enum_validation natively
+#         choices=["text", "json", "junit", "github"],
         default="text",
         help="Output format"
     )

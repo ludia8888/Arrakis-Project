@@ -15,7 +15,7 @@ from typing import Dict, Any, Optional
 # Add parent directory to path for imports
 sys.path.append(str(Path(__file__).parent.parent))
 
-from core.api.schema_generator import GraphQLSchemaGenerator, OpenAPISchemaGenerator
+from core.api.schema import GraphQLSchemaGenerator, OpenAPISchemaGenerator
 from models.domain import ObjectType, LinkType, Property, Status
 from core.schema.registry import schema_registry
 

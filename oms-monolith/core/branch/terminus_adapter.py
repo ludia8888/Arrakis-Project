@@ -9,7 +9,7 @@ from terminusdb_client import WOQLClient
 from terminusdb_client.woqlquery import WOQLQuery as WQ
 
 from core.branch.interfaces import IBranchService
-from core.branch.models import ChangeProposal, BranchDiff, MergeResult, ProposalStatus, DiffEntry, Conflict
+from core.branch.models import ChangeProposal, BranchDiff, MergeResult, ProposalStatus, DiffEntry, Conflict, MergeStrategy
 from shared.exceptions import (
     NotFoundError,
     ConflictError,
@@ -17,6 +17,7 @@ from shared.exceptions import (
 )
 from core.monitoring.migration_monitor import track_native_operation
 from core.validation.config import get_validation_config
+from core.merge import get_unified_merge_engine
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +52,10 @@ class TerminusNativeBranchService(IBranchService):
             team=self.organization,
             use_token=False
         )
+        
+        # Initialize unified merge engine
+        self.merge_engine = get_unified_merge_engine()
+        self.merge_engine.terminus = self.client
         
         logger.info(
             f"TerminusDB Native Branch Service initialized - "
@@ -222,67 +227,42 @@ class TerminusNativeBranchService(IBranchService):
         source: str, 
         target: str, 
         author: str,
-        message: Optional[str] = None
+        message: Optional[str] = None,
+        strategy: MergeStrategy = MergeStrategy.MERGE
     ) -> MergeResult:
         """
-        Merge branches using TerminusDB native merge
+        Merge branches using UnifiedMergeEngine
         
-        This leverages TerminusDB's built-in 3-way merge algorithm
+        This delegates to the unified merge engine which handles all merge strategies
         """
         try:
-            # Default message if not provided
-            if not message:
-                message = f"Merge {source} into {target}"
+            # Use unified merge engine for all merge operations
+            result = await self.merge_engine.merge(
+                source_branch=source,
+                target_branch=target,
+                author=author,
+                message=message,
+                strategy=strategy
+            )
             
-            # First check if fast-forward is possible
-            diff = await self.get_diff(source, target)
+            # If merge was successful and it's a regular merge, delete source branch
+            if result.merge_commit and strategy == MergeStrategy.MERGE:
+                try:
+                    await self.delete_branch(source)
+                except Exception as e:
+                    logger.warning(f"Failed to delete source branch {source}: {e}")
             
-            if not diff.changes:
-                # No changes, nothing to merge
-                return MergeResult(
-                    status="no_changes",
-                    message="No changes to merge"
-                )
+            return result
             
-            # Attempt TerminusDB native merge
-            try:
-                # TerminusDB merge API
-                result = self.client.merge(
-                    source, 
-                    target,
-                    author=author,
-                    message=message
-                )
-                
-                logger.info(f"Successfully merged {source} into {target}")
-                
-                # Delete source branch after successful merge
-                await self.delete_branch(source)
-                
-                return MergeResult(
-                    status="success",
-                    commit_id=result.get("commit"),
-                    message=f"Merged successfully: {message}"
-                )
-                
-            except Exception as merge_error:
-                # Parse TerminusDB conflict information
-                if "conflict" in str(merge_error).lower():
-                    conflicts = self._parse_terminus_conflicts(str(merge_error))
-                    
-                    return MergeResult(
-                        status="conflict",
-                        conflicts=conflicts,
-                        message="Merge conflicts detected"
-                    )
-                else:
-                    raise
-                    
         except Exception as e:
             logger.error(f"Merge failed: {e}")
             return MergeResult(
-                status="error",
-                message=f"Merge failed: {str(e)}"
+                merge_commit=None,
+                source_branch=source,
+                target_branch=target,
+                conflicts=[],
+                strategy=strategy.value if hasattr(strategy, 'value') else str(strategy),
+                error=str(e)
             )
     
     @track_native_operation("get_diff")
@@ -351,8 +331,17 @@ class TerminusNativeBranchService(IBranchService):
             raise
     
     def _parse_terminus_conflicts(self, error_message: str) -> List[Conflict]:
-        """Parse TerminusDB conflict information from error message"""
-        # This is a simplified parser - in production would need more robust parsing
+        """
+        DEPRECATED: This method is no longer used.
+        Conflict parsing is now handled by UnifiedMergeEngine.
+        """
+        import warnings
+        warnings.warn(
+            "_parse_terminus_conflicts is deprecated. Conflict parsing is handled by UnifiedMergeEngine.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        # Kept for backward compatibility
         conflicts = []
         
         if "conflict" in error_message.lower():

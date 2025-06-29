@@ -9,7 +9,7 @@ from typing import Dict, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Path
 from pydantic import BaseModel, Field
 
-from core.api.schema_generator import (
+from core.api.schema import (
     graphql_generator, 
     openapi_generator
 )
@@ -125,8 +125,8 @@ async def generate_graphql_schema(
         )
         
         # Prepare response
-        from datetime import datetime
-        respo = SchemaGenerationResponse(
+        from datetime import datetime, timezone
+        response = SchemaGenerationResponse(
             format="graphql",
             schema=sdl,
             metadata=graphql_generator.export_schema_metadata() if request.export_metadata else None,
@@ -202,8 +202,8 @@ async def generate_openapi_schema(
         spec_json = json.dumps(spec, indent=2)
         
         # Prepare response
-        from datetime import datetime
-        respo = SchemaGenerationResponse(
+        from datetime import datetime, timezone
+        response = SchemaGenerationResponse(
             format="openapi",
             schema=spec_json,
             metadata=None,  # OpenAPI spec is self-contained
@@ -290,8 +290,8 @@ async def export_schema(
         all_link_types = await schema_registry.list_link_types()
         
         # Generate schema based on format
-        from datetime import datetime
-        timestamp = datetime.(timezone.utc).strftime("%Y%m%d_%H%M%S")
+        from datetime import datetime, timezone
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         
         if format == "graphql":
             schema_content = graphql_generator.generate_complete_schema(

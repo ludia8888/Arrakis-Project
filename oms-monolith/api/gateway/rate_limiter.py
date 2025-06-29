@@ -4,7 +4,7 @@ API 요청 제한 기능
 """
 import logging
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Optional, Tuple
 
 from api.gateway.models import RateLimitPolicy, RequestContext

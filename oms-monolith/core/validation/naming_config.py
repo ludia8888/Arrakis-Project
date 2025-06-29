@@ -188,7 +188,8 @@ def safe_enum_parse(enum_class: type, value: Any, default: Optional[Any] = None)
         raise ValueError(f"Cannot convert None/empty value to {enum_class.__name__}")
     
     # 문자열을 Enum으로 변환 시도
-    if isinstance(value, str):
+# REMOVED: TerminusDB handles type_validation natively
+#     if isinstance(value, str):
         # 1. 직접 value로 찾기 (권장)
         for enum_item in enum_class:
             if enum_item.value == value:

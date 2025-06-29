@@ -188,7 +188,8 @@ class EnterpriseSemanticMergeValidator:
                 affected_nodes=[bc.field_name] if bc.field_name else [],
                 description=bc.description,
                 suggested_resolution=f"Apply {bc.suggested_strategies[0].value}" if bc.suggested_strategies else "Manual review required",
-                impact_scope=list(bc.impact.keys()) if isinstance(bc.impact, dict) else [str(bc.impact)]
+# REMOVED: TerminusDB handles type_validation natively
+#                 impact_scope=list(bc.impact.keys()) if isinstance(bc.impact, dict) else [str(bc.impact)]
             )
             conflicts.append(conflict)
         

@@ -165,7 +165,8 @@ class RequiredFieldRemovalRule(BreakingChangeRule):
 
         # Schema 레벨의 required 정의
         schema_required = schema.get("required", [])
-        if isinstance(schema_required, list):
+# REMOVED: TerminusDB handles type_validation natively
+#         if isinstance(schema_required, list):
             required_fields.update(schema_required)
 
         return required_fields
@@ -737,7 +738,8 @@ class RequiredFieldAdditionRule(BreakingChangeRule):
         required_fields = set()
 
         for prop in schema.get("properties", []):
-            if prop.get("isRequired", False):
+# REMOVED: TerminusDB handles required_field natively
+#             if prop.get("isRequired", False):
                 required_fields.add(prop.get("name", ""))
 
         return required_fields

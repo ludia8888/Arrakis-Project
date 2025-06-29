@@ -29,7 +29,8 @@ logger = logging.getLogger(__name__)
 class ArrayConstraintType(str, Enum):
     """Types of array constraints"""
     UNIQUE_ELEMENTS = "unique_elements"
-    ENUM_VALUES = "enum_values"
+# REMOVED: TerminusDB handles enum_validation natively
+#     ENUM_VALUES = "enum_values"
     REGEX_PATTERN = "regex_pattern"
     MIN_LENGTH = "min_length"
     MAX_LENGTH = "max_length"
@@ -224,7 +225,8 @@ class ArrayElementConstraintRule(BreakingChangeRule):
         if constraint.constraint_type == ArrayConstraintType.UNIQUE_ELEMENTS:
             return self._build_unique_elements_filter(field_name, constraint)
         elif constraint.constraint_type == ArrayConstraintType.ENUM_VALUES:
-            return self._build_enum_values_filter(field_name, constraint)
+# REMOVED: TerminusDB handles enum_validation natively
+#             return self._build_enum_values_filter(field_name, constraint)
         elif constraint.constraint_type == ArrayConstraintType.REGEX_PATTERN:
             return self._build_regex_pattern_filter(field_name, constraint)
         elif constraint.constraint_type == ArrayConstraintType.MIN_LENGTH:
@@ -251,7 +253,8 @@ class ArrayElementConstraintRule(BreakingChangeRule):
         BIND("duplicate_elements_detected" AS ?violation_details)
         """
     
-    def _build_enum_values_filter(self, field_name: str, constraint: ArrayConstraint) -> str:
+# REMOVED: TerminusDB handles enum_validation natively
+#     def _build_enum_values_filter(self, field_name: str, constraint: ArrayConstraint) -> str:
         """Build filter for enum values constraint"""
         if not isinstance(constraint.constraint_value, (list, set)):
             return f"# Invalid enum constraint value: {constraint.constraint_value}"

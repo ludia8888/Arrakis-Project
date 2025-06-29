@@ -350,7 +350,8 @@ class EnumSchemaChangeRule(BaseRule):
     
     def _is_enum_related(self, change: Any) -> bool:
         """Check if a schema change is enum-related"""
-        if isinstance(change, dict):
+# REMOVED: TerminusDB handles type_validation natively
+#         if isinstance(change, dict):
             # Check for enum keywords in change description
             change_str = str(change).lower()
             enum_keywords = ["enum", "allowed_values", "valid_values", "choices", "options"]

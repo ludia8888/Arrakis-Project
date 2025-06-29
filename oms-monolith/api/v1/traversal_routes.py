@@ -14,8 +14,6 @@ from pydantic import BaseModel, Field
 from core.traversal.traversal_engine import TraversalEngine
 from core.traversal.dependency_analyzer import DependencyAnalyzer
 from core.traversal.semantic_validator import SemanticValidator
-# Deprecated import - using validation layer instead
-# from core.traversal.merge_validator import EnterpriseSemanticMergeValidator
 from core.validation.merge_validation_service import MergeValidationService, MergeStrategy
 from core.validation.adapters.terminus_traversal_adapter import create_terminus_traversal_adapter
 from core.validation.rule_registry import RuleRegistry

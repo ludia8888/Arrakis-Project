@@ -366,13 +366,15 @@ def main():
     """메인 실행 함수"""
     
     parser = argparse.ArgumentParser(description="OMS Changes Validation for CI/CD")
-    parser.add_argument("--mode", choices=["ci", "pr", "local"], default="local",
+# REMOVED: TerminusDB handles enum_validation natively
+#     parser.add_argument("--mode", choices=["ci", "pr", "local"], default="local",
                       help="Execution mode (ci=CI build, pr=PR validation, local=development)")
     parser.add_argument("--branch", default="HEAD", help="Branch to validate")
     parser.add_argument("--base-branch", default="main", help="Base branch for comparison")
     parser.add_argument("--fail-fast", action="store_true", help="Stop on first failure")
     parser.add_argument("--max-warnings", type=int, help="Maximum warnings before failure")
-    parser.add_argument("--output-format", choices=["text", "json"], default="text",
+# REMOVED: TerminusDB handles enum_validation natively
+#     parser.add_argument("--output-format", choices=["text", "json"], default="text",
                       help="Output format")
     parser.add_argument("--create-pr-comment", action="store_true", 
                       help="Create PR comment (only in PR mode)")

@@ -1,0 +1,620 @@
+{
+  "summary": {
+    "total_files_analyzed": 72,
+    "total_files_modified": 22,
+    "total_validations_removed": 113,
+    "backup_location": "/Users/sihyun/Desktop/ARRAKIS/SPICE/oms-monolith/validation_terminus_backup_20250629_140147"
+  },
+  "removed_validations": {
+    "/Users/sihyun/Desktop/ARRAKIS/SPICE/oms-monolith/scripts/validate_complete_system.py": [
+      {
+        "line": 373,
+        "type": "required_field",
+        "content": "                    is_required=True"
+      },
+      {
+        "line": 175,
+        "type": "required_field",
+        "content": "                    is_required=True,"
+      },
+      {
+        "line": 159,
+        "type": "required_field",
+        "content": "                    is_required=True"
+      },
+      {
+        "line": 149,
+        "type": "required_field",
+        "content": "                    is_required=True,"
+      }
+    ],
+    "/Users/sihyun/Desktop/ARRAKIS/SPICE/oms-monolith/scripts/remove_terminus_duplicate_validation.py": [
+      {
+        "line": 201,
+        "type": "array_validation",
+        "content": "            if re.search(r'is_array|isArray|isinstance.*list', line):"
+      },
+      {
+        "line": 196,
+        "type": "enum_validation",
+        "content": "            if re.search(r'in\\s+\\[.*\\]|in\\s+\\(.*\\)|choices\\s*=|enum_values', line):"
+      },
+      {
+        "line": 189,
+        "type": "required_field",
+        "content": "            if re.search(r'is_required|isRequired|required.*=.*True', line):"
+      },
+      {
+        "line": 39,
+        "type": "array_validation",
+        "content": "        \"is_array\", \"isArray\", \"List[\", \"array_type\", \"element_type\","
+      },
+      {
+        "line": 31,
+        "type": "enum_validation",
+        "content": "        \"enum_values\", \"enumValues\", \"@oneOf\", \"oneOf\", \"allowed_values\","
+      },
+      {
+        "line": 27,
+        "type": "required_field",
+        "content": "        \"is_required\", \"isRequired\", \"required\", \"min_cardinality\","
+      }
+    ],
+    "/Users/sihyun/Desktop/ARRAKIS/SPICE/oms-monolith/scripts/production_readiness_check.py": [
+      {
+        "line": 362,
+        "type": "type_validation",
+        "content": "            elif isinstance(value, list):"
+      },
+      {
+        "line": 359,
+        "type": "type_validation",
+        "content": "            elif isinstance(value, dict):"
+      },
+      {
+        "line": 355,
+        "type": "type_validation",
+        "content": "            if isinstance(value, str):"
+      },
+      {
+        "line": 314,
+        "type": "type_validation",
+        "content": "                if isinstance(resources, str):"
+      },
+      {
+        "line": 305,
+        "type": "type_validation",
+        "content": "                if isinstance(actions, str):"
+      },
+      {
+        "line": 167,
+        "type": "type_validation",
+        "content": "                    if isinstance(data_schema, dict):"
+      },
+      {
+        "line": 165,
+        "type": "type_validation",
+        "content": "                if isinstance(payload, dict):"
+      }
+    ],
+    "/Users/sihyun/Desktop/ARRAKIS/SPICE/oms-monolith/infrastructure/aws/eventbridge_rules.py": [
+      {
+        "line": 315,
+        "type": "required_field",
+        "content": "    parser.add_argument('--target-arn', required=True, help='Target ARN for events')"
+      }
+    ],
+    "/Users/sihyun/Desktop/ARRAKIS/SPICE/oms-monolith/scripts/ci/validate_oms_changes.py": [
+      {
+        "line": 375,
+        "type": "enum_validation",
+        "content": "    parser.add_argument(\"--output-format\", choices=[\"text\", \"json\"], default=\"text\","
+      },
+      {
+        "line": 369,
+        "type": "enum_validation",
+        "content": "    parser.add_argument(\"--mode\", choices=[\"ci\", \"pr\", \"local\"], default=\"local\","
+      }
+    ],
+    "/Users/sihyun/Desktop/ARRAKIS/SPICE/oms-monolith/core/traversal/merge_validator.py": [
+      {
+        "line": 191,
+        "type": "type_validation",
+        "content": "                impact_scope=list(bc.impact.keys()) if isinstance(bc.impact, dict) else [str(bc.impa"
+      }
+    ],
+    "/Users/sihyun/Desktop/ARRAKIS/SPICE/oms-monolith/core/validation/event_schema.py": [
+      {
+        "line": 264,
+        "type": "type_validation",
+        "content": "                elif field_spec.field_type == \"array\" and not isinstance(value, list):"
+      },
+      {
+        "line": 262,
+        "type": "type_validation",
+        "content": "                elif field_spec.field_type == \"string\" and not isinstance(value, str):"
+      },
+      {
+        "line": 204,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"error_message\", \"string\", required=True),"
+      },
+      {
+        "line": 203,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"stage\", \"string\", required=True, description=\"Pipeline stage where failu"
+      },
+      {
+        "line": 202,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"failure_timestamp\", \"timestamp\", required=True),"
+      },
+      {
+        "line": 201,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"execution_id\", \"string\", required=True),"
+      },
+      {
+        "line": 200,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"pipeline_id\", \"string\", required=True),"
+      },
+      {
+        "line": 186,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"failure_percentage\", \"number\", required=True),"
+      },
+      {
+        "line": 185,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"total_records_count\", \"number\", required=True),"
+      },
+      {
+        "line": 184,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"failed_records_count\", \"number\", required=True),"
+      },
+      {
+        "line": 183,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"check_type\", \"string\", required=True, description=\"completeness, accurac"
+      },
+      {
+        "line": 182,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"failure_timestamp\", \"timestamp\", required=True),"
+      },
+      {
+        "line": 181,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"check_id\", \"string\", required=True),"
+      },
+      {
+        "line": 180,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"dataset_id\", \"string\", required=True),"
+      },
+      {
+        "line": 166,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"severity_level\", \"string\", required=True),"
+      },
+      {
+        "line": 165,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"threshold_type\", \"string\", required=True, description=\"upper, lower, ran"
+      },
+      {
+        "line": 164,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"actual_value\", \"number\", required=True),"
+      },
+      {
+        "line": 163,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"threshold_value\", \"number\", required=True),"
+      },
+      {
+        "line": 162,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"violation_timestamp\", \"timestamp\", required=True),"
+      },
+      {
+        "line": 161,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"threshold_id\", \"string\", required=True),"
+      },
+      {
+        "line": 160,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"metric_id\", \"string\", required=True),"
+      },
+      {
+        "line": 147,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"time_window\", \"object\", required=True, description=\"Start and end timest"
+      },
+      {
+        "line": 146,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"confidence\", \"number\", required=True),"
+      },
+      {
+        "line": 145,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"pattern_type\", \"string\", required=True, description=\"seasonal, trend, cy"
+      },
+      {
+        "line": 144,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"detection_timestamp\", \"timestamp\", required=True),"
+      },
+      {
+        "line": 143,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"dataset_id\", \"string\", required=True),"
+      },
+      {
+        "line": 142,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"pattern_id\", \"string\", required=True),"
+      },
+      {
+        "line": 128,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"anomaly_value\", \"number\", required=True),"
+      },
+      {
+        "line": 126,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"confidence_score\", \"number\", required=True, description=\"Detection confi"
+      },
+      {
+        "line": 125,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"anomaly_type\", \"string\", required=True, description=\"Type of anomaly det"
+      },
+      {
+        "line": 124,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"detection_timestamp\", \"timestamp\", required=True),"
+      },
+      {
+        "line": 123,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"anomaly_id\", \"string\", required=True),"
+      },
+      {
+        "line": 122,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"sensor_id\", \"string\", required=True),"
+      },
+      {
+        "line": 108,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"unit\", \"string\", required=True, description=\"Measurement unit\"),"
+      },
+      {
+        "line": 107,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"value\", \"number\", required=True, description=\"Sensor reading value\"),"
+      },
+      {
+        "line": 106,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"reading_id\", \"string\", required=True, description=\"Unique reading identi"
+      },
+      {
+        "line": 105,
+        "type": "required_field",
+        "content": "            EventFieldSpec(\"timestamp\", \"timestamp\", required=True, description=\"Reading timestamp\")"
+      },
+      {
+        "line": 69,
+        "type": "required_field",
+        "content": "    required: bool = True"
+      }
+    ],
+    "/Users/sihyun/Desktop/ARRAKIS/SPICE/oms-monolith/core/validation/schema_validator.py": [
+      {
+        "line": 79,
+        "type": "type_validation",
+        "content": "        if isinstance(schema, dict):"
+      }
+    ],
+    "/Users/sihyun/Desktop/ARRAKIS/SPICE/oms-monolith/core/validation/version_manager.py": [
+      {
+        "line": 369,
+        "type": "type_validation",
+        "content": "                    if isinstance(words, list):"
+      },
+      {
+        "line": 361,
+        "type": "type_validation",
+        "content": "            if isinstance(words, list):"
+      }
+    ],
+    "/Users/sihyun/Desktop/ARRAKIS/SPICE/oms-monolith/core/validation/service_refactored.py": [
+      {
+        "line": 284,
+        "type": "type_validation",
+        "content": "                                if isinstance(result, list):"
+      }
+    ],
+    "/Users/sihyun/Desktop/ARRAKIS/SPICE/oms-monolith/core/validation/ci_integration.py": [
+      {
+        "line": 455,
+        "type": "enum_validation",
+        "content": "        choices=[\"text\", \"json\", \"junit\", \"github\"],"
+      }
+    ],
+    "/Users/sihyun/Desktop/ARRAKIS/SPICE/oms-monolith/core/validation/naming_config.py": [
+      {
+        "line": 191,
+        "type": "type_validation",
+        "content": "    if isinstance(value, str):"
+      }
+    ],
+    "/Users/sihyun/Desktop/ARRAKIS/SPICE/oms-monolith/core/validation/naming_history.py": [
+      {
+        "line": 519,
+        "type": "type_validation",
+        "content": "                    if isinstance(old[key], dict) and isinstance(new[key], dict):"
+      },
+      {
+        "line": 81,
+        "type": "type_validation",
+        "content": "    if isinstance(value, str):"
+      }
+    ],
+    "/Users/sihyun/Desktop/ARRAKIS/SPICE/oms-monolith/core/validation/input_sanitization.py": [
+      {
+        "line": 125,
+        "type": "type_validation",
+        "content": "        if not isinstance(value, str):"
+      }
+    ],
+    "/Users/sihyun/Desktop/ARRAKIS/SPICE/oms-monolith/core/validation/enterprise_service.py": [
+      {
+        "line": 931,
+        "type": "type_validation",
+        "content": "                if isinstance(prop, dict) and \"name\" in prop:"
+      },
+      {
+        "line": 928,
+        "type": "type_validation",
+        "content": "        if \"properties\" in data and isinstance(data[\"properties\"], list):"
+      },
+      {
+        "line": 870,
+        "type": "type_validation",
+        "content": "                if field in data and (not data[field] or not isinstance(data[field], str)):"
+      },
+      {
+        "line": 858,
+        "type": "type_validation",
+        "content": "            if not data[\"objectType\"] or not isinstance(data[\"objectType\"], str):"
+      },
+      {
+        "line": 829,
+        "type": "type_validation",
+        "content": "            elif isinstance(value, list):"
+      },
+      {
+        "line": 826,
+        "type": "type_validation",
+        "content": "            elif isinstance(value, dict):"
+      },
+      {
+        "line": 818,
+        "type": "type_validation",
+        "content": "            if isinstance(value, str) and sql_pattern.search(value):"
+      },
+      {
+        "line": 698,
+        "type": "type_validation",
+        "content": "            if field in data and isinstance(data[field], str):"
+      },
+      {
+        "line": 553,
+        "type": "type_validation",
+        "content": "            elif isinstance(value, list):"
+      },
+      {
+        "line": 550,
+        "type": "type_validation",
+        "content": "            elif isinstance(value, dict):"
+      },
+      {
+        "line": 538,
+        "type": "type_validation",
+        "content": "            if isinstance(value, str):"
+      },
+      {
+        "line": 456,
+        "type": "type_validation",
+        "content": "                    else self.sanitizer.sanitize(item, SanitizationLevel.STRICT).sanitized_value if "
+      },
+      {
+        "line": 455,
+        "type": "type_validation",
+        "content": "                    await self._sanitize_input(item, entity_type, result) if isinstance(item, dict)"
+      },
+      {
+        "line": 453,
+        "type": "type_validation",
+        "content": "            elif isinstance(value, list):"
+      },
+      {
+        "line": 451,
+        "type": "type_validation",
+        "content": "            elif isinstance(value, dict):"
+      },
+      {
+        "line": 428,
+        "type": "type_validation",
+        "content": "            if isinstance(value, str):"
+      }
+    ],
+    "/Users/sihyun/Desktop/ARRAKIS/SPICE/oms-monolith/core/validation/oms_rules.py": [
+      {
+        "line": 611,
+        "type": "type_validation",
+        "content": "                if isinstance(implements, list) and entity_name in implements:"
+      },
+      {
+        "line": 599,
+        "type": "type_validation",
+        "content": "                elif isinstance(extends, list) and entity_name in extends:"
+      },
+      {
+        "line": 591,
+        "type": "type_validation",
+        "content": "                if isinstance(extends, str) and extends == entity_name:"
+      },
+      {
+        "line": 503,
+        "type": "type_validation",
+        "content": "                if isinstance(target, str) and not target.startswith(\"@\"):"
+      },
+      {
+        "line": 448,
+        "type": "type_validation",
+        "content": "        if \"extends\" in data and isinstance(data[\"extends\"], str):"
+      },
+      {
+        "line": 413,
+        "type": "type_validation",
+        "content": "            if not isinstance(field, dict):"
+      },
+      {
+        "line": 301,
+        "type": "type_validation",
+        "content": "            if isinstance(extends, list):"
+      },
+      {
+        "line": 287,
+        "type": "type_validation",
+        "content": "            if isinstance(prop, dict) and \"name\" in prop:"
+      },
+      {
+        "line": 232,
+        "type": "type_validation",
+        "content": "            if not isinstance(data[\"outputSchema\"], dict):"
+      },
+      {
+        "line": 222,
+        "type": "type_validation",
+        "content": "            if not isinstance(data[\"inputSchema\"], dict):"
+      },
+      {
+        "line": 167,
+        "type": "type_validation",
+        "content": "            if not isinstance(data[\"inverseLink\"], str):"
+      },
+      {
+        "line": 113,
+        "type": "type_validation",
+        "content": "            \"reference\": lambda v: isinstance(v, str) and v.startswith(\"@\")"
+      },
+      {
+        "line": 111,
+        "type": "type_validation",
+        "content": "            \"datetime\": lambda v: isinstance(v, str) and self._is_valid_datetime(v),"
+      },
+      {
+        "line": 110,
+        "type": "type_validation",
+        "content": "            \"date\": lambda v: isinstance(v, str) and self._is_valid_date(v),"
+      },
+      {
+        "line": 109,
+        "type": "type_validation",
+        "content": "            \"boolean\": lambda v: isinstance(v, bool),"
+      },
+      {
+        "line": 108,
+        "type": "type_validation",
+        "content": "            \"float\": lambda v: isinstance(v, (int, float)) and not isinstance(v, bool),"
+      },
+      {
+        "line": 107,
+        "type": "type_validation",
+        "content": "            \"integer\": lambda v: isinstance(v, int) and not isinstance(v, bool),"
+      },
+      {
+        "line": 106,
+        "type": "type_validation",
+        "content": "            \"string\": lambda v: isinstance(v, str),"
+      }
+    ],
+    "/Users/sihyun/Desktop/ARRAKIS/SPICE/oms-monolith/core/validation/rules/naming_convention_rule.py": [
+      {
+        "line": 291,
+        "type": "required_field",
+        "content": "            migration_required=True,"
+      }
+    ],
+    "/Users/sihyun/Desktop/ARRAKIS/SPICE/oms-monolith/core/validation/rules/enum_value_constraint_rule.py": [
+      {
+        "line": 353,
+        "type": "type_validation",
+        "content": "        if isinstance(change, dict):"
+      }
+    ],
+    "/Users/sihyun/Desktop/ARRAKIS/SPICE/oms-monolith/core/validation/rules/foundry_alerting_rule.py": [
+      {
+        "line": 271,
+        "type": "type_validation",
+        "content": "                    if isinstance(change, dict):"
+      }
+    ],
+    "/Users/sihyun/Desktop/ARRAKIS/SPICE/oms-monolith/core/validation/rules/array_element_rule.py": [
+      {
+        "line": 254,
+        "type": "enum_validation",
+        "content": "    def _build_enum_values_filter(self, field_name: str, constraint: ArrayConstraint) -> str:"
+      },
+      {
+        "line": 227,
+        "type": "enum_validation",
+        "content": "            return self._build_enum_values_filter(field_name, constraint)"
+      },
+      {
+        "line": 32,
+        "type": "enum_validation",
+        "content": "    ENUM_VALUES = \"enum_values\""
+      }
+    ],
+    "/Users/sihyun/Desktop/ARRAKIS/SPICE/oms-monolith/core/validation/rules/primary_key_change.py": [
+      {
+        "line": 399,
+        "type": "type_validation",
+        "content": "        if isinstance(schema_pk, list):"
+      },
+      {
+        "line": 182,
+        "type": "type_validation",
+        "content": "            elif isinstance(schema_pk, list):"
+      },
+      {
+        "line": 180,
+        "type": "type_validation",
+        "content": "            if isinstance(schema_pk, str):"
+      }
+    ],
+    "/Users/sihyun/Desktop/ARRAKIS/SPICE/oms-monolith/core/validation/rules/required_field.py": [
+      {
+        "line": 740,
+        "type": "required_field",
+        "content": "            if prop.get(\"isRequired\", False):"
+      },
+      {
+        "line": 168,
+        "type": "type_validation",
+        "content": "        if isinstance(schema_required, list):"
+      }
+    ]
+  },
+  "errors": []
+}

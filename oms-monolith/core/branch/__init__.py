@@ -1,7 +1,6 @@
 # Core branch module exports
 # Legacy imports removed - use service_factory instead
 from .conflict_resolver import ConflictResolver
-from .merge_strategies import MergeStrategyImplementor
 
 # New abstractions and adapters
 from .interfaces import IBranchService, ILockService, IMergeEngine
@@ -18,7 +17,6 @@ from .lock_cleanup_service import LockCleanupService
 __all__ = [
     # Core services (legacy removed)
     "ConflictResolver",
-    "MergeStrategyImplementor",
     
     # New abstractions
     "IBranchService",

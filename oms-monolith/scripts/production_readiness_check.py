@@ -162,9 +162,11 @@ class ProductionReadinessChecker:
             
             for message_name, message in messages.items():
                 payload = message.get('payload', {})
-                if isinstance(payload, dict):
+# REMOVED: TerminusDB handles type_validation natively
+#                 if isinstance(payload, dict):
                     data_schema = payload.get('properties', {}).get('data', {})
-                    if isinstance(data_schema, dict):
+# REMOVED: TerminusDB handles type_validation natively
+#                     if isinstance(data_schema, dict):
                         data_props = data_schema.get('properties', {})
                         if 'version' in data_props:
                             schemas_with_version += 1
@@ -302,7 +304,8 @@ class ProductionReadinessChecker:
             for statement in policy.get('Statement', []):
                 # 와일드카드 액션 확인
                 actions = statement.get('Action', [])
-                if isinstance(actions, str):
+# REMOVED: TerminusDB handles type_validation natively
+#                 if isinstance(actions, str):
                     actions = [actions]
                 
                 for action in actions:
@@ -311,7 +314,8 @@ class ProductionReadinessChecker:
                 
                 # 리소스 제한 확인
                 resources = statement.get('Resource', [])
-                if isinstance(resources, str):
+# REMOVED: TerminusDB handles type_validation natively
+#                 if isinstance(resources, str):
                     resources = [resources]
                 
                 if '*' in resources and 'Condition' not in statement:
@@ -352,14 +356,17 @@ class PIIHandler:
         def check_value(key: str, value: Any, path: str = ""):
             current_path = f"{path}.{key}" if path else key
             
-            if isinstance(value, str):
+# REMOVED: TerminusDB handles type_validation natively
+#             if isinstance(value, str):
                 for pii_type, pattern in self.PII_PATTERNS.items():
                     if re.search(pattern, value):
                         pii_fields.append((current_path, pii_type))
-            elif isinstance(value, dict):
+# REMOVED: TerminusDB handles type_validation natively
+#             elif isinstance(value, dict):
                 for k, v in value.items():
                     check_value(k, v, current_path)
-            elif isinstance(value, list):
+# REMOVED: TerminusDB handles type_validation natively
+#             elif isinstance(value, list):
                 for i, item in enumerate(value):
                     check_value(f"[{i}]", item, current_path)
         

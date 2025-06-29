@@ -7,7 +7,7 @@ from typing import Optional
 
 import strawberry
 
-from .resolvers import ServiceClient
+from .resolvers.service_client import ServiceClient
 from .schema import (
     Branch,
     BranchStatusEnum,

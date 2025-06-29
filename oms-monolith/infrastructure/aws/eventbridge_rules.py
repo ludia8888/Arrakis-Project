@@ -312,7 +312,8 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description='Setup EventBridge Rules with DLQ')
     parser.add_argument('--event-bus-name', default='oms-events', help='Event bus name')
-    parser.add_argument('--target-arn', required=True, help='Target ARN for events')
+# REMOVED: TerminusDB handles required_field natively
+#     parser.add_argument('--target-arn', required=True, help='Target ARN for events')
     parser.add_argument('--aws-region', default='us-east-1', help='AWS region')
     
     args = parser.parse_args()

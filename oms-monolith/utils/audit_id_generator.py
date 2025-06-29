@@ -82,7 +82,7 @@ class AuditIDGenerator:
         
         # Limit length to 50 characters
         if len(cleaned) > 50:
-            cleaned = cleaned[:47] + "..."
+            cleaned = f"{cleaned[:47]}..."
         
         return cleaned.lower()
     

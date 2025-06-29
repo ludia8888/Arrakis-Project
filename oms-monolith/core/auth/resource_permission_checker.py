@@ -5,38 +5,16 @@ OMS 내부에서 사용하는 최소한의 권한 체크 모듈
 """
 import os
 from typing import List, Optional, Dict, Any
-from enum import Enum
 import httpx
 from pydantic import BaseModel
 from functools import lru_cache
-import jwt
 from datetime import datetime, timezone
 
 from utils.logger import get_logger
+from core.integrations.user_service_client import validate_jwt_token
+from models.permissions import ResourceType, Action
 
 logger = get_logger(__name__)
-
-
-class ResourceType(str, Enum):
-    """OMS 리소스 타입"""
-    SCHEMA = "schema"
-    OBJECT_TYPE = "object_type"
-    PROPERTY = "property"
-    BRANCH = "branch"
-    VALIDATION = "validation"
-    ACTION_TYPE = "action_type"
-    FUNCTION_TYPE = "function_type"
-
-
-class Action(str, Enum):
-    """리소스에 대한 액션"""
-    CREATE = "create"
-    READ = "read"
-    UPDATE = "update"
-    DELETE = "delete"
-    VALIDATE = "validate"
-    MERGE = "merge"
-    APPROVE = "approve"
 
 
 class UserContext(BaseModel):
@@ -78,13 +56,10 @@ class ResourcePermissionChecker:
     
     def __init__(
         self,
-        jwt_secret: Optional[str] = None,
-        jwt_algorithm: str = "HS256",
         idp_endpoint: Optional[str] = None,
         cache_ttl: int = 300  # 5분
     ):
-        self.jwt_secret = jwt_secret or os.getenv("JWT_SECRET", "dev-secret")
-        self.jwt_algorithm = jwt_algorithm
+        # JWT validation is now delegated to MSA
         self.idp_endpoint = idp_endpoint or os.getenv("IDP_ENDPOINT")
         self.cache_ttl = cache_ttl
         
@@ -111,41 +86,26 @@ class ResourcePermissionChecker:
             ]
         }
     
-    def extract_user_from_token(self, token: str) -> Optional[UserContext]:
+    async def extract_user_from_token(self, token: str) -> Optional[UserContext]:
         """
-        JWT 토큰에서 사용자 정보 추출
+        JWT 토큰에서 사용자 정보 추출 - MSA를 통해 검증
         """
         try:
             # Bearer 토큰 처리
             if token.startswith("Bearer "):
                 token = token[7:]
             
-            # JWT 디코드
-            payload = jwt.decode(
-                token,
-                self.jwt_secret,
-                algorithms=[self.jwt_algorithm]
-            )
+            # Delegate JWT validation to user service MSA
+            user_context = await validate_jwt_token(token)
             
-            # UserContext 생성
-            return UserContext(
-                user_id=payload.get("sub", payload.get("user_id")),
-                username=payload.get("username", payload.get("preferred_username")),
-                email=payload.get("email"),
-                roles=payload.get("roles", []),
-                permissions=payload.get("permissions", []),
-                teams=payload.get("teams", []),
-                token_exp=payload.get("exp")
-            )
+            # Add token expiration if available
+            if user_context and hasattr(user_context, 'metadata') and user_context.metadata:
+                user_context.token_exp = user_context.metadata.get('exp')
             
-        except jwt.ExpiredSignatureError:
-            logger.warning("JWT token expired")
-            return None
-        except jwt.InvalidTokenError as e:
-            logger.warning(f"Invalid JWT token: {e}")
-            return None
+            return user_context
+            
         except Exception as e:
-            logger.error(f"Error extracting user from token: {e}")
+            logger.error(f"Error extracting user from token via MSA: {e}")
             return None
     
     def check_permission(
@@ -306,7 +266,7 @@ def get_permission_checker() -> ResourcePermissionChecker:
 
 
 # 편의 함수
-def check_permission(
+async def check_permission(
     token: str,
     resource_type: ResourceType,
     resource_id: str,
@@ -325,7 +285,7 @@ def check_permission(
         권한 여부
     """
     checker = get_permission_checker()
-    user = checker.extract_user_from_token(token)
+    user = await checker.extract_user_from_token(token)
     
     if not user:
         return False

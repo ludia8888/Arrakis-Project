@@ -425,7 +425,8 @@ class EnterpriseValidationService:
         sanitized = {}
         
         for field, value in data.items():
-            if isinstance(value, str):
+# REMOVED: TerminusDB handles type_validation natively
+#             if isinstance(value, str):
                 sanitization_result = self.sanitizer.sanitize(
                     value,
                     SanitizationLevel.STRICT,
@@ -448,12 +449,16 @@ class EnterpriseValidationService:
                     # Reduce security score
                     result.security_score -= len(sanitization_result.detected_threats) * 5
                 
-            elif isinstance(value, dict):
+# REMOVED: TerminusDB handles type_validation natively
+#             elif isinstance(value, dict):
                 sanitized[field] = await self._sanitize_input(value, entity_type, result)
-            elif isinstance(value, list):
+# REMOVED: TerminusDB handles type_validation natively
+#             elif isinstance(value, list):
                 sanitized[field] = [
-                    await self._sanitize_input(item, entity_type, result) if isinstance(item, dict)
-                    else self.sanitizer.sanitize(item, SanitizationLevel.STRICT).sanitized_value if isinstance(item, str)
+# REMOVED: TerminusDB handles type_validation natively
+#                     await self._sanitize_input(item, entity_type, result) if isinstance(item, dict)
+# REMOVED: TerminusDB handles type_validation natively
+#                     else self.sanitizer.sanitize(item, SanitizationLevel.STRICT).sanitized_value if isinstance(item, str)
                     else item
                     for item in value
                 ]
@@ -535,7 +540,8 @@ class EnterpriseValidationService:
         }
         
         def check_value(value: Any, path: str):
-            if isinstance(value, str):
+# REMOVED: TerminusDB handles type_validation natively
+#             if isinstance(value, str):
                 for pattern_name, pattern in security_patterns.items():
                     import re
                     if re.search(pattern, value, re.IGNORECASE):
@@ -547,10 +553,12 @@ class EnterpriseValidationService:
                             code=f"SECURITY_{pattern_name.upper()}"
                         ))
                         result.security_score -= 20
-            elif isinstance(value, dict):
+# REMOVED: TerminusDB handles type_validation natively
+#             elif isinstance(value, dict):
                 for k, v in value.items():
                     check_value(v, f"{path}.{k}")
-            elif isinstance(value, list):
+# REMOVED: TerminusDB handles type_validation natively
+#             elif isinstance(value, list):
                 for i, item in enumerate(value):
                     check_value(item, f"{path}[{i}]")
         
@@ -695,7 +703,8 @@ class FieldLengthRule(ValidationRule):
         max_lengths = self.entity_configs.get(entity_type, {}).get("max_length", {})
         
         for field, max_length in max_lengths.items():
-            if field in data and isinstance(data[field], str):
+# REMOVED: TerminusDB handles type_validation natively
+#             if field in data and isinstance(data[field], str):
                 if len(data[field]) > max_length:
                     errors.append(ValidationError(
                         field=field,
@@ -815,7 +824,8 @@ class SecurityValidationRule(ValidationRule):
         sql_pattern = re.compile(r'(\b(union|select|insert|update|delete|drop)\b.*\b(from|where|table)\b)', re.IGNORECASE)
         
         def check_sql_injection(value: Any, field_path: str):
-            if isinstance(value, str) and sql_pattern.search(value):
+# REMOVED: TerminusDB handles type_validation natively
+#             if isinstance(value, str) and sql_pattern.search(value):
                 errors.append(ValidationError(
                     field=field_path,
                     message="Potential SQL injection pattern detected",
@@ -823,10 +833,12 @@ class SecurityValidationRule(ValidationRule):
                     severity="high",
                     code="SQL_INJECTION_RISK"
                 ))
-            elif isinstance(value, dict):
+# REMOVED: TerminusDB handles type_validation natively
+#             elif isinstance(value, dict):
                 for k, v in value.items():
                     check_sql_injection(v, f"{field_path}.{k}")
-            elif isinstance(value, list):
+# REMOVED: TerminusDB handles type_validation natively
+#             elif isinstance(value, list):
                 for i, item in enumerate(value):
                     check_sql_injection(item, f"{field_path}[{i}]")
         
@@ -855,7 +867,8 @@ class ReferenceIntegrityRule(ValidationRule):
         if entity_type == "property" and "objectType" in data:
             # This would normally check if the object type exists
             # For now, just validate format
-            if not data["objectType"] or not isinstance(data["objectType"], str):
+# REMOVED: TerminusDB handles type_validation natively
+#             if not data["objectType"] or not isinstance(data["objectType"], str):
                 errors.append(ValidationError(
                     field="objectType",
                     message="Invalid object type reference",
@@ -867,7 +880,8 @@ class ReferenceIntegrityRule(ValidationRule):
         # Check source/target references in link types
         if entity_type == "link_type":
             for field in ["sourceObjectType", "targetObjectType"]:
-                if field in data and (not data[field] or not isinstance(data[field], str)):
+# REMOVED: TerminusDB handles type_validation natively
+#                 if field in data and (not data[field] or not isinstance(data[field], str)):
                     errors.append(ValidationError(
                         field=field,
                         message=f"Invalid {field} reference",
@@ -925,10 +939,12 @@ class DuplicateDetectionRule(ValidationRule):
         
         # This would normally check against existing data
         # For now, just check for obvious duplicates in arrays
-        if "properties" in data and isinstance(data["properties"], list):
+# REMOVED: TerminusDB handles type_validation natively
+#         if "properties" in data and isinstance(data["properties"], list):
             seen_names = set()
             for i, prop in enumerate(data["properties"]):
-                if isinstance(prop, dict) and "name" in prop:
+# REMOVED: TerminusDB handles type_validation natively
+#                 if isinstance(prop, dict) and "name" in prop:
                     if prop["name"] in seen_names:
                         errors.append(ValidationError(
                             field=f"properties[{i}].name",

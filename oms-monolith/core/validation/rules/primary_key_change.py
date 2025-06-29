@@ -177,9 +177,11 @@ class PrimaryKeyChangeRule(BreakingChangeRule):
         # Schema 레벨의 Primary Key 정의
         schema_pk = schema.get("primaryKey")
         if schema_pk:
-            if isinstance(schema_pk, str):
+# REMOVED: TerminusDB handles type_validation natively
+#             if isinstance(schema_pk, str):
                 primary_keys.add(schema_pk)
-            elif isinstance(schema_pk, list):
+# REMOVED: TerminusDB handles type_validation natively
+#             elif isinstance(schema_pk, list):
                 primary_keys.update(schema_pk)
 
         return primary_keys
@@ -396,7 +398,8 @@ class PrimaryKeyChangeRule(BreakingChangeRule):
 
         # Schema에 명시적 순서가 있는 경우
         schema_pk = schema.get("primaryKey")
-        if isinstance(schema_pk, list):
+# REMOVED: TerminusDB handles type_validation natively
+#         if isinstance(schema_pk, list):
             return schema_pk
 
         # Properties 정의 순서 기반

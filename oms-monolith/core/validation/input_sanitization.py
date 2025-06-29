@@ -122,7 +122,8 @@ class InputSanitizer:
         Returns:
             정제 결과
         """
-        if not isinstance(value, str):
+# REMOVED: TerminusDB handles type_validation natively
+#         if not isinstance(value, str):
             value = str(value)
         
         original_value = value

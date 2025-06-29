@@ -8,7 +8,7 @@ import strawberry
 from strawberry.types import Info
 
 from core.history.models import (
-    ChangeOperation, ResourceType as ModelResourceType,
+    ChangeOperation, HistoryResourceType as ModelResourceType,
     HistoryEntry as ModelHistoryEntry,
     CommitDetail as ModelCommitDetail,
     RevertRequest as ModelRevertRequest,

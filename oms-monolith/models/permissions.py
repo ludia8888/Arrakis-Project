@@ -11,6 +11,7 @@ class ResourceType(str, Enum):
     """OMS Resource Types"""
     SCHEMA = "schema"
     OBJECT_TYPE = "object_type"
+    PROPERTY = "property"
     LINK_TYPE = "link_type"
     ACTION_TYPE = "action_type"
     FUNCTION_TYPE = "function_type"
@@ -18,6 +19,10 @@ class ResourceType(str, Enum):
     PROPOSAL = "proposal"
     AUDIT = "audit"
     WEBHOOK = "webhook"
+    VALIDATION = "validation"
+    ACL = "acl"
+    USER = "user"
+    SYSTEM = "system"
 
 
 class Action(str, Enum):
@@ -31,6 +36,7 @@ class Action(str, Enum):
     MERGE = "merge"
     REVERT = "revert"
     EXECUTE = "execute"
+    VALIDATE = "validate"
 
 
 class Role(str, Enum):

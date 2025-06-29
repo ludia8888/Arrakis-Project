@@ -24,6 +24,7 @@ import httpx
 
 from core.auth import get_permission_checker, UserContext
 from core.integrations.user_service_client import validate_jwt_token, UserServiceError
+from core.integrations.iam_service_client import get_iam_client, validate_token_with_iam
 from middleware.circuit_breaker import CircuitBreaker, CircuitConfig
 from utils.retry_strategy import with_retry, RetryConfig, RetryStrategy
 from core.audit.audit_publisher import get_audit_publisher
@@ -300,7 +301,18 @@ class LifeCriticalAuthMiddleware(BaseHTTPMiddleware):
             raise AuthenticationServiceError(f"Authentication service unavailable: {str(e)}")
     
     async def _validate_token_remote(self, token: str) -> UserContext:
-        """Validate token via User Service"""
+        """Validate token via IAM Service (primary) with User Service fallback"""
+        try:
+            # Try IAM service first (if available)
+            iam_client = get_iam_client()
+            if iam_client:
+                user_context = await validate_token_with_iam(token)
+                if user_context:
+                    return user_context
+        except Exception as e:
+            logger.warning(f"IAM service validation failed, falling back to user service: {e}")
+        
+        # Fallback to user service
         return await validate_jwt_token(token)
     
     async def _auth_fallback(self, func, args, kwargs):

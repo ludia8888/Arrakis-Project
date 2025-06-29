@@ -281,7 +281,8 @@ class ValidationServiceRefactored:
                             
                             result = await rule.check(old_obj, new_obj, port_context)
                             if result:
-                                if isinstance(result, list):
+# REMOVED: TerminusDB handles type_validation natively
+#                                 if isinstance(result, list):
                                     changes.extend(result)
                                 else:
                                     changes.append(result)

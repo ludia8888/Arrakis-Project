@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 from uuid import UUID
 
 from models.domain import BaseModel as DomainBaseModel
+from models.permissions import ResourceType
 
 
 class AuditAction(str, Enum):
@@ -74,20 +75,6 @@ class AuditAction(str, Enum):
     SYSTEM_IMPORT = "system.import"
     SYSTEM_BACKUP = "system.backup"
     SYSTEM_RESTORE = "system.restore"
-
-
-class ResourceType(str, Enum):
-    """Resource types that can be audited"""
-    SCHEMA = "schema"
-    OBJECT_TYPE = "object_type"
-    LINK_TYPE = "link_type"
-    ACTION_TYPE = "action_type"
-    FUNCTION_TYPE = "function_type"
-    BRANCH = "branch"
-    PROPOSAL = "proposal"
-    ACL = "acl"
-    USER = "user"
-    SYSTEM = "system"
 
 
 class ActorInfo(BaseModel):

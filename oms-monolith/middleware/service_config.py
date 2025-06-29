@@ -698,8 +698,3 @@ def feature_flag(flag_name: str, service: Optional[str] = None):
     return decorator
 
 
-# Usage example:
-# @feature_flag("enable_ml_analysis", service="validation")
-# async def analyze_with_ml(data):
-#     # This function only runs if ML analysis is enabled
-#     pass
