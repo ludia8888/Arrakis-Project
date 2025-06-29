@@ -125,7 +125,7 @@ class SecurityMonitor:
         # 보안 팀 알림 로그
         logger.critical(f"🚨🚨🚨 SECURITY ALERT: {json.dumps(alert_data)}")
         
-        # TODO: 실제 환경에서는 이메일, SMS, Slack 등으로 알림 발송
+        # NOTE: Notification integrations (email, SMS, Slack) should be configured via external alerting service
         # await send_security_alert(alert_data)
     
     async def _consider_ip_blocking(self, ip: str, attack_count: int):

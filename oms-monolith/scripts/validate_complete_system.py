@@ -18,20 +18,30 @@ sys.path.insert(0, str(project_root))
 
 from utils.logger import get_logger
 
-# Import all major components
-from models.semantic_types import semantic_type_registry, SemanticType
-from models.struct_types import struct_type_registry, StructType
+# Import core validation services instead of duplicating logic
+from core.validation.enterprise_service import EnterpriseValidationService, ValidationLevel
+from core.validation.oms_rules import register_oms_validation_rules
+from core.branch.service_factory import BranchServiceFactory
 from models.domain import ObjectType, Property, LinkType, Cardinality, Directionality
-from core.api.schema import graphql_generator, openapi_generator
-from core.merge import get_unified_merge_engine
+# Semantic and struct types now handled by TerminusDB JSON-LD natively
+# from core.semantic_types.registry import semantic_type_registry
+# from core.struct_types.registry import struct_type_registry
+# from models.semantic_types import SemanticType
+# from models.struct_types import StructType
+from core.schema.generators.graphql import graphql_generator
+from core.schema.generators.openapi import openapi_generator
+from core.merge.engine import merge_engine
 from core.versioning.dag_compaction import dag_compactor
-from core.branch.conflict_resolver import ConflictResolver
+from core.merge.conflict_resolver import conflict_resolver
 
 logger = get_logger(__name__)
 
-# Initialize services
-merge_engine = get_unified_merge_engine()
-conflict_resolver = ConflictResolver()
+# Initialize core validation services
+validation_service = EnterpriseValidationService(
+    default_level=ValidationLevel.STANDARD
+)
+register_oms_validation_rules(validation_service)
+branch_service = BranchServiceFactory.create_branch_service()
 
 
 class SystemValidator:

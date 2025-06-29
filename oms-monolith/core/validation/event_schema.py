@@ -66,7 +66,6 @@ class EventFieldSpec:
     """이벤트 필드 스펙 정의"""
     name: str
     field_type: str  # "string", "number", "timestamp", "array", "object"
-# REMOVED: TerminusDB handles required_field natively
 #     required: bool = True
     description: str = ""
     default_value: Any = None
@@ -103,14 +102,6 @@ STANDARD_EVENT_SCHEMAS: Dict[QuiverEventType, EventSchema] = {
         idempotency_key_fields=["sensor_id", "timestamp", "reading_id"],
         fields=[
             EventFieldSpec("sensor_id", "string", required=True, description="Unique sensor identifier"),
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("timestamp", "timestamp", required=True, description="Reading timestamp"),
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("reading_id", "string", required=True, description="Unique reading identifier"),
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("value", "number", required=True, description="Sensor reading value"),
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("unit", "string", required=True, description="Measurement unit"),
             EventFieldSpec("location", "object", required=False, description="GPS coordinates"),
             EventFieldSpec("metadata", "object", required=False, description="Additional sensor metadata")
         ]
@@ -124,19 +115,7 @@ STANDARD_EVENT_SCHEMAS: Dict[QuiverEventType, EventSchema] = {
         description="Anomaly detected in sensor readings",
         idempotency_key_fields=["sensor_id", "anomaly_id", "detection_timestamp"],
         fields=[
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("sensor_id", "string", required=True),
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("anomaly_id", "string", required=True),
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("detection_timestamp", "timestamp", required=True),
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("anomaly_type", "string", required=True, description="Type of anomaly detected"),
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("confidence_score", "number", required=True, description="Detection confidence 0-1"),
             EventFieldSpec("baseline_value", "number", required=False),
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("anomaly_value", "number", required=True),
             EventFieldSpec("deviation_percentage", "number", required=False)
         ]
     ),
@@ -150,18 +129,6 @@ STANDARD_EVENT_SCHEMAS: Dict[QuiverEventType, EventSchema] = {
         description="Pattern detected in time series data",
         idempotency_key_fields=["pattern_id", "dataset_id", "detection_timestamp"],
         fields=[
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("pattern_id", "string", required=True),
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("dataset_id", "string", required=True),
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("detection_timestamp", "timestamp", required=True),
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("pattern_type", "string", required=True, description="seasonal, trend, cyclical, irregular"),
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("confidence", "number", required=True),
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("time_window", "object", required=True, description="Start and end timestamps"),
             EventFieldSpec("affected_metrics", "array", required=False)
         ]
     ),
@@ -174,20 +141,6 @@ STANDARD_EVENT_SCHEMAS: Dict[QuiverEventType, EventSchema] = {
         description="Time series threshold exceeded",
         idempotency_key_fields=["metric_id", "threshold_id", "violation_timestamp"],
         fields=[
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("metric_id", "string", required=True),
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("threshold_id", "string", required=True),
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("violation_timestamp", "timestamp", required=True),
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("threshold_value", "number", required=True),
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("actual_value", "number", required=True),
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("threshold_type", "string", required=True, description="upper, lower, range"),
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("severity_level", "string", required=True),
             EventFieldSpec("duration_seconds", "number", required=False)
         ]
     ),
@@ -201,20 +154,6 @@ STANDARD_EVENT_SCHEMAS: Dict[QuiverEventType, EventSchema] = {
         description="Data quality check failed",
         idempotency_key_fields=["dataset_id", "check_id", "failure_timestamp"],
         fields=[
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("dataset_id", "string", required=True),
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("check_id", "string", required=True),
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("failure_timestamp", "timestamp", required=True),
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("check_type", "string", required=True, description="completeness, accuracy, consistency, validity"),
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("failed_records_count", "number", required=True),
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("total_records_count", "number", required=True),
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("failure_percentage", "number", required=True),
             EventFieldSpec("sample_failures", "array", required=False, description="Sample of failed records")
         ]
     ),
@@ -228,16 +167,6 @@ STANDARD_EVENT_SCHEMAS: Dict[QuiverEventType, EventSchema] = {
         description="Data pipeline execution failed",
         idempotency_key_fields=["pipeline_id", "execution_id", "failure_timestamp"],
         fields=[
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("pipeline_id", "string", required=True),
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("execution_id", "string", required=True),
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("failure_timestamp", "timestamp", required=True),
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("stage", "string", required=True, description="Pipeline stage where failure occurred"),
-# REMOVED: TerminusDB handles required_field natively
-#             EventFieldSpec("error_message", "string", required=True),
             EventFieldSpec("error_code", "string", required=False),
             EventFieldSpec("stack_trace", "string", required=False),
             EventFieldSpec("affected_datasets", "array", required=False)
@@ -295,11 +224,9 @@ class QuiverEvent:
                 value = self.data[field_spec.name]
                 if field_spec.field_type == "number" and not isinstance(value, (int, float)):
                     errors.append(f"Field {field_spec.name} must be a number")
-# REMOVED: TerminusDB handles type_validation natively
-#                 elif field_spec.field_type == "string" and not isinstance(value, str):
+                elif field_spec.field_type == "string" and not isinstance(value, str):
                     errors.append(f"Field {field_spec.name} must be a string")
-# REMOVED: TerminusDB handles type_validation natively
-#                 elif field_spec.field_type == "array" and not isinstance(value, list):
+                elif field_spec.field_type == "array" and not isinstance(value, list):
                     errors.append(f"Field {field_spec.name} must be an array")
         
         return errors

@@ -8,7 +8,7 @@ from datetime import datetime, timezone, timedelta
 import httpx
 from abc import ABC, abstractmethod
 
-from models.issue_tracking import (
+from core.issue_tracking.models import (
     IssueProvider, IssueReference, IssueValidationResult, IssueRequirement,
     IssueTrackingConfig, ChangeIssueLink, IssueStatus, IssueType,
     parse_issue_reference, extract_issue_references

@@ -8,7 +8,7 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone
 from abc import ABC, abstractmethod
 
-from models.audit_events import AuditEventV1, AuditEventFilter
+from core.audit.models import AuditEventV1, AuditEventFilter
 
 logger = logging.getLogger(__name__)
 

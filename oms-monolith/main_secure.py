@@ -299,6 +299,7 @@ async def readiness():
         return {"status": "ready"}
         
     except Exception as e:
+        logger.error(f"Health check failed: {e}")
         return JSONResponse(
             status_code=503,
             content={"status": "not_ready", "reason": str(e)}

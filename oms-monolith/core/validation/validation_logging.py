@@ -15,7 +15,7 @@ import asyncio
 
 from core.validation.naming_convention import EntityType, NamingValidationResult, ValidationIssue
 from core.validation.events import ValidationLogEntry as EventValidationLogEntry
-from infra.siem.port import ISiemPort
+from infrastructure.siem.port import ISiemPort
 from utils.logger import get_logger
 
 logger = get_logger(__name__)

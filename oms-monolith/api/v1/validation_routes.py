@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, Body
 from pydantic import BaseModel, Field
 
 from core.auth import UserContext
-from middleware.auth_middleware import get_current_user
+from middleware.auth_secure import get_current_user
 from core.validation.enterprise_service import (
     EnterpriseValidationService, ValidationLevel, ValidationResult,
     get_enterprise_validation_service

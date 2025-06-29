@@ -171,26 +171,26 @@ def get_environment_config() -> Dict[str, any]:
     
     configs = {
         "development": {
-            "iam_service_url": "http://localhost:8000",
-            "audit_service_url": "http://localhost:8001",
-            "service_discovery_enabled": False,
-            "circuit_breaker_enabled": False,
-            "tracing_enabled": False
+            "iam_service_url": os.getenv("IAM_SERVICE_URL_DEV", "http://localhost:8000"),
+            "audit_service_url": os.getenv("AUDIT_SERVICE_URL_DEV", "http://localhost:8001"),
+            "service_discovery_enabled": os.getenv("SERVICE_DISCOVERY_ENABLED_DEV", "false").lower() == "true",
+            "circuit_breaker_enabled": os.getenv("CIRCUIT_BREAKER_ENABLED_DEV", "false").lower() == "true",
+            "tracing_enabled": os.getenv("TRACING_ENABLED_DEV", "false").lower() == "true"
         },
         "staging": {
-            "iam_service_url": "http://user-service:8000",
-            "audit_service_url": "http://audit-service:8001",
-            "service_discovery_enabled": True,
-            "circuit_breaker_enabled": True,
-            "tracing_enabled": True
+            "iam_service_url": os.getenv("IAM_SERVICE_URL_STAGING", "http://user-service:8000"),
+            "audit_service_url": os.getenv("AUDIT_SERVICE_URL_STAGING", "http://audit-service:8001"),
+            "service_discovery_enabled": os.getenv("SERVICE_DISCOVERY_ENABLED_STAGING", "true").lower() == "true",
+            "circuit_breaker_enabled": os.getenv("CIRCUIT_BREAKER_ENABLED_STAGING", "true").lower() == "true",
+            "tracing_enabled": os.getenv("TRACING_ENABLED_STAGING", "true").lower() == "true"
         },
         "production": {
-            "iam_service_url": "https://iam.company.com",
-            "audit_service_url": "https://audit.company.com",
-            "service_discovery_enabled": True,
-            "circuit_breaker_enabled": True,
-            "tracing_enabled": True,
-            "use_ssl": True
+            "iam_service_url": os.getenv("IAM_SERVICE_URL_PROD", "https://iam.company.com"),
+            "audit_service_url": os.getenv("AUDIT_SERVICE_URL_PROD", "https://audit.company.com"),
+            "service_discovery_enabled": os.getenv("SERVICE_DISCOVERY_ENABLED_PROD", "true").lower() == "true",
+            "circuit_breaker_enabled": os.getenv("CIRCUIT_BREAKER_ENABLED_PROD", "true").lower() == "true",
+            "tracing_enabled": os.getenv("TRACING_ENABLED_PROD", "true").lower() == "true",
+            "use_ssl": os.getenv("USE_SSL_PROD", "true").lower() == "true"
         }
     }
     

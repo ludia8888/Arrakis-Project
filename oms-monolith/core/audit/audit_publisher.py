@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from uuid import uuid4
 import json
 
-from models.audit_events import (
+from core.audit.models import (
     AuditEventV1, AuditAction, ActorInfo, TargetInfo, 
     ChangeDetails, ComplianceInfo, create_audit_event
 )
@@ -250,7 +250,7 @@ class AuditPublisher:
             return
         
         # Create target info
-        from models.audit_events import ResourceType
+        from core.audit.models import ResourceType
         target = TargetInfo(
             resource_type=ResourceType(resource_type),
             resource_id=resource_id,
@@ -315,7 +315,7 @@ class AuditPublisher:
         if not audit_action:
             return
         
-        from models.audit_events import ResourceType
+        from core.audit.models import ResourceType
         target = TargetInfo(
             resource_type=ResourceType.BRANCH,
             resource_id=branch_name,
@@ -353,7 +353,7 @@ class AuditPublisher:
         if not audit_action:
             return
         
-        from models.audit_events import ResourceType
+        from core.audit.models import ResourceType
         target = TargetInfo(
             resource_type=ResourceType.PROPOSAL,
             resource_id=proposal_id,
@@ -398,7 +398,7 @@ class AuditPublisher:
             user_agent=user_agent
         )
         
-        from models.audit_events import ResourceType
+        from core.audit.models import ResourceType
         target = TargetInfo(
             resource_type=ResourceType.USER,
             resource_id=user_id

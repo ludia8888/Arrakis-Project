@@ -20,7 +20,10 @@ def create_test_database():
         account=config.TERMINUS_ORGANIZATION
     )
     # TerminusDB 인증 정보로 연결
-    client.connect(user="admin", key="admin123")
+    client.connect(
+        user=os.getenv("TERMINUS_DB_USER", "admin"), 
+        key=os.getenv("TERMINUS_DB_KEY", "admin123")
+    )
     
     try:
         # 데이터베이스 생성

@@ -7,7 +7,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Dict, Any, List, Optional, Tuple
 from contextlib import asynccontextmanager
 
-from models.audit_events import AuditEventV1, AuditEventFilter, AuditAction, ResourceType
+from core.audit.models import AuditEventV1, AuditEventFilter, AuditAction, ResourceType
 from core.audit.audit_database import get_audit_database, AuditDatabase
 from core.audit.audit_publisher import get_audit_publisher
 from utils.logger import get_logger

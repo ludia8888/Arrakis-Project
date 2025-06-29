@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from pydantic import BaseModel, Field
 
 from core.auth import UserContext
-from middleware.auth_middleware import get_current_user
+from middleware.auth_secure import get_current_user
 from core.issue_tracking.issue_service import get_issue_service
 from models.issue_tracking import (
     IssueReference, IssueProvider, IssueValidationResult,

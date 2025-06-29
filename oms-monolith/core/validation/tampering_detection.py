@@ -16,7 +16,7 @@ import uuid
 from core.validation.naming_convention import NamingConvention
 from core.validation.policy_signing import SignedNamingPolicy, get_policy_signing_manager
 from core.validation.events import TamperingEvent, TamperingType, EventSeverity
-from infra.siem.port import ISiemPort
+from infrastructure.siem.port import ISiemPort
 from utils.logger import get_logger
 
 logger = get_logger(__name__)

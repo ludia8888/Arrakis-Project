@@ -128,7 +128,7 @@ class PropertyDataTypeConsistencyRule(ValidationRule):
         try:
             datetime.fromisoformat(value.replace("Z", "+00:00"))
             return True
-        except:
+        except ValueError:
             return False
     
     def _is_valid_datetime(self, value: str) -> bool:

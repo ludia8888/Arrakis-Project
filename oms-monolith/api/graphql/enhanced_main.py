@@ -11,8 +11,8 @@ from fastapi.middleware.cors import CORSMiddleware
 import redis.asyncio as redis
 from strawberry.fastapi import GraphQLRouter
 
-from core.config.environment import get_environment
-from middleware.rbac_middleware import create_rbac_middleware
+from middleware.service_config import get_environment
+from models.permissions import get_permission_checker
 from api.graphql.auth import get_current_user_optional, GraphQLWebSocketAuth, AuthenticationManager
 from core.auth import UserContext
 
@@ -180,8 +180,7 @@ app.add_middleware(
 )
 
 # RBAC middleware
-rbac_middleware = create_rbac_middleware("graphql-service")
-app.middleware("http")(rbac_middleware)
+# Permission checking is now handled by auth middleware and individual resolvers
 
 
 # Security check middleware

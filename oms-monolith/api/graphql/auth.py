@@ -11,7 +11,7 @@ from fastapi import Depends, HTTPException, status, Request, WebSocket
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from core.auth import UserContext
-from middleware.auth_middleware import get_current_user
+from middleware.auth_secure import get_current_user
 from core.integrations.user_service_client import validate_jwt_token
 from utils.logger import get_logger
 

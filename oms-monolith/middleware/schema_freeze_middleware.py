@@ -11,7 +11,12 @@ from starlette.responses import Response
 
 from core.auth import UserContext
 from core.branch.lock_manager import get_lock_manager, LockConflictError
-from models.branch_state import BranchState
+# BranchState enum moved inline since models.branch_state was removed
+class BranchState:
+    ACTIVE = "active"
+    LOCKED_FOR_WRITE = "locked_for_write"
+    READY = "ready"
+    ARCHIVED = "archived"
 from utils.logger import get_logger
 
 logger = get_logger(__name__)

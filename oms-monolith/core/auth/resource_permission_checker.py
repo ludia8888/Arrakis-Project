@@ -12,7 +12,23 @@ from datetime import datetime, timezone
 
 from utils.logger import get_logger
 from core.integrations.user_service_client import validate_jwt_token
-from models.permissions import ResourceType, Action
+# Moved permissions inline since models.permissions was removed
+from enum import Enum
+
+class ResourceType(str, Enum):
+    SCHEMA = "schema"
+    OBJECT_TYPE = "object_type"
+    PROPERTY = "property"
+    LINK_TYPE = "link_type"
+    BRANCH = "branch"
+    PROPOSAL = "proposal"
+    AUDIT = "audit"
+
+class Action(str, Enum):
+    READ = "read"
+    write = "write"
+    delete = "delete"
+    execute = "execute"
 
 logger = get_logger(__name__)
 

@@ -9,7 +9,7 @@ import asyncio
 from datetime import datetime, timezone
 
 from core.auth import UserContext
-from middleware.auth_middleware import get_current_user
+from middleware.auth_secure import get_current_user
 from core.schema.service import SchemaService
 from core.branch import get_branch_service, IBranchService
 from database.clients.terminus_db import TerminusDBClient

@@ -142,7 +142,8 @@ class RealNATSClient:
             # Try to decode as JSON
             try:
                 return json.loads(msg.data.decode())
-            except:
+            except (json.JSONDecodeError, UnicodeDecodeError) as e:
+                logger.debug(f"Response is not JSON, returning as string: {e}")
                 return msg.data.decode()
                 
         except TimeoutError:
@@ -163,7 +164,8 @@ class RealNATSClient:
                 # Try to parse as JSON
                 try:
                     data = json.loads(msg.data.decode())
-                except:
+                except (json.JSONDecodeError, UnicodeDecodeError) as e:
+                    logger.debug(f"Message is not JSON, using as string: {e}")
                     data = msg.data.decode()
                     
                 # Call the callback with parsed data
@@ -236,7 +238,8 @@ class RealNATSClient:
                 # Parse message
                 try:
                     data = json.loads(msg.data.decode())
-                except:
+                except (json.JSONDecodeError, UnicodeDecodeError) as e:
+                    logger.debug(f"Message is not JSON, using as string: {e}")
                     data = msg.data.decode()
                     
                 # Call the callback
@@ -309,8 +312,8 @@ class RealNATSClient:
             for sub in self.subscriptions:
                 try:
                     await sub.unsubscribe()
-                except:
-                    pass
+                except Exception as e:
+                    logger.debug(f"Failed to unsubscribe: {e}")
                     
             self.subscriptions.clear()
             

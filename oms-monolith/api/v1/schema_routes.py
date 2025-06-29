@@ -9,7 +9,7 @@ import re
 import logging
 
 from core.auth import UserContext
-from middleware.auth_middleware import get_current_user
+from middleware.auth_secure import get_current_user
 from core.schema.service import SchemaService
 from core.schema.extended_service import ExtendedSchemaService
 from core.validation.input_sanitization import get_secure_processor, SanitizationLevel

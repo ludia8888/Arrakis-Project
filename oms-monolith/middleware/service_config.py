@@ -37,6 +37,15 @@ class ConfigType(str, Enum):
     BEHAVIOR = "behavior"
 
 
+class Environment(str, Enum):
+    """Application environments"""
+    PRODUCTION = "production"
+    STAGING = "staging"
+    DEVELOPMENT = "development"
+    TEST = "test"
+    LOCAL = "local"
+
+
 @dataclass
 class ConfigValue:
     """Configuration value with metadata"""
@@ -696,5 +705,81 @@ def feature_flag(flag_name: str, service: Optional[str] = None):
         
         return wrapper
     return decorator
+
+
+class EnvironmentConfig:
+    """Environment configuration and validation integrated with service config"""
+    
+    def __init__(self):
+        self._env = os.getenv("ENV", "development").lower()
+        self._validate_environment()
+    
+    def _validate_environment(self):
+        """Validate environment value"""
+        valid_envs = [e.value for e in Environment]
+        if self._env not in valid_envs:
+            logger.warning(
+                f"Unknown environment '{self._env}', defaulting to 'development'. "
+                f"Valid values: {valid_envs}"
+            )
+            self._env = Environment.DEVELOPMENT.value
+    
+    @property
+    def current(self) -> str:
+        """Get current environment"""
+        return self._env
+    
+    @property
+    def is_production(self) -> bool:
+        """Check if running in production"""
+        return self._env == Environment.PRODUCTION.value
+    
+    @property
+    def is_staging(self) -> bool:
+        """Check if running in staging"""
+        return self._env == Environment.STAGING.value
+    
+    @property
+    def is_development(self) -> bool:
+        """Check if running in development"""
+        return self._env in [Environment.DEVELOPMENT.value, Environment.LOCAL.value]
+    
+    @property
+    def is_test(self) -> bool:
+        """Check if running in test environment"""
+        return self._env == Environment.TEST.value
+    
+    @property
+    def allows_mock_auth(self) -> bool:
+        """Check if mock authentication is allowed"""
+        return not self.is_production and not self.is_staging
+    
+    @property
+    def allows_test_routes(self) -> bool:
+        """Check if test routes should be registered"""
+        return not self.is_production
+    
+    def require_production(self):
+        """Raise error if not in production"""
+        if not self.is_production:
+            raise RuntimeError(
+                f"This operation requires production environment, current: {self._env}"
+            )
+    
+    def require_non_production(self):
+        """Raise error if in production"""
+        if self.is_production:
+            raise RuntimeError(
+                "This operation is not allowed in production environment"
+            )
+
+
+# Global environment instance
+env_config = EnvironmentConfig()
+
+
+def get_environment() -> EnvironmentConfig:
+    """Get environment configuration instance"""
+    return env_config
 
 

@@ -563,3 +563,17 @@ def get_normalized_environment() -> str:
 
 # Replace any existing environment variable access with normalized version
 NORMALIZED_ENVIRONMENT = get_normalized_environment()
+
+
+# Compatibility function for backward compatibility
+def get_current_user(request: Request) -> UserContext:
+    """
+    Backward compatibility wrapper for get_current_user
+    Delegates to life-critical implementation
+    """
+    if not hasattr(request.state, "user") or request.state.user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required - No valid user context found"
+        )
+    return request.state.user

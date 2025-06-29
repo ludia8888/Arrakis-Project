@@ -19,7 +19,7 @@ try:
 except ImportError:
     from strawberry.asgi import GraphQL as GraphQLRouter
 
-from middleware.rbac_middleware import create_rbac_middleware
+from models.permissions import get_permission_checker
 
 # shared 모듈 import를 위한 경로 추가
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
@@ -110,9 +110,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# RBAC 미들웨어 추가
-rbac_middleware = create_rbac_middleware("graphql-service")
-app.middleware("http")(rbac_middleware)
+# Permission checking is now handled by auth middleware and individual resolvers
 
 
 async def get_context(

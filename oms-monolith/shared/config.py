@@ -18,7 +18,9 @@ class SharedConfig:
         self.service_version = os.getenv("ONTOLOGY_SERVICE_VERSION", "2.0.0")
         
         # 보안 설정
-        self.secret_key = os.getenv("ONTOLOGY_SECRET_KEY", "default-secret-key")
+        self.secret_key = os.getenv("ONTOLOGY_SECRET_KEY")
+        if not self.secret_key:
+            raise ValueError("ONTOLOGY_SECRET_KEY environment variable is required for security")
         self.jwt_algorithm = os.getenv("ONTOLOGY_JWT_ALGORITHM", "HS256")
         self.jwt_expiration_minutes = int(os.getenv("ONTOLOGY_JWT_EXPIRATION_MINUTES", "30"))
         

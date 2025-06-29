@@ -690,7 +690,7 @@ class DLQHandler:
             try:
                 await self._processing_task
             except asyncio.CancelledError:
-                pass
+                logger.debug(f"DLQ processing task cancelled for {self.config.name}")
         logger.info(f"Stopped DLQ handler for {self.config.name}")
     
     async def get_metrics(self) -> Dict[str, Any]:

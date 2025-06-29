@@ -3,6 +3,9 @@ NATS Client Module
 Exports the real NATS client implementation when available
 """
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Check if we should use the real implementation
 USE_REAL_NATS = os.getenv("ENABLE_REAL_NATS", "true").lower() == "true"
@@ -11,10 +14,10 @@ if USE_REAL_NATS:
     try:
         # Try to import real implementation
         from .real_nats_client import RealNATSClient as NATSClient, get_nats_client, get_real_nats_client
-        print("✅ Using real NATS client implementation")
+        logger.info("✅ Using real NATS client implementation")
     except ImportError:
         # Fall back to dummy if real client dependencies not available
-        print("⚠️  Real NATS client not available, using dummy implementation")
+        logger.warning("⚠️  Real NATS client not available, using dummy implementation")
         from typing import Callable, Optional
         
         class NATSClient:

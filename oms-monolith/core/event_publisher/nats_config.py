@@ -2,10 +2,13 @@
 NATS JetStream Configuration
 EventBridge와 동일한 재시도 정책 설정
 """
+import logging
 from dataclasses import dataclass
 from typing import Optional, Dict, Any
 import nats
 from nats.js import api
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -164,14 +167,14 @@ class NATSConfigManager:
                     name=config.name,
                     config=new_config
                 )
-                print(f"Updated stream '{config.name}' configuration")
+                logger.info(f"Updated stream '{config.name}' configuration")
             else:
-                print(f"Stream '{config.name}' already exists with correct configuration")
+                logger.info(f"Stream '{config.name}' already exists with correct configuration")
                 
         except nats.js.errors.NotFoundError:
             # Stream 생성
             stream_info = await js.add_stream(config.to_stream_config())
-            print(f"Created stream '{config.name}'")
+            logger.info(f"Created stream '{config.name}'")
         
         return stream_info
     
@@ -213,13 +216,13 @@ if __name__ == "__main__":
         # 설정 검증
         validation_result = NATSConfigManager.validate_dlq_settings()
         
-        print("DLQ Settings Validation:")
-        print(f"EventBridge: {validation_result['eventbridge']}")
-        print(f"NATS: {validation_result['nats']}")
-        print(f"Matches: {validation_result['matches']}")
-        print(f"Valid: {validation_result['valid']}")
+        logger.info("DLQ Settings Validation:")
+        logger.info(f"EventBridge: {validation_result['eventbridge']}")
+        logger.info(f"NATS: {validation_result['nats']}")
+        logger.info(f"Matches: {validation_result['matches']}")
+        logger.info(f"Valid: {validation_result['valid']}")
         
         if not validation_result['valid']:
-            print("\n⚠️  WARNING: DLQ settings do not match between EventBridge and NATS!")
+            logger.warning("\n⚠️  WARNING: DLQ settings do not match between EventBridge and NATS!")
     
     asyncio.run(main())

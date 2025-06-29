@@ -8,6 +8,7 @@ import argon2
 import json
 from datetime import datetime, timezone
 import uuid
+import os
 
 
 async def create_test_user():
@@ -15,11 +16,11 @@ async def create_test_user():
     
     # Connect to database
     conn = await asyncpg.connect(
-        host='localhost',
-        port=15433,
-        user='user_user',
-        password='user_pass',
-        database='user_db'
+        host=os.getenv('USER_DB_HOST', 'localhost'),
+        port=int(os.getenv('USER_DB_PORT', '15433')),
+        user=os.getenv('USER_DB_USER', 'user_user'),
+        password=os.getenv('USER_DB_PASSWORD', 'user_pass'),
+        database=os.getenv('USER_DB_NAME', 'user_db')
     )
     
     try:
@@ -35,7 +36,8 @@ async def create_test_user():
         
         # Hash password using Argon2
         ph = argon2.PasswordHasher()
-        password_hash = ph.hash('test_password')
+        test_password = os.getenv('TEST_USER_PASSWORD', 'test_password')
+        password_hash = ph.hash(test_password)
         
         # Create user
         user_id = str(uuid.uuid4())

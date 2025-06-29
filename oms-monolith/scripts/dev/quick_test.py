@@ -5,6 +5,7 @@ Quick test of User Service endpoints
 import asyncio
 import httpx
 import json
+import os
 
 
 async def test_user_service():

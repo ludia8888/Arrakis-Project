@@ -10,7 +10,7 @@ from datetime import datetime, timezone, timedelta
 from contextlib import asynccontextmanager
 import aiosqlite
 
-from models.issue_tracking import (
+from core.issue_tracking.models import (
     ChangeIssueLink, IssueReference, IssueProvider
 )
 from utils.logger import get_logger

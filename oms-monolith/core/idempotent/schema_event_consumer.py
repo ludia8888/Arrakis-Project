@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from pydantic import BaseModel, Field
 
 from core.idempotent.consumer_service import IdempotentConsumer
-from models.idempotency import EventEnvelope
+from core.idempotent.models import EventEnvelope
 from models.domain import ObjectType, LinkType
 from utils.logger import get_logger
 

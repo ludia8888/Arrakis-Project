@@ -1,0 +1,6941 @@
+{
+  "bare_except": [
+    {
+      "file": "middleware/etag_middleware.py",
+      "line": 261,
+      "code": "except:"
+    },
+    {
+      "file": "infra/siem/adapter.py",
+      "line": 110,
+      "code": "except:"
+    },
+    {
+      "file": "core/foundry/conflict_resolution_ui.py",
+      "line": 149,
+      "code": "except:"
+    },
+    {
+      "file": "core/foundry/audit_trail.py",
+      "line": 89,
+      "code": "except:"
+    },
+    {
+      "file": "core/branch/terminus_adapter.py",
+      "line": 114,
+      "code": "except:"
+    },
+    {
+      "file": "core/branch/terminus_adapter.py",
+      "line": 215,
+      "code": "except:"
+    },
+    {
+      "file": "core/merge/merge_factory.py",
+      "line": 44,
+      "code": "except:"
+    },
+    {
+      "file": "core/event_publisher/nats_publisher.py",
+      "line": 57,
+      "code": "except:"
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/oms_rules.py",
+      "line": 124,
+      "code": "except:"
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/scripts/production_readiness_check.py",
+      "line": 205,
+      "code": "except:"
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/scripts/production_readiness_check.py",
+      "line": 217,
+      "code": "except:"
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/scripts/production_readiness_check.py",
+      "line": 252,
+      "code": "except:"
+    },
+    {
+      "file": "validation_backup/validation/oms_rules.py",
+      "line": 124,
+      "code": "except:"
+    },
+    {
+      "file": "tests/performance/benchmark_terminus_native.py",
+      "line": 57,
+      "code": "except:"
+    },
+    {
+      "file": "utils/git_utils.py",
+      "line": 61,
+      "code": "except:"
+    },
+    {
+      "file": "shared/infrastructure/real_nats_client.py",
+      "line": 145,
+      "code": "except:"
+    },
+    {
+      "file": "shared/infrastructure/real_nats_client.py",
+      "line": 166,
+      "code": "except:"
+    },
+    {
+      "file": "shared/infrastructure/real_nats_client.py",
+      "line": 239,
+      "code": "except:"
+    },
+    {
+      "file": "shared/infrastructure/real_nats_client.py",
+      "line": 312,
+      "code": "except:"
+    },
+    {
+      "file": "models/data_types.py",
+      "line": 638,
+      "code": "except:"
+    },
+    {
+      "file": "models/data_types.py",
+      "line": 669,
+      "code": "except:"
+    },
+    {
+      "file": "models/struct_types.py",
+      "line": 148,
+      "code": "except:"
+    },
+    {
+      "file": "models/semantic_types.py",
+      "line": 147,
+      "code": "except:"
+    },
+    {
+      "file": "scripts/find_legacy_code.py",
+      "line": 164,
+      "code": "except:"
+    },
+    {
+      "file": "scripts/find_legacy_code.py",
+      "line": 227,
+      "code": "except:"
+    },
+    {
+      "file": "scripts/find_legacy_code.py",
+      "line": 274,
+      "code": "except:"
+    },
+    {
+      "file": "scripts/verify_imports.py",
+      "line": 78,
+      "code": "except:"
+    },
+    {
+      "file": "scripts/verify_imports.py",
+      "line": 74,
+      "code": "except:"
+    },
+    {
+      "file": "scripts/test_terminus_integration.py",
+      "line": 160,
+      "code": "except:"
+    },
+    {
+      "file": "scripts/test_terminus_integration.py",
+      "line": 164,
+      "code": "except:"
+    },
+    {
+      "file": "api/graphql/security.py",
+      "line": 149,
+      "code": "except:"
+    },
+    {
+      "file": "api/graphql/enhanced_main.py",
+      "line": 444,
+      "code": "except:"
+    },
+    {
+      "file": "api/graphql/enhanced_main.py",
+      "line": 289,
+      "code": "except:"
+    },
+    {
+      "file": "backups/validation_cleanup_20250629_013247/models/struct_types.py",
+      "line": 150,
+      "code": "except:"
+    },
+    {
+      "file": "backups/validation_cleanup_20250629_013247/models/semantic_types.py",
+      "line": 147,
+      "code": "except:"
+    }
+  ],
+  "broad_exception": [
+    {
+      "file": "main_secure.py",
+      "line": 137,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "main_secure.py",
+      "line": 184,
+      "code": "except Exception as audit_error:",
+      "has_logging": true
+    },
+    {
+      "file": "main_secure.py",
+      "line": 251,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "main_secure.py",
+      "line": 301,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "main_secure.py",
+      "line": 336,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "main_secure.py",
+      "line": 409,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "main_secure.py",
+      "line": 487,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "main_secure.py",
+      "line": 115,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "main.py",
+      "line": 357,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "main.py",
+      "line": 414,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "main.py",
+      "line": 441,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "main.py",
+      "line": 498,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "main.py",
+      "line": 138,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "main.py",
+      "line": 380,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/etag_analytics.py",
+      "line": 70,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/etag_analytics.py",
+      "line": 168,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/auth_secure.py",
+      "line": 190,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/auth_secure.py",
+      "line": 236,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/auth_secure.py",
+      "line": 265,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/auth_secure.py",
+      "line": 297,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/auth_secure.py",
+      "line": 312,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/auth_secure.py",
+      "line": 397,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/auth_secure.py",
+      "line": 414,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/auth_secure.py",
+      "line": 432,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/auth_secure.py",
+      "line": 449,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/auth_secure.py",
+      "line": 465,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/auth_secure.py",
+      "line": 483,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/auth_secure.py",
+      "line": 502,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/auth_msa.py",
+      "line": 129,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/auth_msa.py",
+      "line": 185,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/dlq_handler.py",
+      "line": 218,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/dlq_handler.py",
+      "line": 233,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/dlq_handler.py",
+      "line": 251,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/dlq_handler.py",
+      "line": 276,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/dlq_handler.py",
+      "line": 304,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/dlq_handler.py",
+      "line": 322,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/dlq_handler.py",
+      "line": 518,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/dlq_handler.py",
+      "line": 592,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/dlq_handler.py",
+      "line": 671,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/dlq_handler.py",
+      "line": 548,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/dlq_handler.py",
+      "line": 588,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "middleware/dlq_handler.py",
+      "line": 564,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/issue_tracking_middleware.py",
+      "line": 224,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/issue_tracking_middleware.py",
+      "line": 282,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/issue_tracking_middleware.py",
+      "line": 164,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/service_config.py",
+      "line": 287,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/service_config.py",
+      "line": 512,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/circuit_breaker.py",
+      "line": 311,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/circuit_breaker.py",
+      "line": 256,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "middleware/circuit_breaker.py",
+      "line": 357,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/component_middleware.py",
+      "line": 264,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/component_middleware.py",
+      "line": 302,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "middleware/component_middleware.py",
+      "line": 345,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "middleware/component_middleware.py",
+      "line": 389,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/etag_middleware.py",
+      "line": 319,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/etag_middleware.py",
+      "line": 407,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/etag_middleware.py",
+      "line": 238,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/etag_middleware.py",
+      "line": 279,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/auth_middleware.py",
+      "line": 111,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/schema_freeze_middleware.py",
+      "line": 240,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/schema_freeze_middleware.py",
+      "line": 298,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/schema_freeze_middleware.py",
+      "line": 119,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/component_health.py",
+      "line": 192,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "middleware/component_health.py",
+      "line": 248,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "middleware/component_health.py",
+      "line": 305,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "middleware/component_health.py",
+      "line": 366,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "middleware/component_health.py",
+      "line": 435,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "middleware/component_health.py",
+      "line": 474,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "middleware/component_health.py",
+      "line": 801,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/component_health.py",
+      "line": 776,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/enterprise_validation.py",
+      "line": 169,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/event_state_store.py",
+      "line": 242,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/event_state_store.py",
+      "line": 287,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/event_state_store.py",
+      "line": 308,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/event_state_store.py",
+      "line": 324,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/event_state_store.py",
+      "line": 489,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/event_state_store.py",
+      "line": 535,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/event_state_store.py",
+      "line": 604,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/service_discovery.py",
+      "line": 213,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/service_discovery.py",
+      "line": 256,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/service_discovery.py",
+      "line": 303,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/service_discovery.py",
+      "line": 328,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/service_discovery.py",
+      "line": 425,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/service_discovery.py",
+      "line": 761,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "middleware/service_discovery.py",
+      "line": 578,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/service_discovery.py",
+      "line": 604,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/service_discovery.py",
+      "line": 622,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/service_discovery.py",
+      "line": 698,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/service_discovery.py",
+      "line": 707,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/service_discovery.py",
+      "line": 798,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "middleware/service_discovery.py",
+      "line": 417,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "database/clients/secure_http_client.py",
+      "line": 227,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "database/clients/secure_http_client.py",
+      "line": 39,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "database/clients/redis_ha_client.py",
+      "line": 88,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "database/clients/redis_ha_client.py",
+      "line": 148,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "database/clients/redis_ha_client.py",
+      "line": 198,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "database/clients/redis_ha_client.py",
+      "line": 243,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "database/clients/redis_ha_client.py",
+      "line": 261,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "database/clients/redis_ha_client.py",
+      "line": 281,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "database/clients/redis_ha_client.py",
+      "line": 296,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "database/clients/redis_ha_client.py",
+      "line": 313,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "database/clients/redis_ha_client.py",
+      "line": 333,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "database/clients/redis_ha_client.py",
+      "line": 350,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "database/clients/redis_ha_client.py",
+      "line": 369,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "database/clients/redis_ha_client.py",
+      "line": 217,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "database/clients/redis_ha_client.py",
+      "line": 230,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "database/clients/redis_ha_client.py",
+      "line": 240,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "database/clients/terminus_db.py",
+      "line": 162,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "database/clients/terminus_db.py",
+      "line": 184,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "database/clients/terminus_db.py",
+      "line": 262,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "database/clients/terminus_db.py",
+      "line": 114,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "database/clients/terminus_db.py",
+      "line": 151,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "database/clients/service_client.py",
+      "line": 127,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "database/clients/service_client.py",
+      "line": 63,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "migrations/migrate_to_distributed_locks.py",
+      "line": 194,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "migrations/migrate_to_distributed_locks.py",
+      "line": 76,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "migrations/migrate_to_distributed_locks.py",
+      "line": 188,
+      "code": "except Exception:",
+      "has_logging": true
+    },
+    {
+      "file": "infra/siem/adapter.py",
+      "line": 57,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "infra/siem/adapter.py",
+      "line": 81,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "infra/siem/adapter.py",
+      "line": 100,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "infra/siem/adapter.py",
+      "line": 233,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/advanced/terminus_advanced.py",
+      "line": 98,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/advanced/terminus_advanced.py",
+      "line": 151,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/foundry/conflict_resolution_ui.py",
+      "line": 144,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/branch/lock_cleanup_service.py",
+      "line": 177,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/branch/lock_cleanup_service.py",
+      "line": 210,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/branch/lock_cleanup_service.py",
+      "line": 101,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/branch/lock_cleanup_service.py",
+      "line": 146,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/branch/lock_cleanup_service.py",
+      "line": 203,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/branch/terminus_adapter.py",
+      "line": 101,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/branch/terminus_adapter.py",
+      "line": 119,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/branch/terminus_adapter.py",
+      "line": 196,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/branch/terminus_adapter.py",
+      "line": 220,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/branch/terminus_adapter.py",
+      "line": 257,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/branch/terminus_adapter.py",
+      "line": 329,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/branch/terminus_adapter.py",
+      "line": 151,
+      "code": "except Exception as api_error:",
+      "has_logging": true
+    },
+    {
+      "file": "core/branch/terminus_adapter.py",
+      "line": 173,
+      "code": "except Exception as query_error:",
+      "has_logging": true
+    },
+    {
+      "file": "core/branch/terminus_adapter.py",
+      "line": 252,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/branch/lock_heartbeat_service.py",
+      "line": 103,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/branch/lock_heartbeat_service.py",
+      "line": 183,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/branch/lock_state_manager.py",
+      "line": 44,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/branch/lock_state_manager.py",
+      "line": 58,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/branch/lock_state_manager.py",
+      "line": 150,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/branch/lock_state_manager.py",
+      "line": 207,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/branch/lock_state_manager.py",
+      "line": 214,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/branch/lock_state_manager.py",
+      "line": 228,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/branch/distributed_lock_manager.py",
+      "line": 89,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/shadow_index/manager.py",
+      "line": 355,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/shadow_index/manager.py",
+      "line": 577,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/shadow_index/manager.py",
+      "line": 601,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/shadow_index/manager.py",
+      "line": 631,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/merge/unified_engine.py",
+      "line": 70,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/merge/unified_engine.py",
+      "line": 134,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/merge/unified_engine.py",
+      "line": 210,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/merge/unified_engine.py",
+      "line": 236,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/merge/unified_engine.py",
+      "line": 284,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/security/path_traversal_killer.py",
+      "line": 106,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "core/security/path_traversal_killer.py",
+      "line": 118,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "core/auth/resource_permission_checker.py",
+      "line": 107,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/auth/resource_permission_checker.py",
+      "line": 203,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_consumer/quiver_event_consumer.py",
+      "line": 93,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_consumer/quiver_event_consumer.py",
+      "line": 139,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_consumer/quiver_event_consumer.py",
+      "line": 190,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_consumer/quiver_event_consumer.py",
+      "line": 224,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_consumer/quiver_event_consumer.py",
+      "line": 295,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/event_consumer/quiver_event_consumer.py",
+      "line": 119,
+      "code": "except Exception:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_consumer/iam_event_handler.py",
+      "line": 310,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_consumer/iam_event_handler.py",
+      "line": 47,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_consumer/funnel_indexing_handler.py",
+      "line": 120,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_consumer/funnel_indexing_handler.py",
+      "line": 163,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_consumer/funnel_indexing_handler.py",
+      "line": 202,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_consumer/funnel_indexing_handler.py",
+      "line": 249,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_consumer/funnel_indexing_handler.py",
+      "line": 304,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_consumer/funnel_indexing_handler.py",
+      "line": 370,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_consumer/funnel_indexing_handler.py",
+      "line": 489,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_consumer/funnel_indexing_handler.py",
+      "line": 578,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_consumer/funnel_indexing_handler.py",
+      "line": 616,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/health/health_checker.py",
+      "line": 116,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/health/health_checker.py",
+      "line": 176,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/health/health_checker.py",
+      "line": 205,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/health/health_checker.py",
+      "line": 232,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/health/health_checker.py",
+      "line": 258,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/idempotent/consumer_service.py",
+      "line": 271,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/issue_tracking/issue_service.py",
+      "line": 111,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/issue_tracking/issue_service.py",
+      "line": 124,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/issue_tracking/issue_service.py",
+      "line": 134,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "core/issue_tracking/issue_service.py",
+      "line": 245,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/issue_tracking/issue_service.py",
+      "line": 259,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/issue_tracking/issue_service.py",
+      "line": 270,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "core/issue_tracking/issue_service.py",
+      "line": 558,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/issue_tracking/issue_service.py",
+      "line": 610,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/issue_tracking/issue_service.py",
+      "line": 389,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/scheduler/advanced_scheduler.py",
+      "line": 655,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/scheduler/advanced_scheduler.py",
+      "line": 678,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/scheduler/advanced_scheduler.py",
+      "line": 701,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/scheduler/advanced_scheduler.py",
+      "line": 572,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/integrations/iam_service_client.py",
+      "line": 194,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/integrations/iam_service_client.py",
+      "line": 270,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/integrations/iam_service_client.py",
+      "line": 304,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/integrations/iam_service_client.py",
+      "line": 325,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/integrations/iam_service_client.py",
+      "line": 339,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "core/integrations/iam_service_client.py",
+      "line": 61,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/integrations/iam_service_client.py",
+      "line": 71,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/integrations/iam_service_client.py",
+      "line": 155,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/integrations/iam_service_client.py",
+      "line": 182,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/integrations/iam_service_client_with_fallback.py",
+      "line": 207,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/integrations/iam_service_client_with_fallback.py",
+      "line": 281,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/integrations/iam_service_client_with_fallback.py",
+      "line": 347,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/integrations/iam_service_client_with_fallback.py",
+      "line": 403,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/integrations/iam_service_client_with_fallback.py",
+      "line": 458,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/integrations/iam_service_client_with_fallback.py",
+      "line": 82,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/integrations/iam_service_client_with_fallback.py",
+      "line": 154,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "core/integrations/user_service_client.py",
+      "line": 101,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/concurrency/optimistic_lock.py",
+      "line": 70,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/concurrency/optimistic_lock.py",
+      "line": 114,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "core/action/service.py",
+      "line": 156,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/action/dlq_handler.py",
+      "line": 206,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/action/dlq_handler.py",
+      "line": 282,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/action/dlq_handler.py",
+      "line": 250,
+      "code": "except Exception as retry_error:",
+      "has_logging": true
+    },
+    {
+      "file": "core/action/dlq_handler.py",
+      "line": 415,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/action/dlq_handler.py",
+      "line": 365,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/action/metadata_service.py",
+      "line": 66,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/action/metadata_service.py",
+      "line": 248,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/action/metadata_service.py",
+      "line": 270,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/action/metadata_service.py",
+      "line": 286,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/action/routes.py",
+      "line": 75,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/action/routes.py",
+      "line": 97,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/action/routes.py",
+      "line": 116,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/action/routes.py",
+      "line": 134,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/action/routes.py",
+      "line": 152,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/action/routes.py",
+      "line": 173,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/action/routes.py",
+      "line": 192,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/iam/iam_integration.py",
+      "line": 134,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/iam/iam_integration.py",
+      "line": 44,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/iam/iam_integration.py",
+      "line": 184,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/iam/iam_integration.py",
+      "line": 210,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/iam/iam_integration.py",
+      "line": 70,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/audit/audit_publisher.py",
+      "line": 152,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/audit/audit_publisher.py",
+      "line": 184,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/audit/audit_publisher.py",
+      "line": 50,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/audit/audit_publisher.py",
+      "line": 141,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/audit/audit_publisher.py",
+      "line": 124,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/audit/audit_database.py",
+      "line": 58,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/audit/audit_database.py",
+      "line": 71,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/audit/audit_database.py",
+      "line": 136,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/audit/audit_service.py",
+      "line": 72,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/audit/audit_service.py",
+      "line": 135,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/audit/audit_service.py",
+      "line": 300,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/audit/audit_service.py",
+      "line": 370,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/audit/audit_service.py",
+      "line": 291,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/audit/audit_service.py",
+      "line": 322,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/audit/audit_service.py",
+      "line": 354,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_publisher/nats_publisher.py",
+      "line": 48,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_publisher/nats_publisher.py",
+      "line": 98,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_publisher/cloudevents_migration.py",
+      "line": 38,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/event_publisher/outbox_service.py",
+      "line": 220,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_publisher/outbox_service.py",
+      "line": 294,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_publisher/outbox_service.py",
+      "line": 374,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_publisher/outbox_service.py",
+      "line": 453,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_publisher/outbox_service.py",
+      "line": 478,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_publisher/outbox_service.py",
+      "line": 523,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_publisher/outbox_service.py",
+      "line": 541,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_publisher/outbox_service.py",
+      "line": 559,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_publisher/outbox_service.py",
+      "line": 590,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_publisher/outbox_service.py",
+      "line": 617,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_publisher/outbox_service.py",
+      "line": 696,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_publisher/outbox_service.py",
+      "line": 733,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_publisher/outbox_service.py",
+      "line": 332,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_publisher/outbox_processor.py",
+      "line": 180,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_publisher/outbox_processor.py",
+      "line": 70,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_publisher/outbox_processor.py",
+      "line": 112,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_publisher/multi_platform_router.py",
+      "line": 343,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_publisher/multi_platform_router.py",
+      "line": 380,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/event_publisher/multi_platform_router.py",
+      "line": 432,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_publisher/enhanced_event_service.py",
+      "line": 248,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_publisher/enhanced_event_service.py",
+      "line": 266,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_publisher/eventbridge_adapter.py",
+      "line": 167,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_publisher/eventbridge_adapter.py",
+      "line": 314,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_publisher/secure_publisher.py",
+      "line": 79,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_publisher/secure_publisher.py",
+      "line": 99,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_publisher/eventbridge_publisher.py",
+      "line": 80,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_publisher/eventbridge_publisher.py",
+      "line": 184,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_publisher/eventbridge_publisher.py",
+      "line": 307,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/traversal/traversal_engine.py",
+      "line": 119,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/traversal/traversal_engine.py",
+      "line": 263,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/traversal/traversal_engine.py",
+      "line": 455,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/traversal/traversal_engine.py",
+      "line": 384,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/traversal/dependency_analyzer.py",
+      "line": 140,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/traversal/dependency_analyzer.py",
+      "line": 207,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/traversal/dependency_analyzer.py",
+      "line": 316,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/traversal/dependency_analyzer.py",
+      "line": 420,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/traversal/dependency_analyzer.py",
+      "line": 351,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/traversal/dependency_analyzer.py",
+      "line": 96,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/traversal/dependency_analyzer.py",
+      "line": 125,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/traversal/dependency_analyzer.py",
+      "line": 175,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/traversal/dependency_analyzer.py",
+      "line": 275,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/traversal/dependency_analyzer.py",
+      "line": 308,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/traversal/dependency_analyzer.py",
+      "line": 399,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "core/traversal/caching.py",
+      "line": 416,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/traversal/caching.py",
+      "line": 409,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/traversal/merge_validator.py",
+      "line": 167,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 100,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 134,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 168,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 222,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 246,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 280,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 359,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 440,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 524,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 589,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 639,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 691,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 309,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 386,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 470,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 340,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 421,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 506,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 584,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 686,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "core/history/service.py",
+      "line": 133,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/history/service.py",
+      "line": 199,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/history/service.py",
+      "line": 269,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/history/service.py",
+      "line": 315,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/history/service.py",
+      "line": 343,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/history/service.py",
+      "line": 407,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/history/service.py",
+      "line": 432,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/history/routes.py",
+      "line": 86,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/history/routes.py",
+      "line": 130,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_subscriber/main.py",
+      "line": 340,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_subscriber/main.py",
+      "line": 62,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_subscriber/main.py",
+      "line": 161,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_subscriber/main.py",
+      "line": 175,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_subscriber/main.py",
+      "line": 189,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_subscriber/main.py",
+      "line": 203,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_subscriber/main.py",
+      "line": 214,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_subscriber/main.py",
+      "line": 225,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_subscriber/main.py",
+      "line": 239,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_subscriber/main.py",
+      "line": 250,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/event_subscriber/main.py",
+      "line": 316,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/schema_generator/graphql_to_asyncapi.py",
+      "line": 52,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/schema_generator/asyncapi_generator.py",
+      "line": 689,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/events/event_bus.py",
+      "line": 168,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/events/publisher.py",
+      "line": 129,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/events/publisher.py",
+      "line": 153,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/backup/production_backup.py",
+      "line": 208,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/backup/production_backup.py",
+      "line": 237,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/backup/production_backup.py",
+      "line": 438,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/backup/production_backup.py",
+      "line": 494,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/backup/production_backup.py",
+      "line": 541,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/backup/production_backup.py",
+      "line": 560,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/backup/main.py",
+      "line": 484,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/backup/main.py",
+      "line": 133,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/backup/main.py",
+      "line": 207,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/backup/main.py",
+      "line": 225,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/backup/main.py",
+      "line": 231,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/backup/main.py",
+      "line": 258,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/backup/main.py",
+      "line": 263,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/backup/main.py",
+      "line": 333,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/migration/rollback_manager.py",
+      "line": 82,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/migration/rollback_manager.py",
+      "line": 171,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/migration/rollback_manager.py",
+      "line": 229,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/services/ontology_advanced_service.py",
+      "line": 204,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/validation/migration_planner.py",
+      "line": 134,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/event_schema.py",
+      "line": 390,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/validation/policy_engine.py",
+      "line": 118,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/policy_engine.py",
+      "line": 398,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rule_registry.py",
+      "line": 147,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rule_registry.py",
+      "line": 179,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rule_registry.py",
+      "line": 82,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rule_registry.py",
+      "line": 216,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rule_registry.py",
+      "line": 144,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rule_registry.py",
+      "line": 141,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/ci_integration.py",
+      "line": 206,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/validation/naming_config.py",
+      "line": 123,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/naming_config.py",
+      "line": 153,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/naming_config.py",
+      "line": 602,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "core/validation/naming_config.py",
+      "line": 659,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/naming_config.py",
+      "line": 809,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/naming_config.py",
+      "line": 276,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/integration.py",
+      "line": 58,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/integration.py",
+      "line": 200,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/tampering_detection.py",
+      "line": 83,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/tampering_detection.py",
+      "line": 97,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/tampering_detection.py",
+      "line": 120,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/tampering_detection.py",
+      "line": 134,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/tampering_detection.py",
+      "line": 560,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/merge_validation_service.py",
+      "line": 167,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/merge_validation_service.py",
+      "line": 177,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/pipeline.py",
+      "line": 217,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/pipeline.py",
+      "line": 267,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/pipeline.py",
+      "line": 317,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/pipeline.py",
+      "line": 375,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/pipeline.py",
+      "line": 462,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/pipeline.py",
+      "line": 509,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/pipeline.py",
+      "line": 588,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/pipeline.py",
+      "line": 445,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/policy_signing.py",
+      "line": 227,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/policy_signing.py",
+      "line": 323,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/policy_signing.py",
+      "line": 381,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/policy_signing.py",
+      "line": 431,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/policy_signing.py",
+      "line": 459,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/policy_signing.py",
+      "line": 501,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/policy_signing.py",
+      "line": 101,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/policy_signing.py",
+      "line": 109,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/policy_signing.py",
+      "line": 360,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/validation_logging.py",
+      "line": 38,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/validation_logging.py",
+      "line": 210,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/validation_logging.py",
+      "line": 219,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/validation_logging.py",
+      "line": 326,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/validation_logging.py",
+      "line": 350,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/validation_logging.py",
+      "line": 610,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/validation_logging.py",
+      "line": 635,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/validation_logging.py",
+      "line": 649,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/validation_logging.py",
+      "line": 683,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/adapters.py",
+      "line": 33,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/adapters.py",
+      "line": 41,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/adapters.py",
+      "line": 48,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/adapters.py",
+      "line": 55,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/adapters.py",
+      "line": 83,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/adapters.py",
+      "line": 96,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/adapters.py",
+      "line": 117,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/adapters.py",
+      "line": 138,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/adapters.py",
+      "line": 146,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/adapters.py",
+      "line": 187,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/adapters.py",
+      "line": 203,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/adapters.py",
+      "line": 282,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/adapters.py",
+      "line": 314,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/adapters.py",
+      "line": 326,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/adapters.py",
+      "line": 433,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/adapters.py",
+      "line": 449,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/adapters.py",
+      "line": 478,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/adapters.py",
+      "line": 472,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/adapters.py",
+      "line": 414,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/adapters/terminus_traversal_adapter.py",
+      "line": 56,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/adapters/terminus_traversal_adapter.py",
+      "line": 90,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/adapters/terminus_traversal_adapter.py",
+      "line": 122,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "core/validation/adapters/terminus_traversal_adapter.py",
+      "line": 159,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/adapters/terminus_traversal_adapter.py",
+      "line": 197,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/adapters/terminus_traversal_adapter.py",
+      "line": 229,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/adapters/terminus_traversal_adapter.py",
+      "line": 280,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/adapters/terminus_traversal_adapter.py",
+      "line": 320,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/adapters/terminus_traversal_adapter.py",
+      "line": 362,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rules/type_incompatibility.py",
+      "line": 251,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rules/naming_convention_rule.py",
+      "line": 147,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rules/terminus_native_schema_rule.py",
+      "line": 98,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rules/terminus_native_schema_rule.py",
+      "line": 228,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rules/terminus_native_schema_rule.py",
+      "line": 304,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rules/timeseries_event_mapping_rule.py",
+      "line": 318,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rules/timeseries_event_mapping_rule.py",
+      "line": 390,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rules/timeseries_event_mapping_rule.py",
+      "line": 143,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rules/timeseries_event_mapping_rule.py",
+      "line": 356,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rules/timeseries_event_mapping_rule.py",
+      "line": 445,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rules/timeseries_event_mapping_rule.py",
+      "line": 169,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rules/foundry_alerting_rule.py",
+      "line": 129,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rules/foundry_alerting_rule.py",
+      "line": 208,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rules/foundry_alerting_rule.py",
+      "line": 254,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rules/foundry_alerting_rule.py",
+      "line": 375,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rules/foundry_alerting_rule.py",
+      "line": 327,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rules/data_impact_analyzer.py",
+      "line": 139,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rules/data_impact_analyzer.py",
+      "line": 203,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rules/data_impact_analyzer.py",
+      "line": 288,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rules/data_impact_analyzer.py",
+      "line": 487,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rules/foreign_ref_integrity_rule.py",
+      "line": 142,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rules/foreign_ref_integrity_rule.py",
+      "line": 190,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rules/foreign_ref_integrity_rule.py",
+      "line": 228,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rules/foreign_ref_integrity_rule.py",
+      "line": 363,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rules/foreign_ref_integrity_rule.py",
+      "line": 162,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rules/base.py",
+      "line": 118,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rules/base.py",
+      "line": 143,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "core/validation/rules/base.py",
+      "line": 200,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "versioning_backup/history/service.py",
+      "line": 133,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "versioning_backup/history/service.py",
+      "line": 199,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "versioning_backup/history/service.py",
+      "line": 269,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "versioning_backup/history/service.py",
+      "line": 315,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "versioning_backup/history/service.py",
+      "line": 343,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "versioning_backup/history/service.py",
+      "line": 407,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "versioning_backup/history/service.py",
+      "line": 432,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "versioning_backup/history/routes.py",
+      "line": 86,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "versioning_backup/history/routes.py",
+      "line": 130,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "versioning_backup/versioning/dag_compaction.py",
+      "line": 376,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/traversal/merge_validator.py",
+      "line": 167,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/event_schema.py",
+      "line": 352,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/version_manager.py",
+      "line": 238,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/version_manager.py",
+      "line": 302,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/version_manager.py",
+      "line": 379,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/service_refactored.py",
+      "line": 69,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/service_refactored.py",
+      "line": 143,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/service_refactored.py",
+      "line": 298,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/ci_integration.py",
+      "line": 206,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/naming_config.py",
+      "line": 123,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/naming_config.py",
+      "line": 153,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/naming_config.py",
+      "line": 601,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/naming_config.py",
+      "line": 658,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/naming_config.py",
+      "line": 808,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/naming_config.py",
+      "line": 275,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/naming_history.py",
+      "line": 274,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/naming_history.py",
+      "line": 257,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/input_sanitization.py",
+      "line": 161,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/enterprise_service.py",
+      "line": 186,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/enterprise_service.py",
+      "line": 208,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/enterprise_service.py",
+      "line": 402,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/enterprise_service.py",
+      "line": 518,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/enterprise_service.py",
+      "line": 609,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/enterprise_service.py",
+      "line": 488,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/rules/naming_convention_rule.py",
+      "line": 147,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/rules/enum_value_constraint_rule.py",
+      "line": 100,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/rules/enum_value_constraint_rule.py",
+      "line": 153,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/rules/enum_value_constraint_rule.py",
+      "line": 120,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/rules/foundry_alerting_rule.py",
+      "line": 129,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/rules/foundry_alerting_rule.py",
+      "line": 208,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/rules/foundry_alerting_rule.py",
+      "line": 254,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/rules/foundry_alerting_rule.py",
+      "line": 374,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/rules/foundry_alerting_rule.py",
+      "line": 326,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/rules/array_element_rule.py",
+      "line": 145,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/rules/array_element_rule.py",
+      "line": 186,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/rules/array_element_rule.py",
+      "line": 165,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/rules/primary_key_change.py",
+      "line": 320,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/rules/primary_key_change.py",
+      "line": 383,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/rules/primary_key_change.py",
+      "line": 567,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/rules/required_field.py",
+      "line": 208,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/rules/required_field.py",
+      "line": 355,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/rules/required_field.py",
+      "line": 464,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/rules/required_field.py",
+      "line": 767,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/scripts/validate_complete_system.py",
+      "line": 81,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/scripts/remove_terminus_duplicate_validation.py",
+      "line": 87,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/scripts/production_readiness_check.py",
+      "line": 105,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/scripts/production_readiness_check.py",
+      "line": 144,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/scripts/production_readiness_check.py",
+      "line": 187,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/scripts/production_readiness_check.py",
+      "line": 225,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/scripts/production_readiness_check.py",
+      "line": 261,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/scripts/production_readiness_check.py",
+      "line": 296,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/scripts/production_readiness_check.py",
+      "line": 52,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/scripts/ci/validate_oms_changes.py",
+      "line": 360,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/scripts/ci/validate_oms_changes.py",
+      "line": 116,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/scripts/ci/validate_oms_changes.py",
+      "line": 148,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/infrastructure/aws/eventbridge_rules.py",
+      "line": 239,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/infrastructure/aws/eventbridge_rules.py",
+      "line": 301,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/enterprise_validation.py",
+      "line": 169,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/traversal/traversal_engine.py",
+      "line": 119,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/traversal/traversal_engine.py",
+      "line": 263,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/traversal/traversal_engine.py",
+      "line": 455,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/traversal/traversal_engine.py",
+      "line": 384,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/traversal/dependency_analyzer.py",
+      "line": 140,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/traversal/dependency_analyzer.py",
+      "line": 207,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/traversal/dependency_analyzer.py",
+      "line": 316,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/traversal/dependency_analyzer.py",
+      "line": 420,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/traversal/dependency_analyzer.py",
+      "line": 351,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/traversal/dependency_analyzer.py",
+      "line": 96,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/traversal/dependency_analyzer.py",
+      "line": 125,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/traversal/dependency_analyzer.py",
+      "line": 175,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/traversal/dependency_analyzer.py",
+      "line": 275,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/traversal/dependency_analyzer.py",
+      "line": 308,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/traversal/dependency_analyzer.py",
+      "line": 399,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/traversal/caching.py",
+      "line": 416,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/traversal/caching.py",
+      "line": 409,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/traversal/merge_validator.py",
+      "line": 167,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 100,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 134,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 168,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 222,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 246,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 280,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 359,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 440,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 524,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 589,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 639,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 691,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 309,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 386,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 470,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 340,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 421,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 506,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 584,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 686,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/validation/migration_planner.py",
+      "line": 134,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/event_schema.py",
+      "line": 352,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/validation/policy_engine.py",
+      "line": 118,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/policy_engine.py",
+      "line": 398,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rule_registry.py",
+      "line": 147,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rule_registry.py",
+      "line": 179,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rule_registry.py",
+      "line": 82,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rule_registry.py",
+      "line": 216,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rule_registry.py",
+      "line": 144,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rule_registry.py",
+      "line": 141,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/version_manager.py",
+      "line": 238,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/version_manager.py",
+      "line": 302,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/version_manager.py",
+      "line": 379,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/service_refactored.py",
+      "line": 69,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/service_refactored.py",
+      "line": 143,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/service_refactored.py",
+      "line": 298,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/ci_integration.py",
+      "line": 206,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/validation/naming_config.py",
+      "line": 123,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/naming_config.py",
+      "line": 153,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/naming_config.py",
+      "line": 601,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/validation/naming_config.py",
+      "line": 658,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/naming_config.py",
+      "line": 808,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/naming_config.py",
+      "line": 275,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/integration.py",
+      "line": 58,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/integration.py",
+      "line": 200,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/naming_history.py",
+      "line": 274,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/naming_history.py",
+      "line": 257,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/tampering_detection.py",
+      "line": 83,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/tampering_detection.py",
+      "line": 97,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/tampering_detection.py",
+      "line": 120,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/tampering_detection.py",
+      "line": 134,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/tampering_detection.py",
+      "line": 560,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/merge_validation_service.py",
+      "line": 167,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/merge_validation_service.py",
+      "line": 177,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/input_sanitization.py",
+      "line": 161,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/pipeline.py",
+      "line": 217,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/pipeline.py",
+      "line": 267,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/pipeline.py",
+      "line": 317,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/pipeline.py",
+      "line": 375,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/pipeline.py",
+      "line": 462,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/pipeline.py",
+      "line": 509,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/pipeline.py",
+      "line": 588,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/pipeline.py",
+      "line": 445,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/policy_signing.py",
+      "line": 227,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/policy_signing.py",
+      "line": 323,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/policy_signing.py",
+      "line": 381,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/policy_signing.py",
+      "line": 431,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/policy_signing.py",
+      "line": 459,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/policy_signing.py",
+      "line": 501,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/policy_signing.py",
+      "line": 101,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/policy_signing.py",
+      "line": 109,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/policy_signing.py",
+      "line": 360,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/validation_logging.py",
+      "line": 38,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/validation_logging.py",
+      "line": 210,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/validation_logging.py",
+      "line": 219,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/validation_logging.py",
+      "line": 326,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/validation_logging.py",
+      "line": 350,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/validation_logging.py",
+      "line": 610,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/validation_logging.py",
+      "line": 635,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/validation_logging.py",
+      "line": 649,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/validation_logging.py",
+      "line": 683,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/enterprise_service.py",
+      "line": 186,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/enterprise_service.py",
+      "line": 208,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/enterprise_service.py",
+      "line": 402,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/enterprise_service.py",
+      "line": 518,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/enterprise_service.py",
+      "line": 609,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/enterprise_service.py",
+      "line": 488,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/adapters.py",
+      "line": 33,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/adapters.py",
+      "line": 41,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/adapters.py",
+      "line": 48,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/adapters.py",
+      "line": 55,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/adapters.py",
+      "line": 83,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/adapters.py",
+      "line": 96,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/adapters.py",
+      "line": 117,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/adapters.py",
+      "line": 138,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/adapters.py",
+      "line": 146,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/adapters.py",
+      "line": 187,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/adapters.py",
+      "line": 203,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/adapters.py",
+      "line": 282,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/adapters.py",
+      "line": 314,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/adapters.py",
+      "line": 326,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/adapters.py",
+      "line": 433,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/adapters.py",
+      "line": 449,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/adapters.py",
+      "line": 478,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/adapters.py",
+      "line": 472,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/adapters.py",
+      "line": 414,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/adapters/terminus_traversal_adapter.py",
+      "line": 56,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/adapters/terminus_traversal_adapter.py",
+      "line": 90,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/adapters/terminus_traversal_adapter.py",
+      "line": 122,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "validation_backup/validation/adapters/terminus_traversal_adapter.py",
+      "line": 159,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/adapters/terminus_traversal_adapter.py",
+      "line": 197,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/adapters/terminus_traversal_adapter.py",
+      "line": 229,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/adapters/terminus_traversal_adapter.py",
+      "line": 280,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/adapters/terminus_traversal_adapter.py",
+      "line": 320,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/adapters/terminus_traversal_adapter.py",
+      "line": 362,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/type_incompatibility.py",
+      "line": 251,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/naming_convention_rule.py",
+      "line": 147,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/terminus_native_schema_rule.py",
+      "line": 98,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/terminus_native_schema_rule.py",
+      "line": 228,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/terminus_native_schema_rule.py",
+      "line": 304,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/enum_value_constraint_rule.py",
+      "line": 100,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/enum_value_constraint_rule.py",
+      "line": 153,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/enum_value_constraint_rule.py",
+      "line": 120,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/timeseries_event_mapping_rule.py",
+      "line": 318,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/timeseries_event_mapping_rule.py",
+      "line": 390,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/timeseries_event_mapping_rule.py",
+      "line": 143,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/timeseries_event_mapping_rule.py",
+      "line": 356,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/timeseries_event_mapping_rule.py",
+      "line": 445,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/timeseries_event_mapping_rule.py",
+      "line": 169,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/foundry_alerting_rule.py",
+      "line": 129,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/foundry_alerting_rule.py",
+      "line": 208,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/foundry_alerting_rule.py",
+      "line": 254,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/foundry_alerting_rule.py",
+      "line": 374,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/foundry_alerting_rule.py",
+      "line": 326,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/data_impact_analyzer.py",
+      "line": 139,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/data_impact_analyzer.py",
+      "line": 203,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/data_impact_analyzer.py",
+      "line": 288,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/data_impact_analyzer.py",
+      "line": 487,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/array_element_rule.py",
+      "line": 145,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/array_element_rule.py",
+      "line": 186,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/array_element_rule.py",
+      "line": 165,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/primary_key_change.py",
+      "line": 320,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/primary_key_change.py",
+      "line": 383,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/primary_key_change.py",
+      "line": 567,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/required_field.py",
+      "line": 208,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/required_field.py",
+      "line": 355,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/required_field.py",
+      "line": 464,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/required_field.py",
+      "line": 767,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/foreign_ref_integrity_rule.py",
+      "line": 142,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/foreign_ref_integrity_rule.py",
+      "line": 190,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/foreign_ref_integrity_rule.py",
+      "line": 228,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/foreign_ref_integrity_rule.py",
+      "line": 363,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/foreign_ref_integrity_rule.py",
+      "line": 162,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/base.py",
+      "line": 118,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/base.py",
+      "line": 143,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/base.py",
+      "line": 200,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/terminus_redundant_check.py",
+      "line": 133,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "validation_backup/validation/rules/terminus_redundant_check.py",
+      "line": 297,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "config/circuit_breaker_secure.py",
+      "line": 134,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "config/circuit_breaker_secure.py",
+      "line": 291,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "tests/unit/test_caching.py",
+      "line": 181,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "tests/unit/test_caching.py",
+      "line": 644,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "tests/performance/benchmark_terminus_native.py",
+      "line": 91,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "utils/safe_json_encoder.py",
+      "line": 138,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "utils/safe_json_encoder.py",
+      "line": 113,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "utils/safe_json_encoder.py",
+      "line": 120,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "utils/retry_strategy.py",
+      "line": 349,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "utils/retry_strategy.py",
+      "line": 492,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "utils/git_utils.py",
+      "line": 47,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "shared/clients/secure_http_client.py",
+      "line": 227,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/clients/secure_http_client.py",
+      "line": 39,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/clients/redis_ha_client.py",
+      "line": 88,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/clients/redis_ha_client.py",
+      "line": 148,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/clients/redis_ha_client.py",
+      "line": 198,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/clients/redis_ha_client.py",
+      "line": 243,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/clients/redis_ha_client.py",
+      "line": 261,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/clients/redis_ha_client.py",
+      "line": 281,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/clients/redis_ha_client.py",
+      "line": 296,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/clients/redis_ha_client.py",
+      "line": 313,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/clients/redis_ha_client.py",
+      "line": 333,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/clients/redis_ha_client.py",
+      "line": 350,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/clients/redis_ha_client.py",
+      "line": 369,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/clients/redis_ha_client.py",
+      "line": 217,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/clients/redis_ha_client.py",
+      "line": 230,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/clients/redis_ha_client.py",
+      "line": 240,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/clients/terminus_db.py",
+      "line": 162,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/clients/terminus_db.py",
+      "line": 184,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "shared/clients/terminus_db.py",
+      "line": 262,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/clients/terminus_db.py",
+      "line": 114,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/clients/terminus_db.py",
+      "line": 151,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/clients/service_client.py",
+      "line": 127,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/clients/service_client.py",
+      "line": 63,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/database/client_factory.py",
+      "line": 197,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/database/client_factory.py",
+      "line": 178,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/cache/terminusdb_cache.py",
+      "line": 74,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/cache/terminusdb_cache.py",
+      "line": 87,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "shared/cache/terminusdb_cache.py",
+      "line": 94,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "shared/cache/terminusdb_cache.py",
+      "line": 385,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/cache/terminusdb_cache.py",
+      "line": 162,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/cache/terminusdb_cache.py",
+      "line": 238,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/cache/terminusdb_cache.py",
+      "line": 303,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/cache/terminusdb_cache.py",
+      "line": 326,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/cache/terminusdb_cache.py",
+      "line": 440,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/cache/terminusdb_cache.py",
+      "line": 497,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/infrastructure/real_nats_client.py",
+      "line": 72,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/infrastructure/real_nats_client.py",
+      "line": 123,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/infrastructure/real_nats_client.py",
+      "line": 151,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/infrastructure/real_nats_client.py",
+      "line": 186,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/infrastructure/real_nats_client.py",
+      "line": 221,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/infrastructure/real_nats_client.py",
+      "line": 280,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/infrastructure/real_nats_client.py",
+      "line": 323,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/infrastructure/real_nats_client.py",
+      "line": 172,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/infrastructure/real_nats_client.py",
+      "line": 255,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "shared/infrastructure/real_nats_client.py",
+      "line": 298,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "models/data_types.py",
+      "line": 766,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "models/semantic_types.py",
+      "line": 78,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "grpc_services/server.py",
+      "line": 89,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "grpc_services/server.py",
+      "line": 142,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "grpc_services/server.py",
+      "line": 169,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "grpc_services/server.py",
+      "line": 195,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "grpc_services/server.py",
+      "line": 253,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "grpc_services/server.py",
+      "line": 284,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "grpc_services/server.py",
+      "line": 447,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "examples/etag_demo.py",
+      "line": 181,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/fix_datetime_deprecation.py",
+      "line": 53,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/test_all_apis.py",
+      "line": 50,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/deploy_production.py",
+      "line": 122,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/deploy_production.py",
+      "line": 271,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/deploy_production.py",
+      "line": 495,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/deploy_production.py",
+      "line": 558,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/create_test_db.py",
+      "line": 42,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/test_schema_management.py",
+      "line": 89,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/test_schema_management.py",
+      "line": 166,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/test_schema_management.py",
+      "line": 294,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/test_schema_management.py",
+      "line": 378,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/find_error_handling_issues.py",
+      "line": 35,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/validate_complete_system.py",
+      "line": 81,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/create_oms_schema.py",
+      "line": 141,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/create_oms_schema.py",
+      "line": 191,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/consolidate_permissions.py",
+      "line": 44,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/find_legacy_code.py",
+      "line": 136,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "scripts/verify_imports.py",
+      "line": 48,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/clear_terminusdb.py",
+      "line": 53,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/clear_terminusdb.py",
+      "line": 48,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/test_simple.py",
+      "line": 28,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/test_simple.py",
+      "line": 49,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/quick_verify.py",
+      "line": 38,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/fix_imports.py",
+      "line": 125,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "scripts/enhanced_import_check.py",
+      "line": 69,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/enhanced_import_check.py",
+      "line": 118,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "scripts/find_additional_legacy_patterns.py",
+      "line": 205,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/find_additional_legacy_patterns.py",
+      "line": 241,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/migrate_to_msa_auth.py",
+      "line": 41,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/migrate_to_msa_auth.py",
+      "line": 22,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/verify_deployment.py",
+      "line": 141,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/test_terminus_integration.py",
+      "line": 56,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/test_terminus_integration.py",
+      "line": 76,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/test_terminus_integration.py",
+      "line": 131,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/test_terminus_integration.py",
+      "line": 208,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/test_terminus_integration.py",
+      "line": 241,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/test_simple_foundry.py",
+      "line": 48,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/test_simple_foundry.py",
+      "line": 86,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/test_simple_foundry.py",
+      "line": 113,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/test_simple_foundry.py",
+      "line": 167,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/test_simple_foundry.py",
+      "line": 191,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/run_all_tests.py",
+      "line": 155,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/run_all_tests.py",
+      "line": 219,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/run_all_tests.py",
+      "line": 255,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/run_all_tests.py",
+      "line": 285,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/cleanup_duplicate_validation.py",
+      "line": 142,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/test_foundry_alerting.py",
+      "line": 71,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/test_foundry_alerting.py",
+      "line": 93,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/test_foundry_alerting.py",
+      "line": 158,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/test_foundry_alerting.py",
+      "line": 206,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/test_foundry_alerting.py",
+      "line": 245,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/test_foundry_alerting.py",
+      "line": 267,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/dev/quick_test.py",
+      "line": 23,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/dev/quick_test.py",
+      "line": 32,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/dev/quick_test.py",
+      "line": 67,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "scripts/dev/quick_test.py",
+      "line": 83,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/audit_routes.py",
+      "line": 175,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/audit_routes.py",
+      "line": 232,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/audit_routes.py",
+      "line": 271,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/audit_routes.py",
+      "line": 323,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/audit_routes.py",
+      "line": 361,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/audit_routes.py",
+      "line": 426,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/audit_routes.py",
+      "line": 459,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/audit_routes.py",
+      "line": 489,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/traversal_routes.py",
+      "line": 173,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "api/v1/traversal_routes.py",
+      "line": 206,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "api/v1/traversal_routes.py",
+      "line": 253,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "api/v1/traversal_routes.py",
+      "line": 299,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "api/v1/traversal_routes.py",
+      "line": 323,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "api/v1/traversal_routes.py",
+      "line": 361,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "api/v1/traversal_routes.py",
+      "line": 393,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "api/v1/traversal_routes.py",
+      "line": 417,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "api/v1/traversal_routes.py",
+      "line": 438,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "api/v1/traversal_routes.py",
+      "line": 481,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "api/v1/traversal_routes.py",
+      "line": 585,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/traversal_routes.py",
+      "line": 619,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/traversal_routes.py",
+      "line": 648,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/traversal_routes.py",
+      "line": 675,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/traversal_routes.py",
+      "line": 64,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/traversal_routes.py",
+      "line": 488,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "api/v1/branch_lock_routes.py",
+      "line": 288,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/branch_lock_routes.py",
+      "line": 557,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/branch_lock_routes.py",
+      "line": 626,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/validation_routes.py",
+      "line": 110,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/validation_routes.py",
+      "line": 143,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/validation_routes.py",
+      "line": 216,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/validation_routes.py",
+      "line": 286,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/validation_routes.py",
+      "line": 307,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/validation_routes.py",
+      "line": 328,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/validation_routes.py",
+      "line": 372,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/validation_routes.py",
+      "line": 416,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/validation_routes.py",
+      "line": 187,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/shadow_index_routes.py",
+      "line": 138,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/shadow_index_routes.py",
+      "line": 269,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/schema_routes.py",
+      "line": 800,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/batch_routes.py",
+      "line": 132,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/batch_routes.py",
+      "line": 197,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/batch_routes.py",
+      "line": 254,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/batch_routes.py",
+      "line": 302,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/batch_routes.py",
+      "line": 343,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/schema_generation/endpoints.py",
+      "line": 140,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/schema_generation/endpoints.py",
+      "line": 217,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/v1/schema_generation/endpoints.py",
+      "line": 339,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/auth.py",
+      "line": 43,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/auth.py",
+      "line": 69,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/auth.py",
+      "line": 106,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/bff.py",
+      "line": 271,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/bff.py",
+      "line": 298,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/monitoring.py",
+      "line": 441,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/dataloaders.py",
+      "line": 196,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/security.py",
+      "line": 244,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "api/graphql/subscriptions.py",
+      "line": 125,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/subscriptions.py",
+      "line": 201,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/subscriptions.py",
+      "line": 281,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/subscriptions.py",
+      "line": 363,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/subscriptions.py",
+      "line": 100,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/subscriptions.py",
+      "line": 177,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/subscriptions.py",
+      "line": 257,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/subscriptions.py",
+      "line": 339,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/enhanced_resolvers.py",
+      "line": 53,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/enhanced_resolvers.py",
+      "line": 91,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/enhanced_resolvers.py",
+      "line": 69,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/enhanced_resolvers.py",
+      "line": 108,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/main.py",
+      "line": 62,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/main.py",
+      "line": 92,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/main.py",
+      "line": 283,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/main.py",
+      "line": 181,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/main.py",
+      "line": 274,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/realtime_publisher.py",
+      "line": 92,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/enhanced_main.py",
+      "line": 95,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/enhanced_main.py",
+      "line": 116,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/enhanced_main.py",
+      "line": 132,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/enhanced_main.py",
+      "line": 228,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/enhanced_main.py",
+      "line": 292,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "api/graphql/enhanced_main.py",
+      "line": 316,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "api/graphql/enhanced_main.py",
+      "line": 349,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "api/graphql/enhanced_main.py",
+      "line": 380,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "api/graphql/websocket_manager.py",
+      "line": 247,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/websocket_manager.py",
+      "line": 117,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "api/graphql/websocket_manager.py",
+      "line": 176,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/websocket_manager.py",
+      "line": 221,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/websocket_manager.py",
+      "line": 69,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/websocket_manager.py",
+      "line": 62,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/graphql/resolvers/data_type_resolvers.py",
+      "line": 73,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "api/graphql/resolvers/function_type_resolvers.py",
+      "line": 78,
+      "code": "except Exception as e:",
+      "has_logging": false
+    },
+    {
+      "file": "api/gateway/graphql_proxy.py",
+      "line": 71,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/gateway/graphql_proxy.py",
+      "line": 155,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/gateway/graphql_proxy.py",
+      "line": 201,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "api/gateway/router.py",
+      "line": 83,
+      "code": "except Exception:",
+      "has_logging": false
+    },
+    {
+      "file": "api/gateway/router.py",
+      "line": 193,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "infrastructure/aws/eventbridge_rules.py",
+      "line": 239,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "infrastructure/aws/eventbridge_rules.py",
+      "line": 301,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "infrastructure/aws/eventbridge_setup.py",
+      "line": 446,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "infrastructure/aws/eventbridge_setup.py",
+      "line": 95,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "infrastructure/aws/eventbridge_setup.py",
+      "line": 262,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "infrastructure/aws/eventbridge_setup.py",
+      "line": 333,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "infrastructure/aws/eventbridge_setup.py",
+      "line": 374,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "infrastructure/aws/eventbridge_setup.py",
+      "line": 148,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "infrastructure/aws/eventbridge_setup.py",
+      "line": 251,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "infrastructure/aws/cloudwatch_alarms.py",
+      "line": 344,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "backups/validation_cleanup_20250629_013247/middleware/request_validation.py",
+      "line": 84,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "backups/validation_cleanup_20250629_013247/middleware/enterprise_validation.py",
+      "line": 171,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "backups/validation_cleanup_20250629_013247/middleware/enterprise_validation.py",
+      "line": 241,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "backups/validation_cleanup_20250629_013247/middleware/enterprise_validation.py",
+      "line": 444,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "backups/validation_cleanup_20250629_013247/middleware/enterprise_validation.py",
+      "line": 499,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "backups/validation_cleanup_20250629_013247/middleware/enterprise_validation.py",
+      "line": 655,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "backups/validation_cleanup_20250629_013247/middleware/enterprise_validation.py",
+      "line": 433,
+      "code": "except Exception as e:",
+      "has_logging": true
+    },
+    {
+      "file": "backups/validation_cleanup_20250629_013247/models/semantic_types.py",
+      "line": 78,
+      "code": "except Exception as e:",
+      "has_logging": false
+    }
+  ],
+  "empty_except": [],
+  "no_logging": [
+    {
+      "file": "main_secure.py",
+      "line": 301,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "main_secure.py",
+      "line": 115,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "middleware/dlq_handler.py",
+      "line": 588,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "middleware/circuit_breaker.py",
+      "line": 256,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "middleware/component_middleware.py",
+      "line": 302,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "middleware/component_middleware.py",
+      "line": 345,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "middleware/component_health.py",
+      "line": 192,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "middleware/component_health.py",
+      "line": 248,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "middleware/component_health.py",
+      "line": 305,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "middleware/component_health.py",
+      "line": 366,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "middleware/component_health.py",
+      "line": 435,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "middleware/component_health.py",
+      "line": 474,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "middleware/service_discovery.py",
+      "line": 761,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "middleware/service_discovery.py",
+      "line": 417,
+      "code": "except Exception:"
+    },
+    {
+      "file": "database/clients/terminus_db.py",
+      "line": 184,
+      "code": "except Exception:"
+    },
+    {
+      "file": "core/advanced/terminus_advanced.py",
+      "line": 98,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/branch/distributed_lock_manager.py",
+      "line": 89,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/shadow_index/manager.py",
+      "line": 577,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/shadow_index/manager.py",
+      "line": 601,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/merge/unified_engine.py",
+      "line": 134,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/security/path_traversal_killer.py",
+      "line": 106,
+      "code": "except Exception:"
+    },
+    {
+      "file": "core/security/path_traversal_killer.py",
+      "line": 118,
+      "code": "except Exception:"
+    },
+    {
+      "file": "core/event_consumer/quiver_event_consumer.py",
+      "line": 295,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/health/health_checker.py",
+      "line": 116,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/health/health_checker.py",
+      "line": 176,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/health/health_checker.py",
+      "line": 205,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/health/health_checker.py",
+      "line": 232,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/health/health_checker.py",
+      "line": 258,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/issue_tracking/issue_service.py",
+      "line": 134,
+      "code": "except Exception:"
+    },
+    {
+      "file": "core/issue_tracking/issue_service.py",
+      "line": 270,
+      "code": "except Exception:"
+    },
+    {
+      "file": "core/integrations/iam_service_client.py",
+      "line": 339,
+      "code": "except Exception:"
+    },
+    {
+      "file": "core/integrations/iam_service_client_with_fallback.py",
+      "line": 154,
+      "code": "except Exception:"
+    },
+    {
+      "file": "core/concurrency/optimistic_lock.py",
+      "line": 114,
+      "code": "except Exception:"
+    },
+    {
+      "file": "core/event_publisher/cloudevents_migration.py",
+      "line": 38,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/event_publisher/multi_platform_router.py",
+      "line": 380,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/event_publisher/eventbridge_publisher.py",
+      "line": 307,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/traversal/dependency_analyzer.py",
+      "line": 140,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/traversal/dependency_analyzer.py",
+      "line": 207,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/traversal/dependency_analyzer.py",
+      "line": 316,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/traversal/dependency_analyzer.py",
+      "line": 420,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/traversal/dependency_analyzer.py",
+      "line": 351,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/traversal/dependency_analyzer.py",
+      "line": 125,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/traversal/dependency_analyzer.py",
+      "line": 175,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/traversal/dependency_analyzer.py",
+      "line": 275,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/traversal/dependency_analyzer.py",
+      "line": 308,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/traversal/dependency_analyzer.py",
+      "line": 399,
+      "code": "except Exception:"
+    },
+    {
+      "file": "core/traversal/caching.py",
+      "line": 416,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/traversal/caching.py",
+      "line": 409,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/traversal/merge_validator.py",
+      "line": 167,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 100,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 134,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 168,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 222,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 246,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 280,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 359,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 440,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 524,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 589,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 639,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 691,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 309,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 386,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 470,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 340,
+      "code": "except Exception:"
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 421,
+      "code": "except Exception:"
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 506,
+      "code": "except Exception:"
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 584,
+      "code": "except Exception:"
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 686,
+      "code": "except Exception:"
+    },
+    {
+      "file": "core/history/service.py",
+      "line": 432,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/backup/main.py",
+      "line": 484,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/backup/main.py",
+      "line": 225,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/backup/main.py",
+      "line": 231,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/backup/main.py",
+      "line": 258,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/backup/main.py",
+      "line": 263,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/migration/rollback_manager.py",
+      "line": 82,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/services/ontology_advanced_service.py",
+      "line": 204,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/validation/event_schema.py",
+      "line": 390,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/validation/ci_integration.py",
+      "line": 206,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/validation/naming_config.py",
+      "line": 602,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/validation/adapters/terminus_traversal_adapter.py",
+      "line": 122,
+      "code": "except Exception:"
+    },
+    {
+      "file": "versioning_backup/history/service.py",
+      "line": 432,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/traversal/merge_validator.py",
+      "line": 167,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/event_schema.py",
+      "line": 352,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/ci_integration.py",
+      "line": 206,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/naming_config.py",
+      "line": 601,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/scripts/production_readiness_check.py",
+      "line": 105,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/scripts/production_readiness_check.py",
+      "line": 144,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/scripts/production_readiness_check.py",
+      "line": 187,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/scripts/production_readiness_check.py",
+      "line": 225,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/scripts/production_readiness_check.py",
+      "line": 261,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/scripts/production_readiness_check.py",
+      "line": 296,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/scripts/ci/validate_oms_changes.py",
+      "line": 116,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_backup/traversal/dependency_analyzer.py",
+      "line": 140,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_backup/traversal/dependency_analyzer.py",
+      "line": 207,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_backup/traversal/dependency_analyzer.py",
+      "line": 316,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_backup/traversal/dependency_analyzer.py",
+      "line": 420,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_backup/traversal/dependency_analyzer.py",
+      "line": 351,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_backup/traversal/dependency_analyzer.py",
+      "line": 125,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_backup/traversal/dependency_analyzer.py",
+      "line": 175,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_backup/traversal/dependency_analyzer.py",
+      "line": 275,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_backup/traversal/dependency_analyzer.py",
+      "line": 308,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_backup/traversal/dependency_analyzer.py",
+      "line": 399,
+      "code": "except Exception:"
+    },
+    {
+      "file": "validation_backup/traversal/caching.py",
+      "line": 416,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_backup/traversal/caching.py",
+      "line": 409,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_backup/traversal/merge_validator.py",
+      "line": 167,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 100,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 134,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 168,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 222,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 246,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 280,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 359,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 440,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 524,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 589,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 639,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 691,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 309,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 386,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 470,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 340,
+      "code": "except Exception:"
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 421,
+      "code": "except Exception:"
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 506,
+      "code": "except Exception:"
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 584,
+      "code": "except Exception:"
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 686,
+      "code": "except Exception:"
+    },
+    {
+      "file": "validation_backup/validation/event_schema.py",
+      "line": 352,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_backup/validation/ci_integration.py",
+      "line": 206,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_backup/validation/naming_config.py",
+      "line": 601,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_backup/validation/adapters/terminus_traversal_adapter.py",
+      "line": 122,
+      "code": "except Exception:"
+    },
+    {
+      "file": "config/circuit_breaker_secure.py",
+      "line": 134,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "tests/unit/test_caching.py",
+      "line": 181,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "tests/unit/test_caching.py",
+      "line": 644,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "utils/safe_json_encoder.py",
+      "line": 138,
+      "code": "except Exception:"
+    },
+    {
+      "file": "utils/safe_json_encoder.py",
+      "line": 113,
+      "code": "except Exception:"
+    },
+    {
+      "file": "utils/safe_json_encoder.py",
+      "line": 120,
+      "code": "except Exception:"
+    },
+    {
+      "file": "utils/retry_strategy.py",
+      "line": 349,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "utils/retry_strategy.py",
+      "line": 492,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "utils/git_utils.py",
+      "line": 47,
+      "code": "except Exception:"
+    },
+    {
+      "file": "shared/clients/terminus_db.py",
+      "line": 184,
+      "code": "except Exception:"
+    },
+    {
+      "file": "shared/cache/terminusdb_cache.py",
+      "line": 87,
+      "code": "except Exception:"
+    },
+    {
+      "file": "shared/cache/terminusdb_cache.py",
+      "line": 94,
+      "code": "except Exception:"
+    },
+    {
+      "file": "models/data_types.py",
+      "line": 766,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "models/semantic_types.py",
+      "line": 78,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "grpc_services/server.py",
+      "line": 447,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "scripts/find_legacy_code.py",
+      "line": 136,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "scripts/fix_imports.py",
+      "line": 125,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "scripts/enhanced_import_check.py",
+      "line": 118,
+      "code": "except Exception:"
+    },
+    {
+      "file": "api/v1/traversal_routes.py",
+      "line": 173,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "api/v1/traversal_routes.py",
+      "line": 206,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "api/v1/traversal_routes.py",
+      "line": 253,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "api/v1/traversal_routes.py",
+      "line": 299,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "api/v1/traversal_routes.py",
+      "line": 323,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "api/v1/traversal_routes.py",
+      "line": 361,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "api/v1/traversal_routes.py",
+      "line": 393,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "api/v1/traversal_routes.py",
+      "line": 417,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "api/v1/traversal_routes.py",
+      "line": 438,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "api/v1/traversal_routes.py",
+      "line": 481,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "api/v1/traversal_routes.py",
+      "line": 488,
+      "code": "except Exception:"
+    },
+    {
+      "file": "api/graphql/security.py",
+      "line": 244,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "api/graphql/enhanced_main.py",
+      "line": 292,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "api/graphql/enhanced_main.py",
+      "line": 316,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "api/graphql/enhanced_main.py",
+      "line": 349,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "api/graphql/enhanced_main.py",
+      "line": 380,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "api/graphql/websocket_manager.py",
+      "line": 117,
+      "code": "except Exception:"
+    },
+    {
+      "file": "api/graphql/resolvers/data_type_resolvers.py",
+      "line": 73,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "api/graphql/resolvers/function_type_resolvers.py",
+      "line": 78,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "api/gateway/router.py",
+      "line": 83,
+      "code": "except Exception:"
+    },
+    {
+      "file": "backups/validation_cleanup_20250629_013247/models/semantic_types.py",
+      "line": 78,
+      "code": "except Exception as e:"
+    }
+  ],
+  "pass_in_except": [
+    {
+      "file": "middleware/dlq_handler.py",
+      "line": 692,
+      "code": "except asyncio.CancelledError:"
+    },
+    {
+      "file": "middleware/issue_tracking_middleware.py",
+      "line": 221,
+      "code": "except json.JSONDecodeError:"
+    },
+    {
+      "file": "middleware/issue_tracking_middleware.py",
+      "line": 279,
+      "code": "except json.JSONDecodeError:"
+    },
+    {
+      "file": "middleware/etag_middleware.py",
+      "line": 385,
+      "code": "except (IndexError, ValueError):"
+    },
+    {
+      "file": "middleware/etag_middleware.py",
+      "line": 261,
+      "code": "except:"
+    },
+    {
+      "file": "middleware/service_discovery.py",
+      "line": 681,
+      "code": "except asyncio.CancelledError:"
+    },
+    {
+      "file": "middleware/service_discovery.py",
+      "line": 789,
+      "code": "except asyncio.CancelledError:"
+    },
+    {
+      "file": "middleware/service_discovery.py",
+      "line": 417,
+      "code": "except Exception:"
+    },
+    {
+      "file": "database/clients/redis_ha_client.py",
+      "line": 103,
+      "code": "except asyncio.CancelledError:"
+    },
+    {
+      "file": "core/foundry/conflict_resolution_ui.py",
+      "line": 149,
+      "code": "except:"
+    },
+    {
+      "file": "core/foundry/audit_trail.py",
+      "line": 89,
+      "code": "except:"
+    },
+    {
+      "file": "core/branch/lock_cleanup_service.py",
+      "line": 53,
+      "code": "except asyncio.CancelledError:"
+    },
+    {
+      "file": "core/branch/terminus_adapter.py",
+      "line": 114,
+      "code": "except:"
+    },
+    {
+      "file": "core/branch/terminus_adapter.py",
+      "line": 215,
+      "code": "except:"
+    },
+    {
+      "file": "core/branch/lock_heartbeat_service.py",
+      "line": 48,
+      "code": "except asyncio.CancelledError:"
+    },
+    {
+      "file": "core/merge/merge_factory.py",
+      "line": 44,
+      "code": "except:"
+    },
+    {
+      "file": "core/event_publisher/outbox_service.py",
+      "line": 314,
+      "code": "except asyncio.CancelledError:"
+    },
+    {
+      "file": "core/traversal/semantic_validator.py",
+      "line": 280,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "core/validation/naming_config.py",
+      "line": 59,
+      "code": "except KeyError:"
+    },
+    {
+      "file": "core/validation/naming_config.py",
+      "line": 201,
+      "code": "except KeyError:"
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/naming_config.py",
+      "line": 59,
+      "code": "except KeyError:"
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/naming_config.py",
+      "line": 200,
+      "code": "except KeyError:"
+    },
+    {
+      "file": "validation_terminus_backup_20250629_140147/core/validation/naming_history.py",
+      "line": 90,
+      "code": "except KeyError:"
+    },
+    {
+      "file": "validation_backup/traversal/semantic_validator.py",
+      "line": 280,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "validation_backup/validation/naming_config.py",
+      "line": 59,
+      "code": "except KeyError:"
+    },
+    {
+      "file": "validation_backup/validation/naming_config.py",
+      "line": 200,
+      "code": "except KeyError:"
+    },
+    {
+      "file": "validation_backup/validation/naming_history.py",
+      "line": 90,
+      "code": "except KeyError:"
+    },
+    {
+      "file": "tests/performance/benchmark_terminus_native.py",
+      "line": 57,
+      "code": "except:"
+    },
+    {
+      "file": "utils/safe_json_encoder.py",
+      "line": 113,
+      "code": "except Exception:"
+    },
+    {
+      "file": "utils/safe_json_encoder.py",
+      "line": 120,
+      "code": "except Exception:"
+    },
+    {
+      "file": "shared/clients/redis_ha_client.py",
+      "line": 103,
+      "code": "except asyncio.CancelledError:"
+    },
+    {
+      "file": "shared/infrastructure/real_nats_client.py",
+      "line": 312,
+      "code": "except:"
+    },
+    {
+      "file": "scripts/update_oms_references.py",
+      "line": 34,
+      "code": "except (UnicodeDecodeError, IOError):"
+    },
+    {
+      "file": "scripts/find_legacy_code.py",
+      "line": 136,
+      "code": "except Exception as e:"
+    },
+    {
+      "file": "scripts/find_legacy_code.py",
+      "line": 164,
+      "code": "except:"
+    },
+    {
+      "file": "scripts/find_legacy_code.py",
+      "line": 227,
+      "code": "except:"
+    },
+    {
+      "file": "scripts/find_legacy_code.py",
+      "line": 274,
+      "code": "except:"
+    },
+    {
+      "file": "scripts/test_terminus_integration.py",
+      "line": 160,
+      "code": "except:"
+    },
+    {
+      "file": "scripts/test_terminus_integration.py",
+      "line": 164,
+      "code": "except:"
+    },
+    {
+      "file": "api/v1/traversal_routes.py",
+      "line": 488,
+      "code": "except Exception:"
+    },
+    {
+      "file": "api/graphql/enhanced_main.py",
+      "line": 289,
+      "code": "except:"
+    },
+    {
+      "file": "api/graphql/websocket_manager.py",
+      "line": 117,
+      "code": "except Exception:"
+    }
+  ]
+}

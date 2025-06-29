@@ -208,11 +208,11 @@ class SemanticValidator:
             # Otherwise, simulate conflict detection with simpler queries
             
             # Get entities that exist in both branches
-            entities_in_both = self._get_common_entities(source_branch, target_branch)
+            entities_in_both = await self._get_common_entities(source_branch, target_branch)
             
             # Check for property conflicts
             for entity in entities_in_both[:50]:  # Limit to avoid performance issues
-                entity_conflicts = self._check_entity_property_conflicts(
+                entity_conflicts = await self._check_entity_property_conflicts(
                     entity, source_branch, target_branch
                 )
                 conflicts.extend(entity_conflicts)
@@ -222,7 +222,7 @@ class SemanticValidator:
         except Exception as e:
             raise RuntimeError(f"Merge conflict detection failed: {e}")
     
-    def _get_common_entities(self, branch1: str, branch2: str) -> List[str]:
+    async def _get_common_entities(self, branch1: str, branch2: str) -> List[str]:
         """Get entities that exist in both branches"""
         try:
             # Get entities from both branches
@@ -246,7 +246,7 @@ class SemanticValidator:
         except Exception as e:
             return []
     
-    def _check_entity_property_conflicts(self, entity: str, branch1: str, branch2: str) -> List[SemanticConflict]:
+    async def _check_entity_property_conflicts(self, entity: str, branch1: str, branch2: str) -> List[SemanticConflict]:
         """Check for property conflicts in a specific entity across branches"""
         conflicts = []
         
@@ -337,7 +337,8 @@ class SemanticValidator:
                             if entity not in missing_props:
                                 missing_props[entity] = []
                             missing_props[entity].append(required_prop)
-                except Exception:
+                except Exception as e:
+                    self.logger.debug(f"Error processing binding for required property check: {e}")
                     continue
             
             # missing_props already populated above

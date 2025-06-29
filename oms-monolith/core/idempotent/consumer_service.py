@@ -10,7 +10,7 @@ from typing import Optional, Dict, Any, List, Callable, TypeVar, Generic
 from datetime import datetime, timezone, timedelta
 import aiosqlite
 
-from models.idempotency import (
+from core.idempotent.models import (
     IdempotencyKey, EventProcessingRecord, EventEnvelope,
     ConsumerState, IdempotentResult, ConsumerCheckpoint,
     calculate_state_hash, is_event_expired

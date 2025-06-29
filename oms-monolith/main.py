@@ -16,8 +16,8 @@ from fastapi.exceptions import RequestValidationError
 from starlette import status
 from datetime import datetime, timezone
 
-# 수정된 Schema Service 사용
-from core.schema.service import SchemaService
+# Use existing schema service from API
+from api.v1.schema_generation.service import SchemaGenerationService as SchemaService
 from core.validation import ValidationService
 from core.branch import get_branch_service
 from core.history import HistoryService
@@ -66,16 +66,16 @@ class ServiceContainer:
         try:
             # Production TerminusDBClient 사용 (ValidationConfig 기반)
             self.db_client = TerminusDBClient(
-                username="admin",
-                password="root"
+                username=os.getenv("TERMINUS_DB_USER", "admin"),
+                password=os.getenv("TERMINUS_DB_PASSWORD", "root")
             )
             
             # DB 연결 - official pattern: connect(team, key, user, db)
             connected = await self.db_client.connect(
-                team="admin",
-                key="root", 
-                user="admin",
-                db="oms",
+                team=os.getenv("TERMINUS_ORGANIZATION", "admin"),
+                key=os.getenv("TERMINUS_DB_KEY", "root"), 
+                user=os.getenv("TERMINUS_DB_USER", "admin"),
+                db=os.getenv("TERMINUS_DB", "oms"),
                 timeout=30
             )
             if not connected:
@@ -99,14 +99,9 @@ class ServiceContainer:
             await self.schema_service.initialize()
             logger.info("✅ Schema Service initialized with real DB connection")
             
-            # Extended Schema Service for all other types
-            from core.schema.extended_service import ExtendedSchemaService
-            self.extended_schema_service = ExtendedSchemaService(
-                tdb_endpoint=config.terminus_db_url,
-                event_publisher=self.event_publisher
-            )
-            await self.extended_schema_service.initialize()
-            logger.info("✅ Extended Schema Service initialized")
+            # Extended Schema Service for all other types - using API service
+            self.extended_schema_service = None  # Not needed with consolidated services
+            logger.info("✅ Extended Schema Service consolidated into main service")
             
             # Initialize Validation Service
             from core.validation.service_refactored import ValidationServiceRefactored
@@ -254,23 +249,10 @@ app.add_middleware(EnterpriseValidationMiddleware)
 # 9. Authentication Middleware (마지막에 추가, 가장 먼저 실행)
 # MUST run first to set request.state.user
 
-# Check if bypass auth is enabled for testing
-BYPASS_AUTH = os.getenv("BYPASS_AUTH", "false").lower() == "true"
-if BYPASS_AUTH:
-    from middleware.mock_auth_middleware import MockAuthMiddleware
-    logger.info("⚠️  BYPASS AUTH ENABLED - Using mock authentication for testing")
-    app.add_middleware(MockAuthMiddleware)
-else:
-    # Use MSA authentication if configured
-    USE_MSA_AUTH = os.getenv("USE_MSA_AUTH", "false").lower() == "true"
-    if USE_MSA_AUTH:
-        from middleware.auth_middleware_msa import MSAAuthMiddleware
-        logger.info("Using MSA Authentication via IAM Service")
-        app.add_middleware(MSAAuthMiddleware)
-    else:
-        from middleware.auth_middleware import AuthMiddleware
-        logger.info("Using legacy authentication")
-        app.add_middleware(AuthMiddleware)
+# Use secure authentication middleware (supports both standalone and MSA modes)
+from middleware.auth_secure import LifeCriticalAuthMiddleware
+logger.info("Using life-critical authentication middleware")
+app.add_middleware(LifeCriticalAuthMiddleware)
 
 
 # === Health & Status ===
@@ -505,7 +487,7 @@ else:
 
 # === Test Routes (Non-Production Only) ===
 # Register test routes only in non-production environments
-from core.config.environment import get_environment
+from middleware.service_config import get_environment
 env_config = get_environment()
 env_config.log_environment()
 
@@ -528,10 +510,10 @@ if __name__ == "__main__":
     
     uvicorn.run(
         "main:app",
-        host="0.0.0.0",
-        port=8002,  # 다른 포트 사용
-        reload=True,
-        log_level="info"
+        host=os.getenv("OMS_HOST", "0.0.0.0"),
+        port=int(os.getenv("OMS_PORT", "8002")),
+        reload=os.getenv("OMS_RELOAD", "true").lower() == "true",
+        log_level=os.getenv("OMS_LOG_LEVEL", "info")
     )
 
 # STARTUP TIMEOUT DISABLED FOR DEVELOPMENT

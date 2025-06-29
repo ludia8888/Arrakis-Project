@@ -21,7 +21,10 @@ def clear_all_databases():
         account=config.TERMINUS_ORGANIZATION
     )
     # TerminusDB 인증 정보로 연결
-    client.connect(user="admin", key="admin123")
+    client.connect(
+        user=os.getenv("TERMINUS_DB_USER", "admin"), 
+        key=os.getenv("TERMINUS_DB_KEY", "admin123")
+    )
     
     try:
         # 모든 데이터베이스 목록 가져오기

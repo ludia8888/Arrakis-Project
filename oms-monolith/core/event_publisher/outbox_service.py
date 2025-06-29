@@ -746,9 +746,10 @@ async def get_outbox_service() -> OutboxService:
     if _outbox_service is None:
         from database.clients.terminus_db import TerminusDBClient
         from shared.infrastructure.nats_client import get_nats_client
+        import os
         
         # Initialize with TerminusDB and NATS clients
-        db_client = TerminusDBClient("http://localhost:6363")
+        db_client = TerminusDBClient(os.getenv("TERMINUS_SERVER_URL", "http://localhost:6363"))
         nats_client = await get_nats_client()
         
         _outbox_service = OutboxService(

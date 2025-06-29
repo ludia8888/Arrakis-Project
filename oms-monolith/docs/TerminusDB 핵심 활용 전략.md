@@ -196,3 +196,160 @@ LRU Cache	TERMINUSDB_LRU_CACHE_SIZE (MB) 환경변수 — 메모리 부족 발�
 결론
 
 TerminusDB는 스키마 버전 관리 + 그래프 + 문서 + AI 임베딩을 통합한 드문 OSS 스택입니다. 위 순서대로 설치 → 스키마 설계 → CRUD·질의 → 브랜치·머지 → 권한 → 성능 관리를 세팅하면, 별도 외부 도구 없이도 SaaS 등급 데이터 협업· lineage 추적·AI 서치까지 모두 자체 구축할 수 있습니다. 필요 기능별로 CLI/Python/GraphQL 예제가 이미 준비돼 있으니, 곧바로 PoC 환경에서 재현해 보시길 권장드립니다.
+
+TerminusDB는 **전통적인 RDBMS처럼 명시적인 인덱스 생성(index creation)**을 사용자가 직접 하는 구조는 아닙니다. 그러나 내부적으로 인덱싱을 자동으로 수행하는 메커니즘을 가지고 있습니다. 이를 아래와 같이 정리해드릴 수 있습니다.
+
+⸻
+
+✅ TerminusDB의 인덱싱 처리 방식 요약
+
+항목	설명
+기본 인덱싱	TerminusDB는 문서(Document) 기반 JSON 스키마를 저장하면서, 이를 내부적으로 **트리플 형태(subject-predicate-object)**로 변환해 저장함. 이 구조는 트리플 단위의 고속 질의 및 검색을 위한 내부 인덱스 구조를 자동 유지함.
+자동 생성되는 인덱스	시스템은 다음과 같은 주요 인덱스를 자동으로 관리함:- @id 기준 인덱스 (URI)- 각 predicate (속성) 별 인덱스- 관계(triple) 기반 경로 탐색 최적화
+사용자 정의 인덱스 없음	사용자가 SQL의 CREATE INDEX 같은 명령으로 직접 인덱스를 지정하는 기능은 현재 없음. 하지만 스키마 설계와 triple 구조가 적절하면 내부 인덱싱으로도 대부분의 질의는 효율적으로 수행됨.
+쿼리 최적화	TerminusDB는 내부적으로 **WOQL(Web Object Query Language)**의 실행 계획을 최적화할 때, 자동으로 적절한 인덱스를 선택하여 탐색 비용을 줄임.
+Graph Traversal 최적화	다중 관계가 연결된 복잡한 경로(traversal)는 자동으로 최적화된 경로로 탐색함. 하지만 너무 깊은 path traversal에서는 성능 병목이 생길 수 있음.
+
+
+⸻
+
+🔧 실제 사용 시 고려사항
+	•	@id 기반 탐색은 가장 빠름 → 객체 식별자는 명확하게 부여할 것
+	•	자주 쿼리하는 속성은 스키마에 명시적으로 넣고, 잘 정의된 타입을 부여할 것 (예: xsd:string, xsd:integer)
+	•	다대다 관계가 많은 경우에는 **중간 객체(Entity)**를 명확히 정의해주는 것이 인덱싱 효율에 도움
+	•	대규모 데이터셋에서는 성능 병목을 피하기 위해 쿼리 병렬화 또는 쿼리 분할을 고려해야 함
+
+⸻
+
+📝 정리
+
+TerminusDB는 전통적인 인덱스 튜닝이 필요한 DB는 아니며, 내부적으로 자동 인덱싱 및 최적화를 수행합니다. 하지만 스키마와 쿼리 구조가 비효율적이면 성능 저하가 발생할 수 있으므로, 구조화된 모델링과 질의 설계가 중요합니다.
+
+⸻
+
+✅ 객관적 사실: TerminusDB에서는 JSON-LD 기반 스키마 정의가 권장되는 방식입니다.
+
+⸻
+
+🔹 TerminusDB 공식 권장 방식 근거
+	1.	공식 문서 기준
+TerminusDB는 스키마 정의를 위해 JSON-LD(Linked Data 기반 JSON 포맷)를 채택하고 있으며, 다음과 같은 언급이 명시되어 있습니다:
+“We use JSON-LD for schema definition to promote structured and linked knowledge representation.”
+— TerminusDB Docs > Schema
+	2.	WOQL보다 JSON-LD 스키마가 우선순위
+	•	TerminusDB는 이전에 WOQL로도 스키마 정의를 할 수 있었지만, 최근 버전에서는 명확하게 JSON-LD 스키마 정의가 표준이며, 권장 방식이라고 밝히고 있습니다.
+	•	내부적으로도 스키마 버전 관리와 브랜치 운영은 JSON-LD 문서를 기반으로 이루어집니다.
+	3.	중복 스키마 정의를 지양함
+	•	TerminusDB는 **명시적인 ‘문서 기반 스키마(Document schema)’**를 중복 없이 선언하고 이를 Git처럼 브랜치, 커밋 방식으로 관리합니다.
+	•	중복된 구조체를 반복해서 정의하는 것을 지양하고, 클래스 재사용 및 상속 개념(@subClassOf)을 통한 구조적 모델링을 유도합니다.
+
+⸻
+
+🔍 요약
+
+항목	사실 여부	설명
+TerminusDB는 JSON-LD 기반 스키마를 권장한다	✅ 사실	공식 문서와 실제 구현 모두 JSON-LD를 기본 방식으로 사용
+중복된 스키마 정의보다는 재사용 가능한 구조 설계를 선호한다	✅ 사실	@id, @type, @subClassOf 등을 활용한 계층적 정의 방식 채택
+WOQL로 스키마를 정의하는 것도 가능하다	⚠️ 예전에는 가능했으나 현재는 비권장	JSON-LD 방식으로 통일되었으며, 문서 버전 관리와 통합되어 있음
+
+
+⸻
+
+📌 결론
+
+TerminusDB에서는 중복된 스키마 정의 대신, 재사용 가능한 JSON-LD 기반의 선언적 스키마 정의가 공식적으로 권장되며, 이는 버전 관리 및 의미론적 데이터 모델링의 핵심 기반입니다.
+
+좋습니다. “명시적인 문서 기반 스키마(Document schema)“는 TerminusDB에서 사용하는 데이터 모델링 방식의 핵심 개념이며, 다음과 같이 설명할 수 있습니다.
+
+⸻
+
+✅ 정의: **명시적인 문서 기반 스키마(Document Schema)**란?
+
+TerminusDB에서 하나의 데이터 객체(예: 사람, 제품, 주문 등)를 하나의 JSON 문서 형태로 표현하고, 그 구조(필드, 타입, 관계)를 사전에 스키마로 선언하는 방식입니다.
+
+즉, 마치 NoSQL의 Document 데이터 모델(예: MongoDB)을 기반으로 하되, 그것을 엄격한 스키마(schema)와 타입 검증, 그리고 버전 관리까지 지원하는 구조입니다.
+
+⸻
+
+🔹 주요 구성 요소 (JSON-LD 기반)
+
+아래는 “제품(Product)“이라는 클래스를 정의하는 예시입니다.
+
+{
+  "@type": "Class",
+  "@id": "Product",
+  "label": "Product",
+  "description": "Represents a product sold by the company",
+  "properties": [
+    {
+      "@type": "Property",
+      "@id": "name",
+      "domain": "Product",
+      "range": "xsd:string"
+    },
+    {
+      "@type": "Property",
+      "@id": "price",
+      "domain": "Product",
+      "range": "xsd:decimal"
+    },
+    {
+      "@type": "Property",
+      "@id": "produced_by",
+      "domain": "Product",
+      "range": "Company"
+    }
+  ]
+}
+
+이 정의는 다음과 같은 의미를 갖습니다:
+
+요소	설명
+@type: "Class"	이 스키마는 하나의 문서 타입(객체 타입)을 정의
+@id: "Product"	이 문서 타입의 이름은 Product
+properties	이 문서에 포함될 필드들(name, price, produced_by)을 명시
+range	각 필드의 데이터 타입 또는 참조 대상 타입을 지정
+
+
+⸻
+
+🔍 “Document” 기반이라는 의미
+	•	각 Class는 실제 JSON 문서 인스턴스로 저장됩니다.
+	•	예를 들어 위에서 정의한 Product 스키마에 따라 다음과 같은 데이터 인스턴스가 들어갈 수 있습니다:
+
+{
+  "@type": "Product",
+  "name": "T-Shirt",
+  "price": 19.99,
+  "produced_by": {
+    "@type": "Company",
+    "name": "YunFactory"
+  }
+}
+
+이는 객체 중심(object-oriented) 방식과 매우 유사하며, RDB의 정규화된 테이블 설계와는 다르게, 연관된 객체를 중첩 또는 참조 형태로 명시합니다.
+
+⸻
+
+🔄 TerminusDB의 문서 기반 스키마 vs 일반 RDB 스키마 비교
+
+TerminusDB (Document Schema)	RDBMS 스키마
+JSON 문서 기반 객체 정의	테이블과 컬럼으로 모델링
+관계는 @type, @id 등으로 표현	외래 키(FK)로 표현
+다대일/일대다 관계도 문서 안에 표현 가능	정규화된 다른 테이블로 분리
+스키마는 JSON-LD로 선언	DDL (CREATE TABLE)로 정의
+Git 스타일 버전 관리 가능	버전 관리 없음
+
+
+⸻
+
+🧠 결론
+
+TerminusDB의 “명시적인 문서 기반 스키마”란, 현실 세계의 객체(Entity)를 JSON 문서로 구조화하고, 이를 사전에 JSON-LD로 선언하여 데이터의 구조와 의미를 강력하게 통제하는 방식입니다.
+
+이 구조 덕분에:
+	•	데이터의 구조적 일관성을 확보할 수 있고
+	•	의미 기반 추론(ontology reasoning)이 가능하며
+	•	Git과 유사한 방식으로 버전 관리도 가능하게 됩니다.
+
+⸻

@@ -218,8 +218,8 @@ class IssueTrackingMiddleware:
                                         if ref not in issue_refs:
                                             issue_refs.append(ref)
                                             
-                    except json.JSONDecodeError:
-                        pass
+                    except json.JSONDecodeError as e:
+                        logger.debug(f"Could not decode JSON from request body: {e}")
                         
         except Exception as e:
             logger.debug(f"Error extracting issues from body: {e}")
@@ -276,8 +276,8 @@ class IssueTrackingMiddleware:
                         for field in ["id", "change_id", "commit_id", "operation_id"]:
                             if field in data:
                                 return str(data[field])
-                    except json.JSONDecodeError:
-                        pass
+                    except json.JSONDecodeError as e:
+                        logger.debug(f"Could not decode JSON from response body: {e}")
                         
         except Exception as e:
             logger.debug(f"Could not extract change ID: {e}")

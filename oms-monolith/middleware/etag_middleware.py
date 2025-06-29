@@ -13,7 +13,7 @@ import time
 from prometheus_client import Counter, Histogram, Gauge
 
 from core.versioning.version_service import get_version_service
-from models.etag import DeltaRequest
+from middleware.etag.models import DeltaRequest
 from core.auth import UserContext
 from utils.logger import get_logger
 from middleware.etag_analytics import get_etag_analytics
@@ -258,8 +258,8 @@ class ETagMiddleware(BaseHTTPMiddleware):
                             try:
                                 request_data = json.loads(request._body)
                                 fields_changed = list(request_data.keys())
-                            except:
-                                pass
+                            except (json.JSONDecodeError, AttributeError) as e:
+                                logger.debug(f"Could not parse request body for field changes: {e}")
                         
                         version = await self.version_service.track_change(
                             resource_type=resource_info["type"],
@@ -382,8 +382,8 @@ class ETagMiddleware(BaseHTTPMiddleware):
                     "id": parts[-1] if resource_type == "proposal" else "all_proposals",
                     "branch": "main"  # Proposals are typically on main
                 }
-        except (IndexError, ValueError):
-            pass
+        except (IndexError, ValueError) as e:
+            logger.debug(f"Could not parse resource info from path: {path}. Error: {e}")
         
         return None
 

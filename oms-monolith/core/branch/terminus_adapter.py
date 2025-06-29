@@ -17,7 +17,8 @@ from shared.exceptions import (
 )
 from core.monitoring.migration_monitor import track_native_operation
 from core.validation.config import get_validation_config
-from core.merge import get_unified_merge_engine
+from core.merge.factory import get_unified_merge_engine
+# Merge functionality now handled directly by TerminusDB client
 
 logger = logging.getLogger(__name__)
 
@@ -54,8 +55,13 @@ class TerminusNativeBranchService(IBranchService):
         )
         
         # Initialize unified merge engine
-        self.merge_engine = get_unified_merge_engine()
-        self.merge_engine.terminus = self.client
+        try:
+            self.merge_engine = get_unified_merge_engine()
+            if hasattr(self.merge_engine, 'terminus'):
+                self.merge_engine.terminus = self.client
+        except Exception as e:
+            logger.warning(f"Failed to initialize merge engine: {e}")
+            self.merge_engine = None
         
         logger.info(
             f"TerminusDB Native Branch Service initialized - "
@@ -111,8 +117,9 @@ class TerminusNativeBranchService(IBranchService):
             # Clean up metadata
             try:
                 self.client.delete_document(f"metadata:{branch_name}")
-            except:
-                pass  # Metadata might not exist
+            except Exception as metadata_error:
+                logger.debug(f"Could not delete metadata for branch {branch_name}: {metadata_error}")
+                # Metadata might not exist, which is acceptable
                 
             return True
             
@@ -212,8 +219,9 @@ class TerminusNativeBranchService(IBranchService):
             try:
                 metadata = self.client.get_document(f"metadata:{branch_name}")
                 branch_info.update(metadata)
-            except:
-                pass  # Metadata might not exist
+            except Exception as metadata_error:
+                logger.debug(f"Could not get metadata for branch {branch_name}: {metadata_error}")
+                # Metadata might not exist, which is acceptable
             
             return branch_info
             
@@ -237,6 +245,9 @@ class TerminusNativeBranchService(IBranchService):
         """
         try:
             # Use unified merge engine for all merge operations
+            if not self.merge_engine:
+                raise Exception("Merge engine not available")
+                
             result = await self.merge_engine.merge(
                 source_branch=source,
                 target_branch=target,
