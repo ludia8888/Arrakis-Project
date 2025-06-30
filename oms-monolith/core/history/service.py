@@ -130,7 +130,17 @@ class HistoryEventPublisher:
             
             return event_id
             
-        except Exception as e:
+        except (ConnectionError, TimeoutError) as e:
+            log_operation_end(logger, "schema_change_event_publish", success=False,
+                            error=str(e))
+            logger.error(f"Failed to publish schema change event: {str(e)}")
+            raise
+        except (KeyError, ValueError, TypeError) as e:
+            log_operation_end(logger, "schema_change_event_publish", success=False,
+                            error=str(e))
+            logger.error(f"Failed to publish schema change event: {str(e)}")
+            raise
+        except RuntimeError as e:
             log_operation_end(logger, "schema_change_event_publish", success=False,
                             error=str(e))
             logger.error(f"Failed to publish schema change event: {str(e)}")
@@ -196,7 +206,15 @@ class HistoryEventPublisher:
             
             return result
             
-        except Exception as e:
+        except (ConnectionError, TimeoutError) as e:
+            log_operation_end(logger, "schema_revert", success=False, error=str(e))
+            logger.error(f"Failed to revert schema: {str(e)}")
+            raise
+        except (PermissionError, ValueError) as e:
+            log_operation_end(logger, "schema_revert", success=False, error=str(e))
+            logger.error(f"Failed to revert schema: {str(e)}")
+            raise
+        except RuntimeError as e:
             log_operation_end(logger, "schema_revert", success=False, error=str(e))
             logger.error(f"Failed to revert schema: {str(e)}")
             raise
@@ -266,7 +284,13 @@ class HistoryEventPublisher:
             
             return event_id
             
-        except Exception as e:
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Failed to publish audit event: {str(e)}")
+            raise
+        except (KeyError, ValueError, TypeError) as e:
+            logger.error(f"Failed to publish audit event: {str(e)}")
+            raise
+        except RuntimeError as e:
             logger.error(f"Failed to publish audit event: {str(e)}")
             raise
     
@@ -312,7 +336,25 @@ class HistoryEventPublisher:
                 dry_run=False
             )
             
-        except Exception as e:
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Schema revert failed: {str(e)}")
+            return RevertResult(
+                success=False,
+                reverted_from="HEAD",
+                reverted_to=request.target_commit,
+                message=str(e),
+                dry_run=False
+            )
+        except (KeyError, ValueError, TypeError) as e:
+            logger.error(f"Schema revert failed: {str(e)}")
+            return RevertResult(
+                success=False,
+                reverted_from="HEAD",
+                reverted_to=request.target_commit,
+                message=str(e),
+                dry_run=False
+            )
+        except RuntimeError as e:
             logger.error(f"Schema revert failed: {str(e)}")
             return RevertResult(
                 success=False,
@@ -340,7 +382,13 @@ class HistoryEventPublisher:
         """특정 커밋의 스키마 스냅샷 조회 (메타데이터만)"""
         try:
             return await self.terminus_client.get_schema_snapshot(branch, commit_hash)
-        except Exception as e:
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Failed to get schema snapshot: {e}")
+            return {}
+        except (KeyError, ValueError, TypeError) as e:
+            logger.error(f"Failed to get schema snapshot: {e}")
+            return {}
+        except RuntimeError as e:
             logger.error(f"Failed to get schema snapshot: {e}")
             return {}
     
@@ -404,7 +452,13 @@ class HistoryEventPublisher:
                 author=author
             )
             return commit_result['commit_hash']
-        except Exception as e:
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Failed to apply schema changes: {e}")
+            raise
+        except (KeyError, ValueError, TypeError) as e:
+            logger.error(f"Failed to apply schema changes: {e}")
+            raise
+        except RuntimeError as e:
             logger.error(f"Failed to apply schema changes: {e}")
             raise
     
@@ -429,7 +483,23 @@ class HistoryEventPublisher:
                 reverted_changes=schema_changes,
                 dry_run=True
             )
-        except Exception as e:
+        except (ConnectionError, TimeoutError) as e:
+            return RevertResult(
+                success=False,
+                reverted_from="HEAD",
+                reverted_to=request.target_commit,
+                message=f"Simulation failed: {e}",
+                dry_run=True
+            )
+        except (KeyError, ValueError, TypeError) as e:
+            return RevertResult(
+                success=False,
+                reverted_from="HEAD",
+                reverted_to=request.target_commit,
+                message=f"Simulation failed: {e}",
+                dry_run=True
+            )
+        except RuntimeError as e:
             return RevertResult(
                 success=False,
                 reverted_from="HEAD",

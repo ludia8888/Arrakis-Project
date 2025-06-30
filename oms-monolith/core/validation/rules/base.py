@@ -115,7 +115,7 @@ class BreakingChangeRule(ABC):
                 change = await self.check(source_obj, target_obj, context)
                 if change:
                     breaking_changes.append(change)
-            except Exception as e:
+            except (KeyError, ValueError, TypeError, AttributeError) as e:
                 logger.error(f"Rule {self.rule_id} failed for {obj_name}: {e}")
 
         return RuleResult(
@@ -140,7 +140,7 @@ class BreakingChangeRule(ABC):
                 change = await self.check(old_schema, new_schema, context)
                 if change:
                     results.append(change)
-            except Exception as e:
+            except (KeyError, ValueError, TypeError, AttributeError) as e:
                 logger.error(
                     f"Error in rule {self.rule_id} for {old_schema.get('@id', 'unknown')}: {e}"
                 )
@@ -197,7 +197,7 @@ class CompositeRule(BreakingChangeRule):
                     change = await rule.check(old_schema, new_schema, context)
                     if change:
                         breaking_changes.append(change)
-                except Exception as e:
+                except (KeyError, ValueError, TypeError, AttributeError, RuntimeError) as e:
                     logger.error(f"Error in composite rule {rule.rule_id}: {e}")
 
         if not breaking_changes:

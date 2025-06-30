@@ -1,7 +1,25 @@
 """
-생명 중요 시스템 보안 모니터링 및 감사 시스템
+생명 중요 시스템 보안 모니터링 및 감사 시스템 - Core Security Logic Layer
 
 실시간 위협 탐지, 공격 패턴 분석, 자동 대응을 수행합니다.
+
+ARCHITECTURE NOTE:
+This module is part of the Core layer, focusing on security threat detection and alerting.
+It complements but serves a different purpose than shared/security/protection_facade.py:
+
+- Core (this module): Security threat monitoring, pattern analysis, and alerting
+  - Detects SQL injection, XSS, command injection, path traversal
+  - Analyzes attack patterns and threat levels
+  - Triggers security alerts and incident response
+
+- Shared protection facade: Protective mechanisms and request filtering
+  - Implements circuit breaker for service protection
+  - Provides rate limiting to prevent abuse
+  - Handles request-level protection
+
+This separation follows the architectural principle:
+- Core: Business logic for security monitoring and threat analysis
+- Shared: Infrastructure-level protection mechanisms
 """
 import asyncio
 import json

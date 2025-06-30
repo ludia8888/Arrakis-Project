@@ -90,6 +90,7 @@ class InputSanitizer:
                 self._limit_length,
             ],
             SanitizationLevel.PARANOID: [
+                self._validate_utf8,
                 self._remove_null_bytes,
                 self._remove_control_chars,
                 self._normalize_unicode,
@@ -159,8 +160,10 @@ class InputSanitizer:
                     applied_rules.append(rule_name)
                     current_value = new_value
                     
-            except Exception as e:
-                logger.warning(f"Sanitization rule {rule_func.__name__} failed: {e}")
+            except ValueError as e:
+                logger.warning(f"Sanitization rule {rule_func.__name__} validation error: {e}")
+            except RuntimeError as e:
+                logger.warning(f"Sanitization rule {rule_func.__name__} runtime error: {e}")
         
         # 최종 검증
         final_threats, final_score = self._detect_threats(current_value)
@@ -207,6 +210,19 @@ class InputSanitizer:
                 score += threat_scores.get(threat_name, 10)
         
         return threats, score
+    
+    def _validate_utf8(self, value: str) -> str:
+        """UTF-8 유효성 검증 및 교정"""
+        try:
+            # UTF-8 인코딩/디코딩으로 유효성 검증
+            value.encode('utf-8').decode('utf-8')
+            return value
+        except UnicodeDecodeError:
+            # 잘못된 UTF-8 시퀀스 제거
+            return value.encode('utf-8', errors='ignore').decode('utf-8', errors='ignore')
+        except UnicodeEncodeError:
+            # 인코딩할 수 없는 문자 제거
+            return value.encode('utf-8', errors='ignore').decode('utf-8')
     
     def _remove_null_bytes(self, value: str) -> str:
         """널 바이트 제거"""

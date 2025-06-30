@@ -33,9 +33,11 @@ class BranchServiceFactory:
         # Always use TerminusDB Native Branch Service (legacy code removed)
         logger.info("Creating TerminusDB Native Branch Service")
         from core.branch.terminus_adapter import TerminusNativeBranchService
+        from shared.config.environment import get_config
         
+        config = get_config()
         cls._instance = TerminusNativeBranchService(
-            terminus_url=getattr(settings, 'TERMINUS_SERVER_URL', 'http://localhost:16363'),
+            terminus_url=config.get_terminus_db_url(),
             database=getattr(settings, 'TERMINUS_DB', 'ontology_db'),
             organization=getattr(settings, 'TERMINUS_ORGANIZATION', 'admin')
         )

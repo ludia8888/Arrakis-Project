@@ -268,7 +268,7 @@ class IdempotentConsumer(Generic[T]):
                     processor_version=self.consumer_version
                 )
                 
-            except Exception as e:
+            except (ValueError, KeyError, RuntimeError) as e:
                 logger.error(f"Error processing event {event.event_id}: {e}")
                 
                 # Record failure

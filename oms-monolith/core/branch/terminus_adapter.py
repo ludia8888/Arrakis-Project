@@ -13,12 +13,14 @@ from core.branch.models import ChangeProposal, BranchDiff, MergeResult, Proposal
 from shared.exceptions import (
     NotFoundError,
     ConflictError,
+    DatabaseConnectionError,
+    InfrastructureException,
     ValidationError
 )
 from core.monitoring.migration_monitor import track_native_operation
 from core.validation.config import get_validation_config
-from core.merge.factory import get_unified_merge_engine
-# Merge functionality now handled directly by TerminusDB client
+# REMOVED: core.merge - merge functionality now handled directly by TerminusDB client
+# from core.merge.factory import get_unified_merge_engine
 
 logger = logging.getLogger(__name__)
 
@@ -54,14 +56,8 @@ class TerminusNativeBranchService(IBranchService):
             use_token=False
         )
         
-        # Initialize unified merge engine
-        try:
-            self.merge_engine = get_unified_merge_engine()
-            if hasattr(self.merge_engine, 'terminus'):
-                self.merge_engine.terminus = self.client
-        except Exception as e:
-            logger.warning(f"Failed to initialize merge engine: {e}")
-            self.merge_engine = None
+        # Use TerminusDB native merge operations (no separate merge engine needed)
+        self.merge_engine = None  # TerminusDB handles merge operations natively
         
         logger.info(
             f"TerminusDB Native Branch Service initialized - "
@@ -104,9 +100,17 @@ class TerminusNativeBranchService(IBranchService):
             
             return branch_name
             
-        except Exception as e:
-            logger.error(f"Failed to create branch {name}: {e}")
-            raise ValidationError(f"Branch creation failed: {str(e)}")
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Database connection error creating branch {name}: {e}")
+            raise DatabaseConnectionError(f"Failed to connect to database: {str(e)}")
+        except ValueError as e:
+            logger.error(f"Invalid branch name or data: {e}")
+            raise ValidationError(f"Invalid branch data: {str(e)}")
+        except RuntimeError as e:
+            logger.error(f"Runtime error creating branch {name}: {e}")
+            if "already exists" in str(e).lower():
+                raise ConflictError(f"Branch '{name}' already exists")
+            raise InfrastructureException(f"Branch creation failed: {str(e)}")
     
     async def delete_branch(self, branch_name: str) -> bool:
         """Delete a branch using TerminusDB native delete"""
@@ -117,14 +121,20 @@ class TerminusNativeBranchService(IBranchService):
             # Clean up metadata
             try:
                 self.client.delete_document(f"metadata:{branch_name}")
-            except Exception as metadata_error:
-                logger.debug(f"Could not delete metadata for branch {branch_name}: {metadata_error}")
+            except (ConnectionError, TimeoutError) as metadata_error:
+                logger.debug(f"Network error deleting metadata for branch {branch_name}: {metadata_error}")
+                # Metadata might not exist, which is acceptable
+            except KeyError as metadata_error:
+                logger.debug(f"Metadata not found for branch {branch_name}: {metadata_error}")
                 # Metadata might not exist, which is acceptable
                 
             return True
             
-        except Exception as e:
-            logger.error(f"Failed to delete branch {branch_name}: {e}")
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Network error deleting branch {branch_name}: {e}")
+            return False
+        except RuntimeError as e:
+            logger.error(f"Runtime error deleting branch {branch_name}: {e}")
             return False
     
     async def list_branches(self) -> List[Dict[str, Any]]:
@@ -155,8 +165,10 @@ class TerminusNativeBranchService(IBranchService):
                             "timestamp": None
                         })
                         
-            except Exception as api_error:
-                logger.debug(f"Could not get branches via API: {api_error}")
+            except (ConnectionError, TimeoutError) as api_error:
+                logger.debug(f"Network error getting branches via API: {api_error}")
+            except RuntimeError as api_error:
+                logger.debug(f"Runtime error getting branches via API: {api_error}")
             
             # Method 2: Try WOQL query for branch metadata (if API failed)
             if not branches:
@@ -177,8 +189,12 @@ class TerminusNativeBranchService(IBranchService):
                                     "timestamp": None
                                 })
                                 
-                except Exception as query_error:
-                    logger.debug(f"WOQL query failed: {query_error}")
+                except (ConnectionError, TimeoutError) as query_error:
+                    logger.debug(f"Network error in WOQL query: {query_error}")
+                except ValueError as query_error:
+                    logger.debug(f"Invalid data in WOQL query: {query_error}")
+                except RuntimeError as query_error:
+                    logger.debug(f"Runtime error in WOQL query: {query_error}")
             
             # Method 3: Fallback to at least include main branch
             if not branches:
@@ -200,8 +216,8 @@ class TerminusNativeBranchService(IBranchService):
             logger.info(f"Listed {len(unique_branches)} branches")
             return unique_branches
             
-        except Exception as e:
-            logger.error(f"Failed to list branches: {e}")
+        except RuntimeError as e:
+            logger.error(f"Runtime error listing branches: {e}")
             # Return minimal fallback even on complete failure
             return [{"name": "main", "head": None, "timestamp": None}]
     
@@ -219,14 +235,17 @@ class TerminusNativeBranchService(IBranchService):
             try:
                 metadata = self.client.get_document(f"metadata:{branch_name}")
                 branch_info.update(metadata)
-            except Exception as metadata_error:
-                logger.debug(f"Could not get metadata for branch {branch_name}: {metadata_error}")
+            except (ConnectionError, TimeoutError) as metadata_error:
+                logger.debug(f"Network error getting metadata for branch {branch_name}: {metadata_error}")
+                # Metadata might not exist, which is acceptable
+            except KeyError as metadata_error:
+                logger.debug(f"Metadata not found for branch {branch_name}: {metadata_error}")
                 # Metadata might not exist, which is acceptable
             
             return branch_info
             
-        except Exception as e:
-            logger.error(f"Failed to get branch info for {branch_name}: {e}")
+        except RuntimeError as e:
+            logger.error(f"Runtime error getting branch info for {branch_name}: {e}")
             raise
     
     @track_native_operation("merge_branches")
@@ -260,13 +279,25 @@ class TerminusNativeBranchService(IBranchService):
             if result.merge_commit and strategy == MergeStrategy.MERGE:
                 try:
                     await self.delete_branch(source)
-                except Exception as e:
-                    logger.warning(f"Failed to delete source branch {source}: {e}")
+                except (ConnectionError, TimeoutError) as e:
+                    logger.warning(f"Network error deleting source branch {source}: {e}")
+                except RuntimeError as e:
+                    logger.warning(f"Runtime error deleting source branch {source}: {e}")
             
             return result
             
-        except Exception as e:
-            logger.error(f"Merge failed: {e}")
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Network error during merge: {e}")
+            return MergeResult(
+                merge_commit=None,
+                source_branch=source,
+                target_branch=target,
+                conflicts=[],
+                strategy=strategy.value if hasattr(strategy, 'value') else str(strategy),
+                error=str(e)
+            )
+        except RuntimeError as e:
+            logger.error(f"Runtime error during merge: {e}")
             return MergeResult(
                 merge_commit=None,
                 source_branch=source,
@@ -337,8 +368,14 @@ class TerminusNativeBranchService(IBranchService):
             
             return branch_diff
             
-        except Exception as e:
-            logger.error(f"Failed to get diff: {e}")
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Network error getting diff: {e}")
+            raise
+        except ValueError as e:
+            logger.error(f"Invalid data in diff: {e}")
+            raise
+        except RuntimeError as e:
+            logger.error(f"Runtime error getting diff: {e}")
             raise
     
     def _parse_terminus_conflicts(self, error_message: str) -> List[Conflict]:

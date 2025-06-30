@@ -144,7 +144,7 @@ class NamingConventionRule(BaseRule):
                 }
             )
             
-        except Exception as e:
+        except (KeyError, ValueError, TypeError, AttributeError, RuntimeError) as e:
             logger.error(f"Naming convention rule execution failed: {str(e)}")
             return RuleExecutionResult(
                 rule_id=self.rule_id,

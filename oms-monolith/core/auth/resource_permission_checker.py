@@ -5,13 +5,14 @@ OMS 내부에서 사용하는 최소한의 권한 체크 모듈
 """
 import os
 from typing import List, Optional, Dict, Any
-import httpx
+from shared.clients.unified_http_client import get_unified_http_client
 from pydantic import BaseModel
 from functools import lru_cache
 from datetime import datetime, timezone
 
-from utils.logger import get_logger
+from shared.utils.logger import get_logger
 from core.integrations.user_service_client import validate_jwt_token
+from core.auth import UserContext  # 통합된 UserContext 사용
 # Moved permissions inline since models.permissions was removed
 from enum import Enum
 
@@ -33,35 +34,6 @@ class Action(str, Enum):
 logger = get_logger(__name__)
 
 
-class UserContext(BaseModel):
-    """IdP에서 전달받은 사용자 컨텍스트"""
-    user_id: str
-    username: str
-    email: Optional[str] = None
-    roles: List[str] = []
-    permissions: List[str] = []
-    teams: List[str] = []
-    tenant_id: Optional[str] = None  # For multi-tenant support (needed for audit events)
-    metadata: Dict[str, Any] = {}  # Additional user metadata
-    token_exp: Optional[int] = None
-    
-    @property
-    def is_authenticated(self) -> bool:
-        """인증 여부 확인"""
-        if not self.token_exp:
-            return True
-        return datetime.now(timezone.utc).timestamp() < self.token_exp
-    
-    @property
-    def is_service_account(self) -> bool:
-        """Check if user is a service account (needed for audit events)"""
-        return "service_account" in self.roles
-    
-    def has_role(self, role: str) -> bool:
-        """Check if user has specific role"""
-        return role in self.roles
-
-
 class ResourcePermissionChecker:
     """
     리소스 권한 체커
@@ -76,6 +48,7 @@ class ResourcePermissionChecker:
         cache_ttl: int = 300  # 5분
     ):
         # JWT validation is now delegated to MSA
+        self.http_client = get_unified_http_client() if idp_endpoint else None
         self.idp_endpoint = idp_endpoint or os.getenv("IDP_ENDPOINT")
         self.cache_ttl = cache_ttl
         
@@ -120,8 +93,11 @@ class ResourcePermissionChecker:
             
             return user_context
             
-        except Exception as e:
-            logger.error(f"Error extracting user from token via MSA: {e}")
+        except ValueError as e:
+            logger.error(f"Invalid token format: {e}")
+            return None
+        except RuntimeError as e:
+            logger.error(f"Runtime error extracting user from token via MSA: {e}")
             return None
     
     def check_permission(
@@ -180,8 +156,7 @@ class ResourcePermissionChecker:
         )
         return False
     
-    @lru_cache(maxsize=1000)
-    def check_permission_with_idp(
+    async def check_permission_with_idp(
         self,
         user_id: str,
         resource_type: str,
@@ -199,15 +174,14 @@ class ResourcePermissionChecker:
         
         try:
             # IdP API 호출
-            response = httpx.post(
+            response = await self.http_client.post(
                 f"{self.idp_endpoint}/check-permission",
                 json={
                     "user_id": user_id,
                     "resource_type": resource_type,
                     "resource_id": resource_id,
                     "action": action
-                },
-                timeout=5.0
+                }
             )
             
             if response.status_code == 200:
@@ -216,8 +190,16 @@ class ResourcePermissionChecker:
                 logger.error(f"IdP permission check failed: {response.status_code}")
                 return False
                 
-        except Exception as e:
-            logger.error(f"Error checking permission with IdP: {e}")
+        except ConnectionError as e:
+            logger.error(f"Connection error checking permission with IdP: {e}")
+            # IdP 장애시 기본 거부
+            return False
+        except TimeoutError as e:
+            logger.error(f"Timeout checking permission with IdP: {e}")
+            # IdP 장애시 기본 거부
+            return False
+        except RuntimeError as e:
+            logger.error(f"Runtime error checking permission with IdP: {e}")
             # IdP 장애시 기본 거부
             return False
     

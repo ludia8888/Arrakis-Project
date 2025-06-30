@@ -12,7 +12,7 @@ from uuid import uuid4
 from enum import Enum
 
 from database.clients.terminus_db import TerminusDBClient
-from shared.infrastructure.nats_client import NATSClient
+from shared.infrastructure.unified_nats_client import UnifiedNATSClient as NATSClient
 from .cloudevents_enhanced import EnhancedCloudEvent
 from .outbox_processor import OutboxProcessor
 from utils.logger import get_logger
@@ -217,8 +217,11 @@ class OutboxService:
             logger.info(f"Outbox database '{self.database}' initialized successfully")
             return True
             
-        except Exception as e:
-            logger.error(f"Failed to initialize outbox database: {e}")
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Network error initializing outbox database: {e}")
+            return False
+        except RuntimeError as e:
+            logger.error(f"Runtime error initializing outbox database: {e}")
             return False
     
     async def publish_event(
@@ -291,8 +294,11 @@ class OutboxService:
             logger.debug(f"Event stored in outbox: {event_id} ({event_type})")
             return event_id
             
-        except Exception as e:
-            logger.error(f"Failed to store event in outbox: {e}")
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Network error storing event in outbox: {e}")
+            raise
+        except RuntimeError as e:
+            logger.error(f"Runtime error storing event in outbox: {e}")
             raise
     
     async def start_processing(self):
@@ -329,8 +335,11 @@ class OutboxService:
                     # No events to process, wait
                     await asyncio.sleep(self.process_interval)
                     
-            except Exception as e:
-                logger.error(f"Error in outbox processing loop: {e}")
+            except (ConnectionError, TimeoutError) as e:
+                logger.error(f"Network error in outbox processing loop: {e}")
+                await asyncio.sleep(5)  # Back off on error
+            except RuntimeError as e:
+                logger.error(f"Runtime error in outbox processing loop: {e}")
                 await asyncio.sleep(5)  # Back off on error
     
     async def _process_events_batch(self, events: List[OutboxEvent]):
@@ -371,10 +380,18 @@ class OutboxService:
             await self._mark_event_completed(event.event_id)
             logger.debug(f"Successfully processed outbox event: {event.event_id}")
             
-        except Exception as e:
+        except (ConnectionError, TimeoutError) as e:
             # Mark as failed and increment retry count
             await self._mark_event_failed(event.event_id, str(e))
-            logger.error(f"Failed to process outbox event {event.event_id}: {e}")
+            logger.error(f"Network error processing outbox event {event.event_id}: {e}")
+        except json.JSONDecodeError as e:
+            # Mark as failed and increment retry count
+            await self._mark_event_failed(event.event_id, str(e))
+            logger.error(f"JSON decode error processing outbox event {event.event_id}: {e}")
+        except RuntimeError as e:
+            # Mark as failed and increment retry count
+            await self._mark_event_failed(event.event_id, str(e))
+            logger.error(f"Runtime error processing outbox event {event.event_id}: {e}")
     
     async def _publish_via_processor(self, event: OutboxEvent):
         """Publish event using the existing OutboxProcessor"""
@@ -450,8 +467,11 @@ class OutboxService:
             
             return events
             
-        except Exception as e:
-            logger.error(f"Failed to get pending events: {e}")
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Network error getting pending events: {e}")
+            return []
+        except RuntimeError as e:
+            logger.error(f"Runtime error getting pending events: {e}")
             return []
     
     async def _is_duplicate_event(self, idempotency_key: str) -> bool:
@@ -475,8 +495,11 @@ class OutboxService:
             
             return len(results) > 0
             
-        except Exception as e:
-            logger.error(f"Failed to check duplicate event: {e}")
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Network error checking duplicate event: {e}")
+            return False
+        except RuntimeError as e:
+            logger.error(f"Runtime error checking duplicate event: {e}")
             return False
     
     async def _get_event_by_idempotency_key(self, idempotency_key: str) -> Optional[OutboxEvent]:
@@ -520,8 +543,11 @@ class OutboxService:
             
             return None
             
-        except Exception as e:
-            logger.error(f"Failed to get event by idempotency key: {e}")
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Network error getting event by idempotency key: {e}")
+            return None
+        except RuntimeError as e:
+            logger.error(f"Runtime error getting event by idempotency key: {e}")
             return None
     
     async def _update_event_status(self, event_id: str, status: OutboxEventStatus):
@@ -538,8 +564,10 @@ class OutboxService:
                 database=self.database
             )
             
-        except Exception as e:
-            logger.error(f"Failed to update event status: {e}")
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Network error updating event status: {e}")
+        except RuntimeError as e:
+            logger.error(f"Runtime error updating event status: {e}")
     
     async def _mark_event_completed(self, event_id: str):
         """Mark event as completed"""
@@ -556,8 +584,10 @@ class OutboxService:
                 database=self.database
             )
             
-        except Exception as e:
-            logger.error(f"Failed to mark event completed: {e}")
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Network error marking event completed: {e}")
+        except RuntimeError as e:
+            logger.error(f"Runtime error marking event completed: {e}")
     
     async def _mark_event_failed(self, event_id: str, error_message: str):
         """Mark event as failed and increment retry count"""
@@ -587,8 +617,10 @@ class OutboxService:
                 database=self.database
             )
             
-        except Exception as e:
-            logger.error(f"Failed to mark event failed: {e}")
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Network error marking event failed: {e}")
+        except RuntimeError as e:
+            logger.error(f"Runtime error marking event failed: {e}")
     
     async def _get_event_by_id(self, event_id: str) -> Optional[OutboxEvent]:
         """Get event by ID"""
@@ -614,8 +646,11 @@ class OutboxService:
             
             return None
             
-        except Exception as e:
-            logger.error(f"Failed to get event by ID: {e}")
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Network error getting event by ID: {e}")
+            return None
+        except RuntimeError as e:
+            logger.error(f"Runtime error getting event by ID: {e}")
             return None
     
     async def cleanup_completed_events(self, older_than_hours: int = 24) -> int:
@@ -693,8 +728,11 @@ class OutboxService:
             
             return deleted_count
             
-        except Exception as e:
-            logger.error(f"Failed to cleanup completed events: {e}")
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Network error cleaning up completed events: {e}")
+            return 0
+        except RuntimeError as e:
+            logger.error(f"Runtime error cleaning up completed events: {e}")
             return 0
     
     async def get_statistics(self) -> Dict[str, int]:
@@ -730,8 +768,10 @@ class OutboxService:
                 stats[status.value] = count
                 stats["total"] += count
             
-        except Exception as e:
-            logger.error(f"Failed to get outbox statistics: {e}")
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Network error getting outbox statistics: {e}")
+        except RuntimeError as e:
+            logger.error(f"Runtime error getting outbox statistics: {e}")
         
         return stats
 
@@ -749,7 +789,9 @@ async def get_outbox_service() -> OutboxService:
         import os
         
         # Initialize with TerminusDB and NATS clients
-        db_client = TerminusDBClient(os.getenv("TERMINUS_SERVER_URL", "http://localhost:6363"))
+        from shared.config.environment import get_config
+        config = get_config()
+        db_client = TerminusDBClient(config.get_terminus_db_url())
         nats_client = await get_nats_client()
         
         _outbox_service = OutboxService(

@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from core.auth import UserContext
 from middleware.auth_secure import get_current_user
 from core.idempotent.schema_event_consumer import get_schema_consumer
-from models.idempotency import (
+from core.idempotent.models import (
     EventEnvelope, IdempotentResult, EventReplayRequest,
     generate_event_id
 )

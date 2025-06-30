@@ -59,15 +59,20 @@ class WebSocketManager:
                                 "type": "ping",
                                 "timestamp": current_time
                             }))
-                        except Exception as e:
+                        except (WebSocketDisconnect, ConnectionError) as e:
                             logger.warning(f"Failed to ping connection {conn_id}: {e}")
+                            disconnected.append(conn_id)
+                        except OSError as e:
+                            logger.warning(f"Network error pinging connection {conn_id}: {e}")
                             disconnected.append(conn_id)
                     
                     for conn_id in disconnected:
                         await self.disconnect(conn_id)
                         
-                except Exception as e:
-                    logger.error(f"Heartbeat error: {e}")
+                except asyncio.CancelledError:
+                    raise
+                except RuntimeError as e:
+                    logger.error(f"Heartbeat runtime error: {e}")
         
         if self._heartbeat_task is None:
             self._heartbeat_task = asyncio.create_task(heartbeat())
@@ -114,7 +119,7 @@ class WebSocketManager:
         # WebSocket 연결 정리
         try:
             await connection.websocket.close()
-        except Exception:
+        except (WebSocketDisconnect, ConnectionError, OSError):
             pass
         
         del self.connections[connection_id]
@@ -173,8 +178,14 @@ class WebSocketManager:
                 
                 await connection.websocket.send_text(json.dumps(message))
                 
-        except Exception as e:
-            logger.error(f"Event streaming error for {connection_id}: {e}")
+        except (WebSocketDisconnect, ConnectionError) as e:
+            logger.error(f"WebSocket error for {connection_id}: {e}")
+            await self.disconnect(connection_id)
+        except asyncio.CancelledError:
+            await self.disconnect(connection_id)
+            raise
+        except OSError as e:
+            logger.error(f"Network error for {connection_id}: {e}")
             await self.disconnect(connection_id)
     
     async def handle_message(self, connection_id: str, message: str):
@@ -218,8 +229,10 @@ class WebSocketManager:
             
         except json.JSONDecodeError:
             logger.warning(f"Invalid JSON from {connection_id}: {message}")
-        except Exception as e:
-            logger.error(f"Message handling error for {connection_id}: {e}")
+        except KeyError as e:
+            logger.error(f"Missing key in message for {connection_id}: {e}")
+        except ValueError as e:
+            logger.error(f"Invalid value in message for {connection_id}: {e}")
     
     def get_connection_count(self) -> int:
         """활성 연결 수"""
@@ -244,6 +257,9 @@ async def handle_websocket_connection(websocket: WebSocket, user_id: str):
             
     except WebSocketDisconnect:
         await websocket_manager.disconnect(connection_id)
-    except Exception as e:
-        logger.error(f"WebSocket error: {e}")
+    except (ConnectionError, OSError) as e:
+        logger.error(f"WebSocket connection error: {e}")
+        await websocket_manager.disconnect(connection_id)
+    except RuntimeError as e:
+        logger.error(f"WebSocket runtime error: {e}")
         await websocket_manager.disconnect(connection_id)

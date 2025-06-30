@@ -203,7 +203,19 @@ class CINamingValidator:
             elif file_path.suffix in ['.java']:
                 results.extend(self._validate_java_file(file_path, content, lines))
                 
-        except Exception as e:
+        except (OSError, IOError) as e:
+            results.append({
+                "file": str(file_path),
+                "error": f"Failed to read file: {e}",
+                "valid": False
+            })
+        except UnicodeDecodeError as e:
+            results.append({
+                "file": str(file_path),
+                "error": f"Failed to decode file: {e}",
+                "valid": False
+            })
+        except ValueError as e:
             results.append({
                 "file": str(file_path),
                 "error": f"Failed to parse file: {e}",

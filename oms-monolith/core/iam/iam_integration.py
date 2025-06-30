@@ -13,6 +13,7 @@ from jwt import PyJWKClient
 
 from core.auth import UserContext
 from utils.logger import get_logger
+from shared.config.environment import StrictEnv
 
 logger = get_logger(__name__)
 
@@ -31,7 +32,7 @@ class IAMIntegration:
     """
     
     def __init__(self):
-        self.iam_base_url = os.getenv("IAM_SERVICE_URL", "https://iam-service:8443")
+        self.iam_base_url = StrictEnv.get("IAM_SERVICE_URL")
         self.jwks_url = f"{self.iam_base_url}/.well-known/jwks.json"
         self.expected_issuer = os.getenv("JWT_ISSUER", "iam.company")
         self.expected_audience = os.getenv("JWT_AUDIENCE", "oms")
@@ -41,7 +42,7 @@ class IAMIntegration:
         if not os.getenv("JWT_LOCAL_VALIDATION", "true").lower() == "true":
             try:
                 self.jwks_client = PyJWKClient(self.jwks_url)
-            except Exception as e:
+            except (ConnectionError, ValueError) as e:
                 logger.warning(f"Failed to initialize JWKS client: {e}")
         
         # Cache for role mappings
@@ -67,7 +68,7 @@ class IAMIntegration:
                 try:
                     signing_key = self.jwks_client.get_signing_key_from_jwt(token)
                     key = signing_key.key
-                except Exception as e:
+                except (ConnectionError, ValueError, KeyError) as e:
                     logger.error(f"Failed to get signing key from JWKS: {e}")
                     # Fallback to local validation
                     key = os.getenv("JWT_SECRET", "your-secret-key")
@@ -131,7 +132,7 @@ class IAMIntegration:
             raise ValueError(f"Invalid issuer - expected {self.expected_issuer}")
         except jwt.InvalidTokenError as e:
             raise ValueError(f"Invalid token: {str(e)}")
-        except Exception as e:
+        except (RuntimeError, AttributeError) as e:
             logger.error(f"JWT validation error: {e}")
             raise ValueError(f"Token validation failed: {str(e)}")
     
@@ -181,7 +182,10 @@ class IAMIntegration:
                     logger.error(f"Failed to get user info: {response.status_code}")
                     return {}
                     
-            except Exception as e:
+            except (ConnectionError, TimeoutError) as e:
+                logger.error(f"Network error getting user info: {e}")
+                return {}
+            except RuntimeError as e:
                 logger.error(f"Error getting user info: {e}")
                 return {}
     
@@ -207,7 +211,10 @@ class IAMIntegration:
                 else:
                     raise ValueError(f"Token refresh failed: {response.status_code}")
                     
-            except Exception as e:
+            except (ConnectionError, TimeoutError) as e:
+                logger.error(f"Network error refreshing token: {e}")
+                raise
+            except RuntimeError as e:
                 logger.error(f"Error refreshing token: {e}")
                 raise
     

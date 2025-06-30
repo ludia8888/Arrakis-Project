@@ -136,7 +136,7 @@ class DataImpactAnalyzer(BreakingChangeRule):
         except asyncio.TimeoutError:
             logger.warning("Data impact analysis timed out after 30 seconds")
             return self._create_timeout_fallback_result(old_schema, new_schema)
-        except Exception as e:
+        except (KeyError, ValueError, TypeError, ConnectionError, RuntimeError) as e:
             logger.error(f"Data impact analysis failed: {e}")
             return self._create_error_fallback_result(old_schema, new_schema, str(e))
 
@@ -200,7 +200,7 @@ class DataImpactAnalyzer(BreakingChangeRule):
                 foundry_compatibility={}  # 별도 분석에서 채움
             )
 
-        except Exception as e:
+        except (KeyError, ValueError, TypeError, ConnectionError) as e:
             logger.error(f"Direct data impact analysis failed: {e}")
             return ImpactAnalysisResult(
                 total_objects=0, affected_objects=0, relationship_impacts=[],
@@ -285,7 +285,7 @@ class DataImpactAnalyzer(BreakingChangeRule):
 
             return relationship_impacts
 
-        except Exception as e:
+        except (KeyError, ValueError, TypeError, ConnectionError) as e:
             logger.error(f"Relationship impact analysis failed: {e}")
             return [{"error": f"Relationship analysis failed: {e}"}]
 
@@ -484,7 +484,7 @@ class DataImpactAnalyzer(BreakingChangeRule):
                         "analysis_timestamp": datetime.now().isoformat()
                     }
                 )
-        except Exception as e:
+        except (ConnectionError, RuntimeError, AttributeError) as e:
             logger.warning(f"Failed to publish analysis event: {e}")
 
     def _is_foundry_compliant_name(self, name: str) -> bool:

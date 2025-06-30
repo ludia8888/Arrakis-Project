@@ -110,14 +110,14 @@ def safe_dict_conversion(obj: Any, _seen: Optional[Set[int]] = None, max_depth: 
         # Use model_dump for Pydantic v2
         try:
             return safe_dict_conversion(obj.model_dump(), _seen, max_depth - 1)
-        except Exception:
+        except (AttributeError, TypeError):
             pass
     
     if hasattr(obj, 'dict'):
         # Fallback to dict() for Pydantic v1
         try:
             return safe_dict_conversion(obj.dict(), _seen, max_depth - 1)
-        except Exception:
+        except (AttributeError, TypeError):
             pass
     
     # Handle objects with __dict__
@@ -135,7 +135,7 @@ def safe_dict_conversion(obj: Any, _seen: Optional[Set[int]] = None, max_depth: 
     # Last resort - convert to string
     try:
         return str(obj)
-    except Exception:
+    except (TypeError, ValueError, AttributeError):
         return f"***UNSERIALIZABLE: {type(obj).__name__}***"
 
 

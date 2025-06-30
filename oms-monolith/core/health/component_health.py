@@ -189,10 +189,16 @@ class HealthCheck(ABC):
                 message=f"Health check timed out after {self.timeout}s",
                 error=TimeoutError("Health check timeout")
             )
-        except Exception as e:
+        except (ConnectionError, OSError) as e:
             result = HealthCheckResult(
                 status=HealthStatus.UNHEALTHY,
-                message=f"Health check failed: {str(e)}",
+                message=f"Connection error during health check: {str(e)}",
+                error=e
+            )
+        except RuntimeError as e:
+            result = HealthCheckResult(
+                status=HealthStatus.UNHEALTHY,
+                message=f"Runtime error during health check: {str(e)}",
                 error=e
             )
         
@@ -245,10 +251,16 @@ class DatabaseHealthCheck(HealthCheck):
                 message="Database driver not installed",
                 error=ImportError("asyncpg not installed")
             )
-        except Exception as e:
+        except (asyncpg.PostgresError, ConnectionError) as e:
             return HealthCheckResult(
                 status=HealthStatus.UNHEALTHY,
-                message=f"Database check failed: {str(e)}",
+                message=f"Database connection failed: {str(e)}",
+                error=e
+            )
+        except RuntimeError as e:
+            return HealthCheckResult(
+                status=HealthStatus.UNHEALTHY,
+                message=f"Runtime error during database check: {str(e)}",
                 error=e
             )
 
@@ -302,10 +314,16 @@ class RedisHealthCheck(HealthCheck):
                 }
             )
             
-        except Exception as e:
+        except redis.RedisError as e:
             return HealthCheckResult(
                 status=HealthStatus.UNHEALTHY,
-                message=f"Redis check failed: {str(e)}",
+                message=f"Redis connection failed: {str(e)}",
+                error=e
+            )
+        except RuntimeError as e:
+            return HealthCheckResult(
+                status=HealthStatus.UNHEALTHY,
+                message=f"Runtime error during Redis check: {str(e)}",
                 error=e
             )
 
@@ -363,10 +381,16 @@ class HttpHealthCheck(HealthCheck):
                 message=f"Request timed out after {self.timeout}s",
                 error=TimeoutError("HTTP request timeout")
             )
-        except Exception as e:
+        except aiohttp.ClientError as e:
             return HealthCheckResult(
                 status=HealthStatus.UNHEALTHY,
-                message=f"HTTP check failed: {str(e)}",
+                message=f"HTTP client error: {str(e)}",
+                error=e
+            )
+        except RuntimeError as e:
+            return HealthCheckResult(
+                status=HealthStatus.UNHEALTHY,
+                message=f"Runtime error during HTTP check: {str(e)}",
                 error=e
             )
 
@@ -432,10 +456,16 @@ class SystemHealthCheck(HealthCheck):
                 }
             )
             
-        except Exception as e:
+        except (OSError, psutil.Error) as e:
             return HealthCheckResult(
                 status=HealthStatus.UNHEALTHY,
-                message=f"System check failed: {str(e)}",
+                message=f"System resource check failed: {str(e)}",
+                error=e
+            )
+        except RuntimeError as e:
+            return HealthCheckResult(
+                status=HealthStatus.UNHEALTHY,
+                message=f"Runtime error during system check: {str(e)}",
                 error=e
             )
 
@@ -471,10 +501,16 @@ class CustomHealthCheck(HealthCheck):
                     message="Custom check " + ("passed" if result else "failed")
                 )
                 
-        except Exception as e:
+        except asyncio.TimeoutError as e:
             return HealthCheckResult(
                 status=HealthStatus.UNHEALTHY,
-                message=f"Custom check failed: {str(e)}",
+                message=f"Custom check timed out: {str(e)}",
+                error=e
+            )
+        except RuntimeError as e:
+            return HealthCheckResult(
+                status=HealthStatus.UNHEALTHY,
+                message=f"Custom check runtime error: {str(e)}",
                 error=e
             )
 
@@ -773,8 +809,11 @@ class ComponentHealthMonitor:
                 await asyncio.sleep(health_check.interval)
             except asyncio.CancelledError:
                 break
-            except Exception as e:
-                logger.error(f"Error monitoring component {component_id}: {e}")
+            except (ConnectionError, OSError) as e:
+                logger.error(f"Connection error monitoring component {component_id}: {e}")
+                await asyncio.sleep(health_check.interval)
+            except RuntimeError as e:
+                logger.error(f"Runtime error monitoring component {component_id}: {e}")
                 await asyncio.sleep(health_check.interval)
     
     async def _send_alert(self, component_id: str, old_status: HealthStatus, new_status: HealthStatus):
@@ -798,8 +837,10 @@ class ComponentHealthMonitor:
                 await asyncio.get_event_loop().run_in_executor(
                     None, self.alert_callback, alert_data
                 )
-        except Exception as e:
-            logger.error(f"Failed to send alert: {e}")
+        except asyncio.TimeoutError as e:
+            logger.error(f"Alert timeout: {e}")
+        except RuntimeError as e:
+            logger.error(f"Runtime error sending alert: {e}")
     
     def get_component_history(self, component_id: str, limit: Optional[int] = None) -> List[Dict[str, Any]]:
         """Get health check history for a component."""

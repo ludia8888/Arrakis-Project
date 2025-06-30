@@ -1,6 +1,19 @@
 """
-Audit Service
+Audit Service - Core Business Logic Layer
 High-level service for audit log management with enterprise features
+
+ARCHITECTURE NOTE:
+This module is part of the Core layer, containing business logic and domain rules for audit management.
+It works in conjunction with, but serves a different purpose than shared/audit/unified_audit_logger.py:
+
+- Core (this module): Comprehensive audit service with database storage, batch processing, 
+  compliance reports, retention policies, and business rules
+- Shared audit logger: Lightweight audit event publishing to NATS with CloudEvents format
+  for real-time event streaming
+
+This separation follows the architectural principle:
+- Core: Business logic and domain rules
+- Shared: Infrastructure and cross-cutting concerns
 """
 import asyncio
 from datetime import datetime, timezone, timedelta
@@ -8,8 +21,8 @@ from typing import Dict, Any, List, Optional, Tuple
 from contextlib import asynccontextmanager
 
 from core.audit.models import AuditEventV1, AuditEventFilter, AuditAction, ResourceType
-from core.audit.audit_database import get_audit_database, AuditDatabase
-from core.audit.audit_publisher import get_audit_publisher
+from core.audit.audit_repository import AuditRepositoryInterface
+from core.audit.event_bus import AuditEventBusInterface
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -32,9 +45,11 @@ class AuditService:
     - GDPR compliance support
     """
     
-    def __init__(self):
-        self.database: Optional[AuditDatabase] = None
-        self.publisher = None
+    def __init__(self, 
+                 repository: AuditRepositoryInterface,
+                 event_bus: AuditEventBusInterface):
+        self.repository = repository
+        self.event_bus = event_bus
         self._batch_queue: List[AuditEventV1] = []
         self._batch_lock = asyncio.Lock()
         self._background_task: Optional[asyncio.Task] = None
@@ -58,18 +73,12 @@ class AuditService:
     async def initialize(self):
         """Initialize audit service components"""
         try:
-            # Initialize database
-            self.database = await get_audit_database()
-            
-            # Initialize publisher
-            self.publisher = get_audit_publisher()
-            
             # Start background batch processor
             self._background_task = asyncio.create_task(self._batch_processor())
             
             logger.info("Audit service initialized successfully")
             
-        except Exception as e:
+        except RuntimeError as e:
             logger.error(f"Failed to initialize audit service: {e}")
             raise AuditServiceError(f"Initialization failed: {e}")
     
@@ -132,8 +141,12 @@ class AuditService:
                 
                 return True
                 
-        except Exception as e:
-            logger.error(f"Failed to log audit event {event.id}: {e}")
+        except (ValueError, KeyError) as e:
+            logger.error(f"Data error logging audit event {event.id}: {e}")
+            self.stats["events_failed"] += 1
+            return False
+        except RuntimeError as e:
+            logger.error(f"Runtime error logging audit event {event.id}: {e}")
             self.stats["events_failed"] += 1
             return False
     
@@ -142,17 +155,11 @@ class AuditService:
         filter_criteria: AuditEventFilter
     ) -> Tuple[List[Dict[str, Any]], int]:
         """Query audit events with filtering and pagination"""
-        if not self.database:
-            raise AuditServiceError("Audit database not initialized")
-        
-        return await self.database.query_audit_events(filter_criteria)
+        return await self.repository.query_events(filter_criteria)
     
     async def get_audit_event(self, event_id: str) -> Optional[Dict[str, Any]]:
         """Get specific audit event by ID"""
-        if not self.database:
-            raise AuditServiceError("Audit database not initialized")
-        
-        return await self.database.get_audit_event_by_id(event_id)
+        return await self.repository.get_event_by_id(event_id)
     
     async def get_audit_statistics(
         self, 
@@ -160,10 +167,7 @@ class AuditService:
         end_time: Optional[datetime] = None
     ) -> Dict[str, Any]:
         """Get audit statistics for monitoring"""
-        if not self.database:
-            raise AuditServiceError("Audit database not initialized")
-        
-        db_stats = await self.database.get_audit_statistics(start_time, end_time)
+        db_stats = await self.repository.get_statistics(start_time, end_time)
         
         # Combine with service stats
         combined_stats = {
@@ -181,17 +185,11 @@ class AuditService:
     
     async def cleanup_expired_events(self) -> int:
         """Clean up expired audit events"""
-        if not self.database:
-            raise AuditServiceError("Audit database not initialized")
-        
-        return await self.database.cleanup_expired_events()
+        return await self.repository.cleanup_expired_events()
     
     async def verify_integrity(self) -> Dict[str, Any]:
         """Verify audit log integrity"""
-        if not self.database:
-            raise AuditServiceError("Audit database not initialized")
-        
-        return await self.database.verify_integrity()
+        return await self.repository.verify_integrity()
     
     async def export_audit_logs(
         self, 
@@ -243,7 +241,8 @@ class AuditService:
         for action in AuditAction:
             action_events = [e for e in events if e['action'] == action.value]
             if action_events:
-                retention_days = self.database.retention_policy.get_retention_days(action)
+                # Default retention days - can be moved to config
+                retention_days = 730  # 2 years default
                 retention_stats[action.value] = {
                     "event_count": len(action_events),
                     "retention_days": retention_days,
@@ -282,14 +281,15 @@ class AuditService:
         """Store event immediately to database and publish"""
         try:
             # Store in database
-            db_success = await self.database.store_audit_event(event)
+            db_success = await self.repository.store_event(event)
             
             # Publish to event stream (best effort)
             try:
-                if self.publisher:
-                    await self.publisher.publish_audit_event_direct(event)
-            except Exception as e:
-                logger.warning(f"Failed to publish audit event to stream: {e}")
+                await self.event_bus.publish_event(event)
+            except (ConnectionError, TimeoutError) as e:
+                logger.warning(f"Network error publishing audit event to stream: {e}")
+            except RuntimeError as e:
+                logger.warning(f"Runtime error publishing audit event to stream: {e}")
             
             # Check for critical events that need alerts
             if self.enable_realtime_alerts:
@@ -297,8 +297,11 @@ class AuditService:
             
             return db_success
             
-        except Exception as e:
-            logger.error(f"Failed to store audit event immediately: {e}")
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Network error storing audit event immediately: {e}")
+            return False
+        except RuntimeError as e:
+            logger.error(f"Runtime error storing audit event immediately: {e}")
             return False
     
     async def _batch_processor(self):
@@ -319,8 +322,8 @@ class AuditService:
                 # Timeout reached, process current batch
                 await self._trigger_batch_processing()
             
-            except Exception as e:
-                logger.error(f"Error in batch processor: {e}")
+            except RuntimeError as e:
+                logger.error(f"Runtime error in batch processor: {e}")
                 await asyncio.sleep(1.0)  # Brief pause on error
         
         logger.info("Audit batch processor stopped")
@@ -344,15 +347,16 @@ class AuditService:
         
         try:
             # Store batch in database
-            stored_count = await self.database.store_audit_events_batch(batch)
+            stored_count = await self.repository.store_events_batch(batch)
             
             # Publish events to stream (best effort)
-            if self.publisher:
-                for event in batch:
-                    try:
-                        await self.publisher.publish_audit_event_direct(event)
-                    except Exception as e:
-                        logger.warning(f"Failed to publish audit event {event.id}: {e}")
+            for event in batch:
+                try:
+                    await self.event_bus.publish_event(event)
+                except (ConnectionError, TimeoutError) as e:
+                    logger.warning(f"Network error publishing audit event {event.id}: {e}")
+                except RuntimeError as e:
+                    logger.warning(f"Runtime error publishing audit event {event.id}: {e}")
             
             # Check for alerts in batch
             if self.enable_realtime_alerts:
@@ -367,8 +371,11 @@ class AuditService:
             
             logger.debug(f"Processed batch of {len(batch)} events, {stored_count} stored successfully")
             
-        except Exception as e:
-            logger.error(f"Failed to process audit batch: {e}")
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Network error processing audit batch: {e}")
+            self.stats["events_failed"] += len(batch)
+        except RuntimeError as e:
+            logger.error(f"Runtime error processing audit batch: {e}")
             self.stats["events_failed"] += len(batch)
     
     async def _check_for_alerts(self, event: AuditEventV1):
@@ -441,24 +448,3 @@ class AuditService:
         ]
 
 
-# Global audit service instance
-_audit_service: Optional[AuditService] = None
-
-
-async def get_audit_service() -> AuditService:
-    """Get global audit service instance"""
-    global _audit_service
-    if _audit_service is None:
-        _audit_service = AuditService()
-        await _audit_service.initialize()
-    return _audit_service
-
-
-@asynccontextmanager
-async def audit_service_context():
-    """Context manager for audit service lifecycle"""
-    service = await get_audit_service()
-    try:
-        yield service
-    finally:
-        await service.shutdown()

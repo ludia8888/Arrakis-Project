@@ -97,7 +97,9 @@ class SemanticValidator:
             
             return unique_conflicts
             
-        except Exception as e:
+        except (KeyError, ValueError) as e:
+            raise RuntimeError(f"Data processing error in merge validation: {e}")
+        except RuntimeError as e:
             raise RuntimeError(f"Merge validation failed: {e}")
     
     async def validate_schema_constraints(self) -> List[SemanticConflict]:
@@ -131,7 +133,9 @@ class SemanticValidator:
             
             return conflicts
             
-        except Exception as e:
+        except (KeyError, ValueError) as e:
+            raise RuntimeError(f"Data processing error in schema constraint validation: {e}")
+        except RuntimeError as e:
             raise RuntimeError(f"Schema constraint validation failed: {e}")
     
     async def validate_semantic_consistency(self) -> List[SemanticConflict]:
@@ -160,12 +164,14 @@ class SemanticValidator:
             conflicts.extend(type_conflicts)
             
             # Check relationship consistency
-            relationship_conflicts = self._validate_relationship_consistency()
+            relationship_conflicts = await self._validate_relationship_consistency()
             conflicts.extend(relationship_conflicts)
             
             return conflicts
             
-        except Exception as e:
+        except (KeyError, ValueError) as e:
+            raise RuntimeError(f"Data processing error in semantic consistency validation: {e}")
+        except RuntimeError as e:
             raise RuntimeError(f"Semantic consistency validation failed: {e}")
     
     async def _validate_branch_semantics(self, branch: str) -> List[SemanticConflict]:
@@ -181,7 +187,7 @@ class SemanticValidator:
                 self.client.branch = branch
             
             # Run standard semantic validations on this branch
-            branch_conflicts = self.validate_schema_constraints()
+            branch_conflicts = await self.validate_schema_constraints()
             
             # Mark conflicts as branch-specific
             for conflict in branch_conflicts:
@@ -200,7 +206,10 @@ class SemanticValidator:
         target_branch: str, 
         base_branch: str
     ) -> List[SemanticConflict]:
-        """Detect semantic conflicts specific to merge operation"""
+        """Detect semantic conflicts specific to merge operation
+        
+        DEPRECATED: Use TerminusNativeMergeConflictRule instead
+        """
         conflicts = []
         
         try:
@@ -219,7 +228,9 @@ class SemanticValidator:
             
             return conflicts
             
-        except Exception as e:
+        except (KeyError, ValueError) as e:
+            raise RuntimeError(f"Data processing error in merge conflict detection: {e}")
+        except RuntimeError as e:
             raise RuntimeError(f"Merge conflict detection failed: {e}")
     
     async def _get_common_entities(self, branch1: str, branch2: str) -> List[str]:
@@ -243,7 +254,7 @@ class SemanticValidator:
             
             return [e for e in entities if e][:50]  # Limit for performance
             
-        except Exception as e:
+        except (json.JSONDecodeError, RuntimeError) as e:
             return []
     
     async def _check_entity_property_conflicts(self, entity: str, branch1: str, branch2: str) -> List[SemanticConflict]:
@@ -277,13 +288,16 @@ class SemanticValidator:
                 )
                 conflicts.append(conflict)
             
-        except Exception as e:
+        except (json.JSONDecodeError, RuntimeError) as e:
             pass
             
         return conflicts
     
     async def _validate_required_properties(self) -> List[SemanticConflict]:
-        """Validate that required properties are present"""
+        """Validate that required properties are present
+        
+        DEPRECATED: Use TerminusNativeSchemaRule instead
+        """
         conflicts = []
         
         try:
@@ -306,7 +320,7 @@ class SemanticValidator:
                 type_requirements = [(binding.get('v:entity_type', {}).get('@value', ''),
                                    binding.get('v:required_prop', {}).get('@value', ''))
                                   for binding in type_result.get('bindings', [])]
-            except Exception as e:
+            except (json.JSONDecodeError, KeyError, ValueError) as e:
                 return []
             
             missing_props = {}
@@ -337,8 +351,8 @@ class SemanticValidator:
                             if entity not in missing_props:
                                 missing_props[entity] = []
                             missing_props[entity].append(required_prop)
-                except Exception as e:
-                    self.logger.debug(f"Error processing binding for required property check: {e}")
+                except (json.JSONDecodeError, RuntimeError) as e:
+                    logger.debug(f"Error processing binding for required property check: {e}")
                     continue
             
             # missing_props already populated above
@@ -357,11 +371,16 @@ class SemanticValidator:
             
             return conflicts
             
-        except Exception as e:
+        except (KeyError, ValueError) as e:
+            raise RuntimeError(f"Data processing error in required property validation: {e}")
+        except RuntimeError as e:
             raise RuntimeError(f"Required property validation failed: {e}")
     
     async def _validate_type_constraints(self) -> List[SemanticConflict]:
-        """Validate type constraints on properties"""
+        """Validate type constraints on properties
+        
+        DEPRECATED: Use TerminusNativeSchemaRule instead
+        """
         conflicts = []
         
         try:
@@ -384,7 +403,7 @@ class SemanticValidator:
                 property_ranges = [(binding.get('v:property', {}).get('@value', ''),
                                   binding.get('v:expected_type', {}).get('@value', ''))
                                  for binding in ranges_result.get('bindings', [])]
-            except Exception as e:
+            except (json.JSONDecodeError, KeyError, ValueError) as e:
                 return []
             
             type_violations = []
@@ -419,7 +438,7 @@ class SemanticValidator:
                                 'expected': expected_type,
                                 'actual': binding.get('v:actual_type', {}).get('@value', '')
                             })
-                except Exception:
+                except (json.JSONDecodeError, RuntimeError):
                     continue
             
             # type_violations already populated above
@@ -438,11 +457,16 @@ class SemanticValidator:
             
             return conflicts
             
-        except Exception as e:
+        except (KeyError, ValueError) as e:
+            raise RuntimeError(f"Data processing error in type constraint validation: {e}")
+        except RuntimeError as e:
             raise RuntimeError(f"Type constraint validation failed: {e}")
     
     async def _validate_cardinality_constraints(self) -> List[SemanticConflict]:
-        """Validate cardinality constraints on relationships"""
+        """Validate cardinality constraints on relationships
+        
+        DEPRECATED: Use TerminusNativeSchemaRule instead
+        """
         conflicts = []
         
         try:
@@ -468,7 +492,7 @@ class SemanticValidator:
                               binding.get('v:min_card', {}).get('@value', 0),
                               binding.get('v:max_card', {}).get('@value', -1))
                              for binding in card_result.get('bindings', [])]
-            except Exception as e:
+            except (json.JSONDecodeError, KeyError, ValueError) as e:
                 return []
             
             cardinality_violations = []
@@ -504,7 +528,7 @@ class SemanticValidator:
                         if entity and (violates_min or violates_max):
                             cardinality_violations.append(entity)
                             
-                except Exception:
+                except (json.JSONDecodeError, RuntimeError):
                     continue
             
             # cardinality_violations already populated above
@@ -522,11 +546,16 @@ class SemanticValidator:
             
             return conflicts
             
-        except Exception as e:
+        except (KeyError, ValueError) as e:
+            raise RuntimeError(f"Data processing error in cardinality validation: {e}")
+        except RuntimeError as e:
             raise RuntimeError(f"Cardinality validation failed: {e}")
     
     async def _validate_domain_range_constraints(self) -> List[SemanticConflict]:
-        """Validate domain and range constraints on properties"""
+        """Validate domain and range constraints on properties
+        
+        DEPRECATED: Use TerminusNativeSchemaRule instead
+        """
         conflicts = []
         
         try:
@@ -582,12 +611,12 @@ class SemanticValidator:
                         )
                         conflicts.append(conflict)
                         
-                except Exception:
+                except (json.JSONDecodeError, RuntimeError):
                     continue
             
             return conflicts
             
-        except Exception as e:
+        except (json.JSONDecodeError, RuntimeError) as e:
             return []
     
     async def _detect_type_mismatches(self) -> List[SemanticConflict]:
@@ -637,10 +666,10 @@ class SemanticValidator:
             
             return conflicts
             
-        except Exception as e:
+        except (json.JSONDecodeError, RuntimeError) as e:
             return []
     
-    def _validate_relationship_consistency(self) -> List[SemanticConflict]:
+    async def _validate_relationship_consistency(self) -> List[SemanticConflict]:
         """Validate consistency of relationships"""
         conflicts = []
         
@@ -684,12 +713,12 @@ class SemanticValidator:
                         )
                         conflicts.append(conflict)
                         
-                except Exception:
+                except (json.JSONDecodeError, RuntimeError):
                     continue
             
             return conflicts
             
-        except Exception as e:
+        except (json.JSONDecodeError, RuntimeError) as e:
             return []
     
     def _deduplicate_conflicts(self, conflicts: List[SemanticConflict]) -> List[SemanticConflict]:

@@ -1,15 +1,18 @@
 """
-LIFE-CRITICAL AUTHENTICATION MIDDLEWARE
+LIFE-CRITICAL AUTHENTICATION MIDDLEWARE - PARTIALLY DEPRECATED
 Where authentication failure could result in loss of life.
 
-FIXES ALL 5 CRITICAL VULNERABILITIES:
-1. Uses enterprise circuit breaker with proper thresholds
-2. Case-insensitive environment checking with FAIL-SECURE defaults
-3. Thread-safe token caching with proper locking
-4. Real MSA communication with actual audit service integration
-5. Robust exception handling with proper inheritance
+DEPRECATION NOTICE: While this middleware contains excellent security features,
+it should now be used ONLY through the UnifiedSecurityMiddleware to prevent
+authentication bypass vulnerabilities.
 
-This code is designed for systems where lives depend on proper authentication.
+SECURITY RISK: Using this middleware independently alongside other auth layers
+can create inconsistent authentication states and bypass opportunities.
+
+RECOMMENDATION: Use middleware.unified_security_middleware.UnifiedSecurityMiddleware
+which wraps this functionality in a unified security layer.
+
+The core validation logic remains valid and is used by the unified middleware.
 """
 import os
 import asyncio
@@ -25,10 +28,9 @@ import httpx
 from core.auth import get_permission_checker, UserContext
 from core.integrations.user_service_client import validate_jwt_token, UserServiceError
 from core.integrations.iam_service_client import get_iam_client, validate_token_with_iam
-from middleware.circuit_breaker import CircuitBreaker, CircuitConfig
+from shared.security import get_protection_facade  # 통합된 보호 레이어 사용
 from utils.retry_strategy import with_retry, RetryConfig, RetryStrategy
-from core.audit.audit_publisher import get_audit_publisher
-from models.audit_events import AuditAction
+from core.audit import get_audit_publisher, AuditAction
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -97,20 +99,18 @@ class LifeCriticalAuthMiddleware(BaseHTTPMiddleware):
         self.permission_checker = get_permission_checker()
         self.audit_publisher = get_audit_publisher()
         
-        # CIRCUIT BREAKER: Enterprise-grade with proper configuration
-        self.user_service_circuit = CircuitBreaker(CircuitConfig(
+        # CIRCUIT BREAKER: 통합된 보호 레이어 사용
+        protection_facade = get_protection_facade()
+        self.user_service_circuit = protection_facade.get_circuit_breaker(
             name="user_service_auth",
-            failure_threshold=3,          # Open after 3 failures (not 5)
-            success_threshold=5,          # Need 5 successes to close (not 3)
-            timeout_seconds=30,           # Shorter timeout for faster recovery
-            half_open_max_calls=1,        # Only 1 call in half-open (not 3)
-            error_rate_threshold=0.3,     # 30% error rate threshold
-            response_time_threshold=2.0,  # 2 second response time limit
-            fallback=self._auth_fallback
-        ))
+            failure_threshold=3,
+            success_threshold=5,
+            timeout_seconds=30,
+            half_open_max_calls=1
+        )
         
         # THREAD SAFETY: Proper locking for token cache
-        self._cache_lock = threading.RLock()  # Reentrant lock for safety
+        self._cache_lock = asyncio.Lock()  # Async lock to prevent event loop blocking
         self._token_cache: Dict[str, tuple[UserContext, datetime]] = {}
         self.cache_ttl = int(os.getenv("AUTH_CACHE_TTL", "300"))  # 5 minutes
         
@@ -277,7 +277,7 @@ class LifeCriticalAuthMiddleware(BaseHTTPMiddleware):
         """Validate JWT token with enterprise circuit breaker protection"""
         
         # THREAD SAFETY: Check cache with proper locking
-        user_context = self._get_cached_user(token)
+        user_context = await self._get_cached_user(token)
         if user_context:
             logger.debug(f"Cache hit for token {token[:20]}...")
             return user_context
@@ -290,7 +290,7 @@ class LifeCriticalAuthMiddleware(BaseHTTPMiddleware):
             )
             
             # Cache the result with thread safety
-            self._cache_user(token, user_context)
+            await self._cache_user(token, user_context)
             
             return user_context
             
@@ -325,9 +325,9 @@ class LifeCriticalAuthMiddleware(BaseHTTPMiddleware):
             "Authentication service unavailable and no secure fallback available"
         )
     
-    def _get_cached_user(self, token: str) -> Optional[UserContext]:
+    async def _get_cached_user(self, token: str) -> Optional[UserContext]:
         """Thread-safe cache retrieval"""
-        with self._cache_lock:
+        async with self._cache_lock:
             cache_key = f"token:{token[:20]}"
             
             if cache_key in self._token_cache:
@@ -341,9 +341,9 @@ class LifeCriticalAuthMiddleware(BaseHTTPMiddleware):
             
             return None
     
-    def _cache_user(self, token: str, user_context: UserContext):
+    async def _cache_user(self, token: str, user_context: UserContext):
         """Thread-safe cache storage"""
-        with self._cache_lock:
+        async with self._cache_lock:
             cache_key = f"token:{token[:20]}"
             expires_at = datetime.now(timezone.utc) + timedelta(seconds=self.cache_ttl)
             

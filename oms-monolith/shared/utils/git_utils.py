@@ -44,7 +44,7 @@ def get_current_commit_hash() -> str:
     except (subprocess.CalledProcessError, FileNotFoundError):
         # Git not available or not a git repository
         return "development"
-    except Exception:
+    except (OSError, RuntimeError):
         return "unknown"
 
 
@@ -58,5 +58,5 @@ def get_git_branch() -> str:
             check=True
         )
         return result.stdout.strip()
-    except:
+    except (subprocess.CalledProcessError, FileNotFoundError, OSError):
         return "unknown"

@@ -71,6 +71,7 @@ class RealtimePublisher:
         self.subscriptions: Dict[str, RealtimeSubscription] = {}
         self.user_subscriptions: Dict[str, Set[str]] = {}
         self._cleanup_task = None
+        self._connected = False
         self._start_cleanup_task()
     
     def _start_cleanup_task(self):
@@ -89,8 +90,13 @@ class RealtimePublisher:
                     for sub_id in stale_subscriptions:
                         await self.unsubscribe(sub_id)
                         
-                except Exception as e:
-                    logger.error(f"Cleanup task error: {e}")
+                except asyncio.CancelledError:
+                    logger.info("Cleanup task cancelled")
+                    break
+                except (KeyError, ValueError) as e:
+                    logger.error(f"Data error in cleanup task: {e}")
+                except RuntimeError as e:
+                    logger.error(f"Runtime error in cleanup task: {e}")
         
         if self._cleanup_task is None:
             self._cleanup_task = asyncio.create_task(cleanup_stale_subscriptions())
@@ -154,6 +160,23 @@ class RealtimePublisher:
 
 # 전역 실시간 발행자 인스턴스
 realtime_publisher = RealtimePublisher()
+
+# Add connect/disconnect methods for compatibility
+async def connect():
+    """Connect method for compatibility"""
+    realtime_publisher._connected = True
+    logger.info("Realtime publisher connected")
+
+async def disconnect():
+    """Disconnect method for compatibility"""
+    realtime_publisher._connected = False
+    if realtime_publisher._cleanup_task:
+        realtime_publisher._cleanup_task.cancel()
+    logger.info("Realtime publisher disconnected")
+
+# Attach methods to instance
+realtime_publisher.connect = connect
+realtime_publisher.disconnect = disconnect
 
 # Convenience functions
 async def publish_schema_change(schema_id: str, change_type: str, user_id: str = None):

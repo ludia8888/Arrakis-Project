@@ -36,7 +36,6 @@ class ServiceRoute(BaseModel):
     strip_prefix: bool = True
     timeout: int = Field(default=30, description="Timeout in seconds")
     retry_count: int = Field(default=3)
-    circuit_breaker_enabled: bool = True
 
 
 class AuthConfig(BaseModel):

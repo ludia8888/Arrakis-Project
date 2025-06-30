@@ -1,347 +1,255 @@
 """
-Event Publisher for OMS
-OMS에서 발생하는 이벤트를 Audit Service로 발행
+Secure Event Publisher with PII Protection - Core Security Wrapper Layer
+PII 보호 기능이 포함된 보안 이벤트 발행자
+
+ARCHITECTURE NOTE:
+This module is part of the Core layer, implementing a security wrapper pattern around
+the base event publishing infrastructure. It works in conjunction with shared/infrastructure/unified_nats_client.py:
+
+- Core (this module): Security layer for event publishing
+  - PII detection and handling (anonymization, encryption, removal)
+  - Event type filtering (allowed/blocked lists)
+  - Security audit logging
+  - Compliance with data protection regulations
+
+- Shared NATS client: Low-level messaging infrastructure
+  - NATS JetStream connectivity
+  - Message delivery guarantees
+  - Connection pooling and resilience
+
+This is an example of the Security Wrapper Pattern:
+- Core layer adds business-specific security rules
+- Shared layer provides generic messaging infrastructure
+- Clean separation of concerns between security logic and transport
 """
-import asyncio
-import json
-import httpx
 import logging
-from datetime import datetime, timezone
-from typing import Dict, Any, Optional
-from uuid import uuid4
-from dataclasses import dataclass, asdict
-from enum import Enum
+from typing import Optional, List, Dict, Any
+from dataclasses import dataclass
+
+from .cloudevents_enhanced import EnhancedCloudEvent
+from core.event_publisher import EventPublisher
+from ..security.pii_handler import PIIHandler, PIIHandlingStrategy, PIIMatch
+from shared.config import config as settings
 
 logger = logging.getLogger(__name__)
 
-class EventType(str, Enum):
-    """OMS 이벤트 타입"""
-    # 스키마 관련
-    SCHEMA_CREATED = "oms.schema.created"
-    SCHEMA_UPDATED = "oms.schema.updated"
-    SCHEMA_DELETED = "oms.schema.deleted"
-    SCHEMA_VALIDATED = "oms.schema.validated"
-    
-    # 브랜치 관련
-    BRANCH_CREATED = "oms.branch.created"
-    BRANCH_MERGED = "oms.branch.merged"
-    BRANCH_DELETED = "oms.branch.deleted"
-    
-    # 검증 관련
-    VALIDATION_PASSED = "oms.validation.passed"
-    VALIDATION_FAILED = "oms.validation.failed"
-    VALIDATION_RULE_CREATED = "oms.validation.rule.created"
-    
-    # 액션 관련
-    ACTION_EXECUTED = "oms.action.executed"
-    ACTION_FAILED = "oms.action.failed"
-    
-    # 시스템 관련
-    SYSTEM_STARTUP = "oms.system.startup"
-    SYSTEM_SHUTDOWN = "oms.system.shutdown"
 
 @dataclass
-class OMSEvent:
-    """OMS 이벤트 데이터 클래스"""
-    event_id: str
-    timestamp: str
-    service: str = "oms"
-    event_type: str = ""
-    user_id: Optional[str] = None
-    data: Dict[str, Any] = None
-    metadata: Dict[str, Any] = None
-    
-    def __post_init__(self):
-        if self.data is None:
-            self.data = {}
-        if self.metadata is None:
-            self.metadata = {}
+class SecurityConfig:
+    """보안 설정"""
+    pii_handling_strategy: PIIHandlingStrategy = PIIHandlingStrategy.ANONYMIZE
+    enable_pii_detection: bool = True
+    pii_detection_fields: List[str] = None
+    encryption_key: Optional[bytes] = None
+    audit_log_enabled: bool = True
+    allowed_event_types: Optional[List[str]] = None
+    blocked_event_types: Optional[List[str]] = None
 
-class EventPublisher:
-    """
-    OMS 이벤트 퍼블리셔
-    Audit Service로 이벤트를 발행하는 역할
-    """
+
+class SecureEventPublisher:
+    """보안 강화된 이벤트 발행자"""
     
-    def __init__(self, audit_service_url: str = "http://localhost:8002", timeout: int = 5):
-        self.audit_service_url = audit_service_url.rstrip('/')
-        self.timeout = timeout
-        self._client: Optional[httpx.AsyncClient] = None
-        
-    async def __aenter__(self):
-        self._client = httpx.AsyncClient(
-            timeout=self.timeout,
-            headers={"Content-Type": "application/json"}
-        )
-        return self
-        
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        if self._client:
-            await self._client.aclose()
-    
-    @property
-    def client(self) -> httpx.AsyncClient:
-        if self._client is None:
-            raise RuntimeError("EventPublisher must be used as async context manager")
-        return self._client
-    
-    def create_event(
-        self, 
-        event_type: EventType,
-        data: Dict[str, Any],
-        user_id: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None
-    ) -> OMSEvent:
+    def __init__(
+        self,
+        publisher: EventPublisher,
+        pii_handler: PIIHandler,
+        security_config: Optional[SecurityConfig] = None
+    ):
         """
-        OMS 이벤트 생성
-        
         Args:
-            event_type: 이벤트 타입
-            data: 이벤트 데이터
-            user_id: 사용자 ID
-            metadata: 추가 메타데이터
-            
-        Returns:
-            OMSEvent: 생성된 이벤트 객체
+            publisher: 기본 이벤트 발행자
+            pii_handler: PII 처리 핸들러
+            security_config: 보안 설정
         """
-        return OMSEvent(
-            event_id=str(uuid4()),
-            timestamp=datetime.now(timezone.utc).isoformat(),
-            event_type=event_type.value,
-            user_id=user_id,
-            data=data or {},
-            metadata=metadata or {}
-        )
+        self.publisher = publisher
+        self.pii_handler = pii_handler
+        self.config = security_config or SecurityConfig()
+        self._event_count = 0
+        self._pii_detected_count = 0
+        self._blocked_count = 0
     
-    async def publish_event(self, event: OMSEvent) -> bool:
+    async def publish_event(self, event: EnhancedCloudEvent) -> None:
         """
-        단일 이벤트 발행
+        보안 검사를 거친 이벤트 발행
         
         Args:
             event: 발행할 이벤트
             
-        Returns:
-            bool: 발행 성공 여부
+        Raises:
+            ValueError: PII 감지 시 (BLOCK 전략인 경우)
+            PermissionError: 허용되지 않은 이벤트 타입
         """
+        self._event_count += 1
+        
+        # 1. 이벤트 타입 검증
+        self._validate_event_type(event)
+        
+        # 2. PII 검사 및 처리
+        if self.config.enable_pii_detection:
+            event = await self._handle_pii(event)
+        
+        # 3. 감사 로그
+        if self.config.audit_log_enabled:
+            self._audit_log_event(event)
+        
+        # 4. 안전한 이벤트 발행
         try:
-            response = await self.client.post(
-                f"{self.audit_service_url}/api/v2/events",
-                json=asdict(event)
-            )
-            return response.status_code in [200, 201, 202]
-        except Exception as e:
-            logger.error(f"Failed to publish event {event.event_id}: {e}")
-            return False
+            await self.publisher.publish_event(event)
+            logger.info(f"Secure event published: {event.type} (id: {event.id})")
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Network error publishing secure event: {e}")
+            raise
+        except RuntimeError as e:
+            logger.error(f"Failed to publish secure event: {e}")
+            raise
     
-    async def publish_events(self, events: list[OMSEvent]) -> int:
+    async def publish_events_batch(self, events: List[EnhancedCloudEvent]) -> List[bool]:
         """
-        배치 이벤트 발행
+        배치 이벤트 보안 발행
         
         Args:
             events: 발행할 이벤트 목록
             
         Returns:
-            int: 성공적으로 발행된 이벤트 수
+            각 이벤트의 발행 성공 여부
         """
-        if not events:
-            return 0
-            
-        try:
-            response = await self.client.post(
-                f"{self.audit_service_url}/api/v2/events/batch",
-                json=[asdict(event) for event in events]
-            )
-            if response.status_code in [200, 201, 202]:
-                return len(events)
-        except Exception as e:
-            logger.error(f"Failed to publish batch events: {e}")
+        results = []
         
-        # 배치 실패시 개별 발행 시도
-        success_count = 0
         for event in events:
-            if await self.publish_event(event):
-                success_count += 1
-        return success_count
-    
-    async def publish_schema_event(
-        self,
-        event_type: EventType,
-        schema_id: str,
-        schema_data: Dict[str, Any],
-        user_id: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None
-    ) -> bool:
-        """
-        스키마 관련 이벤트 발행
+            try:
+                await self.publish_event(event)
+                results.append(True)
+            except (ConnectionError, TimeoutError) as e:
+                logger.error(f"Network error publishing event {event.id}: {e}")
+                results.append(False)
+            except RuntimeError as e:
+                logger.error(f"Failed to publish event {event.id}: {e}")
+                results.append(False)
         
-        Args:
-            event_type: 이벤트 타입
-            schema_id: 스키마 ID
-            schema_data: 스키마 데이터
-            user_id: 사용자 ID
-            metadata: 추가 메타데이터
+        return results
+    
+    def _validate_event_type(self, event: EnhancedCloudEvent):
+        """이벤트 타입 검증"""
+        event_type = event.type
+        
+        # 차단된 이벤트 타입 확인
+        if self.config.blocked_event_types and event_type in self.config.blocked_event_types:
+            self._blocked_count += 1
+            raise PermissionError(f"Event type '{event_type}' is blocked")
+        
+        # 허용된 이벤트 타입 확인
+        if self.config.allowed_event_types and event_type not in self.config.allowed_event_types:
+            self._blocked_count += 1
+            raise PermissionError(f"Event type '{event_type}' is not allowed")
+    
+    async def _handle_pii(self, event: EnhancedCloudEvent) -> EnhancedCloudEvent:
+        """PII 처리"""
+        # 이벤트 데이터에서 PII 검사
+        pii_matches = self.pii_handler.detect_pii(event.data)
+        
+        if pii_matches:
+            self._pii_detected_count += 1
+            logger.warning(
+                f"PII detected in event {event.id}: "
+                f"{len(pii_matches)} sensitive fields found"
+            )
             
-        Returns:
-            bool: 발행 성공 여부
-        """
-        event_data = {
-            "schema_id": schema_id,
-            "schema_data": schema_data
+            # PII 상세 정보 로깅 (개발 환경에서만)
+            if settings.DEBUG:
+                for match in pii_matches:
+                    logger.debug(
+                        f"  - {match.field_path}: {match.pii_type.value} "
+                        f"(confidence: {match.confidence})"
+                    )
+            
+            # 전략에 따른 처리
+            strategy = self.config.pii_handling_strategy
+            
+            if strategy == PIIHandlingStrategy.BLOCK:
+                raise ValueError(
+                    f"PII detected in event data. Fields: "
+                    f"{[m.field_path for m in pii_matches]}"
+                )
+            
+            # 데이터 처리
+            processed_data = self.pii_handler.handle_pii(event.data, strategy)
+            
+            # 새 이벤트 생성 (원본 변경 방지)
+            event_dict = event.to_dict()
+            event_dict['data'] = processed_data
+            
+            # PII 처리 메타데이터 추가
+            event_dict['ce_pii_processed'] = True
+            event_dict['ce_pii_strategy'] = strategy.value
+            event_dict['ce_pii_fields_count'] = len(pii_matches)
+            
+            return EnhancedCloudEvent(**event_dict)
+        
+        return event
+    
+    def _audit_log_event(self, event: EnhancedCloudEvent):
+        """감사 로그 기록"""
+        audit_entry = {
+            "timestamp": event.time,
+            "event_id": event.id,
+            "event_type": event.type,
+            "source": event.source,
+            "subject": event.subject,
+            "author": getattr(event, 'ce_author', 'unknown'),
+            "pii_processed": getattr(event, 'ce_pii_processed', False),
+            "correlation_id": getattr(event, 'ce_correlationid', None),
         }
         
-        event = self.create_event(
-            event_type=event_type,
-            data=event_data,
-            user_id=user_id,
-            metadata=metadata
-        )
-        
-        return await self.publish_event(event)
+        # 실제 구현에서는 전용 감사 로그 시스템으로 전송
+        logger.info(f"AUDIT: {audit_entry}")
     
-    async def publish_branch_event(
-        self,
-        event_type: EventType,
-        branch_name: str,
-        branch_data: Dict[str, Any],
-        user_id: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None
-    ) -> bool:
-        """
-        브랜치 관련 이벤트 발행
-        
-        Args:
-            event_type: 이벤트 타입
-            branch_name: 브랜치 이름
-            branch_data: 브랜치 데이터
-            user_id: 사용자 ID
-            metadata: 추가 메타데이터
-            
-        Returns:
-            bool: 발행 성공 여부
-        """
-        event_data = {
-            "branch_name": branch_name,
-            "branch_data": branch_data
+    def get_statistics(self) -> Dict[str, Any]:
+        """보안 통계 반환"""
+        return {
+            "total_events": self._event_count,
+            "pii_detected_events": self._pii_detected_count,
+            "blocked_events": self._blocked_count,
+            "pii_detection_rate": (
+                self._pii_detected_count / self._event_count 
+                if self._event_count > 0 else 0
+            ),
+            "block_rate": (
+                self._blocked_count / self._event_count 
+                if self._event_count > 0 else 0
+            ),
         }
-        
-        event = self.create_event(
-            event_type=event_type,
-            data=event_data,
-            user_id=user_id,
-            metadata=metadata
-        )
-        
-        return await self.publish_event(event)
+
+
+# 환경별 보안 발행자 생성
+def create_secure_publisher(
+    publisher: EventPublisher,
+    environment: str = "development"
+) -> SecureEventPublisher:
+    """환경별 보안 발행자 생성"""
     
-    async def publish_validation_event(
-        self,
-        event_type: EventType,
-        validation_result: Dict[str, Any],
-        user_id: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None
-    ) -> bool:
-        """
-        검증 관련 이벤트 발행
-        
-        Args:
-            event_type: 이벤트 타입
-            validation_result: 검증 결과
-            user_id: 사용자 ID
-            metadata: 추가 메타데이터
-            
-        Returns:
-            bool: 발행 성공 여부
-        """
-        event_data = {
-            "validation_result": validation_result
-        }
-        
-        event = self.create_event(
-            event_type=event_type,
-            data=event_data,
-            user_id=user_id,
-            metadata=metadata
-        )
-        
-        return await self.publish_event(event)
+    # PII 핸들러 생성
+    from ..security.pii_handler import create_pii_handler
+    pii_handler = create_pii_handler(environment)
     
-    async def publish_action_event(
-        self,
-        event_type: EventType,
-        action_name: str,
-        action_result: Dict[str, Any],
-        user_id: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None
-    ) -> bool:
-        """
-        액션 관련 이벤트 발행
-        
-        Args:
-            event_type: 이벤트 타입
-            action_name: 액션 이름
-            action_result: 액션 결과
-            user_id: 사용자 ID
-            metadata: 추가 메타데이터
-            
-        Returns:
-            bool: 발행 성공 여부
-        """
-        event_data = {
-            "action_name": action_name,
-            "action_result": action_result
-        }
-        
-        event = self.create_event(
-            event_type=event_type,
-            data=event_data,
-            user_id=user_id,
-            metadata=metadata
+    # 환경별 보안 설정
+    if environment == "production":
+        config = SecurityConfig(
+            pii_handling_strategy=PIIHandlingStrategy.ENCRYPT,
+            enable_pii_detection=True,
+            audit_log_enabled=True,
+            encryption_key=settings.PII_ENCRYPTION_KEY.encode() if hasattr(settings, 'PII_ENCRYPTION_KEY') else None
         )
-        
-        return await self.publish_event(event)
-
-# 싱글톤 퍼블리셔 인스턴스
-_event_publisher: Optional[EventPublisher] = None
-
-def get_event_publisher() -> EventPublisher:
-    """Event Publisher 인스턴스 반환"""
-    global _event_publisher
-    if _event_publisher is None:
-        _event_publisher = EventPublisher()
-    return _event_publisher
-
-# 편의 함수들
-async def publish_schema_created(schema_id: str, schema_data: Dict[str, Any], user_id: Optional[str] = None):
-    """스키마 생성 이벤트 발행 편의 함수"""
-    async with get_event_publisher() as publisher:
-        await publisher.publish_schema_event(
-            EventType.SCHEMA_CREATED, schema_id, schema_data, user_id
+    elif environment == "staging":
+        config = SecurityConfig(
+            pii_handling_strategy=PIIHandlingStrategy.ANONYMIZE,
+            enable_pii_detection=True,
+            audit_log_enabled=True
         )
-
-async def publish_schema_updated(schema_id: str, schema_data: Dict[str, Any], user_id: Optional[str] = None):
-    """스키마 수정 이벤트 발행 편의 함수"""
-    async with get_event_publisher() as publisher:
-        await publisher.publish_schema_event(
-            EventType.SCHEMA_UPDATED, schema_id, schema_data, user_id
+    else:  # development
+        config = SecurityConfig(
+            pii_handling_strategy=PIIHandlingStrategy.LOG,
+            enable_pii_detection=True,
+            audit_log_enabled=False
         )
-
-async def publish_branch_created(branch_name: str, branch_data: Dict[str, Any], user_id: Optional[str] = None):
-    """브랜치 생성 이벤트 발행 편의 함수"""
-    async with get_event_publisher() as publisher:
-        await publisher.publish_branch_event(
-            EventType.BRANCH_CREATED, branch_name, branch_data, user_id
-        )
-
-async def publish_validation_failed(validation_result: Dict[str, Any], user_id: Optional[str] = None):
-    """검증 실패 이벤트 발행 편의 함수"""
-    async with get_event_publisher() as publisher:
-        await publisher.publish_validation_event(
-            EventType.VALIDATION_FAILED, validation_result, user_id
-        )
-
-async def publish_action_executed(action_name: str, action_result: Dict[str, Any], user_id: Optional[str] = None):
-    """액션 실행 이벤트 발행 편의 함수"""
-    async with get_event_publisher() as publisher:
-        await publisher.publish_action_event(
-            EventType.ACTION_EXECUTED, action_name, action_result, user_id
-        )
+    
+    return SecureEventPublisher(publisher, pii_handler, config)

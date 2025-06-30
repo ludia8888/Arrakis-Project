@@ -183,8 +183,10 @@ class ValidationCache:
                     expiry = datetime.now(timezone.utc) + timedelta(seconds=self.ttl_seconds)
                     self._local_cache[key] = (expiry, result)
                     return result
-            except Exception as e:
-                logger.warning(f"Redis cache get error: {e}")
+            except (ConnectionError, TimeoutError) as e:
+                logger.warning(f"Redis cache connection error: {e}")
+            except json.JSONDecodeError as e:
+                logger.warning(f"Redis cache decode error: {e}")
         
         self._cache_stats['misses'] += 1
         return None
@@ -205,8 +207,10 @@ class ValidationCache:
                     self.ttl_seconds,
                     result.json()
                 )
-            except Exception as e:
-                logger.warning(f"Redis cache set error: {e}")
+            except (ConnectionError, TimeoutError) as e:
+                logger.warning(f"Redis cache connection error: {e}")
+            except ValueError as e:
+                logger.warning(f"Redis cache serialization error: {e}")
     
     def get_stats(self) -> Dict[str, int]:
         """Get cache statistics"""
@@ -399,8 +403,23 @@ class EnterpriseValidationService:
                 
                 return result
                 
-            except Exception as e:
-                logger.error(f"Validation error for {entity_type}: {e}")
+            except ValueError as e:
+                logger.error(f"Validation value error for {entity_type}: {e}")
+                return ValidationResult(
+                    request_id=request_id,
+                    is_valid=False,
+                    validation_level=validation_level,
+                    errors=[ValidationError(
+                        field="system",
+                        message=f"Validation error: {str(e)}",
+                        category=ValidationCategory.SYNTAX,
+                        severity="critical",
+                        code="VALIDATION_ERROR"
+                    )],
+                    performance_impact_ms=(time.time() - start_time) * 1000
+                )
+            except RuntimeError as e:
+                logger.error(f"Validation runtime error for {entity_type}: {e}")
                 return ValidationResult(
                     request_id=request_id,
                     is_valid=False,
@@ -490,11 +509,20 @@ class EnterpriseValidationService:
                         "context": context or {}
                     })
                     result.errors.extend(errors)
-                except Exception as e:
-                    logger.error(f"Rule {rule.rule_id} failed: {e}")
+                except ValueError as e:
+                    logger.error(f"Rule {rule.rule_id} validation error: {e}")
                     result.warnings.append(ValidationError(
                         field="system",
-                        message=f"Validation rule {rule.rule_id} failed",
+                        message=f"Validation rule {rule.rule_id} failed: {str(e)}",
+                        category=ValidationCategory.SYNTAX,
+                        severity="low",
+                        code="RULE_VALIDATION_ERROR"
+                    ))
+                except RuntimeError as e:
+                    logger.error(f"Rule {rule.rule_id} runtime error: {e}")
+                    result.warnings.append(ValidationError(
+                        field="system",
+                        message=f"Validation rule {rule.rule_id} execution failed",
                         category=ValidationCategory.SYNTAX,
                         severity="low",
                         code="RULE_EXECUTION_ERROR"
@@ -520,8 +548,10 @@ class EnterpriseValidationService:
                     "context": context or {}
                 })
                 result.errors.extend(errors)
-            except Exception as e:
-                logger.error(f"Business rule {rule.rule_id} failed: {e}")
+            except ValueError as e:
+                logger.error(f"Business rule {rule.rule_id} validation error: {e}")
+            except RuntimeError as e:
+                logger.error(f"Business rule {rule.rule_id} runtime error: {e}")
     
     async def _validate_security(
         self,
@@ -614,8 +644,10 @@ class EnterpriseValidationService:
                         "cache_used": result.cache_used
                     }
                 )
-            except Exception as e:
-                logger.warning(f"Failed to publish validation event: {e}")
+            except (ConnectionError, TimeoutError) as e:
+                logger.warning(f"Failed to publish validation event - connection error: {e}")
+            except ValueError as e:
+                logger.warning(f"Failed to publish validation event - data error: {e}")
     
     def register_custom_rule(self, rule: ValidationRule, entity_types: Optional[List[str]] = None):
         """Register a custom validation rule"""

@@ -86,7 +86,11 @@ class DistributedLockManager(BranchLockManager):
                             {"key": lock_key}
                         )
                         acquired = True
-                    except Exception as e:
+                    except (ConnectionError, TimeoutError) as e:
+                        raise LockConflictError(
+                            f"Could not acquire exclusive lock for {resource_id}: {e}"
+                        )
+                    except RuntimeError as e:
                         raise LockConflictError(
                             f"Could not acquire exclusive lock for {resource_id}: {e}"
                         )

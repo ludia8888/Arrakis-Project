@@ -73,7 +73,7 @@ class DistributedLockMigration:
                     active_locks = [l for l in state_info.active_locks if l.is_active]
                     stats["active_locks_migrated"] += len(active_locks)
                     
-                except Exception as e:
+                except (ConnectionError, RuntimeError, ValueError) as e:
                     logger.error(f"Failed to migrate branch {branch_name}: {e}")
                     stats["errors"] += 1
             
@@ -185,13 +185,13 @@ class DistributedLockMigration:
                         async with manager.distributed_lock(test_resource, timeout_ms=100):
                             logger.error("ERROR: Was able to acquire same lock twice!")
                             return False
-                    except Exception:
+                    except asyncio.TimeoutError:
                         logger.info("Good: Second lock acquisition correctly failed")
                 
                 logger.info("Distributed lock test passed")
                 return True
                 
-            except Exception as e:
+            except (ConnectionError, RuntimeError) as e:
                 logger.error(f"Distributed lock test failed: {e}")
                 return False
     
@@ -236,7 +236,7 @@ async def perform_migration(
         # Test distributed locks
         test_passed = await migration.test_distributed_lock()
         if not test_passed:
-            raise Exception("Distributed lock test failed")
+            raise RuntimeError("Distributed lock test failed")
         
         # Create new distributed manager
         async with migration.async_session() as session:

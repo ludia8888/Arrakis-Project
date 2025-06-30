@@ -353,3 +353,287 @@ TerminusDB의 “명시적인 문서 기반 스키마”란, 현실 세계의 �
 	•	Git과 유사한 방식으로 버전 관리도 가능하게 됩니다.
 
 ⸻
+TerminusDB 개요
+
+TerminusDB는 오픈소스 문서형 그래프 데이터베이스로, JSON 문서를 그래프 형태로 저장·관리하며 Git 같은 버전 관리 기능을 갖춘 분산형 DB 시스템입니다 ￼ ￼. 내부적으로는 레이블이 붙은 방향성 그래프로 저장되며, JSON-LD를 기반으로 객체(클래스)와 관계(property)를 정의합니다 ￼ ￼. TerminusDB는 RDF와 유사한 Triple 구조를 사용하되 닫힌 세계(closed-world) 접근과 엄격한 스키마를 지원합니다 ￼. 각 객체와 문서는 고유한 IRI(terminusdb://…)로 식별되며, 스키마와 데이터를 연결합니다 ￼ ￼.
+	•	문서 & 그래프 통합: TerminusDB는 문서 저장소이자 지식 그래프 DB입니다. 스키마에 정의된 클래스에 따라 그래프의 일부를 JSON 문서로 추출/수정/삭제할 수 있습니다 ￼.
+	•	Git 라이크 협업 모델: 모든 변경사항은 커밋(commit) 단위로 관리되며, 커밋 간 차이는 패치(diff)로 표현됩니다. 브랜치, 머지, 푸시/풀 등 Git 유사 워크플로우를 지원합니다 ￼ ￼.
+
+설치 및 초기 설정
+
+TerminusDB 서버는 여러 방법으로 로컬에 설치할 수 있습니다. 공식 문서에 따르면 소스 코드 설치 또는 도커 컨테이너(TerminusDB Bootstrap) 방식이 권장됩니다 ￼. 예를 들어 도커 이미지를 받아 실행하면(기본 포트 6363) 즉시 TerminusDB 서버가 시작됩니다.
+	•	Docker: TerminusDB 공식 [TerminusDB Bootstrap] 이미지 사용. 예) docker run -p 6363:6363 terminusdb/terminusdb (최신 버전 확인 필요).
+	•	Snap (Linux): 우분투 등에서는 sudo snap install terminusdb로 간편 설치 가능합니다 ￼. (Snap 버전은 개발용이며 도커 이미지는 프로덕션 추천)
+	•	소스에서 빌드: Rust로 개발된 소스를 GitHub에서 내려받아 빌드할 수도 있습니다 ￼.
+	•	Python 클라이언트: 서버 설치 후, Python 애플리케이션에서 사용하려면 terminusdb-client 패키지를 설치합니다. 예를 들어 python3 -m pip install terminusdb-client ￼. 파이썬 클라이언트는 TerminusDB 서버와 통신하기 위한 API 래퍼를 제공합니다.
+
+설치 후 terminusdb-cli(이전 명령어) 또는 tdbpy 명령을 통해 데이터베이스 생성·관리할 수 있으며, Python에서는 terminusdb_client.Client 객체로 서버에 연결합니다 ￼.
+
+스키마 정의 (JSON-LD 기반)
+
+TerminusDB 스키마는 JSON-LD 형식을 사용하여 클래스(Class)와 속성(Property)을 정의합니다 ￼. 기본적인 클래스 정의 예시는 다음과 같습니다:
+
+{ "@type": "Class", "@id": "Person", "name": "xsd:string" }
+
+위 예제에서 @type: Class와 @id: Person은 클래스 정의를 의미하며, name: xsd:string 은 문자열 속성(name)을 정의합니다 ￼. 이 외에 다음과 같은 키워드로 스키마를 확장합니다:
+	•	@context: 스키마 전체 설정(기본 prefix, @base 등)을 나타냅니다. 예:
+
+{ "@type": "@context", "@base": "terminusdb:///data/", "@schema": "terminusdb:///schema#" }
+
+
+	•	@inherits: 상속. 다른 클래스의 속성과 @subdocument 설정을 상속합니다. 예를 들어:
+
+{ "@type": "Class", "@id": "Employee", "@inherits": "Person", "employee_id": "xsd:string" }
+
+이렇게 정의된 Employee는 Person의 속성을 물려받습니다 ￼.
+
+	•	@subdocument: 포함문서(subdocument) 지정. 이 클래스는 소유된 문서 내부에 중첩되어 관리됩니다 (직접 업데이트 불가).
+	•	Enum (열거형): @type: "Enum"을 사용하여 제한된 값 집합을 가진 클래스를 정의합니다.
+
+아래는 JSON-LD 스키마 예시입니다:
+
+{ "@type": "@context", "@schema": "terminusdb://Roster/schema#", "@base": "terminusdb://Roster/document" }
+{ "@type": "Class", "@id": "Player", "name": "xsd:string", "position": "xsd:string" }
+{ "@type": "Class", "@id": "Roster", "player": { "@type": "Set", "@class": "Player" } }
+
+이 예시에서 Player 클래스는 선수 이름과 포지션을 문자열로, Roster 클래스는 여러 Player 객체를 가질 수 있도록 Set 타입으로 정의합니다 ￼.
+
+문서 생성 및 저장 방식
+
+스키마에 정의된 클래스에 따라 데이터를 저장하면, TerminusDB는 내부 그래프의 일부를 문서(Document) 로 관리합니다 ￼. 즉, 클래스 인스턴스는 JSON 객체 형태로 삽입되며, 이 객체가 그래프 상의 일부분(segment)이 됩니다. 예를 들어 위 스키마에서 축구팀과 선수 데이터를 저장할 때는 다음과 같이 JSON 문서를 생성할 수 있습니다:
+
+{ "@type": "Roster", "@id": "Roster/Wolves", 
+  "player": [ "Player/George", "Player/Karen" ] }
+{ "@type": "Player", "@id": "Player/George", "name": "George", "position": "Centre Back" }
+{ "@type": "Player", "@id": "Player/Karen", "name": "Karen", "position": "Centre Forward" }
+
+위 예제는 Roster/Wolves 문서가 George와 Karen 두 Player 문서를 참조함을 보여줍니다 ￼. @id는 문서의 고유 주소(IRI)를 나타내며, @base와 결합하여 전체 URI가 결정됩니다 ￼. 한 문서를 삭제하면 그 문서에 속한 하위 그래프 전체가 삭제됩니다.
+
+문서는 CLI나 Python API를 통해 삽입, 조회, 삭제가 가능합니다. 예를 들어 Python 클라이언트에서는 client.insert_document()로 JSON 객체 리스트를 전달하여 삽입하고, client.get_document(<id>) 혹은 client.get_all_documents()로 조회할 수 있습니다 ￼.
+
+버전 관리 기능 (브랜치, 커밋, 머지)
+
+TerminusDB는 모든 변경사항을 커밋 단위로 저장해 Git과 유사한 버전 관리가 가능합니다 ￼. 버전을 변경하거나 분기(브랜치) 생성, 병합(머지)도 지원합니다. 주요 기능은 다음과 같습니다:
+	•	커밋(Log): tdbpy commit -m "메시지" 또는 Python 클라이언트에서 변경 후 Schema.commit(client) 등을 통해 커밋을 수행합니다. 각 커밋에는 고유 ID(예: c3b0nqwl...)와 작성자, 메시지가 기록됩니다 ￼.
+	•	브랜치: 기본적으로 main 브랜치에서 작업하며, client.create_branch("새브랜치")로 새로운 브랜치를 생성할 수 있습니다 ￼. 예를 들어:
+
+client.create_branch("mybranch")
+client.branch("mybranch")
+
+이렇게 생성한 브랜치에서 작업한 변경사항은 자동으로 main에 반영되지 않습니다. 필요 시 머지(merge) 로 합칩니다.
+
+	•	머지: 두 브랜치의 변경사항을 합칠 때 사용하며, 일반적인 Git 머지 과정과 유사합니다. 충돌(conflict)이 있을 경우 수동으로 해결할 수 있습니다. (Python API에서 client.merge_branch(source, target, msg) 형태로 호출)
+	•	타임 트래블: 특정 커밋 시점으로 데이터베이스 상태를 되돌리거나, 과거 이력을 조회할 수 있습니다. 이를 통해 데이터 변경 전후를 비교(patch/diff)할 수 있습니다.
+
+예를 들어 CLI로 커밋 로그를 보면 다음과 같은 형식이 출력됩니다 ￼:
+
+commit c3b0nqwl87z92suvpobqtpzr552vzqs
+Author: admin
+Date: 2021-10-01 ...
+    update phonebook schema
+
+이와 같이 브랜치/머지/커밋 기능을 통해 협업 시 변경 내역 추적과 이력 관리가 용이합니다.
+
+WOQL 사용법 요약 및 예시
+
+TerminusDB는 WOQL(Web Object Query Language) 이라는 JSON 기반 쿼리 언어를 제공합니다. WOQL은 삼중패턴(triple patterns), 논리 연산(AND, OR), 그룹화, 문자열 필터링 등 다양한 쿼리 기능을 지원하며, SPARQL과 유사한 Datalog 스타일로 사용됩니다. Python에서는 WOQLQuery 클래스로 쿼리를 구성합니다. 간단한 예를 들어보면, 데이터베이스에 저장된 모든 사람(Person)의 이름(name)을 조회하는 쿼리는 다음과 같습니다 ￼:
+
+from terminusdb_client import WOQLQuery, WOQLClient
+query = WOQLQuery().woql_and(
+    WOQLQuery().triple('v:PersonId', 'rdf:type', '@schema:Person'),
+    WOQLQuery().triple('v:PersonId', '@schema:name', 'v:Name')
+)
+result = client.query(query)
+
+위 쿼리는 변수 v:PersonId로 Person 클래스를 찾고, 각 Person의 name 속성(@schema:name)을 가져옵니다 ￼. client.query(query)로 실행하면 JSON 결과를 얻습니다. 이 외에도 WOQLQuery는 합계(sum), 문자열 매칭, 경로 쿼리 등 다양한 연산자를 지원합니다. WOQL 문법과 예제는 공식 문서의 [WOQL 튜토리얼]을 참조하세요.
+
+Python SDK 전체 기능 흐름 예시
+
+Python 환경에서 TerminusDB를 사용하려면 terminusdb-client를 활용합니다. 기본 흐름은 다음과 같습니다:
+	1.	클라이언트 초기화 및 연결:
+
+from terminusdb_client import Client
+client = Client("http://127.0.0.1:6363/")
+client.connect(key="root", team="admin", user="admin", db="MyDatabase")
+
+위 코드로 로컬 TerminusDB 서버의 MyDatabase 데이터베이스에 연결합니다.
+
+	2.	데이터베이스 생성:
+
+client.create_database("MyDatabase")
+
+데이터베이스가 없으면 위와 같이 생성할 수 있습니다.
+
+	3.	스키마 정의 및 업로드:
+
+from terminusdb_client.schema import Schema, DocumentTemplate, RandomKey
+my_schema = Schema()
+class Pet(DocumentTemplate):
+    _schema = my_schema
+    name: str
+    species: str
+    age: int
+    weight: float
+my_schema.commit(client)  # 스키마를 TerminusDB에 커밋
+
+위 예제에서 DocumentTemplate를 이용해 Python으로 클래스를 정의한 후 my_schema.commit(client)로 스키마를 서버에 업로드(커밋)합니다 ￼.
+
+	4.	문서 삽입:
+
+my_dog = Pet(name="Honda", species="Huskey", age=3, weight=21.1)
+my_cat = Pet(name="Tiger", species="Bengal cat", age=5, weight=4.5)
+client.insert_document([my_dog, my_cat])  # 문서 리스트 삽입
+
+인스턴스를 만들고 insert_document로 서버에 저장합니다 ￼.
+
+	5.	브랜치 생성 및 머지:
+
+client.create_branch("feature")
+client.branch("feature")
+# feature 브랜치에서 변경 수행...
+# ...
+client.branch("main")
+client.merge_branch("feature", "main", "Merge feature work")
+
+위와 같이 feature 브랜치를 생성한 뒤 작업하고, main으로 돌아와 merge_branch로 병합합니다. (머지 메서드 사용법은 문서 참조) ￼.
+
+	6.	데이터 질의 및 업데이트:
+	•	저장된 모든 문서를 가져오려면:
+
+docs = client.get_all_documents()
+for doc in docs:
+    print(doc)
+
+또는 특정 문서 ID 조회: client.get_document("Person/John"). 위 예시에서 get_all_documents()를 사용하면 JSON 리스트가 반환됩니다 ￼.
+
+	•	WOQL 쿼리로 복잡한 검색도 가능합니다 (앞서 WOQL 예제 참조).
+	•	문서 업데이트는 객체를 수정한 뒤 다시 insert_document하면 됩니다.
+
+이처럼 Python SDK를 통해 TerminusDB의 거의 모든 기능을 코드로 제어할 수 있습니다 ￼ ￼.
+
+온톨로지 관리에 적합한 기능
+
+TerminusDB는 온톨로지 모델링에 유용한 다양한 기능을 제공합니다.
+	•	클래스 상속(@inherits): 스키마에서 @inherits를 사용하면 부모 클래스의 속성을 자식 클래스에 물려줄 수 있습니다 ￼. 이를 통해 개념 계층 구조(class hierarchy)를 표현할 수 있습니다. 예를 들어 Dog 클래스가 Animal을 상속하면 Animal의 속성을 자동으로 갖게 됩니다. 다중 상속도 지원하되 속성이 겹칠 경우 동일 타입이어야 합니다 ￼.
+	•	계층 구조: 클래스 간 상속 외에도 @unfoldable, @subdocument 같은 옵션으로 문서의 포함 관계를 관리할 수 있어 복잡한 데이터 구조를 온톨로지적으로 표현 가능합니다.
+	•	제약조건(Constraints): @key를 통해 클래스의 고유 키 전략(ValueHash, Random, Lexical 등)을 설정할 수 있으며, 속성 타입(xsd형, Optional, Set, Array 등)을 지정해 유효한 값만 저장하도록 할 수 있습니다. 예를 들어 @key: Random은 자동 생성된 랜덤 ID 키를 의미합니다 ￼.
+	•	URI 기반 설계: TerminusDB는 국제 표준 IRI를 사용해 모든 클래스·속성·문서를 식별합니다. 스키마와 데이터 영역의 기본 URI(@schema, @base)를 정해두면, 각 객체는 고유한 절대주소를 갖게 되어 온톨로지에서 충돌 없이 참조가 가능합니다 ￼ ￼.
+
+이러한 기능들 덕분에 TerminusDB는 계층적이며 엄격히 정의된 온톨로지 모델을 구현하기에 적합합니다.
+
+Git 스타일 협업 기능
+
+TerminusDB는 데이터베이스도 코드처럼 협업할 수 있도록 설계되었습니다. 주요 협업 기능은 다음과 같습니다:
+	•	변경 추적: 각 커밋과 브랜치는 변경 이력을 자동으로 기록합니다. 커밋 간 diff를 생성해 변경사항을 시각화할 수 있습니다 ￼.
+	•	코드 리뷰(변경 요청): TerminusCMS(클라우드) 환경에서는 Pull Request와 유사한 방식으로 브랜치 변경사항을 검토하고 승인할 수 있습니다.
+	•	충돌 해결: 여러 사용자가 같은 데이터에 동시에 변경을 시도하면 머지 시점에 충돌이 발생할 수 있습니다. TerminusDB는 충돌 발생 시 병합 과정 중 이에 대한 정보를 제공하며, 사용자는 충돌한 문서를 수동으로 조정한 후 커밋함으로써 해결할 수 있습니다. Git과 유사하게 충돌 상태를 복구할 수 있습니다.
+	•	분산 작업: push, pull, clone 기능을 통해 여러 서버 간 데이터베이스 복제 및 동기화가 가능합니다 ￼. 이는 원격 저정소나 TerminusCMS 팀 프로젝트에서 유용합니다.
+
+TerminusDB가 제공하는 Git-포-데이터 모델을 사용하면, 데이터 변경도 소프트웨어 개발처럼 버전 관리 및 협업 워크플로우로 관리할 수 있습니다 ￼.
+
+사용자 및 권한 관리
+
+TerminusDB는 세분화된 권한 제어 기능을 갖추고 있어 다중 사용자 환경에서도 데이터 보안이 가능합니다. 주요 기능은 다음과 같습니다:
+	•	사용자(User): 서버에 새 사용자를 추가할 수 있습니다. Python 클라이언트에서 client.add_user("username", "password")처럼 호출하면 사용자 계정이 생성됩니다 ￼.
+	•	역할(Role): 역할은 여러 권한(actions)을 묶은 것입니다. 각 역할은 가능 동작(예: branch, commit_write_access, schema_read_access 등)의 리스트를 가집니다. 예를 들어:
+
+role = {
+    "name": "Analyst",
+    "action": ["instance_read_access", "instance_write_access"]
+}
+client.add_role(role)
+
+위 예시는 Analyst라는 역할을 생성하고 읽기/쓰기 권한을 부여하는 예입니다 ￼.
+
+	•	역할 변경: client.change_role(role_dict)로 기존 역할의 권한을 수정할 수 있습니다 ￼.
+	•	사용자 권한 부여: 사용자는 팀과 데이터베이스 단위로 역할이 할당됩니다. 예를 들어 사용자를 생성한 뒤 특정 데이터베이스에서 권한 부여 작업을 통해 역할을 지정할 수 있습니다.
+	•	기타: 클라이언트에서는 change_user_password, change_capabilities 등으로 세부 권한을 관리할 수 있습니다 ￼.
+	•	API 토큰: TerminusCMS를 사용할 경우 API 키 또는 JWT 토큰을 통한 인증도 가능합니다.
+
+이런 사용자/역할 기반 권한 관리를 통해 TerminusDB는 팀원별로 읽기·쓰기 권한을 세밀히 설정할 수 있습니다 ￼ ￼.
+
+참고: TerminusDB 공식 문서와 튜토리얼에는 위 기능들에 대한 자세한 사용 예제 및 설명이 있으며, 워크플로우에 맞는 다양한 코드 예시를 제공합니다. 유지보수와 협업을 고려한 설계를 위해 위에 소개된 각 기능과 관련된 공식 문서를 참고하시기 바랍니다.
+
+출처: TerminusDB 공식 문서 및 튜토리얼 ￼ ￼ ￼ ￼ ￼ ￼ ￼ ￼ ￼ ￼ ￼ (모든 코드 예시는 관련 문서를 참고).
+
+결론부터 정리하면, TerminusDB를 Foundry-style OMS의 핵심 백엔드로 활용하는 접근은 매우 전략적으로 옳으며, 다음과 같은 **요구사항 충족 여부에 따라 “어느 정도” 수준이 아니라, 거의 “핵심 기능 전반을 충족하고 있다”**고 평가할 수 있습니다. 단, 전제는 “초대형 트랜잭션 처리, 초실시간 OLTP”는 스코프 밖이라는 점을 명확히 해야 합니다.
+
+⸻
+
+✅ Foundry-style OMS 요구사항 충족도 평가
+
+항목	TerminusDB 충족도	비고
+1. Git-like 브랜치/커밋/머지 모델	✅ 완전 충족	브랜치, 머지, Rebase, diff, squash까지 가능
+2. 복잡한 온톨로지 구조 정의 & 다중 계층 속성	✅ 완전 충족	JSON-LD 기반 계층적 클래스 + 상속 + subdocument 지원
+3. 구조적/의미적 충돌 검출	⭕ 부분 충족	구조적 충돌 검출은 내장, 의미적 룰 기반 충돌은 별도 구현 필요
+4. 스키마 이력 관리 및 마이그레이션	✅ 완전 충족	커밋/브랜치로 스키마 변경 추적, revert 및 fork 가능
+5. 객체 인덱싱 및 검색 API 제공	✅ 기본 제공	Document API + GraphQL 지원, 고급 인덱스는 제한적
+6. 객체간 그래프 탐색 및 경로 질의	✅ 완전 충족	WOQL + Datalog 기반 경로 질의 내장
+7. 시점별 상태 조회 및 rollback (Time-travel)	✅ 완전 충족	커밋 ID 기준 시점 조회, 상태 롤백 가능
+8. 다중 사용자 협업 및 변경 요청(Temp Branch)	✅ 완전 충족	Change Request 내장 (TerminusCMS), 임시 브랜치 UI 지원
+9. 객체 이력, diff, 감사 추적	✅ 완전 충족	모든 변경 diff 추적 가능, 커밋 기반 이력 제공
+10. 실시간 Webhook 이벤트 트리거	❌ 미지원 (외부 구현 필요)	폴링 또는 직접 작성 필요. 공식 로드맵에는 있음
+11. 대용량/고동시성 쓰기 처리	❌ 미흡	단일 리더 직렬화 처리, 병렬 쓰기 처리 한계 있음
+12. 확장성 (Scale-out)	⭕ 제한적	읽기 분산 가능, 쓰기 병렬성은 DB/브랜치 단위로 제한적
+13. 고가용성 및 장애 복구(HA/DR)	✅ 원칙적 지원	Raft 클러스터 + 공유 스토리지 + 수동 Failover로 구성 가능
+14. API 일관성 및 클라이언트 SDK	✅ 완전 충족	REST API, Python/JS SDK, GraphQL 인터페이스 지원
+15. 시멘틱 모델에 적합한 RDF-ish 온톨로지 표현력	✅ 완전 충족	JSON-LD 기반의 IRI, 클래스 상속, 속성 제약 등 표현 풍부
+
+
+⸻
+
+🔍 주요 핵심 경쟁력 요약
+
+✔️ 강점 요약
+	1.	스키마 브랜치/커밋 모델은 Palantir Foundry와 가장 유사한 구조를 제공.
+	2.	**협업 워크플로우(Change Request, 임시 브랜치, diff, merge)**까지 Git-level로 충실히 구현.
+	3.	객체 기반 문서 관리 + 그래프 탐색 질의를 동시에 만족시키는 문서-그래프 하이브리드 모델.
+	4.	데이터 이력 버전관리(Time-travel), 이슈 발생 시 지점 복구 등 관리적 기능 우수.
+	5.	온톨로지 기반 스키마 모델링에 적합 – 클래스/속성/관계/제약 정의 및 문서화 (@metadata 등).
+
+⸻
+
+⚠️ 주요 한계 및 보완 필요
+
+범주	구체적 한계점	해결 전략
+실시간 처리 성능	QPS 높은 환경에선 병목 발생, 특히 다중 쓰기	데이터 도메인 분리 (DB/브랜치 단위), 고속 처리 필요한 경우 TiKV 등 분산 KV와 역할 분리하여 MSA 구조로 병합(개발예정)
+Webhook/Event Trigger	커밋 이벤트 자동 구독 기능 없음	커밋 로그 Polling + 사용자 정의 Trigger 구현 또는 후속 Pub/Sub 업데이트 대기
+GraphQL 최적화	중첩 필터나 고도화된 질의 성능은 제한적	성능 예측 가능한 질의 구조 사용 + 결과 캐시 전략 고려
+운영 도구 부족	Prometheus/Alertmanager 등 모니터링 연동 부족	외부 APM, 로그 파이프라인 연동 필요 (예: Fluentd + ELK)
+
+
+
+⸻
+
+🔧 전략적 판단: TerminusDB의 역할 정의
+
+✅ 언제 TerminusDB를 OMS의 핵심 구성으로 택해야 하는가?
+	•	데이터 변경 이력, 스키마 진화, 브랜치 기반 협업이 업무 프로세스 중심이 될 때
+	•	사용자 주도 스키마 정의 및 객체 중심 온톨로지 구조가 핵심일 때
+	•	데이터 가버넌스, 감사 추적, 변경 승인 요청 등이 중요할 때
+	•	분산 지식 그래프 형태로 운영되고, 시간축(Time Series) 이슈가 있는 경우
+
+⸻
+
+📌 결론
+
+TerminusDB는 Palantir Foundry의 Ontology Management Layer와 가장 유사한 구조를 오픈소스 환경에서 유일하게 거의 완전하게 재현할 수 있는 기술입니다.
+귀하가 OMS를 설계하면서 지향하는 구조가:
+	•	데이터 변경 이력 관리,
+	•	브랜치 기반 병합 및 승인,
+	•	객체 중심 온톨로지 모델링,
+	•	협업 기반 데이터 정의 및 검토,
+
+를 중시한다면 TerminusDB는 매우 전략적이며 현실적인 선택지입니다.
+
+단, 이를 성공적으로 운영하기 위해서는 다음이 반드시 필요합니다:
+	1.	명확한 아키텍처 계층화 (TerminusDB는 “버전관리 + 스키마 레이어” 역할에만 집중)
+	2.	실시간 처리/검색은 ElasticSearch, 객체 저장소는 TiKV로 별도 구성
+	3.	Webhook & Integration Layer는 별도 오케스트레이터로 구성 
+	4.	운영 자동화와 모니터링은 외부 도구와 통합 필수
+
+⸻
+
+🔚 한 줄 요약:
+
+Foundry-style Ontology Management를 위한 핵심 백엔드로 TerminusDB는 거의 유일하게 목적에 부합하며, 기술적으로도 완성도가 매우 높다. 단, 실시간 처리와 대규모 병렬성은 보완 구조(다른 MSA) 조합이 필수다.

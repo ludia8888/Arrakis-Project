@@ -1,6 +1,29 @@
 """
-Refactored Validation Service with Dependency Injection
+Refactored Validation Service with Dependency Injection - Core Business Logic Layer
 순환 참조 해결을 위한 DI 패턴 적용
+
+ARCHITECTURE NOTE:
+This module is part of the Core layer, containing business logic for breaking change validation.
+It provides a clean separation from the API layer (api/v1/validation_routes.py):
+
+- Core (this module): Business logic for validation
+  - Breaking change detection algorithms
+  - Impact analysis and severity assessment
+  - Migration plan generation
+  - Rule execution engine
+  - Caching and performance optimization
+
+- API validation routes: HTTP interface layer
+  - Request/response handling
+  - Parameter validation
+  - HTTP status codes and error formatting
+  - OpenAPI documentation
+  - Calls this core service for actual validation logic
+
+This separation follows the architectural principle:
+- Core: Business logic and domain rules (what to validate, how to validate)
+- API: HTTP interface and transport concerns (how to expose validation as REST API)
+- Clean dependency: API depends on Core, never the reverse
 """
 import asyncio
 import logging
@@ -9,6 +32,10 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
+from shared.exceptions import ValidationError, ServiceException, InfrastructureException
+from shared.exceptions.domain_exceptions import (
+    SchemaValidationError, PolicyViolationError, DataQualityError
+)
 from core.validation.models import (
     BreakingChange,
     ImpactEstimate,
@@ -66,7 +93,7 @@ class ValidationServiceRefactored:
         try:
             self.rules = self.rule_registry.load_rules_from_package()
             logger.info(f"Loaded {len(self.rules)} validation rules dynamically")
-        except Exception as e:
+        except (ImportError, AttributeError, RuntimeError) as e:
             logger.error(f"Failed to load validation rules: {e}")
             self.rules = []
 
@@ -140,9 +167,21 @@ class ValidationServiceRefactored:
 
             return result
 
-        except Exception as e:
-            logger.error(f"Validation {validation_id} failed: {e}")
+        except SchemaValidationError:
+            # Already a specific exception, just re-raise
             raise
+        except ValidationError as e:
+            logger.error(f"Validation {validation_id} failed: {e}")
+            raise SchemaValidationError(
+                f"Schema validation failed: {str(e)}",
+                violations=[{"validation_id": validation_id, "error": str(e)}]
+            )
+        except ServiceException as e:
+            logger.error(f"Service error during validation {validation_id}: {e}")
+            raise
+        except RuntimeError as e:
+            logger.error(f"Unexpected error in validation {validation_id}: {e}", exc_info=True)
+            raise InfrastructureException(f"Validation infrastructure error: {str(e)}")
 
     async def _build_validation_context(self, request: ValidationRequest) -> ValidationContext:
         """Port를 사용한 검증 컨텍스트 구성"""
@@ -281,8 +320,8 @@ class ValidationServiceRefactored:
                             
                             result = await rule.check(old_obj, new_obj, port_context)
                             if result:
-# REMOVED: TerminusDB handles type_validation natively
-#                                 if isinstance(result, list):
+                                # Simplified validation - TerminusDB handles complex type validation natively
+                                if isinstance(result, list):
                                     changes.extend(result)
                                 else:
                                     changes.append(result)
@@ -296,7 +335,7 @@ class ValidationServiceRefactored:
                 breaking_changes_found=len(changes)
             )
 
-        except Exception as e:
+        except (RuntimeError, ValueError, TypeError) as e:
             logger.error(f"Error executing rule {rule.rule_id}: {e}")
             raise
 

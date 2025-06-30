@@ -97,8 +97,12 @@ class Subscription:
                             version_hash=event_data.get("version_hash", "")
                         )
                         await event_queue.put(schema_event)
-                    except Exception as e:
-                        logger.error(f"Error processing schema change event: {e}")
+                    except ValueError as e:
+                        logger.error(f"Invalid event data for schema change: {e}")
+                    except (KeyError, TypeError) as e:
+                        logger.error(f"Data format error processing schema change event: {e}")
+                    except RuntimeError as e:
+                        logger.error(f"Runtime error processing schema change event: {e}")
 
                 # 각 필터 주제에 대해 구독
                 for filter_subject in filter_subjects:
@@ -122,8 +126,12 @@ class Subscription:
                         logger.info(f"Schema changes subscription cancelled for user {user.user_id}")
                         break
 
-        except Exception as e:
-            logger.error(f"Error in schema changes subscription: {e}")
+        except ConnectionError as e:
+            logger.error(f"Connection error in schema changes subscription: {e}")
+        except (ValueError, TypeError) as e:
+            logger.error(f"Data error in schema changes subscription: {e}")
+        except RuntimeError as e:
+            logger.error(f"Runtime error in schema changes subscription: {e}")
         finally:
             # 구독 정리
             realtime_publisher.remove_schema_subscription(subscription_id)
@@ -174,8 +182,12 @@ class Subscription:
                             affected_resources=event_data.get("affected_resources", [])
                         )
                         await event_queue.put(branch_event)
-                    except Exception as e:
-                        logger.error(f"Error processing branch change event: {e}")
+                    except ValueError as e:
+                        logger.error(f"Invalid event data for branch change: {e}")
+                    except (KeyError, TypeError) as e:
+                        logger.error(f"Data format error processing branch change event: {e}")
+                    except RuntimeError as e:
+                        logger.error(f"Runtime error processing branch change event: {e}")
 
                 # 구독 설정
                 for filter_subject in filter_subjects:
@@ -198,8 +210,12 @@ class Subscription:
                         logger.info(f"Branch changes subscription cancelled for user {user.user_id}")
                         break
 
-        except Exception as e:
-            logger.error(f"Error in branch changes subscription: {e}")
+        except ConnectionError as e:
+            logger.error(f"Connection error in branch changes subscription: {e}")
+        except (ValueError, TypeError) as e:
+            logger.error(f"Data error in branch changes subscription: {e}")
+        except RuntimeError as e:
+            logger.error(f"Runtime error in branch changes subscription: {e}")
         finally:
             realtime_publisher.remove_branch_subscription(subscription_id)
             logger.info(f"Cleaned up branch changes subscription for user {user.user_id}")
@@ -254,8 +270,12 @@ class Subscription:
                             timestamp=event_data.get("timestamp")
                         )
                         await event_queue.put(proposal_event)
-                    except Exception as e:
-                        logger.error(f"Error processing proposal update event: {e}")
+                    except ValueError as e:
+                        logger.error(f"Invalid event data for proposal update: {e}")
+                    except (KeyError, TypeError) as e:
+                        logger.error(f"Data format error processing proposal update event: {e}")
+                    except RuntimeError as e:
+                        logger.error(f"Runtime error processing proposal update event: {e}")
 
                 # 구독 설정
                 for filter_subject in filter_subjects:
@@ -278,8 +298,12 @@ class Subscription:
                         logger.info(f"Proposal updates subscription cancelled for user {user.user_id}")
                         break
 
-        except Exception as e:
-            logger.error(f"Error in proposal updates subscription: {e}")
+        except ConnectionError as e:
+            logger.error(f"Connection error in proposal updates subscription: {e}")
+        except (ValueError, TypeError) as e:
+            logger.error(f"Data error in proposal updates subscription: {e}")
+        except RuntimeError as e:
+            logger.error(f"Runtime error in proposal updates subscription: {e}")
         finally:
             realtime_publisher.remove_proposal_subscription(subscription_id)
             logger.info(f"Cleaned up proposal updates subscription for user {user.user_id}")
@@ -336,8 +360,12 @@ class Subscription:
                             timestamp=event_data.get("timestamp")
                         )
                         await event_queue.put(action_event)
-                    except Exception as e:
-                        logger.error(f"Error processing action progress event: {e}")
+                    except ValueError as e:
+                        logger.error(f"Invalid event data for action progress: {e}")
+                    except (KeyError, TypeError) as e:
+                        logger.error(f"Data format error processing action progress event: {e}")
+                    except RuntimeError as e:
+                        logger.error(f"Runtime error processing action progress event: {e}")
 
                 # 구독 설정
                 for filter_subject in filter_subjects:
@@ -360,8 +388,12 @@ class Subscription:
                         logger.info(f"Action progress subscription cancelled for user {user.user_id}")
                         break
 
-        except Exception as e:
-            logger.error(f"Error in action progress subscription: {e}")
+        except ConnectionError as e:
+            logger.error(f"Connection error in action progress subscription: {e}")
+        except (ValueError, TypeError) as e:
+            logger.error(f"Data error in action progress subscription: {e}")
+        except RuntimeError as e:
+            logger.error(f"Runtime error in action progress subscription: {e}")
         finally:
             realtime_publisher.remove_action_subscription(subscription_id)
             logger.info(f"Cleaned up action progress subscription for user {user.user_id}")

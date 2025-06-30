@@ -6,14 +6,15 @@ import asyncio
 from typing import Optional, Dict, Any, List
 from datetime import datetime, timezone
 from uuid import uuid4
-import json
 
 from core.audit.models import (
     AuditEventV1, AuditAction, ActorInfo, TargetInfo, 
-    ChangeDetails, ComplianceInfo, create_audit_event
+    ChangeDetails, ResourceType, create_audit_event
 )
-from core.event_publisher.outbox_service import OutboxService, get_outbox_service
+from core.audit.audit_repository import AuditRepositoryInterface
+from core.audit.event_bus import AuditEventBusInterface
 from core.auth import UserContext
+from shared.security.pii_utils import mask_pii_fields
 from utils.logger import get_logger
 from utils.safe_json_encoder import safe_dict_conversion
 
@@ -23,34 +24,17 @@ logger = get_logger(__name__)
 class AuditPublisher:
     """
     Publishes audit events for all write operations
-    Dual-write: Database storage + Event stream for guaranteed delivery
+    Uses repository pattern for storage and event bus for streaming
     """
     
-    def __init__(self, outbox_service: Optional[OutboxService] = None):
-        self.outbox_service = outbox_service
+    def __init__(self, 
+                 repository: AuditRepositoryInterface,
+                 event_bus: AuditEventBusInterface):
+        self.repository = repository
+        self.event_bus = event_bus
         self.enabled = True  # Can be disabled for testing
-        self.pii_fields = self._load_pii_fields()
-        self._audit_service = None  # Lazy loaded to avoid circular imports
         
-    def _load_pii_fields(self) -> List[str]:
-        """Load PII field definitions for masking"""
-        # In production, load from configuration
-        return [
-            "email", "phone", "ssn", "credit_card", 
-            "bank_account", "passport", "driver_license",
-            "personal_address", "date_of_birth"
-        ]
     
-    async def _get_audit_service(self):
-        """Lazy load audit service to avoid circular imports"""
-        if self._audit_service is None:
-            try:
-                from core.audit.audit_service import get_audit_service
-                self._audit_service = await get_audit_service()
-            except Exception as e:
-                logger.warning(f"Could not load audit service: {e}")
-                self._audit_service = False  # Mark as unavailable
-        return self._audit_service if self._audit_service is not False else None
     
     async def publish_audit_event(
         self,
@@ -92,9 +76,9 @@ class AuditPublisher:
             
             # Mask PII in changes if present
             if changes and changes.old_values:
-                changes.old_values = self._mask_pii(changes.old_values)
+                changes.old_values = mask_pii_fields(changes.old_values)
             if changes and changes.new_values:
-                changes.new_values = self._mask_pii(changes.new_values)
+                changes.new_values = mask_pii_fields(changes.new_values)
             
             # Create audit event with safe metadata
             safe_event_metadata = safe_dict_conversion(metadata) if metadata else {}
@@ -117,29 +101,26 @@ class AuditPublisher:
             # Dual-write: Store in database and publish to event stream
             
             # 1. Store in audit database (primary storage for compliance)
-            audit_service = await self._get_audit_service()
-            if audit_service:
-                try:
-                    await audit_service.log_audit_event(audit_event, immediate=True)
-                except Exception as e:
-                    logger.error(f"Failed to store audit event in database: {e}")
-                    # Continue with event publishing - database failure shouldn't block operation
-            
-            # 2. Publish to event stream via Outbox (for real-time processing)
             try:
-                if not self.outbox_service:
-                    self.outbox_service = await get_outbox_service()
-                
-                cloudevent = audit_event.to_cloudevent()
-                await self.outbox_service.publish_event(
-                    event_type="audit.activity.v1",
-                    event_data=cloudevent,
-                    source="/oms",
-                    subject=f"{target.resource_type.value}/{target.resource_id}",
-                    correlation_id=request_id
-                )
-            except Exception as e:
-                logger.error(f"Failed to publish audit event to stream: {e}")
+                await self.repository.store_event(audit_event)
+            except (ConnectionError, TimeoutError) as e:
+                logger.error(f"Database connection error storing audit event: {e}")
+                # Continue with event publishing - database failure shouldn't block operation
+            except ValueError as e:
+                logger.error(f"Invalid data format storing audit event: {e}")
+                # Continue with event publishing - database failure shouldn't block operation
+            except RuntimeError as e:
+                logger.error(f"Runtime error storing audit event: {e}")
+                # Continue with event publishing - database failure shouldn't block operation
+            
+            # 2. Publish to event stream (for real-time processing)
+            try:
+                await self.event_bus.publish_event(audit_event)
+            except (ConnectionError, TimeoutError) as e:
+                logger.error(f"Network error publishing audit event to stream: {e}")
+                # Continue - event stream failure shouldn't block operation
+            except RuntimeError as e:
+                logger.error(f"Runtime error publishing audit event to stream: {e}")
                 # Continue - event stream failure shouldn't block operation
             
             logger.info(
@@ -149,14 +130,18 @@ class AuditPublisher:
             
             return audit_event.id
             
-        except Exception as e:
-            logger.error(f"Failed to publish audit event: {e}")
+        except (ValueError, KeyError) as e:
+            logger.error(f"Data processing error in audit event: {e}")
+            # Don't fail the main operation if audit fails
+            return None
+        except RuntimeError as e:
+            logger.error(f"Runtime error publishing audit event: {e}")
             # Don't fail the main operation if audit fails
             return None
     
     async def publish_audit_event_direct(self, audit_event: AuditEventV1) -> bool:
         """
-        Publish a pre-formed audit event directly (used by audit service)
+        Publish a pre-formed audit event directly
         
         Returns:
             True if published successfully to event stream
@@ -165,49 +150,14 @@ class AuditPublisher:
             return False
         
         try:
-            if not self.outbox_service:
-                self.outbox_service = await get_outbox_service()
-            
-            # Publish to event stream via Outbox
-            cloudevent = audit_event.to_cloudevent()
-            await self.outbox_service.publish_event(
-                event_type="audit.activity.v1",
-                event_data=cloudevent,
-                source="/oms",
-                subject=f"{audit_event.target.resource_type.value}/{audit_event.target.resource_id}",
-                correlation_id=audit_event.request_id
-            )
-            
-            logger.debug(f"Published audit event to stream: {audit_event.id}")
-            return True
-            
-        except Exception as e:
-            logger.error(f"Failed to publish audit event {audit_event.id} to stream: {e}")
+            return await self.event_bus.publish_event(audit_event)
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Network error publishing audit event {audit_event.id}: {e}")
+            return False
+        except RuntimeError as e:
+            logger.error(f"Runtime error publishing audit event {audit_event.id}: {e}")
             return False
     
-    def _mask_pii(self, data: Dict[str, Any], _seen=None) -> Dict[str, Any]:
-        """Mask PII fields in data with circular reference handling"""
-        if _seen is None:
-            _seen = set()
-        
-        # Handle circular references
-        data_id = id(data)
-        if data_id in _seen:
-            return {"***CIRCULAR_REFERENCE***": True}
-        _seen.add(data_id)
-        
-        try:
-            masked_data = data.copy()
-            for key, value in data.items():
-                if key.lower() in self.pii_fields:
-                    masked_data[key] = "***MASKED***"
-                elif isinstance(value, dict):
-                    masked_data[key] = self._mask_pii(value, _seen)
-                elif isinstance(value, list) and value and isinstance(value[0], dict):
-                    masked_data[key] = [self._mask_pii(item, _seen) for item in value]
-            return masked_data
-        finally:
-            _seen.discard(data_id)
     
     async def audit_schema_change(
         self,
@@ -414,19 +364,3 @@ class AuditPublisher:
         )
 
 
-# Global audit publisher instance
-_audit_publisher: Optional[AuditPublisher] = None
-
-
-def get_audit_publisher() -> AuditPublisher:
-    """Get global audit publisher instance"""
-    global _audit_publisher
-    if _audit_publisher is None:
-        _audit_publisher = AuditPublisher()
-    return _audit_publisher
-
-
-def set_audit_publisher(publisher: AuditPublisher):
-    """Set global audit publisher instance (for testing)"""
-    global _audit_publisher
-    _audit_publisher = publisher

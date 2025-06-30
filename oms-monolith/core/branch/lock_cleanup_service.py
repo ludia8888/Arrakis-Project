@@ -98,8 +98,10 @@ class LockCleanupService:
                         self._cleanup_stats["total_cleaned"] += 1
                         
                         logger.info(f"TTL expired lock cleaned up: {lock.id} (reason: {cleanup_reason})")
-                    except Exception as e:
-                        logger.error(f"Failed to cleanup lock {lock.id}: {e}")
+                    except (ConnectionError, TimeoutError) as e:
+                        logger.error(f"Network error cleaning up lock {lock.id}: {e}")
+                    except RuntimeError as e:
+                        logger.error(f"Runtime error cleaning up lock {lock.id}: {e}")
             
             # Brief yield to avoid blocking
             if i + self.batch_size < len(active_locks):
@@ -143,8 +145,10 @@ class LockCleanupService:
                             f"Heartbeat expired lock cleaned up: {lock.id} "
                             f"(missed heartbeats from {lock.heartbeat_source})"
                         )
-                    except Exception as e:
-                        logger.error(f"Failed to cleanup heartbeat expired lock {lock.id}: {e}")
+                    except (ConnectionError, TimeoutError) as e:
+                        logger.error(f"Network error cleaning up heartbeat expired lock {lock.id}: {e}")
+                    except RuntimeError as e:
+                        logger.error(f"Runtime error cleaning up heartbeat expired lock {lock.id}: {e}")
         
         if cleaned_locks:
             logger.warning(f"Cleaned up {len(cleaned_locks)} heartbeat expired locks")
@@ -174,8 +178,10 @@ class LockCleanupService:
             try:
                 await release_callback(lock.id, f"system_{reason}")
                 cleaned_count += 1
-            except Exception as e:
-                logger.error(f"Failed to force cleanup lock {lock.id}: {e}")
+            except (ConnectionError, TimeoutError) as e:
+                logger.error(f"Network error force cleaning lock {lock.id}: {e}")
+            except RuntimeError as e:
+                logger.error(f"Runtime error force cleaning lock {lock.id}: {e}")
         
         if cleaned_count > 0:
             logger.info(
@@ -200,15 +206,15 @@ class LockCleanupService:
                             await callback()
                         else:
                             callback()
-                    except Exception as e:
-                        logger.error(f"Cleanup callback error: {e}")
+                    except RuntimeError as e:
+                        logger.error(f"Cleanup callback runtime error: {e}")
                 
                 logger.debug("Cleanup cycle completed")
                 
             except asyncio.CancelledError:
                 break
-            except Exception as e:
-                logger.error(f"Error in cleanup loop: {e}")
+            except RuntimeError as e:
+                logger.error(f"Runtime error in cleanup loop: {e}")
                 await asyncio.sleep(30)  # Brief pause before retry
     
     def get_cleanup_statistics(self) -> dict:

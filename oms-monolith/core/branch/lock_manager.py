@@ -6,14 +6,16 @@ import asyncio
 from typing import Optional, Dict, List, Any
 from datetime import datetime, timezone, timedelta
 
-from models.branch_state import (
-    BranchState, BranchLock, LockType, LockScope
-)
+# REMOVED: models.branch_state - TerminusDB handles branch state natively
+# Use TerminusDB's native branch and transaction management instead
+# from models.branch_state import (
+#     BranchState, BranchLock, LockType, LockScope
+# )
 from core.branch.lock_manager_core import LockManagerCore, LockConflictError
 from core.branch.lock_state_manager import LockStateManager, InvalidStateTransitionError
 from core.branch.lock_heartbeat_service import LockHeartbeatService
 from core.branch.lock_cleanup_service import LockCleanupService
-from utils.logger import get_logger
+from shared.utils.logger import get_logger
 
 logger = get_logger(__name__)
 

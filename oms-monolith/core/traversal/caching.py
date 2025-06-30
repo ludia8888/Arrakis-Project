@@ -406,14 +406,17 @@ class CacheWarmer:
                             result = query_executor(query)
                             if result is not None:
                                 self.cache.put(cache_key, result, "query_results")
-                        except Exception as e:
+                        except (ConnectionError, TimeoutError) as e:
+                            # Log network error but continue warming
+                            continue
+                        except RuntimeError as e:
                             # Log error but continue warming
                             continue
                 
                 # Sleep between warming cycles
                 time.sleep(30)  # 30 seconds between cycles
                 
-            except Exception as e:
+            except RuntimeError as e:
                 # Log error and continue
                 time.sleep(60)  # Wait longer on error
     

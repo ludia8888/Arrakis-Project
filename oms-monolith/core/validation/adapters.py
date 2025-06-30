@@ -3,6 +3,7 @@ Port Adapters - 실제 구현체들을 Port 인터페이스에 맞게 연결
 순환 참조 해결의 핵심: 인프라 레이어의 구현체를 Core 레이어의 인터페이스에 맞춤
 """
 from typing import Any, Dict, List, Optional
+import json
 import logging
 
 from core.validation.ports import CachePort, TerminusPort, EventPort, PolicyServerPort, RuleLoaderPort
@@ -30,29 +31,36 @@ class SmartCacheAdapter:
         """캐시에서 값 조회"""
         try:
             return await self.cache.get(key)
-        except Exception as e:
+        except (ConnectionError, TimeoutError) as e:
             logger.error(f"Cache get error for key {key}: {e}")
+            return None
+        except KeyError as e:
+            logger.error(f"Cache key error for {key}: {e}")
             return None
     
     async def set(self, key: str, value: Any, ttl: Optional[int] = None) -> None:
         """캐시에 값 저장"""
         try:
             await self.cache.set(key, value, ttl=ttl)
-        except Exception as e:
+        except (ConnectionError, TimeoutError) as e:
             logger.error(f"Cache set error for key {key}: {e}")
+        except ValueError as e:
+            logger.error(f"Cache value error for key {key}: {e}")
     
     async def delete(self, key: str) -> None:
         """캐시에서 값 삭제"""
         try:
             await self.cache.delete(key)
-        except Exception as e:
+        except (ConnectionError, TimeoutError) as e:
             logger.error(f"Cache delete error for key {key}: {e}")
+        except KeyError as e:
+            logger.error(f"Cache key not found for delete {key}: {e}")
     
     async def exists(self, key: str) -> bool:
         """키 존재 여부 확인"""
         try:
             return await self.cache.exists(key)
-        except Exception as e:
+        except (ConnectionError, TimeoutError) as e:
             logger.error(f"Cache exists error for key {key}: {e}")
             return False
 
@@ -80,8 +88,11 @@ class TerminusDBAdapter:
         """SPARQL 쿼리 실행"""
         try:
             return await self.tdb.query(sparql, db=db, branch=branch)
-        except Exception as e:
+        except (ConnectionError, TimeoutError) as e:
             logger.error(f"TerminusDB query error: {e}")
+            return []
+        except ValueError as e:
+            logger.error(f"TerminusDB query parsing error: {e}")
             return []
     
     async def get_document(
@@ -93,8 +104,11 @@ class TerminusDBAdapter:
         """문서 조회"""
         try:
             return await self.tdb.get_document(doc_id, db=db, branch=branch)
-        except Exception as e:
+        except (ConnectionError, TimeoutError) as e:
             logger.error(f"TerminusDB get_document error: {e}")
+            return None
+        except KeyError as e:
+            logger.error(f"TerminusDB document not found: {e}")
             return None
     
     async def insert_document(
@@ -114,8 +128,11 @@ class TerminusDBAdapter:
                 author=author,
                 message=message
             )
-        except Exception as e:
+        except (ConnectionError, TimeoutError) as e:
             logger.error(f"TerminusDB insert_document error: {e}")
+            raise
+        except ValueError as e:
+            logger.error(f"TerminusDB insert validation error: {e}")
             raise
     
     async def update_document(
@@ -135,15 +152,21 @@ class TerminusDBAdapter:
                 author=author,
                 message=message
             )
-        except Exception as e:
+        except (ConnectionError, TimeoutError) as e:
             logger.error(f"TerminusDB update_document error: {e}")
+            return False
+        except KeyError as e:
+            logger.error(f"TerminusDB document not found for update: {e}")
+            return False
+        except ValueError as e:
+            logger.error(f"TerminusDB update validation error: {e}")
             return False
     
     async def health_check(self) -> bool:
         """헬스 체크"""
         try:
             return await self.tdb.health_check()
-        except Exception as e:
+        except (ConnectionError, TimeoutError) as e:
             logger.error(f"TerminusDB health_check error: {e}")
             return False
 
@@ -184,8 +207,10 @@ class EventPublisherAdapter:
                 )
             else:
                 logger.warning(f"EventPublisher does not have publish method")
-        except Exception as e:
+        except (ConnectionError, TimeoutError) as e:
             logger.error(f"Event publish error: {e}")
+        except ValueError as e:
+            logger.error(f"Event data validation error: {e}")
     
     async def publish_batch(self, events: List[Dict[str, Any]]) -> None:
         """배치 이벤트 발행"""
@@ -200,8 +225,10 @@ class EventPublisherAdapter:
                         event.get('data', {}),
                         event.get('correlation_id')
                     )
-        except Exception as e:
+        except (ConnectionError, TimeoutError) as e:
             logger.error(f"Event publish_batch error: {e}")
+        except ValueError as e:
+            logger.error(f"Event batch validation error: {e}")
 
 
 class PolicyServerAdapter:
@@ -217,30 +244,26 @@ class PolicyServerAdapter:
             config = get_validation_config()
         
         self.config = config
-        self.base_url = getattr(config, 'policy_server_url', 'http://localhost:8080/api/v1/policies')
+        # Use property that handles environment config
+        self.base_url = config.policy_server_url
         self.timeout = getattr(config, 'policy_server_timeout', 10.0)
         self.api_key = getattr(config, 'policy_server_api_key', None)
         
-        # HTTP 세션 설정
-        import aiohttp
-        self.session = None
-        self._headers = {
+        # HTTP 클라이언트 설정
+        from shared.clients.unified_http_client import UnifiedHTTPClient
+        headers = {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
         }
         if self.api_key:
-            self._headers['Authorization'] = f'Bearer {self.api_key}'
+            headers['Authorization'] = f'Bearer {self.api_key}'
+        
+        self.http_client = UnifiedHTTPClient(
+            base_url=self.base_url,
+            headers=headers,
+            timeout=self.timeout
+        )
     
-    async def _get_session(self):
-        """HTTP 세션 lazy 초기화"""
-        if self.session is None:
-            import aiohttp
-            timeout = aiohttp.ClientTimeout(total=self.timeout)
-            self.session = aiohttp.ClientSession(
-                headers=self._headers,
-                timeout=timeout
-            )
-        return self.session
     
     async def validate_policy(
         self,
@@ -251,8 +274,6 @@ class PolicyServerAdapter:
     ) -> Dict[str, Any]:
         """정책 검증 요청"""
         try:
-            session = await self._get_session()
-            
             payload = {
                 'entity_type': entity_type,
                 'entity_data': entity_data,
@@ -260,29 +281,46 @@ class PolicyServerAdapter:
                 'context': context or {}
             }
             
-            async with session.post(f"{self.base_url}/validate", json=payload) as response:
-                if response.status == 200:
-                    result = await response.json()
-                    return {
-                        'valid': result.get('valid', True),
-                        'violations': result.get('violations', []),
-                        'warnings': result.get('warnings', []),
-                        'policy_version': result.get('policy_version'),
-                        'response_time_ms': result.get('response_time_ms', 0)
-                    }
-                else:
-                    logger.error(f"Policy server error: {response.status} - {await response.text()}")
-                    return {
-                        'valid': True,  # Fail-open: 정책 서버 장애시 통과
-                        'violations': [],
-                        'warnings': [f"Policy server unavailable (HTTP {response.status})"],
-                        'fallback': True
-                    }
+            response = await self.http_client.post("/validate", json=payload)
+            
+            if response.status_code == 200:
+                result = response.json()
+                return {
+                    'valid': result.get('valid', True),
+                    'violations': result.get('violations', []),
+                    'warnings': result.get('warnings', []),
+                    'policy_version': result.get('policy_version'),
+                    'response_time_ms': result.get('response_time_ms', 0)
+                }
+            else:
+                logger.error(f"Policy server error: {response.status_code} - {response.text}")
+                return {
+                    'valid': True,  # Fail-open: 정책 서버 장애시 통과
+                    'violations': [],
+                    'warnings': [f"Policy server unavailable (HTTP {response.status_code})"],
+                    'fallback': True
+                }
                     
-        except Exception as e:
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Policy server connection error: {e}")
+            return {
+                'valid': True,  # Fail-open: 연결 오류시 통과
+                'violations': [],
+                'warnings': [f"Policy server unavailable: {str(e)}"],
+                'fallback': True
+            }
+        except json.JSONDecodeError as e:
+            logger.error(f"Policy response parsing error: {e}")
+            return {
+                'valid': True,  # Fail-open: 파싱 오류시 통과
+                'violations': [],
+                'warnings': [f"Invalid policy response format: {str(e)}"],
+                'fallback': True
+            }
+        except ValueError as e:
             logger.error(f"Policy validation error: {e}")
             return {
-                'valid': True,  # Fail-open: 예외 발생시 통과
+                'valid': True,  # Fail-open: 검증 오류시 통과
                 'violations': [],
                 'warnings': [f"Policy validation failed: {str(e)}"],
                 'fallback': True
@@ -295,42 +333,42 @@ class PolicyServerAdapter:
     ) -> List[Dict[str, Any]]:
         """정책 목록 조회"""
         try:
-            session = await self._get_session()
-            
             params = {}
             if entity_type:
                 params['entity_type'] = entity_type
             if active_only:
                 params['active_only'] = 'true'
             
-            async with session.get(f"{self.base_url}/list", params=params) as response:
-                if response.status == 200:
-                    result = await response.json()
-                    return result.get('policies', [])
-                else:
-                    logger.error(f"Policy list error: {response.status}")
-                    return []
+            response = await self.http_client.get("/list", params=params)
+            
+            if response.status_code == 200:
+                result = response.json()
+                return result.get('policies', [])
+            else:
+                logger.error(f"Policy list error: {response.status_code}")
+                return []
                     
-        except Exception as e:
-            logger.error(f"Policy list error: {e}")
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Policy server connection error: {e}")
+            return []
+        except json.JSONDecodeError as e:
+            logger.error(f"Policy list response parsing error: {e}")
             return []
     
     async def health_check(self) -> bool:
         """정책 서버 헬스 체크"""
         try:
-            session = await self._get_session()
-            
-            async with session.get(f"{self.base_url}/health") as response:
-                return response.status == 200
+            response = await self.http_client.get("/health")
+            return response.status_code == 200
                 
-        except Exception as e:
+        except (ConnectionError, TimeoutError) as e:
             logger.error(f"Policy server health check error: {e}")
             return False
     
     async def close(self):
-        """세션 정리"""
-        if self.session:
-            await self.session.close()
+        """클라이언트 정리"""
+        # UnifiedHTTPClient는 자체적으로 커넥션 풀을 관리함
+        pass
 
 
 class DynamicRuleLoaderAdapter:
@@ -411,7 +449,13 @@ class DynamicRuleLoaderAdapter:
                                 'enabled': getattr(rule_class, 'enabled', True)
                             })
                             
-                        except Exception as e:
+                        except ImportError as e:
+                            logger.error(f"Failed to import rule {entry_point.name}: {e}")
+                            continue
+                        except AttributeError as e:
+                            logger.error(f"Invalid rule class {entry_point.name}: {e}")
+                            continue
+                        except RuntimeError as e:
                             logger.error(f"Failed to load rule {entry_point.name}: {e}")
                             continue
                             
@@ -430,8 +474,11 @@ class DynamicRuleLoaderAdapter:
             logger.info(f"Loaded {len(rules)} rules for {rule_type}:{entity_type}")
             return rules
             
-        except Exception as e:
-            logger.error(f"Rule loading error: {e}")
+        except ImportError as e:
+            logger.error(f"Rule import error: {e}")
+            return []
+        except RuntimeError as e:
+            logger.error(f"Rule loading runtime error: {e}")
             return []
     
     async def reload_rules(self) -> None:
@@ -446,7 +493,7 @@ class DynamicRuleLoaderAdapter:
             
             logger.info("Rules reloaded successfully")
             
-        except Exception as e:
+        except RuntimeError as e:
             logger.error(f"Rule reload error: {e}")
     
     def get_available_rules(self) -> List[Dict[str, Any]]:
@@ -469,13 +516,19 @@ class DynamicRuleLoaderAdapter:
                             'entity_types': getattr(rule_class, 'entity_types', []),
                             'version': getattr(rule_class, '__version__', '1.0.0')
                         })
-                    except Exception as e:
-                        logger.error(f"Failed to inspect rule {entry_point.name}: {e}")
+                    except ImportError as e:
+                        logger.error(f"Failed to import rule for inspection {entry_point.name}: {e}")
+                        continue
+                    except AttributeError as e:
+                        logger.error(f"Failed to inspect rule attributes {entry_point.name}: {e}")
                         continue
             
             return rules_info
             
-        except Exception as e:
+        except ImportError as e:
+            logger.error(f"Failed to import rules registry: {e}")
+            return []
+        except RuntimeError as e:
             logger.error(f"Failed to get available rules: {e}")
             return []
     

@@ -63,7 +63,10 @@ class ActionMetadataService:
             else:
                 logger.error("Failed to connect to TerminusDB")
                 return False
-        except Exception as e:
+        except ConnectionError as e:
+            logger.error(f"ActionMetadataService connection failed: {e}")
+            return False
+        except (ValueError, RuntimeError) as e:
             logger.error(f"ActionMetadataService initialization failed: {e}")
             return False
     
@@ -245,8 +248,10 @@ class ActionMetadataService:
             else:
                 logger.warning(f"Failed to save ActionType to TerminusDB: {action_type.id}")
                 
-        except Exception as e:
-            logger.warning(f"Failed to save ActionType to TerminusDB: {e}")
+        except (ConnectionError, TimeoutError) as e:
+            logger.warning(f"Network error saving ActionType to TerminusDB: {e}")
+        except (ValueError, RuntimeError) as e:
+            logger.warning(f"Error saving ActionType to TerminusDB: {e}")
     
     async def _load_from_terminusdb(self, action_type_id: str) -> Optional[ActionTypeModel]:
         """TerminusDB에서 ActionType 로드"""
@@ -267,8 +272,10 @@ class ActionMetadataService:
                     clean_doc['modifiedAt'] = datetime.fromisoformat(clean_doc['modifiedAt'].replace('Z', '+00:00'))
                 
                 return ActionTypeModel(**clean_doc)
-        except Exception as e:
+        except (ConnectionError, ValueError, KeyError) as e:
             logger.warning(f"Failed to load ActionType from TerminusDB: {e}")
+        except RuntimeError as e:
+            logger.warning(f"Runtime error loading ActionType from TerminusDB: {e}")
         
         return None
     
@@ -283,8 +290,10 @@ class ActionMetadataService:
                 logger.debug(f"Deleted ActionType from TerminusDB: {action_type_id}")
             else:
                 logger.error(f"Failed to delete ActionType from TerminusDB: {action_type_id}")
-        except Exception as e:
-            logger.error(f"Failed to delete ActionType from TerminusDB: {e}")
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Network error deleting ActionType from TerminusDB: {e}")
+        except (ValueError, RuntimeError) as e:
+            logger.error(f"Error deleting ActionType from TerminusDB: {e}")
     
     async def close(self):
         """서비스 종료 - TerminusDB 연결 해제"""

@@ -11,26 +11,33 @@ from typing import Any, Dict, List, Optional, Union
 
 import asyncio
 
-# Lightweight imports - OMS should be self-contained
+# Required dependencies - fail fast if not available
 try:
-    # Try importing from shared if available
-    import sys
-    import os
-    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../../shared'))
     from shared.cache.smart_cache import SmartCacheManager
     from database.clients.terminus_db import TerminusDBClient
-except ImportError:
-    # Fallback to stub implementations for OMS self-containment
-    class SmartCacheManager:
-        def __init__(self, *args, **kwargs):
-            pass
-    
-    class TerminusDBClient:
-        def __init__(self, *args, **kwargs):
-            pass
+    from shared.config.environment import get_config
+    from shared.utils.retry_strategy import with_retry, RetryConfig, RetryStrategy
+except ImportError as e:
+    logger.error(f"Critical dependency missing: {e}")
+    logger.error("Required modules: shared.cache.smart_cache, database.clients.terminus_db, shared.config.environment, shared.utils.retry_strategy")
+    logger.error("Ensure all dependencies are properly installed and available")
+    raise ModuleNotFoundError(f"Action service requires missing dependency: {e}") from e
 from core.action.metadata_service import ActionMetadataService
 
 logger = logging.getLogger(__name__)
+
+# Retry configurations for Actions Service calls
+ACTIONS_SERVICE_READ_CONFIG = RetryConfig.for_strategy(RetryStrategy.STANDARD)
+ACTIONS_SERVICE_WRITE_CONFIG = RetryConfig(
+    strategy=RetryStrategy.CUSTOM,
+    max_attempts=5,
+    initial_delay=0.5,
+    max_delay=30.0,
+    exponential_base=2.0,
+    timeout=30.0,  # 30 second timeout for Actions Service calls
+    circuit_breaker_threshold=10,
+    retry_budget_percent=15.0
+)
 
 
 class ActionService:
@@ -50,10 +57,63 @@ class ActionService:
         self.cache = SmartCacheManager(tdb_client)
         self.redis = redis_client
         self.event_publisher = event_publisher
-        self.actions_service_url = actions_service_url or os.getenv("ACTIONS_SERVICE_URL", "http://actions-service:8009")
+        
+        # Use centralized config for Actions Service URL
+        config = get_config()
+        self.actions_service_url = actions_service_url or config.get_actions_service_url()
+        
+        # Validate Actions Service is reachable in production
+        if config.is_production:
+            logger.info("Validating Actions Service connectivity in production...")
+            # This will raise ConfigurationError if unreachable
+            # Note: Health check is async, so we'll validate on first use
         
         # 메타데이터 서비스만 초기화
         self.metadata_service = ActionMetadataService(tdb_client, redis_client)
+        
+        # Initialize DLQ handler for failed Actions Service calls
+        from shared.dlq import ActionDLQHandler, DLQConfig
+        self.dlq_config = DLQConfig(
+            name="actions_service_calls",
+            max_retries=3,
+            redis_key_prefix="action_service_dlq"
+        )
+        self.dlq_handler = ActionDLQHandler(redis_client, self.dlq_config)
+    
+    async def _handle_actions_service_failure(self, operation: str, request_data: Dict[str, Any], error: Exception):
+        """Handle Actions Service failure by sending to DLQ"""
+        try:
+            from shared.dlq.models import DLQReason
+            
+            # Determine DLQ reason based on error type
+            if isinstance(error, httpx.TimeoutException):
+                reason = DLQReason.TIMEOUT
+            elif isinstance(error, httpx.ConnectError):
+                reason = DLQReason.NETWORK_ERROR
+            elif isinstance(error, httpx.HTTPStatusError):
+                if error.response.status_code >= 500:
+                    reason = DLQReason.EXECUTION_FAILED
+                else:
+                    reason = DLQReason.VALIDATION_FAILED
+            else:
+                reason = DLQReason.UNKNOWN_ERROR
+            
+            await self.dlq_handler.send_to_dlq(
+                queue_name="actions_service",
+                original_message=request_data,
+                reason=reason,
+                error=error,
+                metadata={"operation": operation, "service": "actions_service"}
+            )
+            
+            logger.warning(f"Actions Service request sent to DLQ: {operation}")
+            
+        except (ConnectionError, TimeoutError, ValueError) as dlq_error:
+            logger.error(f"Failed to send Actions Service request to DLQ: {dlq_error}")
+            # Don't raise - we want to return the original error
+        except AttributeError as dlq_error:
+            logger.error(f"DLQ handler configuration error: {dlq_error}")
+            # Don't raise - we want to return the original error
 
     # ActionType 메타데이터 관리 (CRUD)
     async def create_action_type(self, action_definition: Dict[str, Any]) -> str:
@@ -82,6 +142,7 @@ class ActionService:
         return await self.metadata_service.validate_action_schema(action_definition)
 
     # 실행 관련 메서드들 - Actions Service MSA로 위임
+    @with_retry("actions_service_execute", config=ACTIONS_SERVICE_WRITE_CONFIG, bulkhead_resource="actions_service")
     async def execute_action(
         self,
         action_type_id: str,
@@ -92,6 +153,7 @@ class ActionService:
     ) -> Dict[str, Any]:
         """
         액션 실행 - Actions Service MSA로 위임
+        Includes retry and circuit breaker protection
         """
         async with httpx.AsyncClient() as client:
             response = await client.post(
@@ -108,9 +170,11 @@ class ActionService:
             response.raise_for_status()
             return response.json()
 
+    @with_retry("actions_service_get_status", config=ACTIONS_SERVICE_READ_CONFIG, bulkhead_resource="actions_service")
     async def get_execution_status(self, execution_id: str) -> Dict[str, Any]:
         """
         실행 상태 조회 - Actions Service MSA로 위임
+        Includes retry and circuit breaker protection
         """
         async with httpx.AsyncClient() as client:
             response = await client.get(
@@ -120,9 +184,11 @@ class ActionService:
             response.raise_for_status()
             return response.json()
 
+    @with_retry("actions_service_job_status", config=ACTIONS_SERVICE_READ_CONFIG, bulkhead_resource="actions_service")
     async def get_job_status(self, job_id: str) -> Dict[str, Any]:
         """
         Job 상태 조회 - Actions Service MSA로 위임
+        Includes retry and circuit breaker protection
         """
         async with httpx.AsyncClient() as client:
             response = await client.get(
@@ -143,8 +209,12 @@ class ActionService:
         logger.info("Worker shutdown delegated to Actions Service MSA")
         return True
 
+    @with_retry("actions_service_worker_status", config=ACTIONS_SERVICE_READ_CONFIG, bulkhead_resource="actions_service")
     async def get_worker_status(self) -> Dict[str, Any]:
-        """워커 상태 조회 - Actions Service MSA로 위임"""
+        """
+        워커 상태 조회 - Actions Service MSA로 위임
+        Includes retry and circuit breaker protection
+        """
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.get(
@@ -153,8 +223,14 @@ class ActionService:
                 )
                 response.raise_for_status()
                 return response.json()
-            except Exception as e:
-                logger.warning(f"Failed to get worker status from Actions Service: {e}")
+            except httpx.HTTPError as e:
+                logger.warning(f"HTTP error getting worker status from Actions Service: {e}")
+                return {"status": "unknown", "workers": 0}
+            except (ConnectionError, TimeoutError) as e:
+                logger.warning(f"Network error getting worker status from Actions Service: {e}")
+                return {"status": "unknown", "workers": 0}
+            except RuntimeError as e:
+                logger.warning(f"Runtime error getting worker status from Actions Service: {e}")
                 return {"status": "unknown", "workers": 0}
 
     # Legacy 호환성 메서드들

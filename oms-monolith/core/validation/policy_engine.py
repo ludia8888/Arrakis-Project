@@ -115,7 +115,7 @@ class PolicyEngine:
             try:
                 file_config = self._load_config_from_file(config_source)
                 config = self._merge_configs(config, file_config)
-            except Exception as e:
+            except (OSError, IOError, json.JSONDecodeError, ValueError) as e:
                 logger.warning(f"Failed to load policy config from {config_source}: {e}")
         
         # Apply runtime overrides
@@ -395,7 +395,7 @@ class PolicyEngine:
                 try:
                     custom_result = self._custom_handlers[handler_name](rule_result, breaking_change)
                     action_result.update(custom_result)
-                except Exception as e:
+                except (RuntimeError, ValueError, TypeError) as e:
                     logger.error(f"Custom handler {handler_name} failed: {e}")
                     action_result["error"] = str(e)
         

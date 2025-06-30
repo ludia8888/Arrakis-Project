@@ -116,7 +116,11 @@ class TraversalEngine:
                 
             return result
             
-        except Exception as e:
+        except (ConnectionError, TimeoutError) as e:
+            if self.metrics:
+                self.metrics.record_traversal_error(str(e))
+            raise
+        except (ValueError, RuntimeError) as e:
             if self.metrics:
                 self.metrics.record_traversal_error(str(e))
             raise
@@ -260,7 +264,10 @@ class TraversalEngine:
             
             logger.debug(f"WOQL query executed successfully, bindings: {len(result.get('bindings', []))}")
             return result.get('bindings', [])
-        except Exception as e:
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Network error during WOQL query execution: {e}")
+            raise RuntimeError(f"WOQL query execution failed: {e}")
+        except (ValueError, KeyError) as e:
             logger.error(f"WOQL query execution failed: {e}")
             raise RuntimeError(f"WOQL query execution failed: {e}")
     
@@ -381,7 +388,7 @@ class TraversalEngine:
                         )
                         all_paths.append(path)
                         
-            except Exception as e:
+            except (ConnectionError, RuntimeError) as e:
                 # Log error but continue with other relations
                 if self.metrics:
                     self.metrics.record_traversal_error(f"Path query failed for {relation_uri}: {e}")
@@ -452,6 +459,9 @@ class TraversalEngine:
             logger.info(f"Graph metrics calculated: nodes={node_count}, edges={edge_count}, density={density:.3f}")
             return metrics
             
-        except Exception as e:
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Network error during graph metrics calculation: {e}")
+            raise RuntimeError(f"Graph metrics calculation failed: {e}")
+        except (ValueError, KeyError) as e:
             logger.error(f"Graph metrics calculation failed: {e}")
             raise RuntimeError(f"Graph metrics calculation failed: {e}")

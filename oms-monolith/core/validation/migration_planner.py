@@ -5,7 +5,7 @@
 import logging
 import uuid
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Set
 
 from core.validation.models import (
@@ -131,7 +131,11 @@ class MigrationPlanner:
                     if target in grouped_changes:
                         dependencies[object_type].add(target)
 
-            except Exception as e:
+            except (ConnectionError, TimeoutError) as e:
+                logger.error(f"Error analyzing dependencies for {object_type}: {e}")
+            except (KeyError, ValueError, TypeError) as e:
+                logger.error(f"Error analyzing dependencies for {object_type}: {e}")
+            except RuntimeError as e:
                 logger.error(f"Error analyzing dependencies for {object_type}: {e}")
 
         return dict(dependencies)

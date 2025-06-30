@@ -117,8 +117,14 @@ class FunnelIndexingEventHandler:
                     await self._check_auto_merge_conditions(branch_name, data)
                 return success
                 
-        except Exception as e:
-            logger.error(f"Error handling indexing.completed event: {e}")
+        except LockConflictError as e:
+            logger.error(f"Lock conflict handling indexing.completed event: {e}")
+            return False
+        except ValueError as e:
+            logger.error(f"Invalid data in indexing.completed event: {e}")
+            return False
+        except RuntimeError as e:
+            logger.error(f"Runtime error handling indexing.completed event: {e}")
             return False
     
     async def _handle_successful_indexing(
@@ -160,8 +166,11 @@ class FunnelIndexingEventHandler:
             
             return True
             
-        except Exception as e:
-            logger.error(f"Error handling successful indexing for {branch_name}: {e}")
+        except LockConflictError as e:
+            logger.error(f"Lock conflict during successful indexing for {branch_name}: {e}")
+            return False
+        except RuntimeError as e:
+            logger.error(f"Runtime error handling successful indexing for {branch_name}: {e}")
             return False
     
     async def _handle_failed_indexing(
@@ -199,8 +208,11 @@ class FunnelIndexingEventHandler:
             
             return True
             
-        except Exception as e:
+        except (LockConflictError, ValueError) as e:
             logger.error(f"Error handling failed indexing for {branch_name}: {e}")
+            return False
+        except RuntimeError as e:
+            logger.error(f"Runtime error handling failed indexing for {branch_name}: {e}")
             return False
     
     async def _check_auto_merge_conditions(self, branch_name: str, data: Dict[str, Any]):
@@ -246,8 +258,10 @@ class FunnelIndexingEventHandler:
             logger.info(f"Auto-merge conditions met for branch {branch_name}")
             await self._trigger_auto_merge(branch_name, data)
             
-        except Exception as e:
-            logger.error(f"Error checking auto-merge conditions for {branch_name}: {e}")
+        except LockConflictError as e:
+            logger.error(f"Lock conflict checking auto-merge conditions for {branch_name}: {e}")
+        except RuntimeError as e:
+            logger.error(f"Runtime error checking auto-merge conditions for {branch_name}: {e}")
     
     async def _check_merge_conflicts(self, branch_name: str) -> bool:
         """
@@ -301,8 +315,16 @@ class FunnelIndexingEventHandler:
             # Send success notification
             await self._send_auto_merge_notification(branch_name, data)
             
-        except Exception as e:
-            logger.error(f"Error during auto-merge for {branch_name}: {e}")
+        except LockConflictError as e:
+            logger.error(f"Lock conflict during auto-merge for {branch_name}: {e}")
+            # Set branch to ERROR state if auto-merge fails
+            await self.lock_manager.set_branch_state(
+                branch_name=branch_name,
+                new_state=BranchState.ERROR,
+                reason=f"Auto-merge failed due to lock conflict: {str(e)}"
+            )
+        except RuntimeError as e:
+            logger.error(f"Runtime error during auto-merge for {branch_name}: {e}")
             # Set branch to ERROR state if auto-merge fails
             await self.lock_manager.set_branch_state(
                 branch_name=branch_name,
@@ -367,8 +389,10 @@ class FunnelIndexingEventHandler:
             # TODO: Save to audit database
             logger.info(f"Audit log created: {audit_id} for {action.value} on {branch_name}")
             
-        except Exception as e:
-            logger.error(f"Failed to create audit log for {branch_name}: {e}")
+        except (ValueError, KeyError) as e:
+            logger.error(f"Invalid data creating audit log for {branch_name}: {e}")
+        except RuntimeError as e:
+            logger.error(f"Runtime error creating audit log for {branch_name}: {e}")
     
     async def _handle_shadow_indexing_completed(
         self,
@@ -486,8 +510,11 @@ class FunnelIndexingEventHandler:
                 
                 return False
                 
-        except Exception as e:
-            logger.error(f"Error handling shadow indexing completion: {e}")
+        except ValueError as e:
+            logger.error(f"Invalid data in shadow indexing completion: {e}")
+            return False
+        except RuntimeError as e:
+            logger.error(f"Runtime error handling shadow indexing completion: {e}")
             return False
     
     async def _create_shadow_audit_log(
@@ -575,8 +602,10 @@ class FunnelIndexingEventHandler:
             # TODO: Save to audit database
             logger.info(f"Shadow index audit log created: {audit_id} for {action_type} on {branch_name}")
             
-        except Exception as e:
-            logger.error(f"Failed to create shadow index audit log for {branch_name}: {e}")
+        except (ValueError, KeyError) as e:
+            logger.error(f"Invalid data creating shadow index audit log for {branch_name}: {e}")
+        except RuntimeError as e:
+            logger.error(f"Runtime error creating shadow index audit log for {branch_name}: {e}")
     
     async def _send_shadow_indexing_failure_alert(
         self,
@@ -613,8 +642,11 @@ class FunnelIndexingEventHandler:
             
             return (end - start).total_seconds()
             
-        except Exception as e:
-            logger.error(f"Error calculating duration: {e}")
+        except ValueError as e:
+            logger.error(f"Invalid datetime format calculating duration: {e}")
+            return None
+        except RuntimeError as e:
+            logger.error(f"Runtime error calculating duration: {e}")
             return None
     
     async def _send_indexing_failure_alert(self, branch_name: str, data: Dict[str, Any]):

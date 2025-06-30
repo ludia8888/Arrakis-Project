@@ -41,8 +41,12 @@ class LockStateManager:
                 cached = await self.cache_service.get(f"branch_state:{branch_name}")
                 if cached:
                     return BranchStateInfo.parse_obj(json.loads(cached))
-            except Exception as e:
-                logger.warning(f"Cache retrieval failed for branch {branch_name}: {e}")
+            except (ConnectionError, TimeoutError) as e:
+                logger.warning(f"Cache connection error for branch {branch_name}: {e}")
+            except json.JSONDecodeError as e:
+                logger.warning(f"Invalid JSON in cache for branch {branch_name}: {e}")
+            except RuntimeError as e:
+                logger.warning(f"Runtime error retrieving cache for branch {branch_name}: {e}")
         
         # Check in-memory cache
         if branch_name in self._branch_states:
@@ -55,8 +59,10 @@ class LockStateManager:
                 if state:
                     await self._cache_branch_state(state)
                     return state
-            except Exception as e:
-                logger.warning(f"DB retrieval failed for branch {branch_name}: {e}")
+            except (ConnectionError, TimeoutError) as e:
+                logger.warning(f"Database connection error for branch {branch_name}: {e}")
+            except RuntimeError as e:
+                logger.warning(f"Runtime error retrieving from DB for branch {branch_name}: {e}")
         
         # Default state for new branches
         default_state = BranchStateInfo(
@@ -147,8 +153,10 @@ class LockStateManager:
         if self.db_service:
             try:
                 await self.db_service.store_state_transition(transition)
-            except Exception as e:
-                logger.error(f"Failed to store state transition: {e}")
+            except (ConnectionError, TimeoutError) as e:
+                logger.error(f"Database connection error storing state transition: {e}")
+            except RuntimeError as e:
+                logger.error(f"Runtime error storing state transition: {e}")
         
         logger.info(
             f"Branch state transition: {branch_state.branch_name} "
@@ -204,15 +212,19 @@ class LockStateManager:
                     state_info.json(),
                     ttl=3600  # 1 hour
                 )
-            except Exception as e:
-                logger.error(f"Failed to cache branch state: {e}")
+            except (ConnectionError, TimeoutError) as e:
+                logger.error(f"Cache connection error storing branch state: {e}")
+            except RuntimeError as e:
+                logger.error(f"Runtime error caching branch state: {e}")
         
         # Store in persistent DB (if available)
         if self.db_service:
             try:
                 await self.db_service.store_branch_state(state_info)
-            except Exception as e:
-                logger.error(f"Failed to persist branch state: {e}")
+            except (ConnectionError, TimeoutError) as e:
+                logger.error(f"Database connection error persisting branch state: {e}")
+            except RuntimeError as e:
+                logger.error(f"Runtime error persisting branch state: {e}")
     
     async def _cache_branch_state(self, state_info: BranchStateInfo):
         """Cache branch state without persisting"""
@@ -225,5 +237,7 @@ class LockStateManager:
                     state_info.json(),
                     ttl=3600
                 )
-            except Exception as e:
-                logger.warning(f"Failed to cache branch state: {e}")
+            except (ConnectionError, TimeoutError) as e:
+                logger.warning(f"Cache connection error: {e}")
+            except RuntimeError as e:
+                logger.warning(f"Runtime error caching branch state: {e}")

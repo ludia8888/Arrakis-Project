@@ -245,8 +245,14 @@ class EnhancedEventService:
                 
                 events.append(event)
                 
-            except Exception as e:
-                logger.error(f"Failed to create event from data {event_data}: {e}")
+            except KeyError as e:
+                logger.error(f"Missing required field when creating event from data {event_data}: {e}")
+                continue
+            except ValueError as e:
+                logger.error(f"Invalid value when creating event from data {event_data}: {e}")
+                continue
+            except RuntimeError as e:
+                logger.error(f"Runtime error when creating event from data {event_data}: {e}")
                 continue
         
         return events
@@ -263,8 +269,11 @@ class EnhancedEventService:
             try:
                 event_id = await self.publish_event(event, immediate=immediate)
                 published_ids.append(event_id)
-            except Exception as e:
-                logger.error(f"Failed to publish event {event.id}: {e}")
+            except (ConnectionError, TimeoutError) as e:
+                logger.error(f"Network error when publishing event {event.id}: {e}")
+                continue
+            except RuntimeError as e:
+                logger.error(f"Runtime error when publishing event {event.id}: {e}")
                 continue
         
         return published_ids

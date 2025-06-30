@@ -80,7 +80,7 @@ class PolicyIntegrityChecker:
                 snapshots[policy_id] = PolicySnapshot(**snapshot_data)
             
             return snapshots
-        except Exception as e:
+        except (OSError, IOError, json.JSONDecodeError, ValueError) as e:
             logger.error(f"Failed to load snapshots: {e}")
             return {}
     
@@ -94,7 +94,7 @@ class PolicyIntegrityChecker:
             with open(self.snapshots_file, 'w') as f:
                 json.dump(data, f, indent=2, default=str)
                 
-        except Exception as e:
+        except (OSError, IOError, json.JSONDecodeError) as e:
             logger.error(f"Failed to save snapshots: {e}")
     
     def _load_events(self) -> List[TamperingEvent]:
@@ -117,7 +117,7 @@ class PolicyIntegrityChecker:
                 events.append(TamperingEvent(**event_data))
             
             return events
-        except Exception as e:
+        except (OSError, IOError, json.JSONDecodeError, ValueError) as e:
             logger.error(f"Failed to load events: {e}")
             return []
     
@@ -131,7 +131,7 @@ class PolicyIntegrityChecker:
             with open(self.events_file, 'w') as f:
                 json.dump(data, f, indent=2, default=str)
                 
-        except Exception as e:
+        except (OSError, IOError, json.JSONDecodeError) as e:
             logger.error(f"Failed to save events: {e}")
     
     def create_snapshot(
@@ -557,7 +557,7 @@ class PolicyIntegrityChecker:
                     payload=event.to_dict()
                 )
                 logger.debug(f"Sent tampering event {event.event_id} to SIEM")
-        except Exception as e:
+        except (ConnectionError, TimeoutError, RuntimeError) as e:
             logger.error(f"Failed to send tampering event to SIEM: {e}")
     
     def _should_send_tampering_event_to_siem(self, event: TamperingEvent) -> bool:

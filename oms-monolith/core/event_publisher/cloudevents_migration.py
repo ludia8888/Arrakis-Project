@@ -35,9 +35,15 @@ class EventSchemaMigrator:
                     self.migration_stats['migrated_successfully'] += 1
                 else:
                     self.migration_stats['migration_failures'] += 1
-            except Exception as e:
+            except (KeyError, ValueError, TypeError) as e:
                 self.migration_stats['migration_failures'] += 1
                 self.migration_stats['validation_errors'].append(f"Event migration failed: {e}")
+            except json.JSONDecodeError as e:
+                self.migration_stats['migration_failures'] += 1
+                self.migration_stats['validation_errors'].append(f"JSON decode error during migration: {e}")
+            except RuntimeError as e:
+                self.migration_stats['migration_failures'] += 1
+                self.migration_stats['validation_errors'].append(f"Runtime error during migration: {e}")
             
             self.migration_stats['total_events'] += 1
         

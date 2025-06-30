@@ -140,7 +140,7 @@ class TimeseriesEventMappingRule(BaseRule):
             try:
                 event = create_event_from_dict(event_dict)
                 events.append(event)
-            except Exception as e:
+            except (KeyError, ValueError, TypeError) as e:
                 logger.error(f"Failed to parse event: {e}")
         
         return events
@@ -166,7 +166,7 @@ class TimeseriesEventMappingRule(BaseRule):
                 try:
                     result = await self._process_single_event(event)
                     results.append(result)
-                except Exception as e:
+                except (KeyError, ValueError, TypeError, ConnectionError, RuntimeError) as e:
                     logger.error(f"Failed to process event {event.event_id}: {e}")
                     results.append(EventProcessingResult(
                         event_id=event.event_id,
@@ -315,7 +315,7 @@ class TimeseriesEventMappingRule(BaseRule):
             
             return {"action": action, "changes": changes}
             
-        except Exception as e:
+        except (KeyError, ValueError, TypeError, ConnectionError, RuntimeError) as e:
             logger.error(f"Failed to perform OMS mapping {action} for event {event.event_id}: {e}")
             raise
     
@@ -353,7 +353,7 @@ class TimeseriesEventMappingRule(BaseRule):
                     "fields_updated": ["value", "timestamp", "last_updated"],
                     "timestamp": datetime.now(timezone.utc).isoformat()
                 })
-            except Exception as e:
+            except (KeyError, ValueError, TypeError, ConnectionError) as e:
                 logger.error(f"Failed to update sensor reading: {e}")
                 raise
         
@@ -387,7 +387,7 @@ class TimeseriesEventMappingRule(BaseRule):
                 "log_entry_id": f"event_log_{event.event_id}",
                 "timestamp": datetime.now(timezone.utc).isoformat()
             }]
-        except Exception as e:
+        except (KeyError, ValueError, TypeError, ConnectionError) as e:
             logger.error(f"Failed to create event log: {e}")
             raise
     
@@ -442,7 +442,7 @@ class TimeseriesEventMappingRule(BaseRule):
                     "pattern_detected": pattern_type,
                     "timestamp": datetime.now(timezone.utc).isoformat()
                 })
-            except Exception as e:
+            except (KeyError, ValueError, TypeError, ConnectionError) as e:
                 logger.error(f"Failed to update metadata: {e}")
                 raise
         

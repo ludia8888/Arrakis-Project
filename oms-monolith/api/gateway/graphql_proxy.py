@@ -68,7 +68,15 @@ class GraphQLProxy:
                     }]
                 )
 
-        except Exception as e:
+        except (ValueError, TypeError) as e:
+            logger.error(f"GraphQL parsing error: {e}")
+            return GraphQLResponse(
+                errors=[{
+                    "message": str(e),
+                    "extensions": {"code": "PARSE_ERROR"}
+                }]
+            )
+        except RuntimeError as e:
             logger.error(f"GraphQL execution error: {e}")
             return GraphQLResponse(
                 errors=[{
@@ -152,12 +160,20 @@ class GraphQLProxy:
                     }]
                 )
 
-        except Exception as e:
-            logger.error(f"Query execution error: {e}")
+        except httpx.HTTPError as e:
+            logger.error(f"HTTP error during query execution: {e}")
             return GraphQLResponse(
                 errors=[{
                     "message": f"Query execution failed: {str(e)}",
-                    "extensions": {"code": "EXECUTION_ERROR"}
+                    "extensions": {"code": "NETWORK_ERROR"}
+                }]
+            )
+        except (json.JSONDecodeError, ValueError) as e:
+            logger.error(f"Response parsing error: {e}")
+            return GraphQLResponse(
+                errors=[{
+                    "message": f"Invalid response format: {str(e)}",
+                    "extensions": {"code": "PARSE_ERROR"}
                 }]
             )
 
@@ -198,7 +214,23 @@ class GraphQLProxy:
                 data={mutation_name: result}
             )
 
-        except Exception as e:
+        except (ValueError, TypeError) as e:
+            logger.error(f"Mutation parsing error: {e}")
+            return GraphQLResponse(
+                errors=[{
+                    "message": str(e),
+                    "extensions": {"code": "PARSE_ERROR"}
+                }]
+            )
+        except httpx.HTTPError as e:
+            logger.error(f"HTTP error during mutation: {e}")
+            return GraphQLResponse(
+                errors=[{
+                    "message": str(e),
+                    "extensions": {"code": "NETWORK_ERROR"}
+                }]
+            )
+        except RuntimeError as e:
             logger.error(f"Mutation execution error: {e}")
             return GraphQLResponse(
                 errors=[{
@@ -345,7 +377,7 @@ class GraphQLProxy:
         if response.status_code >= 200 and response.status_code < 300:
             return response.json()
         else:
-            raise Exception(f"REST API call failed: {response.status_code} - {response.text}")
+            raise httpx.HTTPError(f"REST API call failed: {response.status_code} - {response.text}")
 
     async def get_schema(self) -> str:
         """통합 GraphQL 스키마 반환"""

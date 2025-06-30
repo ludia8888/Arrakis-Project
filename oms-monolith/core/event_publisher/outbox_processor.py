@@ -11,8 +11,8 @@ from datetime import datetime
 from typing import Dict, Optional
 
 from database.clients.terminus_db import TerminusDBClient
-from shared.infrastructure.metrics import MetricsCollector
-from shared.infrastructure.nats_client import NATSClient
+from shared.monitoring.unified_metrics import get_metrics_collector
+from shared.infrastructure.unified_nats_client import UnifiedNATSClient as NATSClient
 from .cloudevents_enhanced import EnhancedCloudEvent, CloudEventValidator
 from .cloudevents_adapter import CloudEventsAdapter
 from .cloudevents_migration import EventSchemaMigrator
@@ -67,8 +67,11 @@ class OutboxProcessor:
                 if processed > 0:
                     self.metrics.record_events_processed(processed)
 
-            except Exception as e:
-                logger.error(f"Outbox processing error: {e}")
+            except (ConnectionError, TimeoutError) as e:
+                logger.error(f"Network error during outbox processing: {e}")
+                self.metrics.record_processing_error()
+            except RuntimeError as e:
+                logger.error(f"Runtime error during outbox processing: {e}")
                 self.metrics.record_processing_error()
 
             await asyncio.sleep(self.process_interval)
@@ -109,8 +112,14 @@ class OutboxProcessor:
                 await self._mark_published(event["id"])
                 processed += 1
 
-            except Exception as e:
-                logger.error(f"Failed to publish event {event['id']}: {e}")
+            except (ConnectionError, TimeoutError) as e:
+                logger.error(f"Network error publishing event {event['id']}: {e}")
+                await self._mark_failed(event["id"], str(e))
+            except json.JSONDecodeError as e:
+                logger.error(f"JSON decode error for event {event['id']}: {e}")
+                await self._mark_failed(event["id"], str(e))
+            except RuntimeError as e:
+                logger.error(f"Runtime error publishing event {event['id']}: {e}")
                 await self._mark_failed(event["id"], str(e))
 
         return processed
@@ -177,8 +186,16 @@ class OutboxProcessor:
                 # 기존 NATS 직접 발행
                 await self._publish_to_nats_directly(cloud_event, event)
             
-        except Exception as e:
-            logger.error(f"Failed to publish event {event['id']} as CloudEvent: {e}")
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Network error publishing event {event['id']} as CloudEvent: {e}")
+            # 레거시 형식으로 fallback
+            await self._publish_legacy_event(event)
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON decode error for event {event['id']} as CloudEvent: {e}")
+            # 레거시 형식으로 fallback
+            await self._publish_legacy_event(event)
+        except RuntimeError as e:
+            logger.error(f"Runtime error publishing event {event['id']} as CloudEvent: {e}")
             # 레거시 형식으로 fallback
             await self._publish_legacy_event(event)
     

@@ -13,6 +13,11 @@ from pydantic import BaseModel, Field
 
 from core.traversal.traversal_engine import TraversalEngine
 from core.traversal.dependency_analyzer import DependencyAnalyzer
+from shared.exceptions import NotFoundError, ValidationError, ServiceException, InfrastructureException
+from shared.exceptions.domain_exceptions import (
+    TraversalException, TraversalCycleDetectedError, 
+    TraversalDepthLimitError, SchemaException
+)
 from core.traversal.semantic_validator import SemanticValidator
 from core.validation.merge_validation_service import MergeValidationService, MergeStrategy
 from core.validation.adapters.terminus_traversal_adapter import create_terminus_traversal_adapter
@@ -38,9 +43,12 @@ router = APIRouter(prefix="/api/v1/traversal", tags=["Graph Traversal"])
 # Dependency Injection Functions
 async def get_terminus_client() -> TerminusDBClient:
     """Get configured TerminusDB client for traversal operations"""
+    from shared.config.environment import get_config
+    config = get_config()
     settings = get_settings()
+    
     client = TerminusDBClient(
-        endpoint=getattr(settings, 'TERMINUSDB_ENDPOINT', 'http://localhost:6363'),
+        endpoint=config.get_terminus_db_url(),
         username=getattr(settings, 'TERMINUSDB_USERNAME', 'admin'),
         password=getattr(settings, 'TERMINUSDB_PASSWORD', 'changeme-admin-pass')
     )
@@ -61,7 +69,7 @@ async def get_terminus_client() -> TerminusDBClient:
     finally:
         try:
             await client.disconnect()
-        except Exception as e:
+        except (ConnectionError, RuntimeError) as e:
             logger.warning(f"Error disconnecting from TerminusDB: {e}")
 
 
@@ -170,8 +178,27 @@ async def traverse_graph(
         
         return result
         
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Graph traversal failed: {str(e)}")
+    except TraversalDepthLimitError as e:
+        logger.warning(f"Traversal depth limit exceeded: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except TraversalCycleDetectedError as e:
+        logger.warning(f"Cycle detected in traversal: {e}")
+        raise HTTPException(status_code=422, detail=f"Cycle detected: {e.cycle_path}")
+    except NotFoundError as e:
+        logger.warning(f"Entity not found: {e}")
+        raise HTTPException(status_code=404, detail=str(e))
+    except ValidationError as e:
+        logger.warning(f"Validation error in traversal: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except InfrastructureException as e:
+        logger.error(f"Infrastructure error during traversal: {e}")
+        raise HTTPException(status_code=503, detail="Service temporarily unavailable")
+    except (TypeError, AttributeError) as e:
+        logger.error(f"Data structure error in graph traversal: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
+    except RuntimeError as e:
+        logger.error(f"Runtime error in graph traversal: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/path/{source}/{target}", response_model=List[DependencyPath])
@@ -203,8 +230,12 @@ async def find_paths(
         # Apply limit
         return paths[:limit]
         
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Path finding failed: {str(e)}")
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=f"Entity not found: {str(e)}")
+    except TraversalException as e:
+        raise HTTPException(status_code=422, detail=f"Traversal error: {str(e)}")
+    except ServiceException as e:
+        raise HTTPException(status_code=503, detail=f"Service error: {str(e)}")
 
 
 # Dependency Analysis Endpoints
@@ -250,8 +281,12 @@ async def get_entity_dependencies(
             
         return result
         
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Dependency analysis failed: {str(e)}")
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=f"Entity not found: {str(e)}")
+    except TraversalException as e:
+        raise HTTPException(status_code=422, detail=f"Analysis error: {str(e)}")
+    except ServiceException as e:
+        raise HTTPException(status_code=503, detail=f"Service error: {str(e)}")
 
 
 @router.post("/impact-analysis", response_model=Dict[str, Any])
@@ -296,8 +331,12 @@ async def analyze_change_impact(
             
         return result
         
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Impact analysis failed: {str(e)}")
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=f"Validation error: {str(e)}")
+    except TraversalException as e:
+        raise HTTPException(status_code=422, detail=f"Analysis error: {str(e)}")
+    except ServiceException as e:
+        raise HTTPException(status_code=503, detail=f"Service error: {str(e)}")
 
 
 # Graph Metrics and Health Endpoints
@@ -320,8 +359,10 @@ async def get_graph_metrics(
         metrics = await traversal_engine.get_graph_metrics()
         return metrics
         
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Metrics calculation failed: {str(e)}")
+    except InfrastructureException as e:
+        raise HTTPException(status_code=503, detail=f"Infrastructure error: {str(e)}")
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=f"Calculation error: {str(e)}")
 
 
 @router.get("/health/conflicts", response_model=List[SemanticConflict])
@@ -358,8 +399,10 @@ async def detect_semantic_conflicts(
             
         return conflicts
         
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Conflict detection failed: {str(e)}")
+    except TraversalException as e:
+        raise HTTPException(status_code=422, detail=f"Detection error: {str(e)}")
+    except ServiceException as e:
+        raise HTTPException(status_code=503, detail=f"Service error: {str(e)}")
 
 
 # Advanced Query Endpoints
@@ -390,8 +433,10 @@ async def get_critical_paths(
         
         return filtered_paths
         
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Critical path analysis failed: {str(e)}")
+    except TraversalException as e:
+        raise HTTPException(status_code=422, detail=f"Analysis error: {str(e)}")
+    except ServiceException as e:
+        raise HTTPException(status_code=503, detail=f"Service error: {str(e)}")
 
 
 # Utility Endpoints
@@ -414,8 +459,8 @@ async def get_query_performance_report(
         performance_report = query_planner.get_query_performance_report()
         return performance_report
         
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Performance report generation failed: {str(e)}")
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=f"Report generation error: {str(e)}")
 
 
 @router.post("/clear-cache")
@@ -435,8 +480,10 @@ async def clear_traversal_cache(
         # Implementation would clear appropriate caches
         return {"message": f"Cache '{cache_type}' cleared successfully"}
         
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Cache clearing failed: {str(e)}")
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=f"Permission denied: {str(e)}")
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=f"Cache operation error: {str(e)}")
 
 
 # Branch/Version-aware Endpoints
@@ -478,14 +525,18 @@ async def traverse_graph_on_branch(
         
         return result
         
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Branch traversal failed: {str(e)}")
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=f"Branch not found: {str(e)}")
+    except TraversalException as e:
+        raise HTTPException(status_code=422, detail=f"Traversal error: {str(e)}")
+    except ServiceException as e:
+        raise HTTPException(status_code=503, detail=f"Service error: {str(e)}")
     finally:
         # Always return to main branch
         try:
             # Note: checkout_branch may not exist in current client
             pass  # Branch switching handled via connection parameters
-        except Exception:
+        except (ConnectionError, RuntimeError):
             pass
 
 
@@ -582,9 +633,15 @@ async def validate_merge_operation(
             "validated_by": current_user.get("username", "unknown")
         }
         
-    except Exception as e:
-        logger.error(f"Merge validation failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Merge validation failed: {str(e)}")
+    except ValidationError as e:
+        logger.error(f"Merge validation error: {e}")
+        raise HTTPException(status_code=400, detail=f"Validation error: {str(e)}")
+    except NotFoundError as e:
+        logger.error(f"Branch not found: {e}")
+        raise HTTPException(status_code=404, detail=f"Branch not found: {str(e)}")
+    except ServiceException as e:
+        logger.error(f"Service error during merge validation: {e}")
+        raise HTTPException(status_code=503, detail=f"Service error: {str(e)}")
 
 
 @router.post("/detect-cycles", response_model=Dict[str, Any])
@@ -616,9 +673,12 @@ async def detect_circular_dependencies(
             "detected_by": current_user.get("username", "unknown")
         }
         
-    except Exception as e:
-        logger.error(f"Circular dependency detection failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Cycle detection failed: {str(e)}")
+    except TraversalException as e:
+        logger.error(f"Traversal error during cycle detection: {e}")
+        raise HTTPException(status_code=422, detail=f"Detection error: {str(e)}")
+    except ServiceException as e:
+        logger.error(f"Service error during cycle detection: {e}")
+        raise HTTPException(status_code=503, detail=f"Service error: {str(e)}")
 
 
 @router.get("/metrics/graph", response_model=Dict[str, Any])
@@ -645,9 +705,12 @@ async def get_comprehensive_graph_metrics(
             "calculated_by": current_user.get("username", "unknown")
         }
         
-    except Exception as e:
-        logger.error(f"Graph metrics calculation failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Metrics calculation failed: {str(e)}")
+    except InfrastructureException as e:
+        logger.error(f"Infrastructure error during metrics calculation: {e}")
+        raise HTTPException(status_code=503, detail=f"Infrastructure error: {str(e)}")
+    except RuntimeError as e:
+        logger.error(f"Runtime error during metrics calculation: {e}")
+        raise HTTPException(status_code=500, detail=f"Calculation error: {str(e)}")
 
 
 @router.get("/health", response_model=Dict[str, Any])
@@ -672,7 +735,7 @@ async def health_check(
             "timestamp": "2024-01-01T00:00:00Z"  # Would use datetime.utcnow()
         }
         
-    except Exception as e:
+    except (ConnectionError, ServiceException) as e:
         logger.error(f"Health check failed: {e}")
         return {
             "success": False,

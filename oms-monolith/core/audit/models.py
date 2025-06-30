@@ -266,10 +266,5 @@ def create_audit_event(
     )
 
 
-def mask_pii_fields(data: Dict[str, Any], pii_fields: List[str]) -> Dict[str, Any]:
-    """Mask PII fields in data for GDPR compliance"""
-    masked_data = data.copy()
-    for field in pii_fields:
-        if field in masked_data:
-            masked_data[field] = "***MASKED***"
-    return masked_data
+# PII masking moved to shared.security.pii_utils
+from shared.security.pii_utils import mask_pii_fields

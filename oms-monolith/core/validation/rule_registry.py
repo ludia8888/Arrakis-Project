@@ -79,7 +79,7 @@ class RuleRegistry:
                 
                 logger.info(f"Loaded {len(rules)} rules via Entry-point system")
                 
-            except Exception as e:
+            except (ImportError, AttributeError, RuntimeError) as e:
                 logger.error(f"Failed to load rules via Entry-point: {e}")
                 # Entry-point 실패시 폴백으로 패키지 스캔 방식 사용
                 rules = await self._load_rules_fallback(package_name)
@@ -138,13 +138,13 @@ class RuleRegistry:
                                     rules.append(rule_instance)
                                     logger.info(f"Loaded rule: {rule_id} from {module_name}")
                                     
-                            except Exception as e:
+                            except (TypeError, ValueError, RuntimeError) as e:
                                 logger.error(f"Failed to instantiate rule {attr_name}: {e}")
                                 
-                except Exception as e:
+                except (ImportError, AttributeError, RuntimeError) as e:
                     logger.error(f"Failed to load module {module_name}: {e}")
                     
-        except Exception as e:
+        except (ImportError, OSError, RuntimeError) as e:
             logger.error(f"Failed to load rules package {package_name}: {e}")
             
         logger.info(f"Loaded {len(rules)} validation rules via fallback")
@@ -176,7 +176,7 @@ class RuleRegistry:
                 # 기본 생성자 시도
                 return rule_class()
                 
-        except Exception as e:
+        except (TypeError, ValueError, RuntimeError) as e:
             logger.error(f"Failed to create instance of {rule_class.__name__}: {e}")
             return None
     
@@ -213,7 +213,7 @@ class RuleRegistry:
             try:
                 await self.rule_loader.reload_rules()
                 logger.info("Rule loader reloaded successfully")
-            except Exception as e:
+            except (RuntimeError, AttributeError) as e:
                 logger.error(f"Failed to reload rule loader: {e}")
         
         return await self.load_rules_from_package()

@@ -127,7 +127,12 @@ class ValidationConfig:
     fail_fast_mode: bool = field(default_factory=lambda: os.getenv("OMS_FAIL_FAST", "false").lower() == "true")
     
     # Policy Server 설정
-    policy_server_url: str = field(default_factory=lambda: os.getenv("OMS_POLICY_SERVER_URL", "http://localhost:8080/api/v1/policies"))
+    @property
+    def policy_server_url(self) -> str:
+        from shared.config.environment import get_config
+        config = get_config()
+        return config.get("OMS_POLICY_SERVER_URL", "http://policy-server:8080/api/v1/policies")
+    
     policy_server_timeout: float = field(default_factory=lambda: float(os.getenv("OMS_POLICY_TIMEOUT", "10.0")))
     policy_server_api_key: Optional[str] = field(default_factory=lambda: os.getenv("OMS_POLICY_API_KEY"))
     
@@ -135,7 +140,12 @@ class ValidationConfig:
     rule_reload_interval: int = field(default_factory=lambda: int(os.getenv("OMS_RULE_RELOAD_INTERVAL", "300")))
     
     # TerminusDB 통합 설정
-    terminus_db_url: str = field(default_factory=lambda: os.getenv("TERMINUSDB_URL", "http://localhost:6363"))
+    @property
+    def terminus_db_url(self) -> str:
+        from shared.config.environment import get_config
+        config = get_config()
+        return config.get_terminus_db_url()
+    
     terminus_default_db: str = field(default_factory=lambda: os.getenv("TERMINUSDB_DEFAULT_DB", "oms"))
     terminus_default_branch: str = field(default_factory=lambda: os.getenv("TERMINUSDB_DEFAULT_BRANCH", "main"))
     terminus_timeout: float = field(default_factory=lambda: float(os.getenv("TERMINUSDB_TIMEOUT", "30.0")))

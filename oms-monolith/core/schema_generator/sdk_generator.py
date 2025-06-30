@@ -290,8 +290,8 @@ export class OMSEventClient {{
   
   static async connect(config: ClientConfig = {{}}): Promise<OMSEventClient> {{
     // Factory method to create client with appropriate adapters
-    const natsUrl = config.natsUrl || '{default_urls.get("nats", "nats://localhost:4222")}';
-    const wsUrl = config.websocketUrl || '{default_urls.get("ws", "ws://localhost:8080")}';
+    const natsUrl = config.natsUrl || process.env.NATS_URL || 'nats://nats-server:4222';
+    const wsUrl = config.websocketUrl || process.env.WS_URL || 'ws://api-gateway:8080';
     
     // Implementation would depend on the actual transport libraries
     // This is a placeholder for the interface
@@ -377,8 +377,8 @@ import {{ OMSEventClient }} from '{self.config.package_name}';
 
 // Create client (implementation depends on transport)
 const client = await OMSEventClient.connect({{
-  natsUrl: 'nats://localhost:4222',
-  websocketUrl: 'ws://localhost:8080'
+  natsUrl: process.env.NATS_URL || 'nats://nats-server:4222',
+  websocketUrl: process.env.WS_URL || 'ws://api-gateway:8080'
 }});
 
 // Subscribe to events
@@ -720,8 +720,8 @@ class OMSEventClient:
             config = ClientConfig()
         
         # Default URLs from AsyncAPI spec
-        nats_url = config.nats_url or '{default_urls.get("nats", "nats://localhost:4222")}'
-        ws_url = config.websocket_url or '{default_urls.get("ws", "ws://localhost:8080")}'
+        nats_url = config.nats_url or os.getenv('NATS_URL', 'nats://nats-server:4222')
+        ws_url = config.websocket_url or os.getenv('WS_URL', 'ws://api-gateway:8080')
         
         # Implementation would depend on the actual transport libraries
         # This is a placeholder for the interface
@@ -862,8 +862,8 @@ from {self.config.package_name.replace("-", "_")} import OMSEventClient, ClientC
 async def main():
     # Create client (implementation depends on transport)
     config = ClientConfig(
-        nats_url="nats://localhost:4222",
-        websocket_url="ws://localhost:8080"
+        nats_url=os.getenv('NATS_URL', 'nats://nats-server:4222'),
+        websocket_url=os.getenv('WS_URL', 'ws://api-gateway:8080')
     )
     
     client = await OMSEventClient.connect(config)

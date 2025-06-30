@@ -210,7 +210,7 @@ class RedisDiscoveryProvider(DiscoveryProvider):
             logger.info(f"Registered service instance: {instance.name}/{instance.id}")
             return True
             
-        except Exception as e:
+        except (redis.RedisError, ConnectionError, RuntimeError) as e:
             logger.error(f"Failed to register service: {e}")
             return False
     
@@ -253,7 +253,7 @@ class RedisDiscoveryProvider(DiscoveryProvider):
             logger.info(f"Deregistered service instance: {service_name}/{instance_id}")
             return True
             
-        except Exception as e:
+        except (redis.RedisError, ConnectionError, RuntimeError) as e:
             logger.error(f"Failed to deregister service: {e}")
             return False
     
@@ -300,7 +300,7 @@ class RedisDiscoveryProvider(DiscoveryProvider):
             
             return instances
             
-        except Exception as e:
+        except (redis.RedisError, ConnectionError, RuntimeError) as e:
             logger.error(f"Failed to discover services: {e}")
             return []
     
@@ -325,7 +325,7 @@ class RedisDiscoveryProvider(DiscoveryProvider):
             
             return True
             
-        except Exception as e:
+        except (redis.RedisError, ConnectionError, RuntimeError) as e:
             logger.error(f"Failed to update health: {e}")
             return False
 
@@ -414,7 +414,7 @@ class DnsDiscoveryProvider(DiscoveryProvider):
                         )
                         instances.append(instance)
                         
-                except Exception:
+                except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer, dns.resolver.Timeout):
                     pass
             
             # Cache results
@@ -422,7 +422,7 @@ class DnsDiscoveryProvider(DiscoveryProvider):
             
             return instances
             
-        except Exception as e:
+        except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer, dns.resolver.Timeout, OSError) as e:
             logger.error(f"DNS discovery failed: {e}")
             return []
     
@@ -575,7 +575,7 @@ class ServiceDiscovery:
             try:
                 if await provider.register(instance):
                     success = True
-            except Exception as e:
+            except RuntimeError as e:
                 logger.error(f"Provider registration failed: {e}")
         
         if success:
@@ -601,7 +601,7 @@ class ServiceDiscovery:
             try:
                 if await provider.deregister(instance_id):
                     success = True
-            except Exception as e:
+            except RuntimeError as e:
                 logger.error(f"Provider deregistration failed: {e}")
         
         return success
@@ -619,7 +619,7 @@ class ServiceDiscovery:
             try:
                 instances = await provider.discover(service_name, version)
                 all_instances.extend(instances)
-            except Exception as e:
+            except RuntimeError as e:
                 logger.error(f"Provider discovery failed: {e}")
         
         # Filter by tags if specified
@@ -695,7 +695,7 @@ class ServiceDiscovery:
                 
                 await asyncio.sleep(10)  # Check every 10 seconds
                 
-            except Exception as e:
+            except RuntimeError as e:
                 logger.error(f"Health check loop error: {e}")
                 await asyncio.sleep(10)
     
@@ -704,7 +704,7 @@ class ServiceDiscovery:
         for provider in self.providers:
             try:
                 await provider.update_health(instance_id, health)
-            except Exception as e:
+            except RuntimeError as e:
                 logger.error(f"Provider health update failed: {e}")
 
 
@@ -758,7 +758,7 @@ class HealthChecker:
             self.health.error = "Timeout"
             self.health.consecutive_failures += 1
             
-        except Exception as e:
+        except (aiohttp.ClientError, ConnectionError) as e:
             self.health.status = ServiceStatus.DOWN
             self.health.error = str(e)
             self.health.consecutive_failures += 1
@@ -795,6 +795,6 @@ class HealthChecker:
             try:
                 await self.check()
                 await asyncio.sleep(self.interval)
-            except Exception as e:
+            except RuntimeError as e:
                 logger.error(f"Health check error: {e}")
                 await asyncio.sleep(self.interval)

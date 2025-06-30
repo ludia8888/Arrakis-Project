@@ -12,15 +12,14 @@ from core.auth import UserContext
 from middleware.auth_secure import get_current_user
 from core.schema.service import SchemaService
 from core.schema.extended_service import ExtendedSchemaService
-from core.validation.input_sanitization import get_secure_processor, SanitizationLevel
+from core.validation.input_sanitization import (
+    get_secure_processor, SanitizationLevel, get_input_sanitizer
+)
 from models.domain import (
     ObjectType, ObjectTypeCreate, ObjectTypeUpdate,
     Property, PropertyCreate, PropertyUpdate,
     Status
 )
-
-# 🔥 ULTIMATE ATTACK KILLER IMPORT 🔥
-from core.security.ultimate_killer import get_ultimate_killer
 
 logger = logging.getLogger(__name__)
 
@@ -31,36 +30,38 @@ router = APIRouter(
 
 def validate_branch_name(branch: str) -> str:
     """
-    🔥 ULTIMATE BRANCH VALIDATION - 모든 공격 완전 차단 🔥
+    Branch name validation with multi-layer security
     """
-    # 🔥 STEP 1: Ultimate Killer로 모든 공격 차단
-    killer = get_ultimate_killer()
-    is_safe, attacks = killer.kill_all_attacks(branch, "branch_name")
-    if not is_safe:
-        logger.critical(f"🔥 BRANCH ATTACK DESTROYED: {branch} - {attacks}")
-        raise HTTPException(status_code=400, detail="Attack blocked")
+    # Layer 1: Input sanitization with PARANOID level
+    sanitizer = get_input_sanitizer()
+    result = sanitizer.sanitize(branch, SanitizationLevel.PARANOID)
     
-    # 🔥 STEP 2: 추가 브랜치 특화 검증
-    if not re.match(r'^[a-zA-Z0-9_-]+$', branch):
-        logger.warning(f"🔥 Invalid branch format blocked: {branch}")
-        raise HTTPException(status_code=400, detail="Attack blocked")
+    if not result.is_safe:
+        logger.warning(f"Branch validation failed: {branch} - threats: {result.detected_threats}")
+        raise HTTPException(status_code=400, detail="Invalid branch name")
     
-    # 🔥 STEP 3: 길이 제한
-    if len(branch) > 50:
-        logger.warning(f"🔥 Oversized branch name blocked: {len(branch)} chars")
+    # Layer 2: Branch-specific pattern validation
+    if not re.match(r'^[a-zA-Z0-9_-]+$', result.sanitized_value):
+        logger.warning(f"Invalid branch format: {branch}")
+        raise HTTPException(status_code=400, detail="Invalid branch format")
+    
+    # Layer 3: Length validation
+    if len(result.sanitized_value) > 50:
+        logger.warning(f"Branch name too long: {len(result.sanitized_value)} chars")
         raise HTTPException(status_code=400, detail="Attack blocked")
     
     return branch
 
-def ultimate_validate_all_inputs(**inputs) -> None:
-    """🔥 모든 입력값에 대해 Ultimate Killer 적용 🔥"""
-    killer = get_ultimate_killer()
+def validate_all_inputs(**inputs) -> None:
+    """Validate all inputs using multi-layer security approach"""
+    sanitizer = get_input_sanitizer()
+    
     for name, value in inputs.items():
-        if value is not None:
-            is_safe, attacks = killer.kill_all_attacks(value, name)
-            if not is_safe:
-                logger.critical(f"🔥 INPUT ATTACK DESTROYED: {name} = {str(value)[:50]}...")
-                raise HTTPException(status_code=400, detail="Attack blocked")
+        if value is not None and isinstance(value, str):
+            result = sanitizer.sanitize(value, SanitizationLevel.PARANOID)
+            if not result.is_safe:
+                logger.warning(f"Input validation failed for {name}: threats={result.detected_threats}")
+                raise HTTPException(status_code=400, detail=f"Invalid input: {name}")
 
 # ==================== Object Types ====================
 
@@ -74,9 +75,9 @@ async def list_object_types(
     user: UserContext = Depends(get_current_user),
     request: Request = None
 ):
-    """🔥 List all object types - ULTIMATE SECURITY 🔥"""
-    # 🔥 KILL ALL ATTACKS IN ALL INPUTS
-    ultimate_validate_all_inputs(
+    """List all object types with comprehensive security validation"""
+    # Multi-layer input validation
+    validate_all_inputs(
         branch=branch,
         status=status.value if status else None,
         search=search,
@@ -126,16 +127,16 @@ async def create_object_type(
     user: UserContext = Depends(get_current_user),
     request: Request = None
 ):
-    """🔥 Create object type - ULTIMATE ATTACK KILLER 🔥"""
-    # 🔥 STEP 1: ULTIMATE KILLER - 모든 공격 즉시 차단
-    ultimate_validate_all_inputs(
+    """ Create object type - ULTIMATE ATTACK KILLER """
+    # Step 1: ULTIMATE KILLER - 모든 공격 즉시 차단
+    validate_all_inputs(
         branch=branch,
         name=data.name,
         display_name=data.display_name,
         description=data.description
     )
     
-    # 🔥 STEP 2: 브랜치 검증
+    # Step 2: 브랜치 검증
     validate_branch_name(branch)
     
     # 서비스 접근 방식 통일
@@ -144,7 +145,7 @@ async def create_object_type(
     else:
         raise HTTPException(status_code=503, detail="Service container not initialized")
     
-    # 🔥 STEP 3: 추가 보안 검증
+    # Step 3: 추가 보안 검증
     processor = get_secure_processor()
     
     # Sanitize name with additional security
@@ -797,9 +798,36 @@ async def create_semantic_type(
             "semanticType": result,
             "branch": branch
         }
-    except Exception as e:
-        logger.error(f"❌ SemanticType creation failed: {e}")
-        raise
+    except ConnectionError as e:
+        logger.error(f"❌ Database connection error creating SemanticType: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail="Database service temporarily unavailable"
+        )
+    except TimeoutError as e:
+        logger.error(f"❌ Timeout creating SemanticType: {e}")
+        raise HTTPException(
+            status_code=504,
+            detail="Operation timed out"
+        )
+    except ValueError as e:
+        logger.error(f"❌ Invalid data for SemanticType creation: {e}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid semantic type data: {str(e)}"
+        )
+    except KeyError as e:
+        logger.error(f"❌ Missing required field for SemanticType: {e}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Missing required field: {str(e)}"
+        )
+    except RuntimeError as e:
+        logger.error(f"❌ Unexpected error creating SemanticType: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Internal server error"
+        )
 
 # ==================== Struct Types ====================
 

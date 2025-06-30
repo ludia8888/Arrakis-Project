@@ -100,8 +100,10 @@ class LockHeartbeatService:
         if self.db_service:
             try:
                 await self.db_service.store_heartbeat_record(heartbeat)
-            except Exception as e:
-                logger.error(f"Failed to persist heartbeat record: {e}")
+            except (ConnectionError, TimeoutError) as e:
+                logger.error(f"Database connection error persisting heartbeat record: {e}")
+            except RuntimeError as e:
+                logger.error(f"Runtime error persisting heartbeat record: {e}")
         
         logger.debug(
             f"Heartbeat received for lock {lock.id} from {service_name} (status: {status})"
@@ -180,8 +182,8 @@ class LockHeartbeatService:
                 logger.debug("Heartbeat check cycle completed")
             except asyncio.CancelledError:
                 break
-            except Exception as e:
-                logger.error(f"Error in heartbeat checker loop: {e}")
+            except RuntimeError as e:
+                logger.error(f"Runtime error in heartbeat checker loop: {e}")
                 await asyncio.sleep(5)  # Brief pause before retry
     
     def get_heartbeat_statistics(self) -> Dict[str, Any]:

@@ -90,7 +90,10 @@ class QuiverEventConsumer:
             self.is_running = True
             logger.info("Quiver event consumer started successfully")
             
-        except Exception as e:
+        except ConnectionError as e:
+            logger.error(f"Failed to connect to NATS: {e}")
+            raise
+        except RuntimeError as e:
             logger.error(f"Failed to start Quiver event consumer: {e}")
             raise
     
@@ -116,7 +119,7 @@ class QuiverEventConsumer:
             stream_name = "quiver-events"
             try:
                 await self.nats_client.js.stream_info(stream_name)
-            except Exception:
+            except (KeyError, ValueError):
                 # Create stream
                 stream_config = {
                     "name": stream_name,
@@ -136,7 +139,10 @@ class QuiverEventConsumer:
             
             logger.info(f"Created consumer for subject: {subject}")
             
-        except Exception as e:
+        except ConnectionError as e:
+            logger.error(f"Failed to connect to JetStream for {subject}: {e}")
+            raise
+        except RuntimeError as e:
             logger.error(f"Failed to create consumer for {subject}: {e}")
             raise
     
@@ -187,8 +193,16 @@ class QuiverEventConsumer:
             processing_time = (datetime.now() - start_time).total_seconds() * 1000
             logger.debug(f"Processed event {quiver_event.event_id} in {processing_time:.2f}ms")
             
-        except Exception as e:
-            logger.error(f"Failed to process message: {e}")
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse message JSON: {e}")
+            await msg.nak()
+            self.error_count += 1
+        except (KeyError, ValueError) as e:
+            logger.error(f"Invalid message format: {e}")
+            await msg.nak()
+            self.error_count += 1
+        except RuntimeError as e:
+            logger.error(f"Runtime error processing message: {e}")
             await msg.nak()
             self.error_count += 1
     
@@ -221,7 +235,10 @@ class QuiverEventConsumer:
             if self.event_port and result.metadata.get("ontology_changes", 0) > 0:
                 await self._publish_response_events(event, result)
                 
-        except Exception as e:
+        except ValidationError as e:
+            logger.error(f"Validation error for event {event.event_id}: {e}")
+            raise
+        except RuntimeError as e:
             logger.error(f"Failed to process event {event.event_id}: {e}")
             raise
     
@@ -292,7 +309,7 @@ class QuiverEventConsumer:
                 health["nats_connected"] = nats_connected
                 if not nats_connected:
                     health["status"] = "unhealthy"
-        except Exception as e:
+        except (ConnectionError, AttributeError) as e:
             health["status"] = "unhealthy"
             health["error"] = str(e)
         

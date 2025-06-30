@@ -9,9 +9,11 @@ from pydantic import BaseModel, Field
 
 from core.auth import UserContext
 from middleware.auth_secure import get_current_user
-from core.audit.audit_service import get_audit_service, AuditServiceError
-from models.audit_events import AuditEventFilter, AuditAction, ResourceType
+from core.audit import AuditEventFilter, AuditAction, ResourceType
+from core.audit.dependencies import get_audit_service
+from core.audit.audit_service import AuditServiceError
 from utils.logger import get_logger
+from shared.exceptions import ServiceTimeoutError, DatabaseConnectionError
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/api/v1/audit", tags=["Audit Management"])
@@ -172,8 +174,20 @@ async def query_audit_events(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Audit service error: {str(e)}"
         )
-    except Exception as e:
-        logger.error(f"Error querying audit events: {e}")
+    except (ConnectionError, TimeoutError) as e:
+        logger.error(f"Service connection error querying audit events: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Audit service temporarily unavailable"
+        )
+    except KeyError as e:
+        logger.error(f"Missing required field in audit data: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Invalid audit data format"
+        )
+    except RuntimeError as e:
+        logger.error(f"Unexpected error querying audit events: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to query audit events"
@@ -229,8 +243,14 @@ async def get_audit_event(
         
     except HTTPException:
         raise
-    except Exception as e:
-        logger.error(f"Error getting audit event {event_id}: {e}")
+    except (ConnectionError, TimeoutError) as e:
+        logger.error(f"Service connection error getting audit event {event_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Audit service temporarily unavailable"
+        )
+    except RuntimeError as e:
+        logger.error(f"Unexpected error getting audit event {event_id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get audit event"
@@ -268,8 +288,14 @@ async def get_audit_statistics(
             queue_health=stats.get('queue_health', {})
         )
         
-    except Exception as e:
-        logger.error(f"Error getting audit statistics: {e}")
+    except (ConnectionError, TimeoutError) as e:
+        logger.error(f"Service connection error getting audit statistics: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Audit service temporarily unavailable"
+        )
+    except RuntimeError as e:
+        logger.error(f"Unexpected error getting audit statistics: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get audit statistics"
@@ -320,12 +346,26 @@ async def get_audit_health(
         
         return health_status
         
-    except Exception as e:
-        logger.error(f"Error getting audit health: {e}")
+    except (ConnectionError, TimeoutError) as e:
+        logger.error(f"Service connection error getting audit health: {e}")
         return {
             "status": "unhealthy",
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "error": str(e)
+            "error": "Service connection failed"
+        }
+    except DatabaseConnectionError as e:
+        logger.error(f"Database connection error getting audit health: {e}")
+        return {
+            "status": "unhealthy",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "error": "Database unavailable"
+        }
+    except RuntimeError as e:
+        logger.error(f"Unexpected error getting audit health: {e}")
+        return {
+            "status": "unhealthy",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "error": "Health check failed"
         }
 
 
@@ -358,8 +398,20 @@ async def generate_compliance_report(
             security_highlights=report['security_highlights']
         )
         
-    except Exception as e:
-        logger.error(f"Error generating compliance report: {e}")
+    except (ConnectionError, TimeoutError) as e:
+        logger.error(f"Service connection error generating compliance report: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Audit service temporarily unavailable"
+        )
+    except ValueError as e:
+        logger.error(f"Invalid date range for compliance report: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date range specified"
+        )
+    except RuntimeError as e:
+        logger.error(f"Unexpected error generating compliance report: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to generate compliance report"
@@ -423,8 +475,20 @@ async def export_audit_logs(
         
     except HTTPException:
         raise
-    except Exception as e:
-        logger.error(f"Error exporting audit logs: {e}")
+    except (ConnectionError, TimeoutError) as e:
+        logger.error(f"Service connection error exporting audit logs: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Audit service temporarily unavailable"
+        )
+    except ValueError as e:
+        logger.error(f"Invalid export parameters: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid export parameters"
+        )
+    except RuntimeError as e:
+        logger.error(f"Unexpected error exporting audit logs: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to export audit logs"
@@ -456,8 +520,20 @@ async def cleanup_expired_events(
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
-    except Exception as e:
-        logger.error(f"Error cleaning up expired events: {e}")
+    except (ConnectionError, TimeoutError) as e:
+        logger.error(f"Service connection error cleaning up expired events: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Audit service temporarily unavailable"
+        )
+    except DatabaseConnectionError as e:
+        logger.error(f"Database error cleaning up expired events: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database temporarily unavailable"
+        )
+    except RuntimeError as e:
+        logger.error(f"Unexpected error cleaning up expired events: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to cleanup expired events"
@@ -486,8 +562,20 @@ async def verify_audit_integrity(
             "integrity_report": integrity_report
         }
         
-    except Exception as e:
-        logger.error(f"Error verifying audit integrity: {e}")
+    except (ConnectionError, TimeoutError) as e:
+        logger.error(f"Service connection error verifying audit integrity: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Audit service temporarily unavailable"
+        )
+    except DatabaseConnectionError as e:
+        logger.error(f"Database error verifying audit integrity: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database temporarily unavailable"
+        )
+    except RuntimeError as e:
+        logger.error(f"Unexpected error verifying audit integrity: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to verify audit integrity"

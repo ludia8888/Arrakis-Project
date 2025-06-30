@@ -9,7 +9,7 @@ import json
 
 from core.auth import UserContext
 from core.issue_tracking.issue_service import get_issue_service
-from models.issue_tracking import IssueReference, parse_issue_reference, extract_issue_references
+from core.issue_tracking.models import IssueReference, parse_issue_reference, extract_issue_references
 from utils.logger import get_logger
 
 logger = get_logger(__name__)

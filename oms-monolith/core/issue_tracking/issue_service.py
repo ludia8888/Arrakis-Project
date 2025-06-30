@@ -5,7 +5,7 @@ Validates and enforces issue linking requirements for all changes
 import asyncio
 from typing import Optional, List, Dict, Any, Tuple
 from datetime import datetime, timezone, timedelta
-import httpx
+from shared.clients.unified_http_client import UnifiedHTTPClient
 from abc import ABC, abstractmethod
 
 from core.issue_tracking.models import (
@@ -45,16 +45,24 @@ class JiraClient(IssueProviderClient):
         self.base_url = base_url.rstrip('/')
         self.api_token = api_token
         self.email = email
-        self.client = httpx.AsyncClient(
-            auth=(email, api_token),
-            headers={"Accept": "application/json"},
-            timeout=10.0
+        self.client = UnifiedHTTPClient(
+            base_url=self.base_url,
+            headers={
+                "Accept": "application/json",
+                "Authorization": f"Basic {self._encode_auth(email, api_token)}"
+            }
         )
+    
+    def _encode_auth(self, email: str, api_token: str) -> str:
+        """Encode email and token for basic auth"""
+        import base64
+        auth_string = f"{email}:{api_token}"
+        return base64.b64encode(auth_string.encode()).decode()
     
     async def validate_issue(self, issue_id: str) -> IssueValidationResult:
         """Validate JIRA issue"""
         try:
-            response = await self.client.get(f"{self.base_url}/rest/api/3/issue/{issue_id}")
+            response = await self.client.get(f"/rest/api/3/issue/{issue_id}")
             
             if response.status_code == 404:
                 return IssueValidationResult(
@@ -108,21 +116,29 @@ class JiraClient(IssueProviderClient):
                 }
             )
             
-        except Exception as e:
-            logger.error(f"Error validating JIRA issue {issue_id}: {e}")
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Network error validating JIRA issue {issue_id}: {e}")
             return IssueValidationResult(
                 valid=False,
-                error_message=f"Failed to validate issue: {str(e)}"
+                error_message=f"Network error: {str(e)}"
+            )
+        except (KeyError, ValueError) as e:
+            logger.error(f"Data error validating JIRA issue {issue_id}: {e}")
+            return IssueValidationResult(
+                valid=False,
+                error_message=f"Invalid response format: {str(e)}"
             )
     
     async def get_issue_metadata(self, issue_id: str) -> Dict[str, Any]:
         """Get JIRA issue metadata"""
         try:
-            response = await self.client.get(f"{self.base_url}/rest/api/3/issue/{issue_id}")
+            response = await self.client.get(f"/rest/api/3/issue/{issue_id}")
             if response.status_code == 200:
                 return response.json()
-        except Exception as e:
-            logger.error(f"Error getting JIRA issue metadata: {e}")
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Network error getting JIRA issue metadata: {e}")
+        except (KeyError, ValueError) as e:
+            logger.error(f"Data error getting JIRA issue metadata: {e}")
         return {}
     
     async def check_user_assignment(self, issue_id: str, user_email: str) -> bool:
@@ -131,7 +147,7 @@ class JiraClient(IssueProviderClient):
             metadata = await self.get_issue_metadata(issue_id)
             assignee = metadata.get("fields", {}).get("assignee", {}).get("emailAddress")
             return assignee == user_email
-        except Exception:
+        except (ConnectionError, KeyError, ValueError):
             return False
     
     def _map_jira_status(self, jira_status: str) -> IssueStatus:
@@ -167,19 +183,18 @@ class GitHubClient(IssueProviderClient):
         self.token = token
         self.owner = owner
         self.repo = repo
-        self.client = httpx.AsyncClient(
+        self.client = UnifiedHTTPClient(
+            base_url="https://api.github.com",
             headers={
                 "Authorization": f"token {token}",
                 "Accept": "application/vnd.github.v3+json"
-            },
-            timeout=10.0
+            }
         )
     
     async def validate_issue(self, issue_id: str) -> IssueValidationResult:
         """Validate GitHub issue"""
         try:
-            url = f"https://api.github.com/repos/{self.owner}/{self.repo}/issues/{issue_id}"
-            response = await self.client.get(url)
+            response = await self.client.get(f"/repos/{self.owner}/{self.repo}/issues/{issue_id}")
             
             if response.status_code == 404:
                 return IssueValidationResult(
@@ -242,22 +257,29 @@ class GitHubClient(IssueProviderClient):
                 }
             )
             
-        except Exception as e:
-            logger.error(f"Error validating GitHub issue {issue_id}: {e}")
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Network error validating GitHub issue {issue_id}: {e}")
             return IssueValidationResult(
                 valid=False,
-                error_message=f"Failed to validate issue: {str(e)}"
+                error_message=f"Network error: {str(e)}"
+            )
+        except (KeyError, ValueError) as e:
+            logger.error(f"Data error validating GitHub issue {issue_id}: {e}")
+            return IssueValidationResult(
+                valid=False,
+                error_message=f"Invalid response format: {str(e)}"
             )
     
     async def get_issue_metadata(self, issue_id: str) -> Dict[str, Any]:
         """Get GitHub issue metadata"""
         try:
-            url = f"https://api.github.com/repos/{self.owner}/{self.repo}/issues/{issue_id}"
-            response = await self.client.get(url)
+            response = await self.client.get(f"/repos/{self.owner}/{self.repo}/issues/{issue_id}")
             if response.status_code == 200:
                 return response.json()
-        except Exception as e:
-            logger.error(f"Error getting GitHub issue metadata: {e}")
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Network error getting GitHub issue metadata: {e}")
+        except (KeyError, ValueError) as e:
+            logger.error(f"Data error getting GitHub issue metadata: {e}")
         return {}
     
     async def check_user_assignment(self, issue_id: str, user_email: str) -> bool:
@@ -267,7 +289,7 @@ class GitHubClient(IssueProviderClient):
             assignees = metadata.get("assignees", [])
             # Note: Would need to map GitHub username to email
             return any(assignee.get("login") == user_email for assignee in assignees)
-        except Exception:
+        except (ConnectionError, KeyError, ValueError):
             return False
 
 
@@ -386,7 +408,7 @@ class IssueTrackingService:
                     
                 logger.info(f"Initialized issue provider: {provider.value}")
                 
-            except Exception as e:
+            except (ConnectionError, ValueError, KeyError) as e:
                 logger.error(f"Failed to initialize provider {provider.value}: {e}")
         
         # Always have internal provider as fallback
@@ -555,11 +577,11 @@ class IssueTrackingService:
                 valid=False,
                 error_message=f"Timeout validating issue with {issue_ref.provider.value}"
             )
-        except Exception as e:
-            logger.error(f"Error validating issue {issue_ref.issue_id}: {e}")
+        except (ConnectionError, RuntimeError) as e:
+            logger.error(f"Service error validating issue {issue_ref.issue_id}: {e}")
             return IssueValidationResult(
                 valid=False,
-                error_message=f"Failed to validate issue: {str(e)}"
+                error_message=f"Service error: {str(e)}"
             )
     
     async def link_change_to_issues(
@@ -607,8 +629,10 @@ class IssueTrackingService:
             from core.issue_tracking.issue_database import get_issue_database
             issue_db = await get_issue_database()
             await issue_db.store_change_issue_link(link)
-        except Exception as e:
-            logger.error(f"Failed to store change-issue link: {e}")
+        except (ConnectionError, RuntimeError) as e:
+            logger.error(f"Database error storing change-issue link: {e}")
+        except ValueError as e:
+            logger.error(f"Invalid data for change-issue link: {e}")
         
         return link
     

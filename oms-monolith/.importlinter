@@ -1,0 +1,71 @@
+[importlinter]
+root_package = .
+
+[importlinter:contract:no-deprecated-dlq]
+name = No imports from deprecated DLQ handlers
+type = forbidden
+source_modules = 
+    api
+    core
+    infrastructure
+    models
+    shared
+forbidden_modules = 
+    middleware.dlq_handler
+    core.action.dlq_handler
+ignore_imports = 
+    middleware.dlq_handler -> shared.dlq
+    core.action.dlq_handler -> shared.dlq
+
+[importlinter:contract:no-ultimate-killer]
+name = No imports from deprecated ultimate_killer module
+type = forbidden
+source_modules = 
+    api
+    core
+    middleware
+    services
+    shared
+forbidden_modules = 
+    core.security.ultimate_killer
+
+[importlinter:contract:shared-not-depend-on-core]
+name = Shared modules should not depend on core modules
+type = forbidden
+source_modules = 
+    shared
+forbidden_modules = 
+    core
+    api
+    middleware
+ignore_imports = 
+    shared.dlq.handlers -> shared.infrastructure.unified_nats_client
+    shared.dlq.handlers -> shared.monitoring.unified_metrics
+
+[importlinter:contract:no-circular-deps]
+name = No circular dependencies between major modules
+type = layers
+layers = 
+    shared
+    models
+    core
+    middleware
+    api
+    infrastructure
+
+[importlinter:contract:enforce-boundaries]
+name = Enforce module boundaries
+type = independence
+modules = 
+    core.action
+    core.audit
+    core.auth
+    core.branch
+    core.scheduler
+    core.traversal
+    core.validation
+ignore_imports = 
+    core.action -> shared.dlq
+    core.audit -> shared.audit
+    core.auth -> shared.security
+    core.scheduler -> shared.dlq

@@ -95,7 +95,7 @@ class TerminusNativeSchemaRule(BreakingChangeRule):
             
             logger.info(f"TerminusDB native schema validation found {len(result.breaking_changes)} issues")
             
-        except Exception as e:
+        except (KeyError, ValueError, TypeError, ConnectionError, RuntimeError) as e:
             logger.error(f"TerminusDB native schema validation failed: {e}")
             # Create a breaking change to indicate validation failure
             result.breaking_changes.append(BreakingChange(
@@ -225,7 +225,7 @@ class TerminusNativeCircularDependencyRule(BaseRule):
             
             logger.info(f"TerminusDB native circular dependency detection found {len(cycles)} cycles")
             
-        except Exception as e:
+        except (KeyError, ValueError, TypeError, ConnectionError, RuntimeError) as e:
             logger.error(f"TerminusDB native circular dependency detection failed: {e}")
             
         return result
@@ -301,7 +301,7 @@ class TerminusNativeMergeConflictRule(BaseRule):
             
             logger.info(f"TerminusDB native merge conflict detection found {len(conflicts)} conflicts")
             
-        except Exception as e:
+        except (KeyError, ValueError, TypeError, ConnectionError, RuntimeError) as e:
             logger.error(f"TerminusDB native merge conflict detection failed: {e}")
             
         return result

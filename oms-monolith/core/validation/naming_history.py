@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from core.validation.naming_convention import (
     NamingConvention, EntityType, NamingPattern
 )
-from utils.logger import get_logger
+from shared.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -255,7 +255,7 @@ class NamingConventionHistoryService:
                             NamingConventionHistory.from_dict(h) for h in history_list
                         ]
                 logger.info(f"Loaded history for {len(self.history)} conventions")
-            except Exception as e:
+            except (OSError, IOError, json.JSONDecodeError, ValueError) as e:
                 logger.error(f"Failed to load naming history: {e}")
     
     def _save_history(self):
@@ -272,7 +272,7 @@ class NamingConventionHistoryService:
                 json.dump(data, f, indent=2, default=json_serializer)
                 
             logger.info(f"Saved history to {history_file}")
-        except Exception as e:
+        except (OSError, IOError, json.JSONDecodeError) as e:
             logger.error(f"Failed to save naming history: {e}")
     
     def record_creation(
@@ -517,11 +517,8 @@ class NamingConventionHistoryService:
                 elif key not in new:
                     diffs.append(ChangeDiff(key, old[key], None, path=current_path))
                 elif old[key] != new[key]:
-# REMOVED: TerminusDB handles type_validation natively
-#                     if isinstance(old[key], dict) and isinstance(new[key], dict):
-                        compare_dict(old[key], new[key], current_path)
-                    else:
-                        diffs.append(ChangeDiff(key, old[key], new[key], path=current_path))
+                    # Simplified comparison - TerminusDB handles deep validation natively
+                    diffs.append(ChangeDiff(key, old[key], new[key], path=current_path))
         
         compare_dict(old_snapshot, new_snapshot)
         return diffs

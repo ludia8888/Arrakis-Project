@@ -44,8 +44,14 @@ class IAMEventHandler:
         try:
             await handler(event)
             logger.info(f"Successfully processed IAM event: {event_type}")
-        except Exception as e:
-            logger.error(f"Error processing IAM event {event_type}: {e}")
+        except ValueError as e:
+            logger.error(f"Invalid data in IAM event {event_type}: {e}")
+            raise
+        except ConnectionError as e:
+            logger.error(f"Connection error processing IAM event {event_type}: {e}")
+            raise
+        except RuntimeError as e:
+            logger.error(f"Runtime error processing IAM event {event_type}: {e}")
             raise
     
     async def handle_role_changed(self, event: EnhancedCloudEvent):
@@ -307,7 +313,15 @@ async def process_iam_event(msg, handler: IAMEventHandler):
         # Acknowledge message
         await msg.ack()
         
-    except Exception as e:
-        logger.error(f"Error processing IAM event: {e}")
+    except json.JSONDecodeError as e:
+        logger.error(f"Invalid JSON in IAM event: {e}")
+        # Negative acknowledge for retry
+        await msg.nak()
+    except ValueError as e:
+        logger.error(f"Invalid IAM event data: {e}")
+        # Negative acknowledge for retry
+        await msg.nak()
+    except RuntimeError as e:
+        logger.error(f"Runtime error processing IAM event: {e}")
         # Negative acknowledge for retry
         await msg.nak()

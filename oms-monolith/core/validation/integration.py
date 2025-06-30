@@ -16,7 +16,7 @@ from core.validation.enterprise_service import (
 )
 from core.validation.oms_rules import register_oms_validation_rules
 from middleware.enterprise_validation import configure_enterprise_validation
-from api.v1.validation_routes import initialize_validation_routes
+# Removed layer violation: validation routes should be initialized in api layer
 from shared.cache.smart_cache import SmartCacheManager
 from shared.events import EventPublisher
 
@@ -55,7 +55,13 @@ async def initialize_enterprise_validation(
             )
             await redis_client.ping()
             logger.info("Connected to Redis for validation cache")
-        except Exception as e:
+        except (ConnectionError, TimeoutError) as e:
+            logger.warning(f"Failed to connect to Redis: {e}. Continuing without Redis cache.")
+            redis_client = None
+        except (ValueError, TypeError) as e:
+            logger.warning(f"Failed to connect to Redis: {e}. Continuing without Redis cache.")
+            redis_client = None
+        except RuntimeError as e:
             logger.warning(f"Failed to connect to Redis: {e}. Continuing without Redis cache.")
             redis_client = None
     
@@ -89,8 +95,8 @@ async def initialize_enterprise_validation(
         prevent_info_disclosure=os.getenv("PREVENT_INFO_DISCLOSURE", "true").lower() == "true"
     )
     
-    # Initialize validation API routes
-    initialize_validation_routes(app, validation_service)
+    # API routes should be initialized in the API layer to avoid layer violation
+    # The validation_service is stored in app.state for access by API routes
     
     # Store validation service in app state
     if not hasattr(app.state, "services"):
@@ -197,7 +203,11 @@ async def shutdown_validation_service(app: FastAPI):
             try:
                 await validation_service.validation_cache.redis_client.close()
                 logger.info("Closed Redis connection")
-            except Exception as e:
+            except (ConnectionError, TimeoutError) as e:
+                logger.error(f"Error closing Redis connection: {e}")
+            except (ValueError, TypeError) as e:
+                logger.error(f"Error closing Redis connection: {e}")
+            except RuntimeError as e:
                 logger.error(f"Error closing Redis connection: {e}")
         
         # Log final metrics
@@ -223,7 +233,7 @@ async def lifespan(app: FastAPI):
         app,
         cache_manager=cache_manager,
         event_publisher=event_publisher,
-        redis_url=os.getenv("REDIS_URL", "redis://localhost:6379/1")
+        redis_url=config.get_redis_url() + "/1"
     )
     update_existing_routes_for_validation(app)
     

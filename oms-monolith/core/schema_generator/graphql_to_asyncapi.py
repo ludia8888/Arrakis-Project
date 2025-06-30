@@ -49,7 +49,13 @@ class GraphQLSchemaParser:
             
             return self.parse_schema_content(content)
             
-        except Exception as e:
+        except (OSError, IOError) as e:
+            logger.error(f"Failed to parse GraphQL schema file {file_path}: {e}")
+            return {}
+        except (ValueError, TypeError) as e:
+            logger.error(f"Failed to parse GraphQL schema file {file_path}: {e}")
+            return {}
+        except RuntimeError as e:
             logger.error(f"Failed to parse GraphQL schema file {file_path}: {e}")
             return {}
     
@@ -642,14 +648,24 @@ class GraphQLToAsyncAPIConverter:
             },
             "servers": {
                 "websocket": {
-                    "url": "ws://localhost:8080/graphql-ws",
+                    "url": "${WS_URL}",
                     "protocol": "ws",
-                    "description": "GraphQL WebSocket subscriptions"
+                    "description": "GraphQL WebSocket subscriptions",
+                    "variables": {
+                        "WS_URL": {
+                            "default": "ws://api-gateway:8080/graphql-ws"
+                        }
+                    }
                 },
                 "nats": {
-                    "url": "nats://localhost:4222",
+                    "url": "${NATS_URL}",
                     "protocol": "nats",
-                    "description": "NATS for commands and queries"
+                    "description": "NATS for commands and queries",
+                    "variables": {
+                        "NATS_URL": {
+                            "default": "nats://nats-server:4222"
+                        }
+                    }
                 }
             },
             "channels": self.channels,

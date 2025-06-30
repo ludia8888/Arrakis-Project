@@ -103,7 +103,7 @@ class PathTraversalKiller:
                     decoded_paths.append(plus_decoded)
                     current_path = plus_decoded
                     
-            except Exception:
+            except (UnicodeDecodeError, ValueError):
                 # 디코딩 실패는 의심스러운 신호
                 detected_attacks.append(f"DECODE_ERROR_STAGE_{i}")
                 break
@@ -115,7 +115,7 @@ class PathTraversalKiller:
                 normalized = os.path.normpath(path)
                 if normalized != path:
                     decoded_paths.append(normalized)
-            except Exception:
+            except (ValueError, OSError):
                 detected_attacks.append(f"NORMPATH_ERROR_{i}")
             
             # 패턴 매칭

@@ -15,6 +15,7 @@ from models.branch_state import (
     LockType, LockScope
 )
 from utils.logger import get_logger
+from shared.exceptions import ServiceTimeoutError, DatabaseConnectionError
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/api/v1/branch-locks", tags=["Branch Lock Management"])
@@ -285,11 +286,23 @@ async def force_unlock_branch(
             "reason": request.reason
         }
         
-    except Exception as e:
-        logger.error(f"Force unlock failed for {branch_name}: {e}")
+    except ConnectionError as e:
+        logger.error(f"Service connection error during force unlock for {branch_name}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Lock service temporarily unavailable"
+        )
+    except TimeoutError as e:
+        logger.error(f"Timeout during force unlock for {branch_name}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            detail="Force unlock operation timed out"
+        )
+    except RuntimeError as e:
+        logger.error(f"Unexpected error during force unlock for {branch_name}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Force unlock failed: {str(e)}"
+            detail="Force unlock failed due to internal error"
         )
 
 
@@ -554,11 +567,29 @@ async def send_lock_heartbeat(
             last_heartbeat=lock.last_heartbeat if lock else None
         )
         
-    except Exception as e:
-        logger.error(f"Error sending heartbeat for lock {lock_id}: {e}")
+    except ConnectionError as e:
+        logger.error(f"Service connection error sending heartbeat for lock {lock_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Lock service temporarily unavailable"
+        )
+    except TimeoutError as e:
+        logger.error(f"Timeout sending heartbeat for lock {lock_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            detail="Heartbeat operation timed out"
+        )
+    except ValueError as e:
+        logger.error(f"Invalid heartbeat data for lock {lock_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid heartbeat parameters"
+        )
+    except RuntimeError as e:
+        logger.error(f"Unexpected error sending heartbeat for lock {lock_id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to send heartbeat: {str(e)}"
+            detail="Failed to send heartbeat"
         )
 
 
@@ -623,11 +654,29 @@ async def extend_lock_ttl(
             "reason": request.reason
         }
         
-    except Exception as e:
-        logger.error(f"Error extending TTL for lock {lock_id}: {e}")
+    except ConnectionError as e:
+        logger.error(f"Service connection error extending TTL for lock {lock_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Lock service temporarily unavailable"
+        )
+    except TimeoutError as e:
+        logger.error(f"Timeout extending TTL for lock {lock_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            detail="TTL extension operation timed out"
+        )
+    except ValueError as e:
+        logger.error(f"Invalid TTL extension parameters for lock {lock_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid TTL extension parameters"
+        )
+    except RuntimeError as e:
+        logger.error(f"Unexpected error extending TTL for lock {lock_id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to extend TTL: {str(e)}"
+            detail="Failed to extend TTL"
         )
 
 

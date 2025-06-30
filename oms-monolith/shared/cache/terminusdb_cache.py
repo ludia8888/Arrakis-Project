@@ -7,8 +7,8 @@ import logging
 import os
 import asyncio
 from typing import Any, Dict, List, Optional, Callable
-from datetime import datetime, timedelta
-import jso
+from datetime import datetime, timedelta, timezone
+import json
 import hashlib
 
 logger = logging.getLogger(__name__)
@@ -71,7 +71,7 @@ class TerminusDBCacheManager:
             
             logger.info(f"Cache database '{self.cache_db}' initialized successfully")
             
-        except Exception as e:
+        except (ConnectionError, RuntimeError) as e:
             logger.warning(f"Failed to initialize cache database: {e}")
     
     def _generate_cache_key(self, key: str) -> str:
@@ -84,14 +84,14 @@ class TerminusDBCacheManager:
         """Serialize value for storage"""
         try:
             return json.dumps(value, default=str)
-        except Exception:
+        except (TypeError, ValueError):
             return str(value)
     
     def _deserialize_value(self, value: str) -> Any:
         """Deserialize value from storage"""
         try:
             return json.loads(value)
-        except Exception:
+        except json.JSONDecodeError:
             return value
     
     async def get(self, key: str) -> Optional[Any]:
@@ -159,7 +159,7 @@ class TerminusDBCacheManager:
                         # Remove expired entry
                         await self.delete(key)
                         
-            except Exception as e:
+            except (ConnectionError, RuntimeError) as e:
                 logger.error(f"Error retrieving from TerminusDB cache: {e}")
         
         return None
@@ -235,7 +235,7 @@ class TerminusDBCacheManager:
                 
                 return True
                 
-            except Exception as e:
+            except (ConnectionError, RuntimeError) as e:
                 logger.error(f"Error storing in TerminusDB cache: {e}")
                 # Still return True if memory cache worked
                 return True
@@ -300,7 +300,7 @@ class TerminusDBCacheManager:
                 
                 return True
                 
-            except Exception as e:
+            except (ConnectionError, RuntimeError) as e:
                 logger.error(f"Error deleting from TerminusDB cache: {e}")
         
         return True
@@ -323,7 +323,7 @@ class TerminusDBCacheManager:
                 await self.initialize()
                 return True
                 
-            except Exception as e:
+            except (ConnectionError, RuntimeError) as e:
                 logger.error(f"Error clearing TerminusDB cache: {e}")
         
         return True
@@ -382,7 +382,7 @@ class TerminusDBCacheManager:
             
             return result
             
-        except Exception as e:
+        except RuntimeError as e:
             logger.error(f"Error executing query factory for key {key}: {e}")
             raise
     
@@ -437,7 +437,7 @@ class TerminusDBCacheManager:
                 results[doc_type] = count
                 logger.info(f"Pre-warmed {count} {doc_type} documents for {db}:{branch}")
                 
-            except Exception as e:
+            except (ConnectionError, RuntimeError) as e:
                 logger.error(f"Error warming cache for {doc_type}: {e}")
                 results[doc_type] = 0
         
@@ -494,7 +494,7 @@ class TerminusDBCacheManager:
                     )
                     stats["terminusdb_total_accesses"] = total_access_count
                 
-            except Exception as e:
+            except (ConnectionError, RuntimeError) as e:
                 logger.error(f"Error getting TerminusDB cache stats: {e}")
                 stats["terminusdb_cache_error"] = str(e)
         

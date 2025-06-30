@@ -18,14 +18,16 @@ from core.validation.naming_convention import (
     EntityType, NamingConvention, NamingPattern, NamingRule
 )
 from core.validation.naming_history import get_naming_history_service
-from core.validation.schema_validator import (
-    get_schema_validator, validate_external_naming_convention, SchemaValidationError
-)
-from core.validation.version_manager import (
-    get_version_manager, add_file_version, check_file_compatibility, 
-    migrate_file_if_needed, VersionCompatibility
-)
-from utils.logger import get_logger
+# REMOVED: schema_validator was moved to backup as TerminusDB handles validation natively
+# from core.validation.schema_validator import (
+#     get_schema_validator, validate_external_naming_convention, SchemaValidationError
+# )
+# REMOVED: version_manager was moved to backup as TerminusDB handles versioning natively
+# from core.validation.version_manager import (
+#     get_version_manager, add_file_version, check_file_compatibility, 
+#     migrate_file_if_needed, VersionCompatibility
+# )
+from shared.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -120,7 +122,7 @@ def save_json_optimized(data: Dict, file_path: Path, use_orjson: bool = True) ->
                 f.write(json_bytes)
             logger.debug(f"Saved JSON using orjson to {file_path}")
             return
-        except Exception as e:
+        except (ImportError, TypeError, ValueError) as e:
             logger.warning(f"orjson failed, falling back to standard json: {e}")
     
     # 표준 json 사용 - fallback
@@ -150,7 +152,7 @@ def load_json_optimized(file_path: Path, use_orjson: bool = True) -> Dict:
                 data = orjson.loads(f.read())
             logger.debug(f"Loaded JSON using orjson from {file_path}")
             return data
-        except Exception as e:
+        except (ImportError, TypeError, ValueError) as e:
             logger.warning(f"orjson failed, falling back to standard json: {e}")
     
     # 표준 json 사용 - fallback
@@ -273,7 +275,7 @@ class NamingConfigService:
                     convention = self._parse_convention(conv_data)
                     self.conventions[convention.id] = convention
                 logger.info(f"Loaded {len(self.conventions)} naming conventions")
-            except Exception as e:
+            except (OSError, IOError, json.JSONDecodeError, ValueError) as e:
                 logger.error(f"Failed to load naming conventions: {e}")
         
         # 기본 규칙이 없으면 생성
@@ -599,7 +601,7 @@ class NamingConfigService:
                 "is_current": manager.is_current_version(data),
                 "needs_migration": compatibility == VersionCompatibility.MIGRATION_REQUIRED
             }
-        except Exception as e:
+        except (OSError, IOError, json.JSONDecodeError, ValueError) as e:
             return {"error": str(e), "path": str(path)}
     
     def migrate_config_file(self, backup: bool = True) -> Dict[str, Any]:
@@ -656,7 +658,7 @@ class NamingConfigService:
                     "backup_path": str(backup_path) if backup_path else None
                 }
                 
-        except Exception as e:
+        except (OSError, IOError, json.JSONDecodeError, ValueError) as e:
             logger.error(f"Migration failed: {e}")
             return {"error": str(e), "success": False}
     
@@ -806,7 +808,7 @@ class NamingConfigService:
             save_json_optimized(data, config_file)
                 
             logger.info(f"Saved {len(data['conventions'])} conventions to {config_file}")
-        except Exception as e:
+        except (OSError, IOError, json.JSONDecodeError) as e:
             logger.error(f"Failed to save naming conventions: {e}")
 
 

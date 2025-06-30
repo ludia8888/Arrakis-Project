@@ -126,7 +126,7 @@ class FoundryDatasetAlertingRule(BaseRule):
             
             logger.info(f"Foundry alerting generated {len(alerts_sent)} alerts")
             
-        except Exception as e:
+        except (KeyError, ValueError, TypeError, ConnectionError, RuntimeError) as e:
             logger.error(f"Foundry alerting rule failed: {e}")
             # Generate system error alert
             await self._send_system_error_alert(str(e))
@@ -205,7 +205,7 @@ class FoundryDatasetAlertingRule(BaseRule):
                 )
                 result.metadata.setdefault("alerts", []).append(alert)
         
-        except Exception as e:
+        except (KeyError, ValueError, TypeError, ConnectionError) as e:
             logger.error(f"Data quality check failed: {e}")
     
     async def _check_performance_alerts(self, context: ValidationContext, result: RuleResult):
@@ -251,7 +251,7 @@ class FoundryDatasetAlertingRule(BaseRule):
                     )
                     result.metadata.setdefault("alerts", []).append(alert)
         
-        except Exception as e:
+        except (KeyError, ValueError, TypeError, ConnectionError) as e:
             logger.error(f"Performance check failed: {e}")
     
     async def _check_compliance_alerts(self, context: ValidationContext, result: RuleResult):
@@ -324,7 +324,7 @@ class FoundryDatasetAlertingRule(BaseRule):
                 # Check for escalation
                 await self._check_escalation(alert)
                 
-            except Exception as e:
+            except (ConnectionError, RuntimeError, AttributeError) as e:
                 logger.error(f"Failed to send alert {alert.alert_id}: {e}")
         
         return sent_alerts
@@ -372,7 +372,7 @@ class FoundryDatasetAlertingRule(BaseRule):
         
         try:
             await self._send_alert(error_alert)
-        except Exception as e:
+        except (ConnectionError, RuntimeError, AttributeError) as e:
             logger.critical(f"Failed to send system error alert: {e}")
     
     def _assess_schema_change_severity(self, change_type: str, changes: List) -> AlertSeverity:

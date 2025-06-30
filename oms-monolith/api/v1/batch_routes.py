@@ -15,6 +15,8 @@ from core.branch import get_branch_service, IBranchService
 from database.clients.terminus_db import TerminusDBClient
 from utils.logger import get_logger
 from shared.cache.smart_cache import SmartCacheManager
+from shared.exceptions import NotFoundError, ValidationError, ServiceException
+from shared.exceptions.domain_exceptions import SchemaException, SchemaValidationError
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/api/v1/batch", tags=["Batch Operations"])
@@ -52,16 +54,17 @@ class BatchBranchesRequest(BatchRequest):
 # Dependency injection for services
 async def get_schema_service() -> SchemaService:
     """Get schema service instance"""
-    # In production, this would come from the service container
-    # For now, we'll create a new instance
+    from shared.config.environment import get_config
+    config = get_config()
+    
     db_client = TerminusDBClient(
-        endpoint="http://localhost:6363",
-        username="admin", 
-        password="root"
+        endpoint=config.get_terminus_db_url(),
+        username=config.get("TERMINUS_USERNAME", "admin"), 
+        password=config.get("TERMINUS_PASSWORD", "root")
     )
     
     service = SchemaService(
-        tdb_endpoint="http://localhost:6363",
+        tdb_endpoint=config.get_terminus_db_url(),
         event_publisher=None  # We don't need events for batch reads
     )
     await service.initialize()
@@ -129,11 +132,53 @@ async def batch_get_object_types(
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
-    except Exception as e:
-        logger.error(f"Batch object types loading failed: {e}")
+    except ValidationError as e:
+        logger.warning(f"Batch validation error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid request: {str(e)}"
+        )
+    except NotFoundError as e:
+        logger.warning(f"Resource not found in batch operation: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except SchemaException as e:
+        logger.error(f"Schema error in batch operation: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Schema error: {str(e)}"
+        )
+    except ServiceException as e:
+        logger.error(f"Service error in batch operation: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Service temporarily unavailable: {str(e)}"
+        )
+    except ConnectionError as e:
+        logger.error(f"Database connection error in batch object types loading: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database service temporarily unavailable"
+        )
+    except TimeoutError as e:
+        logger.error(f"Timeout error in batch object types loading: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            detail="Request timeout while loading object types"
+        )
+    except KeyError as e:
+        logger.error(f"Missing required field in batch request: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Missing required field: {str(e)}"
+        )
+    except RuntimeError as e:
+        logger.error(f"Unexpected error in batch object types loading: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to batch load object types: {str(e)}"
+            detail="An internal server error occurred"
         )
 
 
@@ -194,11 +239,29 @@ async def batch_get_properties(
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
-    except Exception as e:
-        logger.error(f"Batch properties loading failed: {e}")
+    except ConnectionError as e:
+        logger.error(f"Database connection error in batch properties loading: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database service temporarily unavailable"
+        )
+    except TimeoutError as e:
+        logger.error(f"Timeout error in batch properties loading: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            detail="Request timeout while loading properties"
+        )
+    except KeyError as e:
+        logger.error(f"Missing required field in properties request: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Missing required field: {str(e)}"
+        )
+    except RuntimeError as e:
+        logger.error(f"Unexpected error in batch properties loading: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to batch load properties: {str(e)}"
+            detail="Failed to batch load properties"
         )
 
 
@@ -251,11 +314,29 @@ async def batch_get_link_types(
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
-    except Exception as e:
-        logger.error(f"Batch link types loading failed: {e}")
+    except ConnectionError as e:
+        logger.error(f"Database connection error in batch link types loading: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database service temporarily unavailable"
+        )
+    except TimeoutError as e:
+        logger.error(f"Timeout error in batch link types loading: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            detail="Request timeout while loading link types"
+        )
+    except KeyError as e:
+        logger.error(f"Missing required field in link types request: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Missing required field: {str(e)}"
+        )
+    except RuntimeError as e:
+        logger.error(f"Unexpected error in batch link types loading: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to batch load link types: {str(e)}"
+            detail="Failed to batch load link types"
         )
 
 
@@ -299,11 +380,23 @@ async def batch_get_branches(
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
-    except Exception as e:
-        logger.error(f"Batch branches loading failed: {e}")
+    except ConnectionError as e:
+        logger.error(f"Service connection error in batch branches loading: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Branch service temporarily unavailable"
+        )
+    except TimeoutError as e:
+        logger.error(f"Timeout error in batch branches loading: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            detail="Request timeout while loading branches"
+        )
+    except RuntimeError as e:
+        logger.error(f"Unexpected error in batch branches loading: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to batch load branches: {str(e)}"
+            detail="Failed to batch load branches"
         )
 
 
@@ -340,11 +433,23 @@ async def batch_get_branch_states(
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
-    except Exception as e:
-        logger.error(f"Batch branch states loading failed: {e}")
+    except ConnectionError as e:
+        logger.error(f"Service connection error in batch branch states loading: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Branch service temporarily unavailable"
+        )
+    except TimeoutError as e:
+        logger.error(f"Timeout error in batch branch states loading: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            detail="Request timeout while loading branch states"
+        )
+    except RuntimeError as e:
+        logger.error(f"Unexpected error in batch branch states loading: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to batch load branch states: {str(e)}"
+            detail="Failed to batch load branch states"
         )
 
 

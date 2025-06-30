@@ -214,7 +214,7 @@ class ValidationPipeline:
                 warnings=warnings
             )
             
-        except Exception as e:
+        except RuntimeError as e:
             logger.error(f"Validation pipeline error: {e}")
             total_time = (time.time() - start_time) * 1000
             
@@ -264,7 +264,7 @@ class ValidationPipeline:
                 errors=errors
             )
             
-        except Exception as e:
+        except (OSError, IOError, json.JSONDecodeError, ValueError) as e:
             logger.error(f"JSON Schema validation error: {e}")
             return StageResult(
                 stage=ValidationStage.JSON_SCHEMA,
@@ -314,7 +314,7 @@ class ValidationPipeline:
                 warnings=result.get("warnings", [])
             )
             
-        except Exception as e:
+        except (ConnectionError, TimeoutError, RuntimeError) as e:
             logger.error(f"Policy validation error: {e}")
             return StageResult(
                 stage=ValidationStage.POLICY,
@@ -372,7 +372,7 @@ class ValidationPipeline:
                 warnings=["TerminusDB validation skipped - will be checked at actual insert time"]
             )
             
-        except Exception as e:
+        except (ConnectionError, TimeoutError, ValueError, RuntimeError) as e:
             logger.error(f"TerminusDB validation error: {e}")
             return StageResult(
                 stage=ValidationStage.TERMINUS_CHECK,
@@ -442,7 +442,7 @@ class ValidationPipeline:
                     
                     warnings.extend(result.get("warnings", []))
                     
-                except Exception as e:
+                except (RuntimeError, ValueError, TypeError) as e:
                     logger.error(f"Rule {rule.rule_id} execution error: {e}")
                     warnings.append(f"Rule {rule.rule_id} failed: {str(e)}")
             
@@ -459,7 +459,7 @@ class ValidationPipeline:
                 warnings=warnings
             )
             
-        except Exception as e:
+        except (ImportError, RuntimeError, ValueError) as e:
             logger.error(f"Rule engine validation error: {e}")
             return StageResult(
                 stage=ValidationStage.RULE_ENGINE,
@@ -506,7 +506,7 @@ class ValidationPipeline:
                         }
                     }
                 )
-        except Exception as e:
+        except (ConnectionError, TimeoutError, RuntimeError) as e:
             logger.error(f"Failed to publish validation metrics: {e}")
     
     async def _run_foundry_alerting(
@@ -585,7 +585,7 @@ class ValidationPipeline:
                 warnings=[] if alerts_generated == 0 else [f"Generated {alerts_generated} Foundry alerts"]
             )
             
-        except Exception as e:
+        except (ImportError, RuntimeError, ValueError) as e:
             logger.error(f"Foundry alerting error: {e}")
             return StageResult(
                 stage=ValidationStage.FOUNDRY_ALERTING,

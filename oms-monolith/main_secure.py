@@ -20,6 +20,11 @@ from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 from typing import Optional, Dict, Any
 
+# Early environment validation before any other imports
+from shared.config.environment import StrictEnv
+# Validate environment at import time
+StrictEnv.validate_or_die(services=["actions", "audit", "scheduler", "nats"])
+
 # Life-critical imports
 from middleware.auth_secure import (
     LifeCriticalAuthMiddleware, 
@@ -47,18 +52,14 @@ async def lifespan(app: FastAPI):
     """Life-critical application lifespan management"""
     logger.info("🚨 Starting LIFE-CRITICAL OMS Application")
     
-    # Verify critical environment variables
-    required_env_vars = [
-        "JWT_SECRET",
-        "USER_SERVICE_URL", 
-        "AUDIT_SERVICE_URL"
-    ]
+    # Perform strict environment validation
+    from shared.config.environment import StrictEnv
     
-    missing_vars = [var for var in required_env_vars if not os.getenv(var)]
-    if missing_vars:
-        error_msg = f"CRITICAL: Missing required environment variables: {missing_vars}"
-        logger.critical(error_msg)
-        raise SecurityConfigurationError(error_msg)
+    # Validate all required environment variables at startup
+    services = ["actions", "audit", "scheduler", "nats"]
+    StrictEnv.validate_or_die(services=services)
+    
+    logger.info("✅ Environment validation passed")
     
     # Initialize circuit breakers
     app.state.user_service_circuit = LifeCriticalCircuitBreaker(
@@ -88,9 +89,12 @@ async def verify_critical_services_startup(app: FastAPI):
     """Verify all critical services are reachable at startup"""
     import httpx
     
+    from shared.config.environment import get_config
+    env_config = get_config()
+    
     critical_services = [
-        ("User Service", os.getenv("USER_SERVICE_URL", "http://localhost:18002"), "/health"),  # FIXED
-        ("Audit Service", os.getenv("AUDIT_SERVICE_URL", "http://localhost:28002"), "/health")
+        ("User Service", env_config.get("USER_SERVICE_URL", "http://user-service:18002"), "/health"),  # FIXED
+        ("Audit Service", env_config.get("AUDIT_SERVICE_URL", "http://audit-service:28002"), "/health")
     ]
     
     failed_services = []
@@ -149,7 +153,7 @@ app = FastAPI(
 # CORS configuration - restricted for security
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(","),
+    allow_origins=env_config.get("ALLOWED_ORIGINS", "http://frontend:3000").split(","),
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
@@ -277,7 +281,9 @@ async def readiness():
         
         async with httpx.AsyncClient(timeout=5.0) as client:
             # Quick check to User Service
-            user_service_url = os.getenv("USER_SERVICE_URL", "http://localhost:18002")
+            from shared.config.environment import get_config
+            config = get_config()
+            user_service_url = config.get("USER_SERVICE_URL", "http://user-service:18002")
             response = await client.get(f"{user_service_url}/health")  # FIXED
             
             if response.status_code == 200:

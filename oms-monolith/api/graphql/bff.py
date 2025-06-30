@@ -268,8 +268,11 @@ class DataAggregator:
             id_map = {item["id"]: item for item in data}
             return [id_map.get(id) for id in ids]
             
-        except Exception as e:
-            logger.error(f"Failed to batch load object types: {e}")
+        except httpx.HTTPError as e:
+            logger.error(f"HTTP error batch loading object types: {e}")
+            return [None] * len(ids)
+        except (KeyError, ValueError) as e:
+            logger.error(f"Data format error batch loading object types: {e}")
             return [None] * len(ids)
     
     async def _batch_load_properties_by_type(
@@ -295,8 +298,11 @@ class DataAggregator:
             
             return [grouped[type_id] for type_id in type_ids]
             
-        except Exception as e:
-            logger.error(f"Failed to batch load properties: {e}")
+        except httpx.HTTPError as e:
+            logger.error(f"HTTP error batch loading properties: {e}")
+            return [[] for _ in type_ids]
+        except (KeyError, ValueError) as e:
+            logger.error(f"Data format error batch loading properties: {e}")
             return [[] for _ in type_ids]
     
     async def _load_relationships(self, object_type_id: str) -> Dict[str, Any]:

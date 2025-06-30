@@ -193,8 +193,17 @@ class EnterpriseDataLoader(Generic[K, T]):
                 if self.cache and fresh_results:
                     await self.cache.set_many(fresh_results)
                     
-            except Exception as e:
-                logger.error(f"Batch load error in {self.config.cache_prefix}: {e}")
+            except asyncio.TimeoutError as e:
+                logger.error(f"Batch load timeout in {self.config.cache_prefix}: {e}")
+                # Return partial results rather than failing completely
+            except (redis.RedisError, ConnectionError) as e:
+                logger.error(f"Cache error in {self.config.cache_prefix}: {e}")
+                # Return partial results rather than failing completely
+            except (KeyError, ValueError, TypeError) as e:
+                logger.error(f"Data format error in {self.config.cache_prefix}: {e}")
+                # Return partial results rather than failing completely
+            except RuntimeError as e:
+                logger.error(f"Runtime error in batch load {self.config.cache_prefix}: {e}")
                 # Return partial results rather than failing completely
         
         # Combine results in correct order

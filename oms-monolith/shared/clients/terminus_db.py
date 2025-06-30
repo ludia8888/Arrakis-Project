@@ -111,7 +111,7 @@ class TerminusDBClient:
 
                 logger.info("TerminusDB client initialized with mTLS")
 
-            except Exception as e:
+            except (OSError, ssl.SSLError, ValueError) as e:
                 logger.warning(f"mTLS initialization failed, falling back to HTTP: {e}")
                 self.use_mtls = False
                 self.client = httpx.AsyncClient(
@@ -148,7 +148,7 @@ class TerminusDBClient:
                 # Try to create database if it doesn't exist
                 try:
                     await self.create_database(db, f"{db} Database")
-                except Exception as e:
+                except httpx.HTTPStatusError as e:
                     # Database might already exist, that's ok
                     logger.debug(f"Database creation skipped (might exist): {e}")
                 
@@ -159,7 +159,7 @@ class TerminusDBClient:
                 logger.error(f"Failed to connect to TerminusDB: HTTP {response.status_code}")
                 return False
                 
-        except Exception as e:
+        except (httpx.RequestError, httpx.HTTPStatusError, TimeoutError) as e:
             logger.error(f"TerminusDB connection failed: {e}")
             self.connected = False
             return False
@@ -181,7 +181,7 @@ class TerminusDBClient:
         try:
             response = await self.client.get(f"{self.endpoint}/api/info")
             return response.status_code == 200
-        except Exception:
+        except (httpx.RequestError, httpx.HTTPStatusError):
             return False
 
     @with_retry("terminusdb_create_database", config=DB_WRITE_CONFIG)
@@ -259,7 +259,7 @@ class TerminusDBClient:
                 # 대안 방법: info에서 조직 정보 확인
                 response = await self.client.get(f"{self.endpoint}/api/info")
                 return [{"name": "admin", "status": "available"}]
-        except Exception as e:
+        except (httpx.RequestError, httpx.HTTPStatusError) as e:
             logger.warning(f"Failed to get databases: {e}")
             return []
 

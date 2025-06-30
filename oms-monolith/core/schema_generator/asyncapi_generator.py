@@ -123,10 +123,15 @@ class AsyncAPIGenerator:
     def _add_default_servers(self):
         """기본 서버 설정 추가"""
         self.servers = {
-            "nats-local": {
-                "url": "nats://localhost:4222",
+            "nats-server": {
+                "url": "${NATS_URL}",
                 "protocol": "nats",
-                "description": "Local NATS Server",
+                "description": "NATS Server",
+                "variables": {
+                    "NATS_URL": {
+                        "default": "nats://nats-server:4222"
+                    }
+                },
                 "bindings": {
                     "nats": {
                         "clientId": "oms-client"
@@ -686,7 +691,13 @@ class AsyncAPIGenerator:
             
             return types
             
-        except Exception as e:
+        except (OSError, IOError) as e:
+            logger.error(f"Failed to parse GraphQL schema: {e}")
+            return {}
+        except (ValueError, TypeError) as e:
+            logger.error(f"Failed to parse GraphQL schema: {e}")
+            return {}
+        except RuntimeError as e:
             logger.error(f"Failed to parse GraphQL schema: {e}")
             return {}
     

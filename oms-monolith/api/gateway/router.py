@@ -57,11 +57,6 @@ class RequestRouter:
         # 헤더 준비
         forward_headers = self._prepare_headers(headers, context)
 
-        # Circuit breaker 확인
-        if self.circuit_breaker and route.circuit_breaker_enabled:
-            if not await self.circuit_breaker.is_closed(route.service_name):
-                raise ServiceUnavailableError(f"Service {route.service_name} is unavailable")
-
         # 요청 전달
         try:
             response = await self._forward_request(
@@ -74,17 +69,7 @@ class RequestRouter:
                 service_name=route.service_name
             )
 
-            # Circuit breaker 성공 기록
-            if self.circuit_breaker and route.circuit_breaker_enabled:
-                await self.circuit_breaker.record_success(route.service_name)
-
             return response
-
-        except Exception:
-            # Circuit breaker 실패 기록
-            if self.circuit_breaker and route.circuit_breaker_enabled:
-                await self.circuit_breaker.record_failure(route.service_name)
-            raise
 
     def _find_matching_route(self, method: str, path: str) -> Optional[ServiceRoute]:
         """매칭되는 라우트 찾기"""
@@ -190,9 +175,14 @@ class RequestRouter:
                 if attempt < retry_count - 1:
                     await asyncio.sleep(2 ** attempt)
 
-            except Exception as e:
+            except (OSError, IOError) as e:
                 last_error = e
-                logger.error(f"Unexpected error calling {service_name}: {e}")
+                logger.error(f"Network error calling {service_name}: {e}")
+                break
+                
+            except ValueError as e:
+                last_error = e
+                logger.error(f"Invalid value error calling {service_name}: {e}")
                 break
 
         # 모든 재시도 실패

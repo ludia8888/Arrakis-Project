@@ -164,8 +164,14 @@ class EventBridgeAdapter:
                 
                 return builder.build()
                 
-        except Exception as e:
-            logger.error(f"Failed to convert EventBridge event to CloudEvent: {e}")
+        except KeyError as e:
+            logger.error(f"Missing required field in EventBridge event: {e}")
+            return None
+        except ValueError as e:
+            logger.error(f"Invalid value in EventBridge event: {e}")
+            return None
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON decode error in EventBridge event: {e}")
             return None
     
     @staticmethod
@@ -311,8 +317,12 @@ class EventBridgeOutboxAdapter:
                 
                 return builder.build()
             
-        except Exception as e:
-            logger.error(f"Failed to extract CloudEvent from EventBridge outbox: {e}")
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON decode error when extracting CloudEvent from EventBridge outbox: {e}")
+        except KeyError as e:
+            logger.error(f"Missing required field when extracting CloudEvent from EventBridge outbox: {e}")
+        except ValueError as e:
+            logger.error(f"Invalid value when extracting CloudEvent from EventBridge outbox: {e}")
         
         return None
 

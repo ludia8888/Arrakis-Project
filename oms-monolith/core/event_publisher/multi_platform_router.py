@@ -340,14 +340,23 @@ class MultiPlatformEventRouter:
             
             return result
             
-        except Exception as e:
-            logger.error(f"Failed to publish to {platform}: {e}")
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Network error publishing to {platform}: {e}")
             self.platform_health[platform] = False
             return PublishResult(
                 event_id=event.id,
                 success=False,
                 subject="",
-                error=f"Platform error: {str(e)}"
+                error=f"Network error: {str(e)}"
+            )
+        except RuntimeError as e:
+            logger.error(f"Runtime error publishing to {platform}: {e}")
+            self.platform_health[platform] = False
+            return PublishResult(
+                event_id=event.id,
+                success=False,
+                subject="",
+                error=f"Runtime error: {str(e)}"
             )
     
     async def _publish_to_nats(self, publisher, event: EnhancedCloudEvent) -> PublishResult:
@@ -377,12 +386,26 @@ class MultiPlatformEventRouter:
                 latency_ms=10.0  # 실제로는 측정된 latency
             )
             
-        except Exception as e:
+        except (ConnectionError, TimeoutError) as e:
             return PublishResult(
                 event_id=event.id,
                 success=False,
                 subject="",
-                error=str(e)
+                error=f"Network error: {str(e)}"
+            )
+        except json.JSONDecodeError as e:
+            return PublishResult(
+                event_id=event.id,
+                success=False,
+                subject="",
+                error=f"JSON decode error: {str(e)}"
+            )
+        except RuntimeError as e:
+            return PublishResult(
+                event_id=event.id,
+                success=False,
+                subject="",
+                error=f"Runtime error: {str(e)}"
             )
     
     def _check_conditions(self, event: EnhancedCloudEvent, conditions: Dict[str, Any]) -> bool:
@@ -429,8 +452,11 @@ class MultiPlatformEventRouter:
                     # 기타 플랫폼은 기본적으로 healthy로 가정
                     self.platform_health[platform] = True
                 
-            except Exception as e:
-                logger.error(f"Health check failed for {platform}: {e}")
+            except (ConnectionError, TimeoutError) as e:
+                logger.error(f"Network error during health check for {platform}: {e}")
+                self.platform_health[platform] = False
+            except RuntimeError as e:
+                logger.error(f"Runtime error during health check for {platform}: {e}")
                 self.platform_health[platform] = False
     
     def get_platform_status(self) -> Dict[str, Any]:

@@ -16,6 +16,10 @@ from core.validation.enterprise_service import (
     get_enterprise_validation_service
 )
 from core.validation.oms_rules import register_oms_validation_rules
+from shared.exceptions import ValidationError, ServiceException, NotFoundError
+from shared.exceptions.domain_exceptions import (
+    SchemaValidationError, PolicyViolationError, BranchNotFoundError
+)
 
 
 logger = logging.getLogger(__name__)
@@ -107,12 +111,24 @@ async def validate_data(
         
         return result
         
-    except Exception as e:
-        logger.error(f"Validation endpoint error: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Validation service error: {str(e)}"
-        )
+    except SchemaValidationError as e:
+        logger.warning(f"Schema validation failed: {e}")
+        raise HTTPException(status_code=422, detail=str(e))
+    except PolicyViolationError as e:
+        logger.warning(f"Policy violation: {e}")
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValidationError as e:
+        logger.warning(f"Validation error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except ServiceException as e:
+        logger.error(f"Service error during validation: {e}")
+        raise HTTPException(status_code=503, detail="Validation service temporarily unavailable")
+    except (KeyError, ValueError, TypeError) as e:
+        logger.error(f"Data format error in validation endpoint: {e}")
+        raise HTTPException(status_code=400, detail="Invalid request data")
+    except RuntimeError as e:
+        logger.error(f"Runtime error in validation endpoint: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/validate/batch", response_model=List[ValidationResult])
@@ -140,11 +156,17 @@ async def validate_batch(
         
         return results
         
-    except Exception as e:
-        logger.error(f"Batch validation error: {e}")
+    except (KeyError, ValueError, TypeError) as e:
+        logger.error(f"Data format error in batch validation: {e}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid batch data: {str(e)}"
+        )
+    except RuntimeError as e:
+        logger.error(f"Runtime error in batch validation: {e}")
         raise HTTPException(
             status_code=500,
-            detail=f"Batch validation error: {str(e)}"
+            detail="Batch validation service error"
         )
 
 
@@ -184,7 +206,7 @@ async def get_validation_metrics(
                         errors_by_category=getattr(metrics, 'errors_by_category', {}),
                         last_reset=datetime.now(timezone.utc)
                     )
-            except Exception as e:
+            except (AttributeError, ValueError) as e:
                 logger.warning(f"Could not get detailed metrics from service: {e}")
         
         # 🔥 Fallback: 기본 메트릭스 반환 (500 오류 방지)
@@ -213,8 +235,11 @@ async def get_validation_metrics(
             last_reset=datetime.now(timezone.utc)
         )
         
-    except Exception as e:
-        logger.error(f"Metrics endpoint error: {e}")
+    except (AttributeError, ValueError) as e:
+        logger.error(f"Metrics data error: {e}")
+        # 🔥 최종 안전장치 - 빈 메트릭스라도 200으로 응답
+    except RuntimeError as e:
+        logger.error(f"Metrics service error: {e}")
         # 🔥 최종 안전장치 - 빈 메트릭스라도 200으로 응답
         return ValidationMetricsResponse(
             total_validations=0,
@@ -283,11 +308,17 @@ async def list_validation_rules(
         
         return rule_infos
         
-    except Exception as e:
-        logger.error(f"Rules listing error: {e}")
+    except (AttributeError, KeyError) as e:
+        logger.error(f"Rules data error: {e}")
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid rules data"
+        )
+    except RuntimeError as e:
+        logger.error(f"Rules service error: {e}")
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to list rules: {str(e)}"
+            detail="Rules service unavailable"
         )
 
 
@@ -304,11 +335,17 @@ async def enable_validation_rule(
         
         return {"message": f"Rule '{rule_id}' enabled successfully"}
         
-    except Exception as e:
-        logger.error(f"Rule enable error: {e}")
+    except (KeyError, ValueError) as e:
+        logger.error(f"Rule enable data error: {e}")
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid rule ID or data"
+        )
+    except RuntimeError as e:
+        logger.error(f"Rule enable service error: {e}")
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to enable rule: {str(e)}"
+            detail="Rule service unavailable"
         )
 
 
@@ -325,11 +362,17 @@ async def disable_validation_rule(
         
         return {"message": f"Rule '{rule_id}' disabled successfully"}
         
-    except Exception as e:
-        logger.error(f"Rule disable error: {e}")
+    except (KeyError, ValueError) as e:
+        logger.error(f"Rule disable data error: {e}")
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid rule ID or data"
+        )
+    except RuntimeError as e:
+        logger.error(f"Rule disable service error: {e}")
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to disable rule: {str(e)}"
+            detail="Rule service unavailable"
         )
 
 
@@ -369,8 +412,18 @@ async def validation_service_health(
             issues=issues
         )
         
-    except Exception as e:
-        logger.error(f"Health check error: {e}")
+    except (AttributeError, ValueError) as e:
+        logger.error(f"Health check data error: {e}")
+        return ValidationHealthResponse(
+            status="unhealthy",
+            validation_service_ready=False,
+            cache_available=False,
+            rules_loaded=0,
+            last_validation=None,
+            issues=[str(e)]
+        )
+    except RuntimeError as e:
+        logger.error(f"Health check service error: {e}")
         return ValidationHealthResponse(
             status="unhealthy",
             validation_service_ready=False,
@@ -413,11 +466,17 @@ async def test_sanitization(
             "risk_score": result.risk_score
         }
         
-    except Exception as e:
-        logger.error(f"Sanitization test error: {e}")
+    except (ValueError, TypeError) as e:
+        logger.error(f"Sanitization input error: {e}")
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid sanitization input"
+        )
+    except RuntimeError as e:
+        logger.error(f"Sanitization service error: {e}")
         raise HTTPException(
             status_code=500,
-            detail=f"Sanitization test failed: {str(e)}"
+            detail="Sanitization service unavailable"
         )
 
 

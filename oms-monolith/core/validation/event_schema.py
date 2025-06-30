@@ -314,5 +314,9 @@ def validate_event_dict(event_dict: Dict[str, Any]) -> List[str]:
     try:
         event = create_event_from_dict(event_dict)
         return event.validate_schema()
-    except Exception as e:
-        return [f"Invalid event structure: {str(e)}"]
+    except KeyError as e:
+        return [f"Missing required field: {str(e)}"]
+    except ValueError as e:
+        return [f"Invalid event value: {str(e)}"]
+    except TypeError as e:
+        return [f"Invalid event type: {str(e)}"]

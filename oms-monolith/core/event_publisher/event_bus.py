@@ -165,8 +165,8 @@ class EventBus:
             else:
                 handler(event)
                 
-        except Exception as e:
-            logger.error(f"Handler error for event {event.event_id}: {e}")
+        except (ConnectionError, TimeoutError) as e:
+            logger.error(f"Network error in handler for event {event.event_id}: {e}")
             
             # 재시도 로직
             if event.metadata.get("retry_count", 0) < 3:
@@ -178,6 +178,15 @@ class EventBus:
                 return await self._deliver_to_handler(event, handler)
             else:
                 raise
+        except KeyError as e:
+            logger.error(f"Missing required field in handler for event {event.event_id}: {e}")
+            raise
+        except ValueError as e:
+            logger.error(f"Invalid value in handler for event {event.event_id}: {e}")
+            raise
+        except RuntimeError as e:
+            logger.error(f"Runtime error in handler for event {event.event_id}: {e}")
+            raise
     
     def get_events_by_aggregate(self, aggregate_id: str) -> List[DomainEvent]:
         """특정 집합체의 모든 이벤트 조회"""

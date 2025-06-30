@@ -53,7 +53,7 @@ class TerminusTraversalAdapter:
                 commit_msg=f"Query from validation layer: {opts.get('context', 'merge_validation')}"
             )
             return result.get('bindings', [])
-        except Exception as e:
+        except (RuntimeError, ValueError) as e:
             logger.error(f"SPARQL query failed: {e}")
             return []
     
@@ -87,7 +87,7 @@ class TerminusTraversalAdapter:
             
             return None
             
-        except Exception as e:
+        except (RuntimeError, KeyError) as e:
             logger.error(f"Document retrieval failed for {doc_id}: {e}")
             return None
     
@@ -119,7 +119,7 @@ class TerminusTraversalAdapter:
         """Health check using TerminusDB client"""
         try:
             return await self.terminus_client.ping()
-        except Exception:
+        except (ConnectionError, RuntimeError):
             return False
     
     async def get_branch_diff(
@@ -156,7 +156,7 @@ class TerminusTraversalAdapter:
             logger.info(f"Branch diff calculated: {len(changes)} changes between {base_branch} and {branch}")
             return changes
             
-        except Exception as e:
+        except (RuntimeError, KeyError) as e:
             logger.error(f"Branch diff calculation failed: {e}")
             return {}
     
@@ -194,7 +194,7 @@ class TerminusTraversalAdapter:
             logger.debug(f"Found {len(entity_ids)} entities in branch {branch}")
             return entity_ids
             
-        except Exception as e:
+        except (RuntimeError, KeyError) as e:
             logger.error(f"Failed to get entities for branch {branch}: {e}")
             return []
     
@@ -226,7 +226,7 @@ class TerminusTraversalAdapter:
                 "execution_time_ms": result.execution_time_ms
             }
             
-        except Exception as e:
+        except (RuntimeError, ValueError) as e:
             logger.error(f"Graph traversal failed: {e}")
             return {
                 "nodes": [],
@@ -277,7 +277,7 @@ class TerminusTraversalAdapter:
                 "replaces": ["semantic_validator.schema_constraints"]
             }
             
-        except Exception as e:
+        except (RuntimeError, ValueError) as e:
             logger.error(f"TerminusDB native schema validation failed: {e}")
             return {
                 "valid": False,
@@ -317,7 +317,7 @@ class TerminusTraversalAdapter:
             
             return cycles
             
-        except Exception as e:
+        except (RuntimeError, AttributeError) as e:
             logger.error(f"TerminusDB native circular dependency detection failed: {e}")
             return []
     
@@ -359,7 +359,7 @@ class TerminusTraversalAdapter:
             
             return conflicts
             
-        except Exception as e:
+        except (RuntimeError, KeyError) as e:
             logger.error(f"TerminusDB native merge conflict detection failed: {e}")
             return []
 

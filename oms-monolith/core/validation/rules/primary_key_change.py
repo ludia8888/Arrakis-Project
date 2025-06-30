@@ -319,7 +319,7 @@ class PrimaryKeyChangeRule(BreakingChangeRule):
                             f"affecting {total_duplicates} records"
                         )
 
-        except Exception as e:
+        except (KeyError, ValueError, TypeError, ConnectionError) as e:
             logger.warning(f"Could not verify uniqueness constraints: {e}")
             violations.append(f"Unable to verify uniqueness: {e}")
 
@@ -382,7 +382,7 @@ class PrimaryKeyChangeRule(BreakingChangeRule):
                             "impact": "Reference relationships may break"
                         })
 
-        except Exception as e:
+        except (KeyError, ValueError, TypeError, ConnectionError) as e:
             logger.error(f"Referential integrity analysis failed: {e}")
             risks.append({
                 "type": "analysis_error",
@@ -567,7 +567,7 @@ class PrimaryKeyChangeRule(BreakingChangeRule):
                 migration_risks=self._identify_migration_risks(analysis)
             )
 
-        except Exception as e:
+        except (KeyError, ValueError, TypeError, ConnectionError) as e:
             logger.error(f"Data impact calculation failed: {e}")
             return DataImpact(
                 total_records=0,

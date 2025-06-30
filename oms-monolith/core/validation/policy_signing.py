@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field
 from enum import Enum
 
 from core.validation.naming_convention import NamingConvention
-from utils.logger import get_logger
+from shared.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -98,7 +98,7 @@ class PolicySigner:
                 with open(self.private_key_path, 'rb') as f:
                     self._private_key = load_pem_private_key(f.read(), password=None)
                 logger.info(f"Loaded private key from {self.private_key_path}")
-            except Exception as e:
+            except (OSError, IOError, ValueError) as e:
                 logger.error(f"Failed to load private key: {e}")
         
         if self.public_key_path and Path(self.public_key_path).exists():
@@ -106,7 +106,7 @@ class PolicySigner:
                 with open(self.public_key_path, 'rb') as f:
                     self._public_key = load_pem_public_key(f.read())
                 logger.info(f"Loaded public key from {self.public_key_path}")
-            except Exception as e:
+            except (OSError, IOError, ValueError) as e:
                 logger.error(f"Failed to load public key: {e}")
     
     def generate_rsa_keypair(self, key_size: int = 2048) -> Tuple[str, str]:
@@ -224,7 +224,7 @@ class PolicySigner:
             
             return is_valid
             
-        except Exception as e:
+        except (ValueError, TypeError, RuntimeError) as e:
             logger.error(f"Policy verification error: {e}")
             return False
     
@@ -320,7 +320,7 @@ class PolicySigner:
             else:
                 raise ValueError(f"Unsupported signature algorithm: {algorithm}")
                 
-        except Exception as e:
+        except (ValueError, TypeError, RuntimeError) as e:
             logger.error(f"Signature verification failed: {e}")
             return False
 
@@ -357,7 +357,7 @@ class PolicySigningManager:
             try:
                 with open(config_file, 'r') as f:
                     return json.load(f)
-            except Exception as e:
+            except (OSError, IOError, json.JSONDecodeError) as e:
                 logger.error(f"Failed to load signing config: {e}")
         
         # 기본 설정 생성
@@ -378,7 +378,7 @@ class PolicySigningManager:
             with open(config_file, 'w') as f:
                 json.dump(config, f, indent=2)
             logger.info(f"Signing config saved to {config_file}")
-        except Exception as e:
+        except (OSError, IOError, json.JSONDecodeError) as e:
             logger.error(f"Failed to save signing config: {e}")
     
     def setup_rsa_keys(self, key_size: int = 2048) -> bool:
@@ -428,7 +428,7 @@ class PolicySigningManager:
             logger.info(f"RSA keys generated and saved to {self.config_path}")
             return True
             
-        except Exception as e:
+        except (OSError, IOError, ValueError, RuntimeError) as e:
             logger.error(f"Failed to setup RSA keys: {e}")
             return False
     
@@ -456,7 +456,7 @@ class PolicySigningManager:
             with open(policy_file, 'w') as f:
                 json.dump(signed_policy.model_dump(), f, indent=2, default=str)
             logger.info(f"Signed policy saved to {policy_file}")
-        except Exception as e:
+        except (OSError, IOError, json.JSONDecodeError) as e:
             logger.error(f"Failed to save signed policy: {e}")
     
     def load_signed_policy(self, filename: str) -> Optional[SignedNamingPolicy]:
@@ -498,7 +498,7 @@ class PolicySigningManager:
             logger.info(f"Signed policy loaded from {policy_file}")
             return signed_policy
             
-        except Exception as e:
+        except (OSError, IOError, json.JSONDecodeError, ValueError, KeyError) as e:
             logger.error(f"Failed to load signed policy: {e}")
             return None
 

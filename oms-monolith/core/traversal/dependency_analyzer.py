@@ -93,9 +93,13 @@ class DependencyAnalyzer:
                         commit_msg="Find direct dependents"
                     )
                     all_dependents.extend(result.get('bindings', []))
-                except Exception as e:
+                except (json.JSONDecodeError, AttributeError) as e:
                     # Log error but continue
-                    logger.error(f"Error finding dependents for relation: {e}")
+                    logger.error(f"Error serializing query for relation: {e}")
+                    continue
+                except RuntimeError as e:
+                    # Log error but continue
+                    logger.error(f"Query execution error for relation: {e}")
                     continue
             
             # Process direct dependencies
@@ -122,7 +126,7 @@ class DependencyAnalyzer:
                     )
                     for path in paths:
                         transitive_dependents.update(path.path[1:-1])  # Exclude start/end
-                except Exception as e:
+                except (RuntimeError, ValueError) as e:
                     # Skip if path finding fails
                     continue
             
@@ -137,7 +141,9 @@ class DependencyAnalyzer:
             
             return impact_analysis
             
-        except Exception as e:
+        except (KeyError, ValueError) as e:
+            raise RuntimeError(f"Data processing error in impact analysis for {changed_entity}: {e}")
+        except RuntimeError as e:
             raise RuntimeError(f"Impact analysis failed for {changed_entity}: {e}")
     
     async def detect_circular_dependencies(self) -> List[SemanticConflict]:
@@ -172,7 +178,10 @@ class DependencyAnalyzer:
                         commit_msg="Detect circular dependencies"
                     )
                     all_cycles.extend(result.get('bindings', []))
-                except Exception as e:
+                except (json.JSONDecodeError, AttributeError) as e:
+                    # Skip if query serialization fails for this relation
+                    continue
+                except RuntimeError as e:
                     # Skip if cycle detection fails for this relation
                     continue
             
@@ -204,7 +213,9 @@ class DependencyAnalyzer:
             
             return conflicts
             
-        except Exception as e:
+        except (KeyError, ValueError) as e:
+            raise RuntimeError(f"Data processing error in circular dependency detection: {e}")
+        except RuntimeError as e:
             raise RuntimeError(f"Circular dependency detection failed: {e}")
     
     async def find_critical_paths(self, max_paths: int = 10) -> List[DependencyPath]:
@@ -272,7 +283,10 @@ class DependencyAnalyzer:
                                 node_degrees[node] = {'in': 0, 'out': 0}
                             node_degrees[node]['out'] += out_count
                             
-                except Exception as e:
+                except (json.JSONDecodeError, AttributeError) as e:
+                    # Skip if query serialization fails
+                    continue
+                except RuntimeError as e:
                     # Skip if degree calculation fails
                     continue
             
@@ -305,7 +319,7 @@ class DependencyAnalyzer:
                             path.is_critical = True
                             path.total_weight = (degree1 + degree2) / len(path.path) if path.path else 1.0
                             critical_paths.append(path)
-                    except Exception as e:
+                    except (RuntimeError, ValueError) as e:
                         # Skip if path finding fails
                         continue
             
@@ -313,7 +327,9 @@ class DependencyAnalyzer:
             critical_paths.sort(key=lambda p: p.total_weight, reverse=True)
             return critical_paths[:max_paths]
             
-        except Exception as e:
+        except (KeyError, ValueError) as e:
+            raise RuntimeError(f"Data processing error in critical path analysis: {e}")
+        except RuntimeError as e:
             raise RuntimeError(f"Critical path analysis failed: {e}")
     
     async def analyze_orphaned_entities(self) -> List[SemanticConflict]:
@@ -348,7 +364,7 @@ class DependencyAnalyzer:
                 all_entities = [(binding.get('v:entity', {}).get('@value', ''), 
                                binding.get('v:entity_type', {}).get('@value', '')) 
                               for binding in all_entities_result.get('bindings', [])]
-            except Exception as e:
+            except (json.JSONDecodeError, RuntimeError) as e:
                 return []
             
             # Check each entity for relationships
@@ -396,7 +412,7 @@ class DependencyAnalyzer:
                         if (out_result.get('bindings') or in_result.get('bindings')):
                             has_relationships = True
                             break
-                    except Exception:
+                    except (json.JSONDecodeError, RuntimeError):
                         continue
                 
                 if not has_relationships:
@@ -417,7 +433,9 @@ class DependencyAnalyzer:
             
             return conflicts
             
-        except Exception as e:
+        except (KeyError, ValueError) as e:
+            raise RuntimeError(f"Data processing error in orphaned entity analysis: {e}")
+        except RuntimeError as e:
             raise RuntimeError(f"Orphaned entity analysis failed: {e}")
     
     def _generate_impact_recommendations(
