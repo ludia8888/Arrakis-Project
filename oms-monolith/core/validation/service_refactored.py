@@ -33,9 +33,19 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from shared.exceptions import ValidationError, ServiceException, InfrastructureException
-from shared.exceptions.domain_exceptions import (
-    SchemaValidationError, PolicyViolationError, DataQualityError
-)
+# Import domain exceptions from the correct location
+try:
+    from shared.exceptions.domain_exceptions import (
+        SchemaValidationError, PolicyViolationError, DataQualityError
+    )
+except ImportError:
+    # Create fallback exceptions if domain_exceptions module is not available
+    class SchemaValidationError(ValidationError):
+        pass
+    class PolicyViolationError(ValidationError):
+        pass
+    class DataQualityError(ValidationError):
+        pass
 from core.validation.models import (
     BreakingChange,
     ImpactEstimate,

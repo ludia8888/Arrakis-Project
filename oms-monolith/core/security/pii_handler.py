@@ -10,6 +10,7 @@ from enum import Enum
 from cryptography.fernet import Fernet
 import hashlib
 import copy
+from shared.config.unified_env import unified_env
 
 logger = logging.getLogger(__name__)
 
@@ -302,11 +303,10 @@ class PIIHandler:
 # 환경별 PII 핸들러 팩토리
 def create_pii_handler(environment: str = "development") -> PIIHandler:
     """환경별 PII 핸들러 생성"""
-    import os
     
     if environment == "production":
         # 프로덕션: 암호화 사용
-        encryption_key = os.getenv("PII_ENCRYPTION_KEY")
+        encryption_key = unified_env.get("PII_ENCRYPTION_KEY")
         if encryption_key:
             encryption_key = encryption_key.encode()
         

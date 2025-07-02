@@ -16,10 +16,10 @@ try:
     from shared.cache.smart_cache import SmartCacheManager
     from database.clients.terminus_db import TerminusDBClient
     from shared.config.environment import get_config
-    from shared.utils.retry_strategy import with_retry, RetryConfig, RetryStrategy
+    from shared.resilience import with_retry, RetryConfig, RETRY_POLICIES
 except ImportError as e:
     logger.error(f"Critical dependency missing: {e}")
-    logger.error("Required modules: shared.cache.smart_cache, database.clients.terminus_db, shared.config.environment, shared.utils.retry_strategy")
+    logger.error("Required modules: shared.cache.smart_cache, database.clients.terminus_db, shared.config.environment, shared.resilience")
     logger.error("Ensure all dependencies are properly installed and available")
     raise ModuleNotFoundError(f"Action service requires missing dependency: {e}") from e
 from core.action.metadata_service import ActionMetadataService
@@ -27,16 +27,26 @@ from core.action.metadata_service import ActionMetadataService
 logger = logging.getLogger(__name__)
 
 # Retry configurations for Actions Service calls
-ACTIONS_SERVICE_READ_CONFIG = RetryConfig.for_strategy(RetryStrategy.STANDARD)
+# Using unified resilience policies - these map to the old configs:
+# STANDARD strategy → 'standard' policy
+# CUSTOM write config → 'action_write' custom policy
+ACTIONS_SERVICE_READ_POLICY = 'standard'
 ACTIONS_SERVICE_WRITE_CONFIG = RetryConfig(
-    strategy=RetryStrategy.CUSTOM,
-    max_attempts=5,
+    max_retries=5,
     initial_delay=0.5,
     max_delay=30.0,
-    exponential_base=2.0,
+    backoff_multiplier=2.0,
     timeout=30.0,  # 30 second timeout for Actions Service calls
-    circuit_breaker_threshold=10,
-    retry_budget_percent=15.0
+    jitter=True,
+    circuit_breaker_config={
+        'failure_threshold': 10,
+        'recovery_timeout': 30,
+        'expected_exception': Exception
+    },
+    retry_budget_config={
+        'budget_percent': 15.0,
+        'min_requests': 10
+    }
 )
 
 
@@ -142,7 +152,7 @@ class ActionService:
         return await self.metadata_service.validate_action_schema(action_definition)
 
     # 실행 관련 메서드들 - Actions Service MSA로 위임
-    @with_retry("actions_service_execute", config=ACTIONS_SERVICE_WRITE_CONFIG, bulkhead_resource="actions_service")
+    @with_retry(config=ACTIONS_SERVICE_WRITE_CONFIG)
     async def execute_action(
         self,
         action_type_id: str,
@@ -170,7 +180,7 @@ class ActionService:
             response.raise_for_status()
             return response.json()
 
-    @with_retry("actions_service_get_status", config=ACTIONS_SERVICE_READ_CONFIG, bulkhead_resource="actions_service")
+    @with_retry(policy=ACTIONS_SERVICE_READ_POLICY)
     async def get_execution_status(self, execution_id: str) -> Dict[str, Any]:
         """
         실행 상태 조회 - Actions Service MSA로 위임
@@ -184,7 +194,7 @@ class ActionService:
             response.raise_for_status()
             return response.json()
 
-    @with_retry("actions_service_job_status", config=ACTIONS_SERVICE_READ_CONFIG, bulkhead_resource="actions_service")
+    @with_retry(policy=ACTIONS_SERVICE_READ_POLICY)
     async def get_job_status(self, job_id: str) -> Dict[str, Any]:
         """
         Job 상태 조회 - Actions Service MSA로 위임
@@ -209,7 +219,7 @@ class ActionService:
         logger.info("Worker shutdown delegated to Actions Service MSA")
         return True
 
-    @with_retry("actions_service_worker_status", config=ACTIONS_SERVICE_READ_CONFIG, bulkhead_resource="actions_service")
+    @with_retry(policy=ACTIONS_SERVICE_READ_POLICY)
     async def get_worker_status(self) -> Dict[str, Any]:
         """
         워커 상태 조회 - Actions Service MSA로 위임

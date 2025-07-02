@@ -4,11 +4,11 @@ Provides seamless integration of the enterprise validation service
 with the existing OMS infrastructure.
 """
 import logging
-import os
 from typing import Optional
 
 from fastapi import FastAPI
 import redis.asyncio as redis
+from shared.config.unified_env import unified_env
 
 from core.validation.enterprise_service import (
     EnterpriseValidationService, ValidationLevel,
@@ -67,7 +67,7 @@ async def initialize_enterprise_validation(
     
     # Get validation level from environment
     default_level = ValidationLevel(
-        os.getenv("DEFAULT_VALIDATION_LEVEL", ValidationLevel.STANDARD.value)
+        unified_env.get("DEFAULT_VALIDATION_LEVEL") or ValidationLevel.STANDARD.value
     )
     
     # Create validation service
@@ -89,10 +89,10 @@ async def initialize_enterprise_validation(
         app,
         validation_service=validation_service,
         default_level=default_level,
-        enable_response_validation=os.getenv("VALIDATE_RESPONSES", "true").lower() == "true",
-        enable_metrics=os.getenv("VALIDATION_METRICS", "true").lower() == "true",
-        log_validation_errors=os.getenv("LOG_VALIDATION_ERRORS", "true").lower() == "true",
-        prevent_info_disclosure=os.getenv("PREVENT_INFO_DISCLOSURE", "true").lower() == "true"
+        enable_response_validation=unified_env.get("VALIDATE_RESPONSES") != "false",
+        enable_metrics=unified_env.get("VALIDATION_METRICS") != "false",
+        log_validation_errors=unified_env.get("LOG_VALIDATION_ERRORS") != "false",
+        prevent_info_disclosure=unified_env.get("PREVENT_INFO_DISCLOSURE") != "false"
     )
     
     # API routes should be initialized in the API layer to avoid layer violation

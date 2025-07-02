@@ -21,9 +21,9 @@ from contextlib import asynccontextmanager
 from typing import Optional, Dict, Any
 
 # Early environment validation before any other imports
-from shared.config.environment import StrictEnv
-# Validate environment at import time
-StrictEnv.validate_or_die(services=["actions", "audit", "scheduler", "nats"])
+from shared.config.unified_env import unified_env, validate_env
+# Validate environment at import time - fail fast for life-critical system
+validate_env(fail_fast=True)
 
 # Life-critical imports
 from middleware.auth_secure import (
@@ -153,7 +153,7 @@ app = FastAPI(
 # CORS configuration - restricted for security
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=env_config.get("ALLOWED_ORIGINS", "http://frontend:3000").split(","),
+    allow_origins=unified_env.get("ALLOWED_ORIGINS").split(","),
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
@@ -259,7 +259,7 @@ async def health_detailed():
         "status": "healthy",
         "service": "oms-life-critical",
         "version": "1.0.0-life-critical",
-        "environment": os.getenv("ENVIRONMENT", "production"),
+        "environment": unified_env.get("ENVIRONMENT").value,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "circuit_breakers": circuit_metrics,
         "safety_features": {

@@ -1,0 +1,113 @@
+name: Enforce Unified Environment Configuration
+
+on:
+  pull_request:
+    paths:
+      - '**.py'
+      - '.importlinter'
+      - 'shared/config/unified_env.py'
+  push:
+    branches:
+      - main
+      - develop
+      - 'refactoring/**'
+
+jobs:
+  check-env-usage:
+    runs-on: ubuntu-latest
+    name: Check for direct os.getenv usage
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        pip install import-linter
+        pip install -r requirements.txt || true
+    
+    - name: Run import-linter check
+      run: |
+        echo "Checking for direct os.getenv usage..."
+        import-linter --contract no-direct-os-getenv
+        
+    - name: Check for os.getenv in new files
+      run: |
+        # Check for any remaining os.getenv calls
+        echo "Scanning for os.getenv usage..."
+        
+        # Count os.getenv occurrences
+        count=$(grep -r "os\.getenv" --include="*.py" \
+          --exclude-dir=venv \
+          --exclude-dir=.git \
+          --exclude-dir=__pycache__ \
+          --exclude-dir=tests \
+          --exclude-dir=scripts \
+          --exclude="unified_env.py" \
+          core middleware shared api 2>/dev/null | wc -l)
+        
+        if [ "$count" -gt 0 ]; then
+          echo "❌ Found $count os.getenv() calls. Please use unified_env.get() instead."
+          echo ""
+          echo "Files with os.getenv():"
+          grep -r "os\.getenv" --include="*.py" \
+            --exclude-dir=venv \
+            --exclude-dir=.git \
+            --exclude-dir=__pycache__ \
+            --exclude-dir=tests \
+            --exclude-dir=scripts \
+            --exclude="unified_env.py" \
+            core middleware shared api 2>/dev/null || true
+          exit 1
+        else
+          echo "✅ No direct os.getenv() usage found"
+        fi
+        
+    - name: Validate security configuration
+      run: |
+        echo "Validating security configuration..."
+        python -m shared.config.validate_security_config || echo "⚠️  Security validation warnings (non-blocking in CI)"
+
+  migration-helper:
+    runs-on: ubuntu-latest
+    name: Provide migration assistance
+    if: failure()
+    needs: check-env-usage
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Generate migration hints
+      run: |
+        echo "## 🔧 Migration Guide"
+        echo ""
+        echo "To migrate from os.getenv to unified_env:"
+        echo ""
+        echo "1. Replace imports:"
+        echo "   ```python"
+        echo "   # Old"
+        echo "   import os"
+        echo "   value = os.getenv('MY_VAR', 'default')"
+        echo ""
+        echo "   # New" 
+        echo "   from shared.config.unified_env import unified_env"
+        echo "   value = unified_env.get('MY_VAR')"
+        echo "   ```"
+        echo ""
+        echo "2. Register new variables in shared/config/unified_env.py"
+        echo ""
+        echo "3. Run migration script:"
+        echo "   ```bash"
+        echo "   python scripts/migrate_to_unified_env.py --file <your_file.py>"
+        echo "   ```"
+        echo ""
+        echo "For more details, see docs/phase2.1-week1-completion.md"

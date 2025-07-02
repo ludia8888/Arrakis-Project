@@ -12,6 +12,7 @@ from typing import Dict, List, Optional, Any, Tuple
 from pathlib import Path
 from pydantic import BaseModel, Field
 import uuid
+from shared.config.unified_env import unified_env
 
 from core.validation.naming_convention import NamingConvention
 from core.validation.policy_signing import SignedNamingPolicy, get_policy_signing_manager
@@ -562,14 +563,13 @@ class PolicyIntegrityChecker:
     
     def _should_send_tampering_event_to_siem(self, event: TamperingEvent) -> bool:
         """SIEM 전송 필요성 판단"""
-        import os
         
         # 전체 SIEM 비활성화 체크
-        if not os.getenv("ENABLE_SIEM_INTEGRATION", "true").lower() in ("true", "1", "yes"):
+        if unified_env.get("ENABLE_SIEM_INTEGRATION") == "false":
             return False
         
         # 변조 감지 SIEM 전송 비활성화 체크
-        if not os.getenv("SIEM_SEND_TAMPERING_EVENTS", "true").lower() in ("true", "1", "yes"):
+        if unified_env.get("SIEM_SEND_TAMPERING_EVENTS") == "false":
             return False
         
         # CRITICAL 및 HIGH 이벤트는 항상 전송
@@ -578,7 +578,7 @@ class PolicyIntegrityChecker:
         
         # INFO 이벤트는 설정에 따라
         if (event.severity == EventSeverity.INFO and 
-            os.getenv("SIEM_SEND_INFO_TAMPERING", "false").lower() in ("true", "1", "yes")):
+            unified_env.get("SIEM_SEND_INFO_TAMPERING") == "true"):
             return True
         
         return False

@@ -69,3 +69,61 @@ ignore_imports =
     core.audit -> shared.audit
     core.auth -> shared.security
     core.scheduler -> shared.dlq
+
+[importlinter:contract:no-threading-in-async-cache]
+name = No threading imports in async cache (except CacheWarmer)
+type = forbidden
+source_modules = 
+    core.traversal.caching.AsyncLRUCache
+    core.traversal.caching.MultiLevelCache
+    core.traversal.caching.TraversalCacheManager
+forbidden_modules = 
+    threading
+allow_indirect_imports = True
+
+[importlinter:contract:no-sync-cache-in-async]
+name = No sync cache methods in async contexts
+type = forbidden
+source_modules = 
+    api.graphql
+    api.graphql.resolvers
+    api.graphql.bff
+    core.traversal.traversal_engine
+    core.validation.service_refactored
+forbidden_modules =
+    core.traversal.cache.implementations.lru_cache.LRUCache.get
+    core.traversal.cache.implementations.lru_cache.LRUCache.put
+ignore_imports =
+    # Allow AsyncLRUCache to use sync methods for backward compatibility
+    core.traversal.cache.implementations.lru_cache -> core.traversal.cache.implementations.lru_cache
+
+[importlinter:contract:cache-layer-dependencies]
+name = Enforce layer dependencies in cache module
+type = layers
+layers =
+    core.traversal.cache.services
+    core.traversal.cache.implementations
+    core.traversal.cache.interfaces
+
+[importlinter:contract:validation-layer-dependencies]
+name = Enforce layer dependencies in validation module
+type = layers
+layers =
+    core.validation.enterprise.services
+    core.validation.enterprise.implementations
+    core.validation.enterprise.interfaces
+
+[importlinter:contract:no-direct-os-getenv]
+name = No direct os.getenv usage - use unified_env
+type = forbidden
+source_modules = 
+    core
+    middleware
+    shared
+    api
+forbidden_modules = 
+    os.getenv
+ignore_imports = 
+    tests -> os
+    shared.config.unified_env -> os
+    scripts -> os

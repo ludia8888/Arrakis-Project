@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field, validator
 from database.clients import RedisHAClient
 from utils import logging
 from shared.observability import metrics
+from shared.config import unified_env, ConfigurationError
 
 logger = logging.get_logger(__name__)
 
@@ -711,7 +712,10 @@ class EnvironmentConfig:
     """Environment configuration and validation integrated with service config"""
     
     def __init__(self):
-        self._env = os.getenv("ENV", "development").lower()
+        try:
+            self._env = unified_env.get("ENVIRONMENT").value
+        except ConfigurationError:
+            self._env = "development"
         self._validate_environment()
     
     def _validate_environment(self):

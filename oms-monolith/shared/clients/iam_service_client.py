@@ -2,7 +2,6 @@
 IAM Service Client with Fallback Support
 MSA 통합 + 로컬 JWT 검증 fallback
 """
-import os
 import asyncio
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone, timedelta
@@ -22,6 +21,7 @@ from core.auth import UserContext
 from utils.logger import get_logger
 from shared.config.environment import StrictEnv
 from prometheus_client import Counter, Histogram, Gauge
+from shared.config.unified_env import unified_env
 
 logger = get_logger(__name__)
 
@@ -63,20 +63,18 @@ class LocalJWTValidator:
     
     def __init__(self):
         # FIXED: Fail fast on missing JWT_SECRET
-        secret = os.getenv("JWT_SECRET")
-        if not secret:
-            raise ValueError("SECURITY: JWT_SECRET environment variable is required")
+        secret = unified_env.get("JWT_SECRET")
         
         # FIXED: Validate secret security
         self._validate_secret_security(secret)
         
         self.secret_key = secret
-        self.expected_issuer = os.getenv("JWT_ISSUER", "iam.company")
-        self.expected_audience = os.getenv("JWT_AUDIENCE", "oms")
+        self.expected_issuer = unified_env.get("JWT_ISSUER")
+        self.expected_audience = unified_env.get("JWT_AUDIENCE")
         self.jwks_client = None
         
         # Try to initialize JWKS client for RS256
-        jwks_url = os.getenv("JWT_JWKS_URL")
+        jwks_url = unified_env.get("JWT_JWKS_URL")
         if jwks_url:
             try:
                 self.jwks_client = PyJWKClient(jwks_url)
@@ -221,8 +219,8 @@ class IAMServiceClientWithFallback:
     
     def __init__(self):
         self.iam_service_url = StrictEnv.get("IAM_SERVICE_URL")
-        self.timeout = int(os.getenv("IAM_TIMEOUT", "5"))  # Shorter timeout for faster fallback
-        self.max_retries = int(os.getenv("IAM_MAX_RETRIES", "2"))
+        self.timeout = unified_env.get("IAM_TIMEOUT")  # Shorter timeout for faster fallback
+        self.max_retries = unified_env.get("IAM_MAX_RETRIES")
         
         # HTTP client
         self._client = httpx.AsyncClient(

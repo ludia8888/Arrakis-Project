@@ -1,0 +1,4111 @@
+{
+  "total_files": 20,
+  "total_vars": 156,
+  "unique_vars": 130,
+  "vars_with_defaults": 132,
+  "vars_without_defaults": 24,
+  "by_category": {
+    "security": [
+      {
+        "line": 309,
+        "col": 25,
+        "var_name": "PII_ENCRYPTION_KEY",
+        "default": null,
+        "has_default": false,
+        "file": "core/security/pii_handler.py"
+      },
+      {
+        "line": 137,
+        "col": 73,
+        "var_name": "OMS_POLICY_API_KEY",
+        "default": null,
+        "has_default": false,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 26,
+        "col": 26,
+        "var_name": "ONTOLOGY_SECRET_KEY",
+        "default": null,
+        "has_default": false,
+        "file": "shared/config/base_config.py"
+      },
+      {
+        "line": 29,
+        "col": 29,
+        "var_name": "ONTOLOGY_JWT_ALGORITHM",
+        "default": "HS256",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      },
+      {
+        "line": 30,
+        "col": 42,
+        "var_name": "ONTOLOGY_JWT_EXPIRATION_MINUTES",
+        "default": "30",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      },
+      {
+        "line": 229,
+        "col": 41,
+        "var_name": "JWT_SECRET_KEY",
+        "default": "config.security.jwt_secret_key",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 341,
+        "col": 40,
+        "var_name": "JWT_SECRET_KEY",
+        "default": "secret",
+        "has_default": true,
+        "file": "services/grpc/server.py"
+      }
+    ],
+    "service": [
+      {
+        "line": 52,
+        "col": 44,
+        "var_name": "IDP_ENDPOINT",
+        "default": null,
+        "has_default": false,
+        "file": "core/auth/resource_permission_checker.py"
+      },
+      {
+        "line": 22,
+        "col": 28,
+        "var_name": "ONTOLOGY_SERVICE_NAME",
+        "default": "ontology-management-system",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      },
+      {
+        "line": 23,
+        "col": 31,
+        "var_name": "ONTOLOGY_SERVICE_VERSION",
+        "default": "2.0.0",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      }
+    ],
+    "config": [
+      {
+        "line": 32,
+        "col": 11,
+        "var_name": "IAM_ENABLE_FALLBACK",
+        "default": "true",
+        "has_default": true,
+        "file": "core/integrations/__init__.py"
+      },
+      {
+        "line": 34,
+        "col": 13,
+        "var_name": "IAM_JWKS_ENABLED",
+        "default": "false",
+        "has_default": true,
+        "file": "core/integrations/__init__.py"
+      },
+      {
+        "line": 496,
+        "col": 18,
+        "var_name": "POLICY_CONFIG_FILE",
+        "default": null,
+        "has_default": false,
+        "file": "core/validation/policy_engine.py"
+      },
+      {
+        "line": 98,
+        "col": 61,
+        "var_name": "OMS_ENABLE_QUERY_CACHE",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 99,
+        "col": 60,
+        "var_name": "OMS_ENABLE_PLAN_CACHE",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 100,
+        "col": 62,
+        "var_name": "OMS_ENABLE_RESULT_CACHE",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 111,
+        "col": 63,
+        "var_name": "OMS_ENABLE_CACHE_WARMING",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 123,
+        "col": 72,
+        "var_name": "OMS_ENABLE_JSON_SCHEMA",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 124,
+        "col": 67,
+        "var_name": "OMS_ENABLE_POLICY",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 126,
+        "col": 61,
+        "var_name": "OMS_ENABLE_RULE_ENGINE",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 158,
+        "col": 69,
+        "var_name": "OMS_ENABLE_METRICS",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 161,
+        "col": 66,
+        "var_name": "OMS_ENABLE_FOUNDRY_ALERTING",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 162,
+        "col": 67,
+        "var_name": "OMS_FOUNDRY_ALERTING_ENABLED",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 568,
+        "col": 15,
+        "var_name": "ENABLE_SIEM_INTEGRATION",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/tampering_detection.py"
+      },
+      {
+        "line": 293,
+        "col": 7,
+        "var_name": "ISSUE_TRACKING_ENABLED",
+        "default": "true",
+        "has_default": true,
+        "file": "middleware/issue_tracking_middleware.py"
+      },
+      {
+        "line": 53,
+        "col": 42,
+        "var_name": "ENABLE_EVENT_DEDUPLICATION",
+        "default": "true",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      },
+      {
+        "line": 190,
+        "col": 22,
+        "var_name": "CONFIG_FILE",
+        "default": null,
+        "has_default": false,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 230,
+        "col": 39,
+        "var_name": "MTLS_ENABLED",
+        "default": "false",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 233,
+        "col": 40,
+        "var_name": "NATS_ENABLED",
+        "default": "true",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 241,
+        "col": 44,
+        "var_name": "METRICS_ENABLED",
+        "default": "true",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      }
+    ],
+    "performance": [
+      {
+        "line": 229,
+        "col": 41,
+        "var_name": "TRAVERSAL_MAX_DEPTH",
+        "default": "config.max_traversal_depth",
+        "has_default": true,
+        "file": "core/traversal/config.py"
+      },
+      {
+        "line": 489,
+        "col": 7,
+        "var_name": "POLICY_MAX_WARNINGS",
+        "default": null,
+        "has_default": false,
+        "file": "core/validation/policy_engine.py"
+      },
+      {
+        "line": 490,
+        "col": 40,
+        "var_name": "POLICY_MAX_WARNINGS",
+        "default": null,
+        "has_default": false,
+        "file": "core/validation/policy_engine.py"
+      },
+      {
+        "line": 491,
+        "col": 7,
+        "var_name": "POLICY_MAX_ALERTS",
+        "default": null,
+        "has_default": false,
+        "file": "core/validation/policy_engine.py"
+      },
+      {
+        "line": 492,
+        "col": 38,
+        "var_name": "POLICY_MAX_ALERTS",
+        "default": null,
+        "has_default": false,
+        "file": "core/validation/policy_engine.py"
+      },
+      {
+        "line": 23,
+        "col": 63,
+        "var_name": "OMS_SCHEMA_CACHE_MAX",
+        "default": "256",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 29,
+        "col": 60,
+        "var_name": "OMS_MAX_DIFF_ITEMS",
+        "default": "1000",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 30,
+        "col": 65,
+        "var_name": "OMS_TRAVERSAL_MAX_DEPTH",
+        "default": "5",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 31,
+        "col": 73,
+        "var_name": "OMS_DEPENDENCY_CYCLE_MAX",
+        "default": "50",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 50,
+        "col": 65,
+        "var_name": "OMS_MAX_TRAVERSAL_DEPTH",
+        "default": "20",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 55,
+        "col": 69,
+        "var_name": "OMS_MAX_ENTITIES_ANALYZE",
+        "default": "50",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 56,
+        "col": 67,
+        "var_name": "OMS_MAX_HIGH_DEGREE_NODES",
+        "default": "10",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 59,
+        "col": 65,
+        "var_name": "OMS_DEFAULT_QUERY_LIMIT",
+        "default": "1000",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 60,
+        "col": 61,
+        "var_name": "OMS_MAX_QUERY_LIMIT",
+        "default": "10000",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 61,
+        "col": 67,
+        "var_name": "OMS_QUERY_TIMEOUT",
+        "default": "30",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 62,
+        "col": 81,
+        "var_name": "OMS_PLAN_VALIDATION_TIMEOUT_HOURS",
+        "default": "1",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 74,
+        "col": 65,
+        "var_name": "OMS_MAX_MERGE_CONFLICTS",
+        "default": "10",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 106,
+        "col": 66,
+        "var_name": "OMS_QUERY_CACHE_MAX_SIZE",
+        "default": "1000",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 107,
+        "col": 65,
+        "var_name": "OMS_PLAN_CACHE_MAX_SIZE",
+        "default": "500",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 108,
+        "col": 67,
+        "var_name": "OMS_RESULT_CACHE_MAX_SIZE",
+        "default": "2000",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 113,
+        "col": 76,
+        "var_name": "OMS_CACHE_WARMING_INTERVAL",
+        "default": "30",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 114,
+        "col": 79,
+        "var_name": "OMS_CACHE_WARMING_ERROR_DELAY",
+        "default": "60",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 136,
+        "col": 71,
+        "var_name": "OMS_POLICY_TIMEOUT",
+        "default": "10.0",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 164,
+        "col": 76,
+        "var_name": "OMS_FOUNDRY_ALERT_COOLDOWN_MINUTES",
+        "default": "60",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 165,
+        "col": 73,
+        "var_name": "OMS_FOUNDRY_MAX_ALERTS_PER_HOUR",
+        "default": "10",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 49,
+        "col": 42,
+        "var_name": "JETSTREAM_MAX_INFLIGHT",
+        "default": "50",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      },
+      {
+        "line": 50,
+        "col": 49,
+        "var_name": "JETSTREAM_ACK_TIMEOUT",
+        "default": "30",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      },
+      {
+        "line": 55,
+        "col": 52,
+        "var_name": "EVENT_PROCESSING_TIMEOUT",
+        "default": "60",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      }
+    ],
+    "other": [
+      {
+        "line": 232,
+        "col": 32,
+        "var_name": "TRAVERSAL_DEFAULT_BRANCH",
+        "default": "config.default_branch",
+        "has_default": true,
+        "file": "core/traversal/config.py"
+      },
+      {
+        "line": 473,
+        "col": 7,
+        "var_name": "CI",
+        "default": null,
+        "has_default": false,
+        "file": "core/validation/policy_engine.py"
+      },
+      {
+        "line": 474,
+        "col": 11,
+        "var_name": "GITHUB_EVENT_NAME",
+        "default": null,
+        "has_default": false,
+        "file": "core/validation/policy_engine.py"
+      },
+      {
+        "line": 480,
+        "col": 9,
+        "var_name": "RUNTIME_MODE",
+        "default": null,
+        "has_default": false,
+        "file": "core/validation/policy_engine.py"
+      },
+      {
+        "line": 482,
+        "col": 9,
+        "var_name": "RUNTIME_MODE",
+        "default": null,
+        "has_default": false,
+        "file": "core/validation/policy_engine.py"
+      },
+      {
+        "line": 487,
+        "col": 7,
+        "var_name": "POLICY_FAIL_FAST",
+        "default": null,
+        "has_default": false,
+        "file": "core/validation/policy_engine.py"
+      },
+      {
+        "line": 488,
+        "col": 33,
+        "var_name": "POLICY_FAIL_FAST",
+        "default": null,
+        "has_default": false,
+        "file": "core/validation/policy_engine.py"
+      },
+      {
+        "line": 493,
+        "col": 7,
+        "var_name": "POLICY_DEFAULT_ACTION",
+        "default": null,
+        "has_default": false,
+        "file": "core/validation/policy_engine.py"
+      },
+      {
+        "line": 494,
+        "col": 38,
+        "var_name": "POLICY_DEFAULT_ACTION",
+        "default": null,
+        "has_default": false,
+        "file": "core/validation/policy_engine.py"
+      },
+      {
+        "line": 17,
+        "col": 57,
+        "var_name": "OMS_SCHEMA_BASE_DIR",
+        "default": "schemas",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 18,
+        "col": 55,
+        "var_name": "OMS_JSON_SCHEMA_DRAFT",
+        "default": "2020-12",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 19,
+        "col": 67,
+        "var_name": "OMS_SCHEMA_FORMAT_CHECK",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 22,
+        "col": 62,
+        "var_name": "OMS_SCHEMA_CACHE",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 24,
+        "col": 63,
+        "var_name": "OMS_SCHEMA_CACHE_TTL",
+        "default": "600",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 25,
+        "col": 68,
+        "var_name": "OMS_RULE_CACHE_TTL",
+        "default": "300",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 28,
+        "col": 80,
+        "var_name": "OMS_COMMON_ENTITIES_THRESHOLD",
+        "default": "10",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 51,
+        "col": 69,
+        "var_name": "OMS_DEFAULT_TRAVERSAL_DEPTH",
+        "default": "5",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 52,
+        "col": 69,
+        "var_name": "OMS_CRITICAL_PATH_THRESHOLD",
+        "default": "3",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 53,
+        "col": 67,
+        "var_name": "OMS_HIGH_DEGREE_THRESHOLD",
+        "default": "5",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 54,
+        "col": 71,
+        "var_name": "OMS_IMPACT_ANALYSIS_THRESHOLD",
+        "default": "10",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 65,
+        "col": 56,
+        "var_name": "OMS_DEFAULT_BRANCH",
+        "default": "main",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 71,
+        "col": 72,
+        "var_name": "OMS_AUTO_RESOLVE_THRESHOLD",
+        "default": "0.8",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 72,
+        "col": 73,
+        "var_name": "OMS_MANUAL_REVIEW_THRESHOLD",
+        "default": "0.4",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 73,
+        "col": 72,
+        "var_name": "OMS_REJECT_MERGE_THRESHOLD",
+        "default": "0.1",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 95,
+        "col": 71,
+        "var_name": "OMS_MSA_HIGH_IMPACT_THRESHOLD",
+        "default": "3",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 102,
+        "col": 61,
+        "var_name": "OMS_QUERY_CACHE_TTL",
+        "default": "300",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 103,
+        "col": 60,
+        "var_name": "OMS_PLAN_CACHE_TTL",
+        "default": "1800",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 104,
+        "col": 62,
+        "var_name": "OMS_RESULT_CACHE_TTL",
+        "default": "600",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 110,
+        "col": 57,
+        "var_name": "OMS_EVICTION_POLICY",
+        "default": "LRU",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 127,
+        "col": 57,
+        "var_name": "OMS_FAIL_FAST",
+        "default": "false",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 140,
+        "col": 66,
+        "var_name": "OMS_RULE_RELOAD_INTERVAL",
+        "default": "300",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 154,
+        "col": 67,
+        "var_name": "OMS_ORPHAN_DETECTION",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 157,
+        "col": 58,
+        "var_name": "OMS_VALIDATION_VERBOSE",
+        "default": "false",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 163,
+        "col": 74,
+        "var_name": "OMS_FOUNDRY_ALERT_SEVERITY_THRESHOLD",
+        "default": "medium",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 167,
+        "col": 8,
+        "var_name": "OMS_FOUNDRY_NOTIFICATION_CHANNELS",
+        "default": "email,slack",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 169,
+        "col": 70,
+        "var_name": "OMS_FOUNDRY_ESCALATION_THRESHOLD",
+        "default": "critical",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 170,
+        "col": 76,
+        "var_name": "OMS_FOUNDRY_DATASET_SIZE_THRESHOLD",
+        "default": "10000",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 171,
+        "col": 76,
+        "var_name": "OMS_FOUNDRY_COMPLIANCE_CHECKS",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 70,
+        "col": 8,
+        "var_name": "DEFAULT_VALIDATION_LEVEL",
+        "default": "ValidationLevel.STANDARD.value",
+        "has_default": true,
+        "file": "core/validation/integration.py"
+      },
+      {
+        "line": 92,
+        "col": 35,
+        "var_name": "VALIDATE_RESPONSES",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/integration.py"
+      },
+      {
+        "line": 94,
+        "col": 30,
+        "var_name": "LOG_VALIDATION_ERRORS",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/integration.py"
+      },
+      {
+        "line": 95,
+        "col": 32,
+        "var_name": "PREVENT_INFO_DISCLOSURE",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/integration.py"
+      },
+      {
+        "line": 572,
+        "col": 15,
+        "var_name": "SIEM_SEND_TAMPERING_EVENTS",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/tampering_detection.py"
+      },
+      {
+        "line": 581,
+        "col": 12,
+        "var_name": "SIEM_SEND_INFO_TAMPERING",
+        "default": "false",
+        "has_default": true,
+        "file": "core/validation/tampering_detection.py"
+      },
+      {
+        "line": 25,
+        "col": 11,
+        "var_name": "TEST_MODE",
+        "default": "false",
+        "has_default": true,
+        "file": "core/validation/dependencies.py"
+      },
+      {
+        "line": 35,
+        "col": 31,
+        "var_name": "CACHE_DEFAULT_TTL",
+        "default": "3600",
+        "has_default": true,
+        "file": "shared/cache/terminusdb_cache.py"
+      },
+      {
+        "line": 42,
+        "col": 40,
+        "var_name": "ONTOLOGY_EVENT_RETENTION_DAYS",
+        "default": "30",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      },
+      {
+        "line": 43,
+        "col": 36,
+        "var_name": "ONTOLOGY_EVENT_BATCH_SIZE",
+        "default": "100",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      },
+      {
+        "line": 47,
+        "col": 40,
+        "var_name": "JETSTREAM_SUBJECT_PREFIX",
+        "default": "quiver.events",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      },
+      {
+        "line": 48,
+        "col": 39,
+        "var_name": "JETSTREAM_CONSUMER_NAME",
+        "default": "oms-consumer",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      },
+      {
+        "line": 54,
+        "col": 43,
+        "var_name": "EVENT_CACHE_TTL_SECONDS",
+        "default": "300",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      },
+      {
+        "line": 59,
+        "col": 26,
+        "var_name": "ONTOLOGY_LOG_FORMAT",
+        "default": "json",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      },
+      {
+        "line": 209,
+        "col": 30,
+        "var_name": "API_HOST",
+        "default": "config.app.api_host",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 210,
+        "col": 34,
+        "var_name": "API_PORT",
+        "default": "str(config.app.api_port)",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 234,
+        "col": 23,
+        "var_name": "NATS_SERVERS",
+        "default": "",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 240,
+        "col": 39,
+        "var_name": "LOG_FORMAT",
+        "default": "config.monitoring.log_format",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      }
+    ],
+    "environment": [
+      {
+        "line": 356,
+        "col": 47,
+        "var_name": "ENVIRONMENT",
+        "default": "development",
+        "has_default": true,
+        "file": "core/traversal/config.py"
+      },
+      {
+        "line": 478,
+        "col": 9,
+        "var_name": "ENVIRONMENT",
+        "default": null,
+        "has_default": false,
+        "file": "core/validation/policy_engine.py"
+      },
+      {
+        "line": 58,
+        "col": 25,
+        "var_name": "ONTOLOGY_LOG_LEVEL",
+        "default": "INFO",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      },
+      {
+        "line": 138,
+        "col": 11,
+        "var_name": "ENVIRONMENT",
+        "default": "",
+        "has_default": true,
+        "file": "shared/config/environment.py"
+      },
+      {
+        "line": 187,
+        "col": 29,
+        "var_name": "ENVIRONMENT",
+        "default": "",
+        "has_default": true,
+        "file": "shared/config/environment.py"
+      },
+      {
+        "line": 306,
+        "col": 18,
+        "var_name": "ENVIRONMENT",
+        "default": "development",
+        "has_default": true,
+        "file": "shared/config/environment.py"
+      },
+      {
+        "line": 207,
+        "col": 45,
+        "var_name": "ENVIRONMENT",
+        "default": "development",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 208,
+        "col": 27,
+        "var_name": "DEBUG",
+        "default": "false",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 239,
+        "col": 38,
+        "var_name": "LOG_LEVEL",
+        "default": "config.monitoring.log_level",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 110,
+        "col": 15,
+        "var_name": "ENVIRONMENT",
+        "default": "development",
+        "has_default": true,
+        "file": "shared/security/exception_handler.py"
+      },
+      {
+        "line": 19,
+        "col": 22,
+        "var_name": "ENVIRONMENT",
+        "default": "development",
+        "has_default": true,
+        "file": "shared/security/pii_utils.py"
+      }
+    ],
+    "database": [
+      {
+        "line": 125,
+        "col": 69,
+        "var_name": "OMS_ENABLE_TERMINUS_CHECK",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 149,
+        "col": 61,
+        "var_name": "TERMINUSDB_DEFAULT_DB",
+        "default": "oms",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 150,
+        "col": 65,
+        "var_name": "TERMINUSDB_DEFAULT_BRANCH",
+        "default": "main",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 151,
+        "col": 66,
+        "var_name": "TERMINUSDB_TIMEOUT",
+        "default": "30.0",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 33,
+        "col": 37,
+        "var_name": "TERMINUSDB_CACHE_ENABLED",
+        "default": "true",
+        "has_default": true,
+        "file": "shared/cache/terminusdb_cache.py"
+      },
+      {
+        "line": 34,
+        "col": 34,
+        "var_name": "TERMINUSDB_LRU_CACHE_SIZE",
+        "default": "500000000",
+        "has_default": true,
+        "file": "shared/cache/terminusdb_cache.py"
+      },
+      {
+        "line": 70,
+        "col": 27,
+        "var_name": "TERMINUS_DB",
+        "default": "oms_test",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      },
+      {
+        "line": 71,
+        "col": 37,
+        "var_name": "TERMINUS_ORGANIZATION",
+        "default": "admin",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      },
+      {
+        "line": 213,
+        "col": 44,
+        "var_name": "TERMINUS_DB_ENDPOINT",
+        "default": "config.database.terminus_endpoint",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 214,
+        "col": 44,
+        "var_name": "TERMINUS_DB_USER",
+        "default": "config.database.terminus_username",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 215,
+        "col": 44,
+        "var_name": "TERMINUS_DB_PASSWORD",
+        "default": "config.database.terminus_password",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 216,
+        "col": 48,
+        "var_name": "TERMINUS_ORGANIZATION",
+        "default": "config.database.terminus_organization",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 217,
+        "col": 38,
+        "var_name": "TERMINUS_DB",
+        "default": "config.database.terminus_db",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 218,
+        "col": 39,
+        "var_name": "TERMINUS_DB_KEY",
+        "default": "config.database.terminus_key",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 221,
+        "col": 20,
+        "var_name": "REDIS_SENTINELS",
+        "default": "",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 224,
+        "col": 44,
+        "var_name": "REDIS_MASTER_NAME",
+        "default": "config.database.redis_master_name",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 225,
+        "col": 41,
+        "var_name": "REDIS_PASSWORD",
+        "default": "config.database.redis_password",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 226,
+        "col": 39,
+        "var_name": "REDIS_DB",
+        "default": "str(config.database.redis_db)",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 282,
+        "col": 23,
+        "var_name": "POSTGRES_URL",
+        "default": "postgresql+asyncpg://user:password@localhost/oms_db",
+        "has_default": true,
+        "file": "migrations/migrate_to_distributed_locks.py"
+      },
+      {
+        "line": 25,
+        "col": 13,
+        "var_name": "TERMINUS_DB_USER",
+        "default": "admin",
+        "has_default": true,
+        "file": "scripts/dev-tools/clear_terminusdb.py"
+      },
+      {
+        "line": 26,
+        "col": 12,
+        "var_name": "TERMINUS_DB_KEY",
+        "default": "admin123",
+        "has_default": true,
+        "file": "scripts/dev-tools/clear_terminusdb.py"
+      }
+    ],
+    "monitoring": [
+      {
+        "line": 93,
+        "col": 23,
+        "var_name": "VALIDATION_METRICS",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/integration.py"
+      }
+    ]
+  },
+  "by_file": {
+    "core/security/pii_handler.py": [
+      {
+        "line": 309,
+        "col": 25,
+        "var_name": "PII_ENCRYPTION_KEY",
+        "default": null,
+        "has_default": false,
+        "file": "core/security/pii_handler.py"
+      }
+    ],
+    "core/auth/resource_permission_checker.py": [
+      {
+        "line": 52,
+        "col": 44,
+        "var_name": "IDP_ENDPOINT",
+        "default": null,
+        "has_default": false,
+        "file": "core/auth/resource_permission_checker.py"
+      }
+    ],
+    "core/integrations/__init__.py": [
+      {
+        "line": 32,
+        "col": 11,
+        "var_name": "IAM_ENABLE_FALLBACK",
+        "default": "true",
+        "has_default": true,
+        "file": "core/integrations/__init__.py"
+      },
+      {
+        "line": 34,
+        "col": 13,
+        "var_name": "IAM_JWKS_ENABLED",
+        "default": "false",
+        "has_default": true,
+        "file": "core/integrations/__init__.py"
+      }
+    ],
+    "core/traversal/config.py": [
+      {
+        "line": 229,
+        "col": 41,
+        "var_name": "TRAVERSAL_MAX_DEPTH",
+        "default": "config.max_traversal_depth",
+        "has_default": true,
+        "file": "core/traversal/config.py"
+      },
+      {
+        "line": 232,
+        "col": 32,
+        "var_name": "TRAVERSAL_DEFAULT_BRANCH",
+        "default": "config.default_branch",
+        "has_default": true,
+        "file": "core/traversal/config.py"
+      },
+      {
+        "line": 356,
+        "col": 47,
+        "var_name": "ENVIRONMENT",
+        "default": "development",
+        "has_default": true,
+        "file": "core/traversal/config.py"
+      }
+    ],
+    "core/validation/policy_engine.py": [
+      {
+        "line": 473,
+        "col": 7,
+        "var_name": "CI",
+        "default": null,
+        "has_default": false,
+        "file": "core/validation/policy_engine.py"
+      },
+      {
+        "line": 474,
+        "col": 11,
+        "var_name": "GITHUB_EVENT_NAME",
+        "default": null,
+        "has_default": false,
+        "file": "core/validation/policy_engine.py"
+      },
+      {
+        "line": 478,
+        "col": 9,
+        "var_name": "ENVIRONMENT",
+        "default": null,
+        "has_default": false,
+        "file": "core/validation/policy_engine.py"
+      },
+      {
+        "line": 480,
+        "col": 9,
+        "var_name": "RUNTIME_MODE",
+        "default": null,
+        "has_default": false,
+        "file": "core/validation/policy_engine.py"
+      },
+      {
+        "line": 482,
+        "col": 9,
+        "var_name": "RUNTIME_MODE",
+        "default": null,
+        "has_default": false,
+        "file": "core/validation/policy_engine.py"
+      },
+      {
+        "line": 487,
+        "col": 7,
+        "var_name": "POLICY_FAIL_FAST",
+        "default": null,
+        "has_default": false,
+        "file": "core/validation/policy_engine.py"
+      },
+      {
+        "line": 488,
+        "col": 33,
+        "var_name": "POLICY_FAIL_FAST",
+        "default": null,
+        "has_default": false,
+        "file": "core/validation/policy_engine.py"
+      },
+      {
+        "line": 489,
+        "col": 7,
+        "var_name": "POLICY_MAX_WARNINGS",
+        "default": null,
+        "has_default": false,
+        "file": "core/validation/policy_engine.py"
+      },
+      {
+        "line": 490,
+        "col": 40,
+        "var_name": "POLICY_MAX_WARNINGS",
+        "default": null,
+        "has_default": false,
+        "file": "core/validation/policy_engine.py"
+      },
+      {
+        "line": 491,
+        "col": 7,
+        "var_name": "POLICY_MAX_ALERTS",
+        "default": null,
+        "has_default": false,
+        "file": "core/validation/policy_engine.py"
+      },
+      {
+        "line": 492,
+        "col": 38,
+        "var_name": "POLICY_MAX_ALERTS",
+        "default": null,
+        "has_default": false,
+        "file": "core/validation/policy_engine.py"
+      },
+      {
+        "line": 493,
+        "col": 7,
+        "var_name": "POLICY_DEFAULT_ACTION",
+        "default": null,
+        "has_default": false,
+        "file": "core/validation/policy_engine.py"
+      },
+      {
+        "line": 494,
+        "col": 38,
+        "var_name": "POLICY_DEFAULT_ACTION",
+        "default": null,
+        "has_default": false,
+        "file": "core/validation/policy_engine.py"
+      },
+      {
+        "line": 496,
+        "col": 18,
+        "var_name": "POLICY_CONFIG_FILE",
+        "default": null,
+        "has_default": false,
+        "file": "core/validation/policy_engine.py"
+      }
+    ],
+    "core/validation/config.py": [
+      {
+        "line": 17,
+        "col": 57,
+        "var_name": "OMS_SCHEMA_BASE_DIR",
+        "default": "schemas",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 18,
+        "col": 55,
+        "var_name": "OMS_JSON_SCHEMA_DRAFT",
+        "default": "2020-12",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 19,
+        "col": 67,
+        "var_name": "OMS_SCHEMA_FORMAT_CHECK",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 22,
+        "col": 62,
+        "var_name": "OMS_SCHEMA_CACHE",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 23,
+        "col": 63,
+        "var_name": "OMS_SCHEMA_CACHE_MAX",
+        "default": "256",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 24,
+        "col": 63,
+        "var_name": "OMS_SCHEMA_CACHE_TTL",
+        "default": "600",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 25,
+        "col": 68,
+        "var_name": "OMS_RULE_CACHE_TTL",
+        "default": "300",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 28,
+        "col": 80,
+        "var_name": "OMS_COMMON_ENTITIES_THRESHOLD",
+        "default": "10",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 29,
+        "col": 60,
+        "var_name": "OMS_MAX_DIFF_ITEMS",
+        "default": "1000",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 30,
+        "col": 65,
+        "var_name": "OMS_TRAVERSAL_MAX_DEPTH",
+        "default": "5",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 31,
+        "col": 73,
+        "var_name": "OMS_DEPENDENCY_CYCLE_MAX",
+        "default": "50",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 50,
+        "col": 65,
+        "var_name": "OMS_MAX_TRAVERSAL_DEPTH",
+        "default": "20",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 51,
+        "col": 69,
+        "var_name": "OMS_DEFAULT_TRAVERSAL_DEPTH",
+        "default": "5",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 52,
+        "col": 69,
+        "var_name": "OMS_CRITICAL_PATH_THRESHOLD",
+        "default": "3",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 53,
+        "col": 67,
+        "var_name": "OMS_HIGH_DEGREE_THRESHOLD",
+        "default": "5",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 54,
+        "col": 71,
+        "var_name": "OMS_IMPACT_ANALYSIS_THRESHOLD",
+        "default": "10",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 55,
+        "col": 69,
+        "var_name": "OMS_MAX_ENTITIES_ANALYZE",
+        "default": "50",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 56,
+        "col": 67,
+        "var_name": "OMS_MAX_HIGH_DEGREE_NODES",
+        "default": "10",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 59,
+        "col": 65,
+        "var_name": "OMS_DEFAULT_QUERY_LIMIT",
+        "default": "1000",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 60,
+        "col": 61,
+        "var_name": "OMS_MAX_QUERY_LIMIT",
+        "default": "10000",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 61,
+        "col": 67,
+        "var_name": "OMS_QUERY_TIMEOUT",
+        "default": "30",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 62,
+        "col": 81,
+        "var_name": "OMS_PLAN_VALIDATION_TIMEOUT_HOURS",
+        "default": "1",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 65,
+        "col": 56,
+        "var_name": "OMS_DEFAULT_BRANCH",
+        "default": "main",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 71,
+        "col": 72,
+        "var_name": "OMS_AUTO_RESOLVE_THRESHOLD",
+        "default": "0.8",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 72,
+        "col": 73,
+        "var_name": "OMS_MANUAL_REVIEW_THRESHOLD",
+        "default": "0.4",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 73,
+        "col": 72,
+        "var_name": "OMS_REJECT_MERGE_THRESHOLD",
+        "default": "0.1",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 74,
+        "col": 65,
+        "var_name": "OMS_MAX_MERGE_CONFLICTS",
+        "default": "10",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 95,
+        "col": 71,
+        "var_name": "OMS_MSA_HIGH_IMPACT_THRESHOLD",
+        "default": "3",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 98,
+        "col": 61,
+        "var_name": "OMS_ENABLE_QUERY_CACHE",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 99,
+        "col": 60,
+        "var_name": "OMS_ENABLE_PLAN_CACHE",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 100,
+        "col": 62,
+        "var_name": "OMS_ENABLE_RESULT_CACHE",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 102,
+        "col": 61,
+        "var_name": "OMS_QUERY_CACHE_TTL",
+        "default": "300",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 103,
+        "col": 60,
+        "var_name": "OMS_PLAN_CACHE_TTL",
+        "default": "1800",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 104,
+        "col": 62,
+        "var_name": "OMS_RESULT_CACHE_TTL",
+        "default": "600",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 106,
+        "col": 66,
+        "var_name": "OMS_QUERY_CACHE_MAX_SIZE",
+        "default": "1000",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 107,
+        "col": 65,
+        "var_name": "OMS_PLAN_CACHE_MAX_SIZE",
+        "default": "500",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 108,
+        "col": 67,
+        "var_name": "OMS_RESULT_CACHE_MAX_SIZE",
+        "default": "2000",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 110,
+        "col": 57,
+        "var_name": "OMS_EVICTION_POLICY",
+        "default": "LRU",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 111,
+        "col": 63,
+        "var_name": "OMS_ENABLE_CACHE_WARMING",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 113,
+        "col": 76,
+        "var_name": "OMS_CACHE_WARMING_INTERVAL",
+        "default": "30",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 114,
+        "col": 79,
+        "var_name": "OMS_CACHE_WARMING_ERROR_DELAY",
+        "default": "60",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 123,
+        "col": 72,
+        "var_name": "OMS_ENABLE_JSON_SCHEMA",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 124,
+        "col": 67,
+        "var_name": "OMS_ENABLE_POLICY",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 125,
+        "col": 69,
+        "var_name": "OMS_ENABLE_TERMINUS_CHECK",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 126,
+        "col": 61,
+        "var_name": "OMS_ENABLE_RULE_ENGINE",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 127,
+        "col": 57,
+        "var_name": "OMS_FAIL_FAST",
+        "default": "false",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 136,
+        "col": 71,
+        "var_name": "OMS_POLICY_TIMEOUT",
+        "default": "10.0",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 137,
+        "col": 73,
+        "var_name": "OMS_POLICY_API_KEY",
+        "default": null,
+        "has_default": false,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 140,
+        "col": 66,
+        "var_name": "OMS_RULE_RELOAD_INTERVAL",
+        "default": "300",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 149,
+        "col": 61,
+        "var_name": "TERMINUSDB_DEFAULT_DB",
+        "default": "oms",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 150,
+        "col": 65,
+        "var_name": "TERMINUSDB_DEFAULT_BRANCH",
+        "default": "main",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 151,
+        "col": 66,
+        "var_name": "TERMINUSDB_TIMEOUT",
+        "default": "30.0",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 154,
+        "col": 67,
+        "var_name": "OMS_ORPHAN_DETECTION",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 157,
+        "col": 58,
+        "var_name": "OMS_VALIDATION_VERBOSE",
+        "default": "false",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 158,
+        "col": 69,
+        "var_name": "OMS_ENABLE_METRICS",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 161,
+        "col": 66,
+        "var_name": "OMS_ENABLE_FOUNDRY_ALERTING",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 162,
+        "col": 67,
+        "var_name": "OMS_FOUNDRY_ALERTING_ENABLED",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 163,
+        "col": 74,
+        "var_name": "OMS_FOUNDRY_ALERT_SEVERITY_THRESHOLD",
+        "default": "medium",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 164,
+        "col": 76,
+        "var_name": "OMS_FOUNDRY_ALERT_COOLDOWN_MINUTES",
+        "default": "60",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 165,
+        "col": 73,
+        "var_name": "OMS_FOUNDRY_MAX_ALERTS_PER_HOUR",
+        "default": "10",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 167,
+        "col": 8,
+        "var_name": "OMS_FOUNDRY_NOTIFICATION_CHANNELS",
+        "default": "email,slack",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 169,
+        "col": 70,
+        "var_name": "OMS_FOUNDRY_ESCALATION_THRESHOLD",
+        "default": "critical",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 170,
+        "col": 76,
+        "var_name": "OMS_FOUNDRY_DATASET_SIZE_THRESHOLD",
+        "default": "10000",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      },
+      {
+        "line": 171,
+        "col": 76,
+        "var_name": "OMS_FOUNDRY_COMPLIANCE_CHECKS",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/config.py"
+      }
+    ],
+    "core/validation/integration.py": [
+      {
+        "line": 70,
+        "col": 8,
+        "var_name": "DEFAULT_VALIDATION_LEVEL",
+        "default": "ValidationLevel.STANDARD.value",
+        "has_default": true,
+        "file": "core/validation/integration.py"
+      },
+      {
+        "line": 92,
+        "col": 35,
+        "var_name": "VALIDATE_RESPONSES",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/integration.py"
+      },
+      {
+        "line": 93,
+        "col": 23,
+        "var_name": "VALIDATION_METRICS",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/integration.py"
+      },
+      {
+        "line": 94,
+        "col": 30,
+        "var_name": "LOG_VALIDATION_ERRORS",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/integration.py"
+      },
+      {
+        "line": 95,
+        "col": 32,
+        "var_name": "PREVENT_INFO_DISCLOSURE",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/integration.py"
+      }
+    ],
+    "core/validation/tampering_detection.py": [
+      {
+        "line": 568,
+        "col": 15,
+        "var_name": "ENABLE_SIEM_INTEGRATION",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/tampering_detection.py"
+      },
+      {
+        "line": 572,
+        "col": 15,
+        "var_name": "SIEM_SEND_TAMPERING_EVENTS",
+        "default": "true",
+        "has_default": true,
+        "file": "core/validation/tampering_detection.py"
+      },
+      {
+        "line": 581,
+        "col": 12,
+        "var_name": "SIEM_SEND_INFO_TAMPERING",
+        "default": "false",
+        "has_default": true,
+        "file": "core/validation/tampering_detection.py"
+      }
+    ],
+    "core/validation/dependencies.py": [
+      {
+        "line": 25,
+        "col": 11,
+        "var_name": "TEST_MODE",
+        "default": "false",
+        "has_default": true,
+        "file": "core/validation/dependencies.py"
+      }
+    ],
+    "middleware/issue_tracking_middleware.py": [
+      {
+        "line": 293,
+        "col": 7,
+        "var_name": "ISSUE_TRACKING_ENABLED",
+        "default": "true",
+        "has_default": true,
+        "file": "middleware/issue_tracking_middleware.py"
+      }
+    ],
+    "shared/cache/terminusdb_cache.py": [
+      {
+        "line": 33,
+        "col": 37,
+        "var_name": "TERMINUSDB_CACHE_ENABLED",
+        "default": "true",
+        "has_default": true,
+        "file": "shared/cache/terminusdb_cache.py"
+      },
+      {
+        "line": 34,
+        "col": 34,
+        "var_name": "TERMINUSDB_LRU_CACHE_SIZE",
+        "default": "500000000",
+        "has_default": true,
+        "file": "shared/cache/terminusdb_cache.py"
+      },
+      {
+        "line": 35,
+        "col": 31,
+        "var_name": "CACHE_DEFAULT_TTL",
+        "default": "3600",
+        "has_default": true,
+        "file": "shared/cache/terminusdb_cache.py"
+      }
+    ],
+    "shared/config/base_config.py": [
+      {
+        "line": 22,
+        "col": 28,
+        "var_name": "ONTOLOGY_SERVICE_NAME",
+        "default": "ontology-management-system",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      },
+      {
+        "line": 23,
+        "col": 31,
+        "var_name": "ONTOLOGY_SERVICE_VERSION",
+        "default": "2.0.0",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      },
+      {
+        "line": 26,
+        "col": 26,
+        "var_name": "ONTOLOGY_SECRET_KEY",
+        "default": null,
+        "has_default": false,
+        "file": "shared/config/base_config.py"
+      },
+      {
+        "line": 29,
+        "col": 29,
+        "var_name": "ONTOLOGY_JWT_ALGORITHM",
+        "default": "HS256",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      },
+      {
+        "line": 30,
+        "col": 42,
+        "var_name": "ONTOLOGY_JWT_EXPIRATION_MINUTES",
+        "default": "30",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      },
+      {
+        "line": 42,
+        "col": 40,
+        "var_name": "ONTOLOGY_EVENT_RETENTION_DAYS",
+        "default": "30",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      },
+      {
+        "line": 43,
+        "col": 36,
+        "var_name": "ONTOLOGY_EVENT_BATCH_SIZE",
+        "default": "100",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      },
+      {
+        "line": 47,
+        "col": 40,
+        "var_name": "JETSTREAM_SUBJECT_PREFIX",
+        "default": "quiver.events",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      },
+      {
+        "line": 48,
+        "col": 39,
+        "var_name": "JETSTREAM_CONSUMER_NAME",
+        "default": "oms-consumer",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      },
+      {
+        "line": 49,
+        "col": 42,
+        "var_name": "JETSTREAM_MAX_INFLIGHT",
+        "default": "50",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      },
+      {
+        "line": 50,
+        "col": 49,
+        "var_name": "JETSTREAM_ACK_TIMEOUT",
+        "default": "30",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      },
+      {
+        "line": 53,
+        "col": 42,
+        "var_name": "ENABLE_EVENT_DEDUPLICATION",
+        "default": "true",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      },
+      {
+        "line": 54,
+        "col": 43,
+        "var_name": "EVENT_CACHE_TTL_SECONDS",
+        "default": "300",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      },
+      {
+        "line": 55,
+        "col": 52,
+        "var_name": "EVENT_PROCESSING_TIMEOUT",
+        "default": "60",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      },
+      {
+        "line": 58,
+        "col": 25,
+        "var_name": "ONTOLOGY_LOG_LEVEL",
+        "default": "INFO",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      },
+      {
+        "line": 59,
+        "col": 26,
+        "var_name": "ONTOLOGY_LOG_FORMAT",
+        "default": "json",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      },
+      {
+        "line": 70,
+        "col": 27,
+        "var_name": "TERMINUS_DB",
+        "default": "oms_test",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      },
+      {
+        "line": 71,
+        "col": 37,
+        "var_name": "TERMINUS_ORGANIZATION",
+        "default": "admin",
+        "has_default": true,
+        "file": "shared/config/base_config.py"
+      }
+    ],
+    "shared/config/environment.py": [
+      {
+        "line": 138,
+        "col": 11,
+        "var_name": "ENVIRONMENT",
+        "default": "",
+        "has_default": true,
+        "file": "shared/config/environment.py"
+      },
+      {
+        "line": 187,
+        "col": 29,
+        "var_name": "ENVIRONMENT",
+        "default": "",
+        "has_default": true,
+        "file": "shared/config/environment.py"
+      },
+      {
+        "line": 306,
+        "col": 18,
+        "var_name": "ENVIRONMENT",
+        "default": "development",
+        "has_default": true,
+        "file": "shared/config/environment.py"
+      }
+    ],
+    "shared/config/unified_config.py": [
+      {
+        "line": 190,
+        "col": 22,
+        "var_name": "CONFIG_FILE",
+        "default": null,
+        "has_default": false,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 207,
+        "col": 45,
+        "var_name": "ENVIRONMENT",
+        "default": "development",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 208,
+        "col": 27,
+        "var_name": "DEBUG",
+        "default": "false",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 209,
+        "col": 30,
+        "var_name": "API_HOST",
+        "default": "config.app.api_host",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 210,
+        "col": 34,
+        "var_name": "API_PORT",
+        "default": "str(config.app.api_port)",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 213,
+        "col": 44,
+        "var_name": "TERMINUS_DB_ENDPOINT",
+        "default": "config.database.terminus_endpoint",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 214,
+        "col": 44,
+        "var_name": "TERMINUS_DB_USER",
+        "default": "config.database.terminus_username",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 215,
+        "col": 44,
+        "var_name": "TERMINUS_DB_PASSWORD",
+        "default": "config.database.terminus_password",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 216,
+        "col": 48,
+        "var_name": "TERMINUS_ORGANIZATION",
+        "default": "config.database.terminus_organization",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 217,
+        "col": 38,
+        "var_name": "TERMINUS_DB",
+        "default": "config.database.terminus_db",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 218,
+        "col": 39,
+        "var_name": "TERMINUS_DB_KEY",
+        "default": "config.database.terminus_key",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 221,
+        "col": 20,
+        "var_name": "REDIS_SENTINELS",
+        "default": "",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 224,
+        "col": 44,
+        "var_name": "REDIS_MASTER_NAME",
+        "default": "config.database.redis_master_name",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 225,
+        "col": 41,
+        "var_name": "REDIS_PASSWORD",
+        "default": "config.database.redis_password",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 226,
+        "col": 39,
+        "var_name": "REDIS_DB",
+        "default": "str(config.database.redis_db)",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 229,
+        "col": 41,
+        "var_name": "JWT_SECRET_KEY",
+        "default": "config.security.jwt_secret_key",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 230,
+        "col": 39,
+        "var_name": "MTLS_ENABLED",
+        "default": "false",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 233,
+        "col": 40,
+        "var_name": "NATS_ENABLED",
+        "default": "true",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 234,
+        "col": 23,
+        "var_name": "NATS_SERVERS",
+        "default": "",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 239,
+        "col": 38,
+        "var_name": "LOG_LEVEL",
+        "default": "config.monitoring.log_level",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 240,
+        "col": 39,
+        "var_name": "LOG_FORMAT",
+        "default": "config.monitoring.log_format",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      },
+      {
+        "line": 241,
+        "col": 44,
+        "var_name": "METRICS_ENABLED",
+        "default": "true",
+        "has_default": true,
+        "file": "shared/config/unified_config.py"
+      }
+    ],
+    "shared/security/exception_handler.py": [
+      {
+        "line": 110,
+        "col": 15,
+        "var_name": "ENVIRONMENT",
+        "default": "development",
+        "has_default": true,
+        "file": "shared/security/exception_handler.py"
+      }
+    ],
+    "shared/security/pii_utils.py": [
+      {
+        "line": 19,
+        "col": 22,
+        "var_name": "ENVIRONMENT",
+        "default": "development",
+        "has_default": true,
+        "file": "shared/security/pii_utils.py"
+      }
+    ],
+    "services/grpc/server.py": [
+      {
+        "line": 341,
+        "col": 40,
+        "var_name": "JWT_SECRET_KEY",
+        "default": "secret",
+        "has_default": true,
+        "file": "services/grpc/server.py"
+      }
+    ],
+    "migrations/migrate_to_distributed_locks.py": [
+      {
+        "line": 282,
+        "col": 23,
+        "var_name": "POSTGRES_URL",
+        "default": "postgresql+asyncpg://user:password@localhost/oms_db",
+        "has_default": true,
+        "file": "migrations/migrate_to_distributed_locks.py"
+      }
+    ],
+    "scripts/dev-tools/clear_terminusdb.py": [
+      {
+        "line": 25,
+        "col": 13,
+        "var_name": "TERMINUS_DB_USER",
+        "default": "admin",
+        "has_default": true,
+        "file": "scripts/dev-tools/clear_terminusdb.py"
+      },
+      {
+        "line": 26,
+        "col": 12,
+        "var_name": "TERMINUS_DB_KEY",
+        "default": "admin123",
+        "has_default": true,
+        "file": "scripts/dev-tools/clear_terminusdb.py"
+      }
+    ]
+  },
+  "unique_var_details": {
+    "PII_ENCRYPTION_KEY": {
+      "name": "PII_ENCRYPTION_KEY",
+      "category": "security",
+      "used_in_files": [
+        "core/security/pii_handler.py"
+      ],
+      "defaults": [],
+      "always_has_default": false,
+      "usage_count": 1
+    },
+    "IDP_ENDPOINT": {
+      "name": "IDP_ENDPOINT",
+      "category": "service",
+      "used_in_files": [
+        "core/auth/resource_permission_checker.py"
+      ],
+      "defaults": [],
+      "always_has_default": false,
+      "usage_count": 1
+    },
+    "IAM_ENABLE_FALLBACK": {
+      "name": "IAM_ENABLE_FALLBACK",
+      "category": "config",
+      "used_in_files": [
+        "core/integrations/__init__.py"
+      ],
+      "defaults": [
+        "true"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "IAM_JWKS_ENABLED": {
+      "name": "IAM_JWKS_ENABLED",
+      "category": "config",
+      "used_in_files": [
+        "core/integrations/__init__.py"
+      ],
+      "defaults": [
+        "false"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "TRAVERSAL_MAX_DEPTH": {
+      "name": "TRAVERSAL_MAX_DEPTH",
+      "category": "performance",
+      "used_in_files": [
+        "core/traversal/config.py"
+      ],
+      "defaults": [
+        "config.max_traversal_depth"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "TRAVERSAL_DEFAULT_BRANCH": {
+      "name": "TRAVERSAL_DEFAULT_BRANCH",
+      "category": "other",
+      "used_in_files": [
+        "core/traversal/config.py"
+      ],
+      "defaults": [
+        "config.default_branch"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "ENVIRONMENT": {
+      "name": "ENVIRONMENT",
+      "category": "environment",
+      "used_in_files": [
+        "shared/config/unified_config.py",
+        "core/traversal/config.py",
+        "shared/security/exception_handler.py",
+        "shared/config/environment.py",
+        "core/validation/policy_engine.py",
+        "shared/security/pii_utils.py"
+      ],
+      "defaults": [
+        "",
+        "development"
+      ],
+      "always_has_default": false,
+      "usage_count": 6
+    },
+    "CI": {
+      "name": "CI",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/policy_engine.py"
+      ],
+      "defaults": [],
+      "always_has_default": false,
+      "usage_count": 1
+    },
+    "GITHUB_EVENT_NAME": {
+      "name": "GITHUB_EVENT_NAME",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/policy_engine.py"
+      ],
+      "defaults": [],
+      "always_has_default": false,
+      "usage_count": 1
+    },
+    "RUNTIME_MODE": {
+      "name": "RUNTIME_MODE",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/policy_engine.py"
+      ],
+      "defaults": [],
+      "always_has_default": false,
+      "usage_count": 1
+    },
+    "POLICY_FAIL_FAST": {
+      "name": "POLICY_FAIL_FAST",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/policy_engine.py"
+      ],
+      "defaults": [],
+      "always_has_default": false,
+      "usage_count": 1
+    },
+    "POLICY_MAX_WARNINGS": {
+      "name": "POLICY_MAX_WARNINGS",
+      "category": "performance",
+      "used_in_files": [
+        "core/validation/policy_engine.py"
+      ],
+      "defaults": [],
+      "always_has_default": false,
+      "usage_count": 1
+    },
+    "POLICY_MAX_ALERTS": {
+      "name": "POLICY_MAX_ALERTS",
+      "category": "performance",
+      "used_in_files": [
+        "core/validation/policy_engine.py"
+      ],
+      "defaults": [],
+      "always_has_default": false,
+      "usage_count": 1
+    },
+    "POLICY_DEFAULT_ACTION": {
+      "name": "POLICY_DEFAULT_ACTION",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/policy_engine.py"
+      ],
+      "defaults": [],
+      "always_has_default": false,
+      "usage_count": 1
+    },
+    "POLICY_CONFIG_FILE": {
+      "name": "POLICY_CONFIG_FILE",
+      "category": "config",
+      "used_in_files": [
+        "core/validation/policy_engine.py"
+      ],
+      "defaults": [],
+      "always_has_default": false,
+      "usage_count": 1
+    },
+    "OMS_SCHEMA_BASE_DIR": {
+      "name": "OMS_SCHEMA_BASE_DIR",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "schemas"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_JSON_SCHEMA_DRAFT": {
+      "name": "OMS_JSON_SCHEMA_DRAFT",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "2020-12"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_SCHEMA_FORMAT_CHECK": {
+      "name": "OMS_SCHEMA_FORMAT_CHECK",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "true"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_SCHEMA_CACHE": {
+      "name": "OMS_SCHEMA_CACHE",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "true"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_SCHEMA_CACHE_MAX": {
+      "name": "OMS_SCHEMA_CACHE_MAX",
+      "category": "performance",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "256"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_SCHEMA_CACHE_TTL": {
+      "name": "OMS_SCHEMA_CACHE_TTL",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "600"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_RULE_CACHE_TTL": {
+      "name": "OMS_RULE_CACHE_TTL",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "300"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_COMMON_ENTITIES_THRESHOLD": {
+      "name": "OMS_COMMON_ENTITIES_THRESHOLD",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "10"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_MAX_DIFF_ITEMS": {
+      "name": "OMS_MAX_DIFF_ITEMS",
+      "category": "performance",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "1000"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_TRAVERSAL_MAX_DEPTH": {
+      "name": "OMS_TRAVERSAL_MAX_DEPTH",
+      "category": "performance",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "5"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_DEPENDENCY_CYCLE_MAX": {
+      "name": "OMS_DEPENDENCY_CYCLE_MAX",
+      "category": "performance",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "50"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_MAX_TRAVERSAL_DEPTH": {
+      "name": "OMS_MAX_TRAVERSAL_DEPTH",
+      "category": "performance",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "20"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_DEFAULT_TRAVERSAL_DEPTH": {
+      "name": "OMS_DEFAULT_TRAVERSAL_DEPTH",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "5"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_CRITICAL_PATH_THRESHOLD": {
+      "name": "OMS_CRITICAL_PATH_THRESHOLD",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "3"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_HIGH_DEGREE_THRESHOLD": {
+      "name": "OMS_HIGH_DEGREE_THRESHOLD",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "5"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_IMPACT_ANALYSIS_THRESHOLD": {
+      "name": "OMS_IMPACT_ANALYSIS_THRESHOLD",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "10"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_MAX_ENTITIES_ANALYZE": {
+      "name": "OMS_MAX_ENTITIES_ANALYZE",
+      "category": "performance",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "50"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_MAX_HIGH_DEGREE_NODES": {
+      "name": "OMS_MAX_HIGH_DEGREE_NODES",
+      "category": "performance",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "10"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_DEFAULT_QUERY_LIMIT": {
+      "name": "OMS_DEFAULT_QUERY_LIMIT",
+      "category": "performance",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "1000"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_MAX_QUERY_LIMIT": {
+      "name": "OMS_MAX_QUERY_LIMIT",
+      "category": "performance",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "10000"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_QUERY_TIMEOUT": {
+      "name": "OMS_QUERY_TIMEOUT",
+      "category": "performance",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "30"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_PLAN_VALIDATION_TIMEOUT_HOURS": {
+      "name": "OMS_PLAN_VALIDATION_TIMEOUT_HOURS",
+      "category": "performance",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "1"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_DEFAULT_BRANCH": {
+      "name": "OMS_DEFAULT_BRANCH",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "main"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_AUTO_RESOLVE_THRESHOLD": {
+      "name": "OMS_AUTO_RESOLVE_THRESHOLD",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "0.8"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_MANUAL_REVIEW_THRESHOLD": {
+      "name": "OMS_MANUAL_REVIEW_THRESHOLD",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "0.4"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_REJECT_MERGE_THRESHOLD": {
+      "name": "OMS_REJECT_MERGE_THRESHOLD",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "0.1"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_MAX_MERGE_CONFLICTS": {
+      "name": "OMS_MAX_MERGE_CONFLICTS",
+      "category": "performance",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "10"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_MSA_HIGH_IMPACT_THRESHOLD": {
+      "name": "OMS_MSA_HIGH_IMPACT_THRESHOLD",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "3"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_ENABLE_QUERY_CACHE": {
+      "name": "OMS_ENABLE_QUERY_CACHE",
+      "category": "config",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "true"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_ENABLE_PLAN_CACHE": {
+      "name": "OMS_ENABLE_PLAN_CACHE",
+      "category": "config",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "true"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_ENABLE_RESULT_CACHE": {
+      "name": "OMS_ENABLE_RESULT_CACHE",
+      "category": "config",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "true"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_QUERY_CACHE_TTL": {
+      "name": "OMS_QUERY_CACHE_TTL",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "300"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_PLAN_CACHE_TTL": {
+      "name": "OMS_PLAN_CACHE_TTL",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "1800"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_RESULT_CACHE_TTL": {
+      "name": "OMS_RESULT_CACHE_TTL",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "600"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_QUERY_CACHE_MAX_SIZE": {
+      "name": "OMS_QUERY_CACHE_MAX_SIZE",
+      "category": "performance",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "1000"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_PLAN_CACHE_MAX_SIZE": {
+      "name": "OMS_PLAN_CACHE_MAX_SIZE",
+      "category": "performance",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "500"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_RESULT_CACHE_MAX_SIZE": {
+      "name": "OMS_RESULT_CACHE_MAX_SIZE",
+      "category": "performance",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "2000"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_EVICTION_POLICY": {
+      "name": "OMS_EVICTION_POLICY",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "LRU"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_ENABLE_CACHE_WARMING": {
+      "name": "OMS_ENABLE_CACHE_WARMING",
+      "category": "config",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "true"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_CACHE_WARMING_INTERVAL": {
+      "name": "OMS_CACHE_WARMING_INTERVAL",
+      "category": "performance",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "30"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_CACHE_WARMING_ERROR_DELAY": {
+      "name": "OMS_CACHE_WARMING_ERROR_DELAY",
+      "category": "performance",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "60"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_ENABLE_JSON_SCHEMA": {
+      "name": "OMS_ENABLE_JSON_SCHEMA",
+      "category": "config",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "true"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_ENABLE_POLICY": {
+      "name": "OMS_ENABLE_POLICY",
+      "category": "config",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "true"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_ENABLE_TERMINUS_CHECK": {
+      "name": "OMS_ENABLE_TERMINUS_CHECK",
+      "category": "database",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "true"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_ENABLE_RULE_ENGINE": {
+      "name": "OMS_ENABLE_RULE_ENGINE",
+      "category": "config",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "true"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_FAIL_FAST": {
+      "name": "OMS_FAIL_FAST",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "false"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_POLICY_TIMEOUT": {
+      "name": "OMS_POLICY_TIMEOUT",
+      "category": "performance",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "10.0"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_POLICY_API_KEY": {
+      "name": "OMS_POLICY_API_KEY",
+      "category": "security",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [],
+      "always_has_default": false,
+      "usage_count": 1
+    },
+    "OMS_RULE_RELOAD_INTERVAL": {
+      "name": "OMS_RULE_RELOAD_INTERVAL",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "300"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "TERMINUSDB_DEFAULT_DB": {
+      "name": "TERMINUSDB_DEFAULT_DB",
+      "category": "database",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "oms"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "TERMINUSDB_DEFAULT_BRANCH": {
+      "name": "TERMINUSDB_DEFAULT_BRANCH",
+      "category": "database",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "main"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "TERMINUSDB_TIMEOUT": {
+      "name": "TERMINUSDB_TIMEOUT",
+      "category": "database",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "30.0"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_ORPHAN_DETECTION": {
+      "name": "OMS_ORPHAN_DETECTION",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "true"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_VALIDATION_VERBOSE": {
+      "name": "OMS_VALIDATION_VERBOSE",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "false"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_ENABLE_METRICS": {
+      "name": "OMS_ENABLE_METRICS",
+      "category": "config",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "true"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_ENABLE_FOUNDRY_ALERTING": {
+      "name": "OMS_ENABLE_FOUNDRY_ALERTING",
+      "category": "config",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "true"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_FOUNDRY_ALERTING_ENABLED": {
+      "name": "OMS_FOUNDRY_ALERTING_ENABLED",
+      "category": "config",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "true"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_FOUNDRY_ALERT_SEVERITY_THRESHOLD": {
+      "name": "OMS_FOUNDRY_ALERT_SEVERITY_THRESHOLD",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "medium"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_FOUNDRY_ALERT_COOLDOWN_MINUTES": {
+      "name": "OMS_FOUNDRY_ALERT_COOLDOWN_MINUTES",
+      "category": "performance",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "60"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_FOUNDRY_MAX_ALERTS_PER_HOUR": {
+      "name": "OMS_FOUNDRY_MAX_ALERTS_PER_HOUR",
+      "category": "performance",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "10"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_FOUNDRY_NOTIFICATION_CHANNELS": {
+      "name": "OMS_FOUNDRY_NOTIFICATION_CHANNELS",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "email,slack"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_FOUNDRY_ESCALATION_THRESHOLD": {
+      "name": "OMS_FOUNDRY_ESCALATION_THRESHOLD",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "critical"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_FOUNDRY_DATASET_SIZE_THRESHOLD": {
+      "name": "OMS_FOUNDRY_DATASET_SIZE_THRESHOLD",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "10000"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "OMS_FOUNDRY_COMPLIANCE_CHECKS": {
+      "name": "OMS_FOUNDRY_COMPLIANCE_CHECKS",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/config.py"
+      ],
+      "defaults": [
+        "true"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "DEFAULT_VALIDATION_LEVEL": {
+      "name": "DEFAULT_VALIDATION_LEVEL",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/integration.py"
+      ],
+      "defaults": [
+        "ValidationLevel.STANDARD.value"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "VALIDATE_RESPONSES": {
+      "name": "VALIDATE_RESPONSES",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/integration.py"
+      ],
+      "defaults": [
+        "true"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "VALIDATION_METRICS": {
+      "name": "VALIDATION_METRICS",
+      "category": "monitoring",
+      "used_in_files": [
+        "core/validation/integration.py"
+      ],
+      "defaults": [
+        "true"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "LOG_VALIDATION_ERRORS": {
+      "name": "LOG_VALIDATION_ERRORS",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/integration.py"
+      ],
+      "defaults": [
+        "true"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "PREVENT_INFO_DISCLOSURE": {
+      "name": "PREVENT_INFO_DISCLOSURE",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/integration.py"
+      ],
+      "defaults": [
+        "true"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "ENABLE_SIEM_INTEGRATION": {
+      "name": "ENABLE_SIEM_INTEGRATION",
+      "category": "config",
+      "used_in_files": [
+        "core/validation/tampering_detection.py"
+      ],
+      "defaults": [
+        "true"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "SIEM_SEND_TAMPERING_EVENTS": {
+      "name": "SIEM_SEND_TAMPERING_EVENTS",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/tampering_detection.py"
+      ],
+      "defaults": [
+        "true"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "SIEM_SEND_INFO_TAMPERING": {
+      "name": "SIEM_SEND_INFO_TAMPERING",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/tampering_detection.py"
+      ],
+      "defaults": [
+        "false"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "TEST_MODE": {
+      "name": "TEST_MODE",
+      "category": "other",
+      "used_in_files": [
+        "core/validation/dependencies.py"
+      ],
+      "defaults": [
+        "false"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "ISSUE_TRACKING_ENABLED": {
+      "name": "ISSUE_TRACKING_ENABLED",
+      "category": "config",
+      "used_in_files": [
+        "middleware/issue_tracking_middleware.py"
+      ],
+      "defaults": [
+        "true"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "TERMINUSDB_CACHE_ENABLED": {
+      "name": "TERMINUSDB_CACHE_ENABLED",
+      "category": "database",
+      "used_in_files": [
+        "shared/cache/terminusdb_cache.py"
+      ],
+      "defaults": [
+        "true"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "TERMINUSDB_LRU_CACHE_SIZE": {
+      "name": "TERMINUSDB_LRU_CACHE_SIZE",
+      "category": "database",
+      "used_in_files": [
+        "shared/cache/terminusdb_cache.py"
+      ],
+      "defaults": [
+        "500000000"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "CACHE_DEFAULT_TTL": {
+      "name": "CACHE_DEFAULT_TTL",
+      "category": "other",
+      "used_in_files": [
+        "shared/cache/terminusdb_cache.py"
+      ],
+      "defaults": [
+        "3600"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "ONTOLOGY_SERVICE_NAME": {
+      "name": "ONTOLOGY_SERVICE_NAME",
+      "category": "service",
+      "used_in_files": [
+        "shared/config/base_config.py"
+      ],
+      "defaults": [
+        "ontology-management-system"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "ONTOLOGY_SERVICE_VERSION": {
+      "name": "ONTOLOGY_SERVICE_VERSION",
+      "category": "service",
+      "used_in_files": [
+        "shared/config/base_config.py"
+      ],
+      "defaults": [
+        "2.0.0"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "ONTOLOGY_SECRET_KEY": {
+      "name": "ONTOLOGY_SECRET_KEY",
+      "category": "security",
+      "used_in_files": [
+        "shared/config/base_config.py"
+      ],
+      "defaults": [],
+      "always_has_default": false,
+      "usage_count": 1
+    },
+    "ONTOLOGY_JWT_ALGORITHM": {
+      "name": "ONTOLOGY_JWT_ALGORITHM",
+      "category": "security",
+      "used_in_files": [
+        "shared/config/base_config.py"
+      ],
+      "defaults": [
+        "HS256"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "ONTOLOGY_JWT_EXPIRATION_MINUTES": {
+      "name": "ONTOLOGY_JWT_EXPIRATION_MINUTES",
+      "category": "security",
+      "used_in_files": [
+        "shared/config/base_config.py"
+      ],
+      "defaults": [
+        "30"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "ONTOLOGY_EVENT_RETENTION_DAYS": {
+      "name": "ONTOLOGY_EVENT_RETENTION_DAYS",
+      "category": "other",
+      "used_in_files": [
+        "shared/config/base_config.py"
+      ],
+      "defaults": [
+        "30"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "ONTOLOGY_EVENT_BATCH_SIZE": {
+      "name": "ONTOLOGY_EVENT_BATCH_SIZE",
+      "category": "other",
+      "used_in_files": [
+        "shared/config/base_config.py"
+      ],
+      "defaults": [
+        "100"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "JETSTREAM_SUBJECT_PREFIX": {
+      "name": "JETSTREAM_SUBJECT_PREFIX",
+      "category": "other",
+      "used_in_files": [
+        "shared/config/base_config.py"
+      ],
+      "defaults": [
+        "quiver.events"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "JETSTREAM_CONSUMER_NAME": {
+      "name": "JETSTREAM_CONSUMER_NAME",
+      "category": "other",
+      "used_in_files": [
+        "shared/config/base_config.py"
+      ],
+      "defaults": [
+        "oms-consumer"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "JETSTREAM_MAX_INFLIGHT": {
+      "name": "JETSTREAM_MAX_INFLIGHT",
+      "category": "performance",
+      "used_in_files": [
+        "shared/config/base_config.py"
+      ],
+      "defaults": [
+        "50"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "JETSTREAM_ACK_TIMEOUT": {
+      "name": "JETSTREAM_ACK_TIMEOUT",
+      "category": "performance",
+      "used_in_files": [
+        "shared/config/base_config.py"
+      ],
+      "defaults": [
+        "30"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "ENABLE_EVENT_DEDUPLICATION": {
+      "name": "ENABLE_EVENT_DEDUPLICATION",
+      "category": "config",
+      "used_in_files": [
+        "shared/config/base_config.py"
+      ],
+      "defaults": [
+        "true"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "EVENT_CACHE_TTL_SECONDS": {
+      "name": "EVENT_CACHE_TTL_SECONDS",
+      "category": "other",
+      "used_in_files": [
+        "shared/config/base_config.py"
+      ],
+      "defaults": [
+        "300"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "EVENT_PROCESSING_TIMEOUT": {
+      "name": "EVENT_PROCESSING_TIMEOUT",
+      "category": "performance",
+      "used_in_files": [
+        "shared/config/base_config.py"
+      ],
+      "defaults": [
+        "60"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "ONTOLOGY_LOG_LEVEL": {
+      "name": "ONTOLOGY_LOG_LEVEL",
+      "category": "environment",
+      "used_in_files": [
+        "shared/config/base_config.py"
+      ],
+      "defaults": [
+        "INFO"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "ONTOLOGY_LOG_FORMAT": {
+      "name": "ONTOLOGY_LOG_FORMAT",
+      "category": "other",
+      "used_in_files": [
+        "shared/config/base_config.py"
+      ],
+      "defaults": [
+        "json"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "TERMINUS_DB": {
+      "name": "TERMINUS_DB",
+      "category": "database",
+      "used_in_files": [
+        "shared/config/unified_config.py",
+        "shared/config/base_config.py"
+      ],
+      "defaults": [
+        "config.database.terminus_db",
+        "oms_test"
+      ],
+      "always_has_default": true,
+      "usage_count": 2
+    },
+    "TERMINUS_ORGANIZATION": {
+      "name": "TERMINUS_ORGANIZATION",
+      "category": "database",
+      "used_in_files": [
+        "shared/config/unified_config.py",
+        "shared/config/base_config.py"
+      ],
+      "defaults": [
+        "admin",
+        "config.database.terminus_organization"
+      ],
+      "always_has_default": true,
+      "usage_count": 2
+    },
+    "CONFIG_FILE": {
+      "name": "CONFIG_FILE",
+      "category": "config",
+      "used_in_files": [
+        "shared/config/unified_config.py"
+      ],
+      "defaults": [],
+      "always_has_default": false,
+      "usage_count": 1
+    },
+    "DEBUG": {
+      "name": "DEBUG",
+      "category": "environment",
+      "used_in_files": [
+        "shared/config/unified_config.py"
+      ],
+      "defaults": [
+        "false"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "API_HOST": {
+      "name": "API_HOST",
+      "category": "other",
+      "used_in_files": [
+        "shared/config/unified_config.py"
+      ],
+      "defaults": [
+        "config.app.api_host"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "API_PORT": {
+      "name": "API_PORT",
+      "category": "other",
+      "used_in_files": [
+        "shared/config/unified_config.py"
+      ],
+      "defaults": [
+        "str(config.app.api_port)"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "TERMINUS_DB_ENDPOINT": {
+      "name": "TERMINUS_DB_ENDPOINT",
+      "category": "database",
+      "used_in_files": [
+        "shared/config/unified_config.py"
+      ],
+      "defaults": [
+        "config.database.terminus_endpoint"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "TERMINUS_DB_USER": {
+      "name": "TERMINUS_DB_USER",
+      "category": "database",
+      "used_in_files": [
+        "shared/config/unified_config.py",
+        "scripts/dev-tools/clear_terminusdb.py"
+      ],
+      "defaults": [
+        "admin",
+        "config.database.terminus_username"
+      ],
+      "always_has_default": true,
+      "usage_count": 2
+    },
+    "TERMINUS_DB_PASSWORD": {
+      "name": "TERMINUS_DB_PASSWORD",
+      "category": "database",
+      "used_in_files": [
+        "shared/config/unified_config.py"
+      ],
+      "defaults": [
+        "config.database.terminus_password"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "TERMINUS_DB_KEY": {
+      "name": "TERMINUS_DB_KEY",
+      "category": "database",
+      "used_in_files": [
+        "shared/config/unified_config.py",
+        "scripts/dev-tools/clear_terminusdb.py"
+      ],
+      "defaults": [
+        "admin123",
+        "config.database.terminus_key"
+      ],
+      "always_has_default": true,
+      "usage_count": 2
+    },
+    "REDIS_SENTINELS": {
+      "name": "REDIS_SENTINELS",
+      "category": "database",
+      "used_in_files": [
+        "shared/config/unified_config.py"
+      ],
+      "defaults": [
+        ""
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "REDIS_MASTER_NAME": {
+      "name": "REDIS_MASTER_NAME",
+      "category": "database",
+      "used_in_files": [
+        "shared/config/unified_config.py"
+      ],
+      "defaults": [
+        "config.database.redis_master_name"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "REDIS_PASSWORD": {
+      "name": "REDIS_PASSWORD",
+      "category": "database",
+      "used_in_files": [
+        "shared/config/unified_config.py"
+      ],
+      "defaults": [
+        "config.database.redis_password"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "REDIS_DB": {
+      "name": "REDIS_DB",
+      "category": "database",
+      "used_in_files": [
+        "shared/config/unified_config.py"
+      ],
+      "defaults": [
+        "str(config.database.redis_db)"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "JWT_SECRET_KEY": {
+      "name": "JWT_SECRET_KEY",
+      "category": "security",
+      "used_in_files": [
+        "shared/config/unified_config.py",
+        "services/grpc/server.py"
+      ],
+      "defaults": [
+        "secret",
+        "config.security.jwt_secret_key"
+      ],
+      "always_has_default": true,
+      "usage_count": 2
+    },
+    "MTLS_ENABLED": {
+      "name": "MTLS_ENABLED",
+      "category": "config",
+      "used_in_files": [
+        "shared/config/unified_config.py"
+      ],
+      "defaults": [
+        "false"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "NATS_ENABLED": {
+      "name": "NATS_ENABLED",
+      "category": "config",
+      "used_in_files": [
+        "shared/config/unified_config.py"
+      ],
+      "defaults": [
+        "true"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "NATS_SERVERS": {
+      "name": "NATS_SERVERS",
+      "category": "other",
+      "used_in_files": [
+        "shared/config/unified_config.py"
+      ],
+      "defaults": [
+        ""
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "LOG_LEVEL": {
+      "name": "LOG_LEVEL",
+      "category": "environment",
+      "used_in_files": [
+        "shared/config/unified_config.py"
+      ],
+      "defaults": [
+        "config.monitoring.log_level"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "LOG_FORMAT": {
+      "name": "LOG_FORMAT",
+      "category": "other",
+      "used_in_files": [
+        "shared/config/unified_config.py"
+      ],
+      "defaults": [
+        "config.monitoring.log_format"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "METRICS_ENABLED": {
+      "name": "METRICS_ENABLED",
+      "category": "config",
+      "used_in_files": [
+        "shared/config/unified_config.py"
+      ],
+      "defaults": [
+        "true"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    },
+    "POSTGRES_URL": {
+      "name": "POSTGRES_URL",
+      "category": "database",
+      "used_in_files": [
+        "migrations/migrate_to_distributed_locks.py"
+      ],
+      "defaults": [
+        "postgresql+asyncpg://user:password@localhost/oms_db"
+      ],
+      "always_has_default": true,
+      "usage_count": 1
+    }
+  },
+  "migration_priority": [
+    {
+      "name": "PII_ENCRYPTION_KEY",
+      "score": 16,
+      "category": "security",
+      "usage_count": 1,
+      "has_default": false
+    },
+    {
+      "name": "OMS_POLICY_API_KEY",
+      "score": 16,
+      "category": "security",
+      "usage_count": 1,
+      "has_default": false
+    },
+    {
+      "name": "ONTOLOGY_SECRET_KEY",
+      "score": 16,
+      "category": "security",
+      "usage_count": 1,
+      "has_default": false
+    },
+    {
+      "name": "JWT_SECRET_KEY",
+      "score": 12,
+      "category": "security",
+      "usage_count": 2,
+      "has_default": true
+    },
+    {
+      "name": "ONTOLOGY_JWT_ALGORITHM",
+      "score": 11,
+      "category": "security",
+      "usage_count": 1,
+      "has_default": true
+    },
+    {
+      "name": "ONTOLOGY_JWT_EXPIRATION_MINUTES",
+      "score": 11,
+      "category": "security",
+      "usage_count": 1,
+      "has_default": true
+    },
+    {
+      "name": "ENVIRONMENT",
+      "score": 10,
+      "category": "environment",
+      "usage_count": 6,
+      "has_default": false
+    },
+    {
+      "name": "TERMINUS_DB",
+      "score": 10,
+      "category": "database",
+      "usage_count": 2,
+      "has_default": true
+    },
+    {
+      "name": "TERMINUS_ORGANIZATION",
+      "score": 10,
+      "category": "database",
+      "usage_count": 2,
+      "has_default": true
+    },
+    {
+      "name": "TERMINUS_DB_USER",
+      "score": 10,
+      "category": "database",
+      "usage_count": 2,
+      "has_default": true
+    },
+    {
+      "name": "TERMINUS_DB_KEY",
+      "score": 10,
+      "category": "database",
+      "usage_count": 2,
+      "has_default": true
+    },
+    {
+      "name": "OMS_ENABLE_TERMINUS_CHECK",
+      "score": 9,
+      "category": "database",
+      "usage_count": 1,
+      "has_default": true
+    },
+    {
+      "name": "TERMINUSDB_DEFAULT_DB",
+      "score": 9,
+      "category": "database",
+      "usage_count": 1,
+      "has_default": true
+    },
+    {
+      "name": "TERMINUSDB_DEFAULT_BRANCH",
+      "score": 9,
+      "category": "database",
+      "usage_count": 1,
+      "has_default": true
+    },
+    {
+      "name": "TERMINUSDB_TIMEOUT",
+      "score": 9,
+      "category": "database",
+      "usage_count": 1,
+      "has_default": true
+    },
+    {
+      "name": "TERMINUSDB_CACHE_ENABLED",
+      "score": 9,
+      "category": "database",
+      "usage_count": 1,
+      "has_default": true
+    },
+    {
+      "name": "TERMINUSDB_LRU_CACHE_SIZE",
+      "score": 9,
+      "category": "database",
+      "usage_count": 1,
+      "has_default": true
+    },
+    {
+      "name": "TERMINUS_DB_ENDPOINT",
+      "score": 9,
+      "category": "database",
+      "usage_count": 1,
+      "has_default": true
+    },
+    {
+      "name": "TERMINUS_DB_PASSWORD",
+      "score": 9,
+      "category": "database",
+      "usage_count": 1,
+      "has_default": true
+    },
+    {
+      "name": "REDIS_SENTINELS",
+      "score": 9,
+      "category": "database",
+      "usage_count": 1,
+      "has_default": true
+    }
+  ]
+}

@@ -78,7 +78,7 @@ class TraversalResult(BaseModel):
 class SemanticConflict(BaseModel):
     """Detected semantic conflict in graph"""
     conflict_type: ConflictType
-    severity: str = Field(regex="^(low|medium|high|critical)$")
+    severity: str = Field(pattern="^(low|medium|high|critical)$")
     affected_nodes: List[str]
     description: str
     suggested_resolution: Optional[str] = None

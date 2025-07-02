@@ -3,12 +3,12 @@ Resource Permission Checker
 OMS 내부에서 사용하는 최소한의 권한 체크 모듈
 실제 인증/인가는 외부 IdP에 위임
 """
-import os
 from typing import List, Optional, Dict, Any
 from shared.clients.unified_http_client import get_unified_http_client
 from pydantic import BaseModel
 from functools import lru_cache
 from datetime import datetime, timezone
+from shared.config.unified_env import unified_env
 
 from shared.utils.logger import get_logger
 from core.integrations.user_service_client import validate_jwt_token
@@ -49,7 +49,7 @@ class ResourcePermissionChecker:
     ):
         # JWT validation is now delegated to MSA
         self.http_client = get_unified_http_client() if idp_endpoint else None
-        self.idp_endpoint = idp_endpoint or os.getenv("IDP_ENDPOINT")
+        self.idp_endpoint = idp_endpoint or unified_env.get("IDP_ENDPOINT")
         self.cache_ttl = cache_ttl
         
         # 기본 권한 매핑 (Role -> Permissions)

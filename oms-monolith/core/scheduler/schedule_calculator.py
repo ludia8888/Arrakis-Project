@@ -9,6 +9,7 @@ from abc import ABC, abstractmethod
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.date import DateTrigger
+from shared.resilience import UnifiedBackoffCalculator
 
 from .models import JobPriority
 from utils import logging
@@ -120,26 +121,34 @@ class DefaultScheduleCalculator(ScheduleCalculatorProtocol):
     def calculate_retry_delay(
         self, base_delay: int, retry_count: int, strategy: str = "exponential"
     ) -> int:
-        """Calculate retry delay with backoff strategy"""
-        if strategy == "exponential":
-            # Exponential backoff: delay = base_delay * (2 ^ retry_count)
-            return base_delay * (2 ** retry_count)
+        """Calculate retry delay using unified backoff calculator"""
+        # Create backoff calculator
+        calculator = UnifiedBackoffCalculator()
         
-        elif strategy == "linear":
-            # Linear backoff: delay = base_delay * (retry_count + 1)
-            return base_delay * (retry_count + 1)
+        # Map strategy names to unified strategies
+        strategy_map = {
+            "exponential": "exponential",
+            "linear": "linear",
+            "fixed": "constant",
+            "fibonacci": "fibonacci"
+        }
         
-        elif strategy == "fixed":
-            # Fixed delay
-            return base_delay
-        
-        elif strategy == "fibonacci":
-            # Fibonacci backoff
-            return base_delay * self._fibonacci(retry_count + 1)
-        
-        else:
+        mapped_strategy = strategy_map.get(strategy)
+        if not mapped_strategy:
             logger.warning(f"Unknown retry strategy: {strategy}, using exponential")
-            return self.calculate_retry_delay(base_delay, retry_count, "exponential")
+            mapped_strategy = "exponential"
+        
+        # Calculate delay using unified calculator
+        delay = calculator.calculate(
+            attempt=retry_count,
+            base_delay=float(base_delay),
+            strategy=mapped_strategy,
+            multiplier=2.0 if mapped_strategy == "exponential" else 1.0,
+            max_delay=float(base_delay * 100),  # Reasonable max
+            jitter=False  # No jitter for scheduler
+        )
+        
+        return int(delay)
     
     def is_business_hours(
         self, dt: datetime, business_start: int = 9, business_end: int = 17

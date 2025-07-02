@@ -7,7 +7,6 @@ Connection Pool을 통한 안정적인 연결 관리와 TerminusDB의 TERMINUSDB
 환경변수를 통한 내부 캐싱을 활용하여 높은 성능과 안정성을 달성합니다.
 """
 import logging
-import os
 import ssl
 from typing import Any, Dict, List, Optional
 
@@ -28,6 +27,7 @@ from shared.utils import (
     with_retry,
 )
 from core.validation.config import get_validation_config
+from shared.config.unified_env import unified_env
 
 logger = logging.getLogger(__name__)
 
@@ -48,8 +48,8 @@ class TerminusDBClient:
             self.endpoint = endpoint
         
         # Use environment variables if username/password not provided
-        self.username = username or os.getenv("TERMINUS_DB_USER", "admin")
-        self.password = password or os.getenv("TERMINUS_DB_PASSWORD", "root")
+        self.username = username or unified_env.get("TERMINUS_DB_USER")
+        self.password = password or unified_env.get("TERMINUS_DB_PASSWORD")
         self.service_name = service_name
         self.use_connection_pool = use_connection_pool
         self.client = None
@@ -59,20 +59,20 @@ class TerminusDBClient:
         self.db = None
 
         # TerminusDB 내부 캐싱 설정
-        self.cache_size = int(os.getenv("TERMINUSDB_LRU_CACHE_SIZE", "500000000"))  # 500MB
-        self.enable_internal_cache = os.getenv("TERMINUSDB_CACHE_ENABLED", "true").lower() == "true"
+        self.cache_size = unified_env.get("TERMINUSDB_LRU_CACHE_SIZE")
+        self.enable_internal_cache = unified_env.get("TERMINUSDB_CACHE_ENABLED")
 
         # mTLS 설정
-        self.use_mtls = os.getenv("TERMINUSDB_USE_MTLS", "false").lower() == "true"
+        self.use_mtls = unified_env.get("TERMINUSDB_USE_MTLS")
 
         if self.use_connection_pool:
             self.pool_config = ConnectionConfig(
                 terminus_url=endpoint,
-                max_connections=int(os.getenv("DB_MAX_CONNECTIONS", "20")),
-                min_connections=int(os.getenv("DB_MIN_CONNECTIONS", "5")),
-                max_idle_time=int(os.getenv("DB_MAX_IDLE_TIME", "300")),
-                connection_timeout=int(os.getenv("DB_CONNECTION_TIMEOUT", "30")),
-                database=os.getenv("DB_NAME", "oms"),
+                max_connections=unified_env.get("DB_MAX_CONNECTIONS"),
+                min_connections=unified_env.get("DB_MIN_CONNECTIONS"),
+                max_idle_time=unified_env.get("DB_MAX_IDLE_TIME"),
+                connection_timeout=unified_env.get("DB_CONNECTION_TIMEOUT"),
+                database=unified_env.get("DB_NAME"),
                 service=service_name
             )
 

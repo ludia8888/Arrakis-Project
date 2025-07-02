@@ -5,7 +5,6 @@ Supports Schema and Branch services with advanced features
 
 import asyncio
 import logging
-import os
 from concurrent import futures
 from typing import Optional, Dict, Any
 
@@ -39,6 +38,7 @@ from core.schema.service import SchemaService
 from core.branch.service_factory import get_branch_service
 from models import UserContext
 from utils.logger import get_logger
+from shared.config.unified_env import unified_env
 
 # Override with specialized logger if available
 try:
@@ -338,7 +338,7 @@ class EnterpriseGrpcServer:
         self.enable_tls = enable_tls
         self.tls_cert_path = tls_cert_path
         self.tls_key_path = tls_key_path
-        self.jwt_secret = jwt_secret or os.getenv('JWT_SECRET_KEY', 'secret')
+        self.jwt_secret = jwt_secret or unified_env.get('JWT_SECRET_KEY')
         
         self.server = None
         

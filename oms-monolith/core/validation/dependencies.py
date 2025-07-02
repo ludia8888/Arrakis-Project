@@ -4,7 +4,7 @@ Validation 서비스를 위한 DI 구성
 """
 from typing import Annotated, Optional
 from fastapi import Depends
-import os
+from shared.config.unified_env import unified_env
 
 from core.validation.ports import CachePort, TerminusPort, EventPort
 from core.validation.container import ValidationContainer, get_container
@@ -22,7 +22,7 @@ from core.validation.adapters import (
 # 환경별 설정
 def get_test_mode() -> bool:
     """테스트 모드 여부 확인"""
-    return os.getenv("TEST_MODE", "false").lower() == "true"
+    return unified_env.get("TEST_MODE")
 
 
 # 기본 Port 제공자들

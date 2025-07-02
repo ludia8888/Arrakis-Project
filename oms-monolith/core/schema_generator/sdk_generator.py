@@ -9,6 +9,7 @@ from typing import Dict, Any, List, Optional, Set, Union
 from dataclasses import dataclass
 from pathlib import Path
 from datetime import datetime
+from shared.config.unified_env import unified_env
 
 logger = logging.getLogger(__name__)
 
@@ -720,8 +721,8 @@ class OMSEventClient:
             config = ClientConfig()
         
         # Default URLs from AsyncAPI spec
-        nats_url = config.nats_url or os.getenv('NATS_URL', 'nats://nats-server:4222')
-        ws_url = config.websocket_url or os.getenv('WS_URL', 'ws://api-gateway:8080')
+        nats_url = config.nats_url or unified_env.get('NATS_URL') or 'nats://nats-server:4222'
+        ws_url = config.websocket_url or unified_env.get('WS_URL') or 'ws://api-gateway:8080'
         
         # Implementation would depend on the actual transport libraries
         # This is a placeholder for the interface
@@ -862,8 +863,8 @@ from {self.config.package_name.replace("-", "_")} import OMSEventClient, ClientC
 async def main():
     # Create client (implementation depends on transport)
     config = ClientConfig(
-        nats_url=os.getenv('NATS_URL', 'nats://nats-server:4222'),
-        websocket_url=os.getenv('WS_URL', 'ws://api-gateway:8080')
+        nats_url='nats://nats-server:4222',  # or use unified_env in real app
+        websocket_url='ws://api-gateway:8080'  # or use unified_env in real app
     )
     
     client = await OMSEventClient.connect(config)

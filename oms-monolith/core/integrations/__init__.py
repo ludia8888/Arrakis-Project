@@ -9,7 +9,7 @@ Unified Integration Interface
 from .iam_service_client_with_fallback import IAMServiceClientWithFallback
 from .iam_service_client import IAMServiceClient
 from ..iam.iam_integration import IAMIntegration
-import os
+from shared.config.unified_env import unified_env
 
 # 통합 IAM 클라이언트 인스턴스 (중복 제거)
 _UNIFIED_IAM_CLIENT = None
@@ -29,9 +29,9 @@ def get_iam_client():
     global _UNIFIED_IAM_CLIENT
     if _UNIFIED_IAM_CLIENT is None:
         # Use with_fallback as default (most robust)
-        if os.getenv("IAM_ENABLE_FALLBACK", "true").lower() == "true":
+        if unified_env.get("IAM_ENABLE_FALLBACK") != "false":
             _UNIFIED_IAM_CLIENT = IAMServiceClientWithFallback()
-        elif os.getenv("IAM_JWKS_ENABLED", "false").lower() == "true":
+        elif unified_env.get("IAM_JWKS_ENABLED") == "true":
             _UNIFIED_IAM_CLIENT = IAMIntegration()
         else:
             _UNIFIED_IAM_CLIENT = IAMServiceClient()

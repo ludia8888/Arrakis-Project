@@ -14,7 +14,6 @@ which wraps this functionality in a unified security layer.
 
 The core validation logic remains valid and is used by the unified middleware.
 """
-import os
 import asyncio
 from typing import Optional, Callable, Dict, Any, List
 from datetime import datetime, timezone, timedelta
@@ -29,9 +28,10 @@ from core.auth import get_permission_checker, UserContext
 from core.integrations.user_service_client import validate_jwt_token, UserServiceError
 from core.integrations.iam_service_client import get_iam_client, validate_token_with_iam
 from shared.security import get_protection_facade  # 통합된 보호 레이어 사용
-from utils.retry_strategy import with_retry, RetryConfig, RetryStrategy
+from shared.resilience import with_retry, RetryConfig
 from core.audit import get_audit_publisher, AuditAction
 from utils.logger import get_logger
+from shared.config.unified_env import unified_env
 
 logger = get_logger(__name__)
 
@@ -77,7 +77,7 @@ class LifeCriticalAuthMiddleware(BaseHTTPMiddleware):
         
         # SECURITY: FAIL-SECURE environment detection
         # ANY variation of "production" is treated as production
-        environment = os.getenv('ENVIRONMENT', 'production').lower().strip()
+        environment = unified_env.get('ENVIRONMENT').value.lower()
         self.is_production = environment.startswith("prod")
         
         # LIFE-CRITICAL: Authentication ALWAYS required regardless of environment
@@ -112,7 +112,7 @@ class LifeCriticalAuthMiddleware(BaseHTTPMiddleware):
         # THREAD SAFETY: Proper locking for token cache
         self._cache_lock = asyncio.Lock()  # Async lock to prevent event loop blocking
         self._token_cache: Dict[str, tuple[UserContext, datetime]] = {}
-        self.cache_ttl = int(os.getenv("AUTH_CACHE_TTL", "300"))  # 5 minutes
+        self.cache_ttl = unified_env.get("AUTH_CACHE_TTL")  # 5 minutes
         
         # AUDIT: Initialize audit tracking
         self._audit_failures = 0
@@ -268,11 +268,7 @@ class LifeCriticalAuthMiddleware(BaseHTTPMiddleware):
         
         return token
     
-    @with_retry(
-        "user_service_validation",
-        config=RetryConfig.for_strategy(RetryStrategy.CONSERVATIVE),
-        bulkhead_resource="user_service"
-    )
+    @with_retry(policy="conservative")
     async def _validate_token_with_circuit_breaker(self, token: str, request: Request) -> UserContext:
         """Validate JWT token with enterprise circuit breaker protection"""
         
@@ -531,10 +527,8 @@ def get_normalized_environment() -> str:
     Nuclear reactor-grade environment variable handling.
     Prevents case-sensitivity attacks and environment spoofing.
     """
-    import os
-    
     # Get environment with secure defaults
-    env = os.getenv('ENVIRONMENT', 'production').strip().lower()
+    env = unified_env.get('ENVIRONMENT').value.strip().lower()
     
     # Normalize common variations to prevent bypasses
     env_mapping = {

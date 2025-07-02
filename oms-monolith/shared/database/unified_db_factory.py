@@ -15,6 +15,7 @@ from shared.clients.redis_ha_client import RedisHAClient
 from shared.monitoring.unified_metrics import get_metrics_collector
 from shared.utils.logger import get_logger
 from shared.exceptions import OntologyException
+from shared.config.unified_env import unified_env
 
 logger = get_logger(__name__)
 metrics = get_metrics_collector()
@@ -306,20 +307,20 @@ async def initialize_databases(config: Optional[Dict[str, Any]] = None) -> None:
         # 환경 변수에서 설정 로드
         config = {
             'terminus': {
-                'endpoint': os.getenv('TERMINUS_DB_ENDPOINT'),
-                'username': os.getenv('TERMINUS_DB_USER'),
-                'password': os.getenv('TERMINUS_DB_PASSWORD'),
+                'endpoint': unified_env.get('TERMINUS_DB_ENDPOINT'),
+                'username': unified_env.get('TERMINUS_DB_USER'),
+                'password': unified_env.get('TERMINUS_DB_PASSWORD'),
                 'service_name': 'oms',
                 'use_connection_pool': True
             },
             'redis': {
-                'sentinels': os.getenv('REDIS_SENTINELS', '').split(','),
-                'master_name': os.getenv('REDIS_MASTER_NAME', 'mymaster'),
-                'password': os.getenv('REDIS_PASSWORD'),
-                'db': int(os.getenv('REDIS_DB', '0')),
+                'sentinels': unified_env.get('REDIS_SENTINELS').split(',') if unified_env.get('REDIS_SENTINELS') else [],
+                'master_name': unified_env.get('REDIS_MASTER_NAME'),
+                'password': unified_env.get('REDIS_PASSWORD'),
+                'db': unified_env.get('REDIS_DB'),
                 'decode_responses': True
             },
-            'cache_type': os.getenv('CACHE_TYPE', 'redis')
+            'cache_type': unified_env.get('CACHE_TYPE')
         }
     
     await UnifiedDatabaseFactory.configure(config)

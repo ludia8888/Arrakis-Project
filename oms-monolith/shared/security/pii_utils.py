@@ -4,6 +4,7 @@ PII Masking Utilities - Shared module for consistent PII handling
 from typing import Dict, Any, List, Optional, Set
 from core.security.pii_handler import PIIHandler, PIIHandlingStrategy
 from utils.logger import get_logger
+from shared.config.unified_env import unified_env
 
 logger = get_logger(__name__)
 
@@ -15,8 +16,7 @@ def get_pii_handler() -> PIIHandler:
     """Get or create global PII handler instance"""
     global _pii_handler
     if _pii_handler is None:
-        import os
-        environment = os.getenv("ENVIRONMENT", "development")
+        environment = unified_env.get("ENVIRONMENT").value
         
         # For audit logging, we always anonymize
         _pii_handler = PIIHandler(strategy=PIIHandlingStrategy.ANONYMIZE)

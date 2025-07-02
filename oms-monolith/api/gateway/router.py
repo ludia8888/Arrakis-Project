@@ -11,6 +11,7 @@ from urllib.parse import urljoin
 import httpx
 
 from api.gateway.models import RequestContext, ServiceRoute
+from shared.resilience import UnifiedRetryExecutor, RetryConfig
 
 logger = logging.getLogger(__name__)
 
@@ -142,48 +143,47 @@ class RequestRouter:
         retry_count: int,
         service_name: str
     ) -> Tuple[int, Dict[str, str], bytes]:
-        """요청 전달 with retry"""
-
+        """요청 전달 with unified retry"""
+        
+        # Create retry config for gateway
+        retry_config = RetryConfig(
+            max_retries=retry_count - 1,  # retry_count includes first attempt
+            initial_delay=1.0,
+            max_delay=8.0,
+            backoff_multiplier=2.0,
+            timeout=timeout,
+            jitter=True
+        )
+        
+        # Create retry executor
+        executor = UnifiedRetryExecutor()
         last_error = None
-
-        for attempt in range(retry_count):
-            try:
-                response = await self.http_client.request(
-                    method=method,
-                    url=url,
-                    headers=headers,
-                    content=body,
-                    timeout=timeout
-                )
-
-                # 응답 헤더 정리
-                response_headers = dict(response.headers)
-                response_headers.pop("content-encoding", None)  # Gateway에서 처리
-                response_headers.pop("transfer-encoding", None)
-
-                return response.status_code, response_headers, response.content
-
-            except httpx.TimeoutException as e:
-                last_error = e
-                logger.warning(f"Timeout calling {service_name} (attempt {attempt + 1}/{retry_count})")
-                if attempt < retry_count - 1:
-                    await asyncio.sleep(2 ** attempt)  # Exponential backoff
-
-            except httpx.HTTPError as e:
-                last_error = e
-                logger.error(f"HTTP error calling {service_name}: {e}")
-                if attempt < retry_count - 1:
-                    await asyncio.sleep(2 ** attempt)
-
-            except (OSError, IOError) as e:
-                last_error = e
-                logger.error(f"Network error calling {service_name}: {e}")
-                break
-                
-            except ValueError as e:
-                last_error = e
-                logger.error(f"Invalid value error calling {service_name}: {e}")
-                break
+        
+        async def make_request():
+            response = await self.http_client.request(
+                method=method,
+                url=url,
+                headers=headers,
+                content=body,
+                timeout=timeout
+            )
+            
+            # 응답 헤더 정리
+            response_headers = dict(response.headers)
+            response_headers.pop("content-encoding", None)  # Gateway에서 처리
+            response_headers.pop("transfer-encoding", None)
+            
+            return response.status_code, response_headers, response.content
+        
+        try:
+            result = await executor.aexecute(make_request, retry_config)
+            if result.success:
+                return result.result
+            else:
+                last_error = result.exception
+        except Exception as e:
+            last_error = e
+            logger.error(f"Failed to forward request to {service_name}: {e}")
 
         # 모든 재시도 실패
         if isinstance(last_error, httpx.TimeoutException):

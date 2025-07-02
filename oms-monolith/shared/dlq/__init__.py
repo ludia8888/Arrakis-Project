@@ -8,6 +8,7 @@ the duplicate DLQ handlers across core/action and middleware modules.
 from .models import DLQReason, DLQMessage, RetryPolicy, MessageStatus
 from .handlers import DLQHandler, ActionDLQHandler
 from .config import DLQConfig, RetryConfig
+from .unified_dlq_handler import UnifiedDLQHandler, DLQ_RETRY_POLICIES
 
 __all__ = [
     'DLQReason',
@@ -16,6 +17,8 @@ __all__ = [
     'MessageStatus',
     'DLQHandler',
     'ActionDLQHandler',
+    'UnifiedDLQHandler',
     'DLQConfig',
-    'RetryConfig'
+    'RetryConfig',
+    'DLQ_RETRY_POLICIES'
 ]

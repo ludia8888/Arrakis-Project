@@ -2,7 +2,6 @@
 User Service Client
 Handles JWT token validation and user information retrieval
 """
-import os
 import httpx
 from typing import Optional, Dict, Any, List
 from datetime import datetime, timedelta, timezone
@@ -12,6 +11,7 @@ from fastapi import HTTPException, status
 from core.auth import UserContext
 from utils.logger import get_logger
 from shared.config.environment import StrictEnv
+from shared.config.unified_env import unified_env
 
 logger = get_logger(__name__)
 
@@ -42,7 +42,7 @@ class UserServiceClient:
         self.jwt_algorithm = "HS256"
         
         # For development/testing, we can validate JWTs locally
-        self.local_validation = os.getenv("JWT_LOCAL_VALIDATION", "true").lower() == "true"
+        self.local_validation = unified_env.get("JWT_LOCAL_VALIDATION")
     
     async def validate_jwt_token(self, token: str) -> UserContext:
         """

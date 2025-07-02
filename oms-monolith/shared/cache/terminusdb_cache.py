@@ -4,12 +4,12 @@ Real caching implementation utilizing TerminusDB's internal LRU cache
 """
 
 import logging
-import os
 import asyncio
 from typing import Any, Dict, List, Optional, Callable
 from datetime import datetime, timedelta, timezone
 import json
 import hashlib
+from shared.config.unified_env import unified_env
 
 logger = logging.getLogger(__name__)
 
@@ -30,9 +30,9 @@ class TerminusDBCacheManager:
         """
         self.db_client = db_client
         self.cache_db = cache_db
-        self.enable_internal_cache = os.getenv("TERMINUSDB_CACHE_ENABLED", "true").lower() == "true"
-        self.lru_cache_size = int(os.getenv("TERMINUSDB_LRU_CACHE_SIZE", "500000000"))  # 500MB
-        self.default_ttl = int(os.getenv("CACHE_DEFAULT_TTL", "3600"))  # 1 hour
+        self.enable_internal_cache = unified_env.get("TERMINUSDB_CACHE_ENABLED")
+        self.lru_cache_size = unified_env.get("TERMINUSDB_LRU_CACHE_SIZE")
+        self.default_ttl = unified_env.get("CACHE_DEFAULT_TTL") or 3600  # 1 hour
         
         # Memory cache for frequently accessed items (fallback)
         self._memory_cache: Dict[str, Dict[str, Any]] = {}

@@ -11,6 +11,7 @@ from core.auth import UserContext
 from core.issue_tracking.issue_service import get_issue_service
 from core.issue_tracking.models import IssueReference, parse_issue_reference, extract_issue_references
 from utils.logger import get_logger
+from shared.config.unified_env import unified_env
 
 logger = get_logger(__name__)
 
@@ -287,10 +288,9 @@ class IssueTrackingMiddleware:
 
 def configure_issue_tracking(app):
     """Configure issue tracking middleware for the application"""
-    import os
     
     # Check if issue tracking is enabled
-    if os.getenv("ISSUE_TRACKING_ENABLED", "true").lower() == "false":
+    if unified_env.get("ISSUE_TRACKING_ENABLED") == "false":
         logger.info("Issue tracking middleware DISABLED for development")
         # Add a no-op middleware
         @app.middleware("http")

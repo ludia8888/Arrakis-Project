@@ -2,7 +2,6 @@
 IAM Service Integration
 Enhanced JWT validation and Scope-based authorization for IAM MSA integration
 """
-import os
 import json
 import httpx
 from typing import Optional, Dict, Any, List, Set
@@ -14,6 +13,7 @@ from jwt import PyJWKClient
 from core.auth import UserContext
 from utils.logger import get_logger
 from shared.config.environment import StrictEnv
+from shared.config.unified_env import unified_env
 
 logger = get_logger(__name__)
 
@@ -34,12 +34,12 @@ class IAMIntegration:
     def __init__(self):
         self.iam_base_url = StrictEnv.get("IAM_SERVICE_URL")
         self.jwks_url = f"{self.iam_base_url}/.well-known/jwks.json"
-        self.expected_issuer = os.getenv("JWT_ISSUER", "iam.company")
-        self.expected_audience = os.getenv("JWT_AUDIENCE", "oms")
+        self.expected_issuer = unified_env.get("JWT_ISSUER")
+        self.expected_audience = unified_env.get("JWT_AUDIENCE")
         
         # Initialize JWKS client for key rotation support
         self.jwks_client = None
-        if not os.getenv("JWT_LOCAL_VALIDATION", "true").lower() == "true":
+        if not unified_env.get("JWT_LOCAL_VALIDATION"):
             try:
                 self.jwks_client = PyJWKClient(self.jwks_url)
             except (ConnectionError, ValueError) as e:
@@ -71,10 +71,10 @@ class IAMIntegration:
                 except (ConnectionError, ValueError, KeyError) as e:
                     logger.error(f"Failed to get signing key from JWKS: {e}")
                     # Fallback to local validation
-                    key = os.getenv("JWT_SECRET", "your-secret-key")
+                    key = unified_env.get("JWT_SECRET")
             else:
                 # Local validation mode
-                key = os.getenv("JWT_SECRET", "your-secret-key")
+                key = unified_env.get("JWT_SECRET")
             
             # Decode and validate JWT
             payload = jwt.decode(
@@ -201,7 +201,7 @@ class IAMIntegration:
                     data={
                         "grant_type": "refresh_token",
                         "refresh_token": refresh_token,
-                        "client_id": os.getenv("OAUTH_CLIENT_ID", "oms-service")
+                        "client_id": unified_env.get("OAUTH_CLIENT_ID")
                     },
                     timeout=10.0
                 )

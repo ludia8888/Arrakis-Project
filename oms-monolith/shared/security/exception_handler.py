@@ -22,6 +22,7 @@ from shared.utils.logger import get_logger
 from shared.exceptions import OntologyException
 from .auth_facade import SecurityViolation
 from .protection_facade import ProtectionViolation
+from shared.config.unified_env import unified_env
 
 logger = get_logger(__name__)
 
@@ -106,8 +107,7 @@ class SecurityResponse:
     @staticmethod
     def _is_production() -> bool:
         """프로덕션 환경 확인"""
-        import os
-        return os.getenv("ENVIRONMENT", "development").lower() == "production"
+        return unified_env.get("ENVIRONMENT").value == "production"
     
     @staticmethod
     def _sanitize_details(details: Dict[str, Any]) -> Dict[str, Any]:
