@@ -6,7 +6,7 @@ setup(
     description="Ontology Management Service for Arrakis Project",
     author="Arrakis Corp",
     author_email="dev@arrakis.corp",
-    packages=find_packages(),
+    packages=find_packages(exclude=['tests*']),
     install_requires=[
         # Dependencies are managed by requirements.txt files
         # to separate production and development dependencies.

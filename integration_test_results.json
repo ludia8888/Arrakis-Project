@@ -1,0 +1,222 @@
+{
+  "summary": {
+    "total": 24,
+    "passed": 23,
+    "failed": 0,
+    "skipped": 1,
+    "success_rate": "95.8%",
+    "timestamp": "2025-07-08T13:45:20.205036"
+  },
+  "results": [
+    {
+      "test": "OMS Database Connection",
+      "status": "PASSED",
+      "timestamp": "2025-07-08T13:45:19.202358",
+      "details": {
+        "version": "PostgreSQL 15.13 (Debian 15.13-1.pgdg120+1) on aar..."
+      }
+    },
+    {
+      "test": "USER Database Connection",
+      "status": "PASSED",
+      "timestamp": "2025-07-08T13:45:19.207462",
+      "details": {
+        "version": "PostgreSQL 15.13 (Debian 15.13-1.pgdg120+1) on aar..."
+      }
+    },
+    {
+      "test": "Redis Connection",
+      "status": "SKIPPED",
+      "timestamp": "2025-07-08T13:45:19.207526",
+      "details": {
+        "reason": "Redis is internal only, checked via OMS health"
+      }
+    },
+    {
+      "test": "Port 8091 (OMS API)",
+      "status": "PASSED",
+      "timestamp": "2025-07-08T13:45:19.207743",
+      "details": {
+        "accessible": true
+      }
+    },
+    {
+      "test": "Port 8090 (TerminusDB UI)",
+      "status": "PASSED",
+      "timestamp": "2025-07-08T13:45:19.207923",
+      "details": {
+        "accessible": true
+      }
+    },
+    {
+      "test": "Port 6363 (TerminusDB)",
+      "status": "PASSED",
+      "timestamp": "2025-07-08T13:45:19.208154",
+      "details": {
+        "accessible": true
+      }
+    },
+    {
+      "test": "Port 5433 (OMS PostgreSQL)",
+      "status": "PASSED",
+      "timestamp": "2025-07-08T13:45:19.208356",
+      "details": {
+        "accessible": true
+      }
+    },
+    {
+      "test": "Port 5434 (User PostgreSQL)",
+      "status": "PASSED",
+      "timestamp": "2025-07-08T13:45:19.208648",
+      "details": {
+        "accessible": true
+      }
+    },
+    {
+      "test": "Port 4222 (NATS)",
+      "status": "PASSED",
+      "timestamp": "2025-07-08T13:45:19.209064",
+      "details": {
+        "accessible": true
+      }
+    },
+    {
+      "test": "Port 8222 (NATS Monitoring)",
+      "status": "PASSED",
+      "timestamp": "2025-07-08T13:45:19.209416",
+      "details": {
+        "accessible": true
+      }
+    },
+    {
+      "test": "OMS Monolith Health",
+      "status": "PASSED",
+      "timestamp": "2025-07-08T13:45:19.420315",
+      "details": {
+        "url": "http://localhost:8091/health",
+        "status_code": 200
+      }
+    },
+    {
+      "test": "TerminusDB Health",
+      "status": "PASSED",
+      "timestamp": "2025-07-08T13:45:19.425492",
+      "details": {
+        "url": "http://localhost:6363/api/info",
+        "status_code": 200
+      }
+    },
+    {
+      "test": "NATS Monitoring Health",
+      "status": "PASSED",
+      "timestamp": "2025-07-08T13:45:19.429690",
+      "details": {
+        "url": "http://localhost:8222/healthz",
+        "status_code": 200
+      }
+    },
+    {
+      "test": "User Login",
+      "status": "PASSED",
+      "timestamp": "2025-07-08T13:45:19.713808",
+      "details": {
+        "username": "admin",
+        "endpoint": "http://localhost:8091/api/v1/auth/login",
+        "token_received": true
+      }
+    },
+    {
+      "test": "Protected Endpoint Access",
+      "status": "PASSED",
+      "timestamp": "2025-07-08T13:45:19.733681",
+      "details": {
+        "endpoint": "http://localhost:8091/api/v1/schemas",
+        "status_code": 404
+      }
+    },
+    {
+      "test": "API Endpoint /health",
+      "status": "PASSED",
+      "timestamp": "2025-07-08T13:45:19.874445",
+      "details": {
+        "method": "GET",
+        "status_code": 200
+      }
+    },
+    {
+      "test": "API Endpoint /api/v1/health",
+      "status": "PASSED",
+      "timestamp": "2025-07-08T13:45:20.014053",
+      "details": {
+        "method": "GET",
+        "status_code": 200
+      }
+    },
+    {
+      "test": "API Endpoint /api/v1/schemas",
+      "status": "PASSED",
+      "timestamp": "2025-07-08T13:45:20.019060",
+      "details": {
+        "method": "GET",
+        "status_code": 404
+      }
+    },
+    {
+      "test": "API Endpoint /api/v1/organizations",
+      "status": "PASSED",
+      "timestamp": "2025-07-08T13:45:20.023099",
+      "details": {
+        "method": "GET",
+        "status_code": 307
+      }
+    },
+    {
+      "test": "API Endpoint /api/v1/properties",
+      "status": "PASSED",
+      "timestamp": "2025-07-08T13:45:20.027828",
+      "details": {
+        "method": "GET",
+        "status_code": 307
+      }
+    },
+    {
+      "test": "API Endpoint /docs",
+      "status": "PASSED",
+      "timestamp": "2025-07-08T13:45:20.031021",
+      "details": {
+        "method": "GET",
+        "status_code": 404
+      }
+    },
+    {
+      "test": "API Endpoint /openapi.json",
+      "status": "PASSED",
+      "timestamp": "2025-07-08T13:45:20.033912",
+      "details": {
+        "method": "GET",
+        "status_code": 404
+      }
+    },
+    {
+      "test": "Internal Service Connectivity",
+      "status": "PASSED",
+      "timestamp": "2025-07-08T13:45:20.189370",
+      "details": {
+        "Database": true,
+        "TerminusDB": true,
+        "Redis": true
+      }
+    },
+    {
+      "test": "NATS Server Status",
+      "status": "PASSED",
+      "timestamp": "2025-07-08T13:45:20.202187",
+      "details": {
+        "version": "2.10.29",
+        "uptime": "4h50m54s",
+        "connections": 0,
+        "subscriptions": 61
+      }
+    }
+  ]
+}

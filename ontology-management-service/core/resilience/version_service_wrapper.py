@@ -167,8 +167,6 @@ class ResilientVersionService:
         self.circuit_breaker = pybreaker.CircuitBreaker(
             fail_max=cb_config.fail_max,
             reset_timeout=cb_config.reset_timeout,
-            expected_exception=cb_config.expected_exception,
-            exclude=cb_config.exclude,
             listeners=[
                 self._on_circuit_breaker_open,
                 self._on_circuit_breaker_close,

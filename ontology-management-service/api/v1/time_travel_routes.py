@@ -11,9 +11,9 @@ from core.auth_utils import UserContext
 from middleware.auth_middleware import get_current_user
 from core.time_travel import (
     TemporalOperator, TemporalReference, TemporalQuery,
-    TemporalResourceQuery, TemporalComparisonQuery,
-    get_time_travel_service
+    TemporalResourceQuery, TemporalComparisonQuery
 )
+from core.service_factory import ServiceFactory
 from core.iam.dependencies import require_scope
 from core.iam.iam_integration import IAMScope
 from common_logging.setup import get_logger
@@ -81,7 +81,7 @@ async def query_as_of(
     - Get object_type at specific time: {"timestamp": "2024-01-01T00:00:00Z"}
     - Get object_type at version 5: {"version": 5}
     """
-    service = await get_time_travel_service()
+    service = await ServiceFactory.get_time_travel_service()
     
     # Build temporal reference
     temporal_ref = TemporalReference(
@@ -132,7 +132,7 @@ async def query_between(
     - Get changes in last week: {"start_time": {"relative_time": "-7d"}}
     - Get changes between versions: {"start_time": {"version": 5}, "end_time": {"version": 10}}
     """
-    service = await get_time_travel_service()
+    service = await ServiceFactory.get_time_travel_service()
     
     # Build temporal references
     start_ref = TemporalReference(
@@ -192,7 +192,7 @@ async def get_all_versions(
     user: UserContext = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """Get all versions of a specific resource"""
-    service = await get_time_travel_service()
+    service = await ServiceFactory.get_time_travel_service()
     
     # Build query for all versions
     temporal_query = TemporalQuery(
@@ -235,7 +235,7 @@ async def compare_states(
     - Compare current with yesterday: time1={relative_time: "-1d"}, time2={timestamp: null}
     - Compare two versions: time1={version: 5}, time2={version: 10}
     """
-    service = await get_time_travel_service()
+    service = await ServiceFactory.get_time_travel_service()
     
     # Build temporal references
     time1_ref = TemporalReference(
@@ -293,7 +293,7 @@ async def get_resource_timeline(
     user: UserContext = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """Get complete timeline of changes for a resource"""
-    service = await get_time_travel_service()
+    service = await ServiceFactory.get_time_travel_service()
     
     timeline = await service.get_resource_timeline(
         resource_type, resource_id, branch
@@ -312,7 +312,7 @@ async def create_snapshot(
     user: UserContext = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """Create a snapshot of the system at a specific point in time"""
-    service = await get_time_travel_service()
+    service = await ServiceFactory.get_time_travel_service()
     
     snapshot = await service.create_temporal_snapshot(
         branch=branch,
@@ -343,7 +343,7 @@ async def get_resource_at_time(
             detail="Must provide either timestamp, version, or relative_time"
         )
     
-    service = await get_time_travel_service()
+    service = await ServiceFactory.get_time_travel_service()
     
     # Build temporal reference
     temporal_ref = TemporalReference(
@@ -382,7 +382,7 @@ async def get_resource_at_time(
 async def health_check() -> Dict[str, str]:
     """Health check for time travel service"""
     try:
-        service = await get_time_travel_service()
+        service = await ServiceFactory.get_time_travel_service()
         return {
             "status": "healthy",
             "service": "time-travel",

@@ -35,6 +35,22 @@ class TerminusDBConfig(BaseSettings):
     user: str = Field(default="admin", validation_alias="TERMINUSDB_USER")
     key: str = Field(default="root", validation_alias="TERMINUSDB_KEY")
     
+    # Cache settings
+    lru_cache_size: int = Field(default=500000000, validation_alias="TERMINUSDB_LRU_CACHE_SIZE", description="Size of TerminusDB's internal LRU cache in bytes.")
+    cache_enabled: bool = Field(default=True, validation_alias="TERMINUSDB_CACHE_ENABLED", description="Enable/disable TerminusDB's internal cache.")
+
+    # mTLS settings
+    use_mtls: bool = Field(default=False, validation_alias="TERMINUSDB_USE_MTLS", description="Enable/disable mTLS for TerminusDB connection.")
+    cert_path: Optional[str] = Field(default=None, validation_alias="TERMINUSDB_CERT_PATH", description="Path to client certificate for mTLS.")
+    key_path: Optional[str] = Field(default=None, validation_alias="TERMINUSDB_KEY_PATH", description="Path to client key for mTLS.")
+    ca_path: Optional[str] = Field(default=None, validation_alias="TERMINUSDB_CA_PATH", description="Path to CA certificate for mTLS.")
+    
+    # Connection pool settings (via httpx.Limits)
+    max_connections: int = Field(default=20, validation_alias="DB_MAX_CONNECTIONS")
+    min_connections: int = Field(default=5, validation_alias="DB_MIN_CONNECTIONS")
+    max_idle_time: int = Field(default=300, validation_alias="DB_MAX_IDLE_TIME")
+    connection_timeout: int = Field(default=30, validation_alias="DB_CONNECTION_TIMEOUT")
+    
     model_config = SettingsConfigDict(env_prefix="TERMINUSDB_")
 
 class PostgresConfig(BaseSettings):
@@ -64,6 +80,7 @@ class EventConfig(BaseSettings):
 
 class ServiceConfig(BaseSettings):
     """Service-level configuration"""
+    name: str = Field(default="oms-monolith", validation_alias="SERVICE_NAME")
     log_level: str = Field(default="INFO", validation_alias="LOG_LEVEL")
     debug: bool = Field(default=False, validation_alias="DEBUG")
     environment: str = Field(default="development", validation_alias="ENVIRONMENT")

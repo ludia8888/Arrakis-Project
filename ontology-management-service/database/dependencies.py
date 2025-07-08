@@ -2,10 +2,10 @@
 Database Dependencies for FastAPI
 Provides secure database access with user context propagation
 """
-from typing import Optional
+from typing import Optional, Union
 from fastapi import Depends, Request
 
-from database.clients.unified_database_client import get_unified_database_client
+from database.clients.unified_database_client import UnifiedDatabaseClient, get_unified_database_client
 from database.clients.secure_database_adapter import SecureDatabaseAdapter
 from core.auth import UserContext
 from middleware.auth_middleware import get_current_user
@@ -50,7 +50,7 @@ async def get_secure_database(
 async def get_secure_database_optional(
     request: Request,
     user: Optional[UserContext] = None
-) -> SecureDatabaseAdapter:
+) -> Union[SecureDatabaseAdapter, UnifiedDatabaseClient]:
     """
     Get secure database adapter with optional user context
     

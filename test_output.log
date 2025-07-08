@@ -1,0 +1,4 @@
+Step 1: Login to User Service
+Login response status: 429
+Login response: {"detail":"Rate limit exceeded"}
+Login failed!

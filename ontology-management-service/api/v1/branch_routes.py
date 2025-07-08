@@ -324,5 +324,4 @@ async def merge_proposal_sync(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Merge failed: {str(e)}"
-        )
-    return proposal 
+        ) 

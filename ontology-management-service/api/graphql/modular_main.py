@@ -176,8 +176,7 @@ app.add_middleware(
 # Create GraphQL router with optional extensions
 graphql_app = GraphQLRouter(
     schema,
-    context_getter=get_graphql_context,
-    graphql_ide="graphiql" if graphql_config.enable_introspection else None
+    context_getter=get_graphql_context
 )
 
 app.include_router(graphql_app, prefix="/graphql")

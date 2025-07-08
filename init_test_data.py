@@ -10,8 +10,8 @@ from sqlalchemy import create_engine, text
 from passlib.context import CryptContext
 
 # Database URLs
-USER_DB_URL = "postgresql://user_service:user_password@localhost:5433/userdb"
-OMS_DB_URL = "postgresql://oms_user:oms_password@localhost:5432/oms_db"
+USER_DB_URL = "postgresql://user_service:password@localhost:5435/user_service"
+OMS_DB_URL = "postgresql://oms_user:oms_password@localhost:5434/oms_db"
 
 # Password hashing
 pwd_context = CryptContext(schemes=["argon2", "bcrypt"], default="argon2")

@@ -19,10 +19,7 @@ from .models import (
     ResourceTimeline
 )
 
-from .service import (
-    TimeTravelQueryService,
-    get_time_travel_service
-)
+from .service import TimeTravelQueryService
 
 from .cache import TemporalQueryCache
 from .metrics import (
@@ -53,7 +50,6 @@ __all__ = [
     
     # Service
     "TimeTravelQueryService",
-    "get_time_travel_service",
     
     # Cache
     "TemporalQueryCache",

@@ -78,7 +78,9 @@ class AuthMiddleware(BaseHTTPMiddleware):
         self.client = httpx.AsyncClient(timeout=5.0)
         self.public_paths = [
             "/health", "/metrics", "/docs", "/openapi.json", "/redoc",
-            "/api/v1/health", "/api/v1/health/live", "/api/v1/health/ready"
+            "/api/v1/health", "/api/v1/health/live", "/api/v1/health/ready",
+            "/auth/login", "/auth/register", "/auth/refresh", "/auth/logout",
+            "/api/v1/auth"  # Allow all auth routes
         ]
         self.cache_ttl = 300
     
@@ -96,18 +98,23 @@ class AuthMiddleware(BaseHTTPMiddleware):
         token = authorization.split(" ")[1]
 
         try:
-            redis_provider = request.app.state.redis_client
-            if inspect.iscoroutine(redis_provider):
-                redis_client = await redis_provider
-            else:
-                redis_client = redis_provider
+            # Get Redis client from container
+            redis_client = None
+            try:
+                container = request.app.state.container
+                redis_provider = container.redis_provider()
+                redis_client = await redis_provider.provide()
+            except Exception as e:
+                logger.warning(f"Failed to get Redis client from container: {e}")
+                redis_client = None
                 
-            user = await self._get_cached_user(token, redis_client)
+            user = await self._get_cached_user(token, redis_client) if redis_client else None
 
             if not user:
                 user_data = None
                 try:
-                    cb_group: CircuitBreakerGroup = request.app.state.circuit_breaker_group
+                    container = request.app.state.container
+                    cb_group: CircuitBreakerGroup = container.circuit_breaker_provider()
                     user_service_breaker = cb_group.get_breaker("user-service")
                     if user_service_breaker:
                         user_data = await user_service_breaker.call(self._validate_token, token)
@@ -138,7 +145,8 @@ class AuthMiddleware(BaseHTTPMiddleware):
                         "metadata": user_data.get("metadata", {})
                     }
                     user = UserContext(**user_context_data)
-                    await self._cache_user(token, user, redis_client)
+                    if redis_client:
+                        await self._cache_user(token, user, redis_client)
                 else:
                     return Response('{"detail": "Invalid token"}', status_code=401)
             
@@ -168,25 +176,33 @@ class AuthMiddleware(BaseHTTPMiddleware):
             logger.error(f"Cache set failed: {e}")
 
     async def _validate_token(self, token: str) -> Optional[Dict[str, Any]]:
-        """Validates the JWT by calling the user-service."""
+        """Validates the JWT by calling the User Service."""
         headers = {"Authorization": f"Bearer {token}"}
+        logger.info(f"AuthMiddleware: Validating token with User Service: {self.user_service_url}")
         try:
-            res = await self.client.get(f"{self.user_service_url}/users/me", headers=headers)
+            res = await self.client.get(f"{self.user_service_url}/auth/account/userinfo", headers=headers)
+            logger.info(f"AuthMiddleware: User Service response status: {res.status_code}")
             res.raise_for_status()
             data = res.json()
+            logger.info(f"AuthMiddleware: Token validation successful for user: {data.get('user_id')}")
             return {
-                "user_id": data.get("id"),
-                "username": data.get("username") or data.get("id"), # Fallback for username
+                "user_id": data.get("user_id"),
+                "username": data.get("username") or data.get("user_id"), # Fallback for username
                 "email": data.get("email"),
                 "roles": data.get("roles", []),
                 "permissions": data.get("scopes", []),
-                "metadata": {}
+                "metadata": {
+                    "scopes": data.get("scopes", [])
+                }
             }
         except httpx.RequestError as e:
-            logger.error(f"Error calling user-service: {e}")
+            logger.error(f"AuthMiddleware: Error calling user-service: {e}")
+            return None
+        except httpx.HTTPStatusError as e:
+            logger.error(f"AuthMiddleware: User Service HTTP error: {e.response.status_code} - {e.response.text}")
             return None
         except Exception as e:
-            logger.error(f"Token validation failed: {e}")
+            logger.error(f"AuthMiddleware: Token validation failed: {e}")
             return None
 
 

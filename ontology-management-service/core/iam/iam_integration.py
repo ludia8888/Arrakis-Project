@@ -306,16 +306,12 @@ class IAMIntegration:
                 data = response.json()
                 permissions = data.get("permissions", [])
                 
-                # Convert IAM scopes to OMS-style permissions using scope mapper
-                from core.iam.scope_mapper import get_scope_mapper
-                scope_mapper = get_scope_mapper()
-                normalized_permissions = scope_mapper.transform_scopes(permissions)
+                # Permissions from user-service are already in OMS format
+                # No transformation needed - just cache and return
+                await self._cache_permissions(user_id, permissions)
                 
-                # Cache the permissions
-                await self._cache_permissions(user_id, normalized_permissions)
-                
-                logger.info(f"Fetched {len(normalized_permissions)} permissions for user {user_id}")
-                return normalized_permissions
+                logger.info(f"Fetched {len(permissions)} permissions for user {user_id}")
+                return permissions
             elif response.status_code in [502, 503, 504]:
                 # Service unavailable - raise specific exception
                 logger.error(f"IAM service unavailable: {response.status_code}")

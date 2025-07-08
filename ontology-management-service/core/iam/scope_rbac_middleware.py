@@ -37,7 +37,8 @@ class ScopeRBACMiddleware(BaseHTTPMiddleware):
             "/redoc",
             "/",
             "/ws",
-            "/api/v1/rbac-test/generate-tokens"
+            "/api/v1/rbac-test/generate-tokens",
+            "/api/v1/auth"  # Allow all auth routes
         ])
     
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
@@ -55,10 +56,9 @@ class ScopeRBACMiddleware(BaseHTTPMiddleware):
         
         user: UserContext = request.state.user
         
-        # Fetch real permissions from user-service if not cached
-        # This part remains to ensure permissions are loaded into the user context
-        # for potential downstream use, though direct checking is now deprecated here.
-        if "permissions" not in user.metadata:
+        # Check if permissions are already loaded (from JWT or previous middleware)
+        if "permissions" not in user.metadata and not hasattr(request.state, "permissions"):
+            # Only fetch permissions if not already available
             auth_header = request.headers.get("Authorization", "")
             token = auth_header.replace("Bearer ", "") if auth_header.startswith("Bearer ") else None
             
@@ -71,10 +71,26 @@ class ScopeRBACMiddleware(BaseHTTPMiddleware):
                 )
 
             try:
+                # Fetch permissions from IAM service with caching
                 permissions = await self.iam.get_user_permissions(user.user_id, token)
+                
+                # Store permissions in both user metadata and request state for downstream use
                 user.metadata["permissions"] = permissions
                 request.state.permissions = permissions
-                logger.info(f"Fetched {len(permissions)} permissions for user {user.username}")
+                
+                # Also ensure scopes are properly set from JWT if available
+                if "scopes" not in user.metadata:
+                    # Try to extract scopes from JWT
+                    try:
+                        import jwt
+                        payload = jwt.decode(token, options={"verify_signature": False})
+                        scopes = payload.get("scope", "").split() if payload.get("scope") else []
+                        user.metadata["scopes"] = scopes
+                    except Exception:
+                        user.metadata["scopes"] = []
+                
+                logger.info(f"Loaded {len(permissions)} permissions for user {user.username}")
+                
             except Exception as e:
                 from core.iam.iam_integration import IAMServiceUnavailableError
                 if isinstance(e, IAMServiceUnavailableError):
@@ -97,6 +113,12 @@ class ScopeRBACMiddleware(BaseHTTPMiddleware):
                             "error_type": "permission_verification_failed"
                         }
                     )
+        else:
+            # Permissions already loaded - ensure they're accessible in request state
+            if hasattr(request.state, "permissions"):
+                user.metadata["permissions"] = request.state.permissions
+            elif "permissions" in user.metadata:
+                request.state.permissions = user.metadata["permissions"]
         
         # The core scope-checking logic is now DELEGATED to endpoint dependencies.
         # This middleware now primarily ensures a user context exists and handles

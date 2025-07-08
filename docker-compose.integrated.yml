@@ -21,7 +21,7 @@ services:
     environment:
       - DATABASE_URL=postgresql+asyncpg://user_service:password@user-db:5432/user_service
       - REDIS_URL=redis://user-redis:6379
-      - JWT_SECRET=${JWT_SECRET:-shared-secret-key-for-testing}
+      - JWT_SECRET=${JWT_SECRET:-shared-secret-key-for-testing-with-at-least-32-characters}
       - JWT_ALGORITHM=HS256
       - JWT_ISSUER=user-service
       - JWT_AUDIENCE=oms
@@ -88,7 +88,7 @@ services:
       # Authentication Configuration
       - USE_IAM_VALIDATION=true
       - IAM_SERVICE_URL=http://user-service:8000
-      - JWT_SECRET=${JWT_SECRET:-shared-secret-key-for-testing}
+      - JWT_SECRET=${JWT_SECRET:-shared-secret-key-for-testing-with-at-least-32-characters}
       - JWT_ALGORITHM=HS256
       - JWT_ISSUER=user-service
       - JWT_AUDIENCE=oms

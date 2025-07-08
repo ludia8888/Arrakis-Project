@@ -84,8 +84,13 @@ class HealthChecker:
         start_time = time.time()
         
         try:
+            # Convert SQLAlchemy async DSN to asyncpg format
+            db_url = self.db_url
+            if db_url and db_url.startswith("postgresql+asyncpg://"):
+                db_url = db_url.replace("postgresql+asyncpg://", "postgresql://")
+            
             # Try to connect and run a simple query
-            conn = await asyncpg.connect(self.db_url, timeout=5)
+            conn = await asyncpg.connect(db_url, timeout=5)
             try:
                 # Run a simple query to verify connection
                 result = await conn.fetchval("SELECT 1")

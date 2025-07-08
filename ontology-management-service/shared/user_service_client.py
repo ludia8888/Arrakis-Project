@@ -72,16 +72,50 @@ class UserServiceClient:
                 await asyncio.sleep(1)
     
     async def login(self, username: str, password: str, mfa_code: Optional[str] = None) -> Dict[str, Any]:
-        """사용자 로그인"""
-        data = {
+        """사용자 로그인 - 2단계 인증 처리"""
+        # Step 1: Username/password authentication
+        step1_data = {
             "username": username,
             "password": password
         }
         
-        if mfa_code:
-            data["mfa_code"] = mfa_code
+        try:
+            logger.info(f"UserServiceClient: Step 1 - login with username: {username}")
+            step1_response = await self._request("POST", "/auth/login", json=step1_data)
+            logger.info(f"UserServiceClient: Step 1 response: {step1_response}")
             
-        return await self._request("POST", "/auth/login", data=data)
+            # Check if this is a challenge response (both mfa_required and complete need step 2)
+            if step1_response.get("challenge_token"):
+                challenge_token = step1_response.get("challenge_token")
+                logger.info(f"UserServiceClient: Step 2 required - challenge_token: {challenge_token}")
+                
+                # Step 2: Complete authentication with challenge token
+                step2_data = {
+                    "challenge_token": challenge_token,
+                    "mfa_code": mfa_code  # Can be None for non-MFA users
+                }
+                
+                step2_response = await self._request("POST", "/auth/login/complete", json=step2_data)
+                logger.info(f"UserServiceClient: Step 2 response: {step2_response}")
+                return step2_response
+            
+            # If no challenge required, return the response (legacy flow)
+            logger.info("UserServiceClient: No challenge required, returning step 1 response")
+            return step1_response
+            
+        except httpx.HTTPStatusError as e:
+            # If step 1 fails, it might be using legacy endpoint
+            if e.response.status_code == 404:
+                # Try legacy endpoint
+                legacy_data = {
+                    "username": username,
+                    "password": password
+                }
+                if mfa_code:
+                    legacy_data["mfa_code"] = mfa_code
+                    
+                return await self._request("POST", "/auth/login/legacy", json=legacy_data)
+            raise
     
     async def register(self, username: str, email: str, password: str, full_name: Optional[str] = None) -> Dict[str, Any]:
         """사용자 회원가입"""
@@ -98,7 +132,7 @@ class UserServiceClient:
         """JWT 토큰 검증"""
         try:
             headers = {"Authorization": f"Bearer {token}"}
-            response = await self._request("GET", "/auth/userinfo", headers=headers)
+            response = await self._request("GET", "/auth/account/userinfo", headers=headers)
             return response
         except Exception as e:
             logger.debug(f"Token validation failed: {e}")
@@ -127,7 +161,7 @@ class UserServiceClient:
         """사용자 정보 조회"""
         try:
             headers = {"Authorization": f"Bearer {token}"}
-            return await self._request("GET", "/auth/userinfo", headers=headers)
+            return await self._request("GET", "/auth/account/userinfo", headers=headers)
         except Exception as e:
             logger.debug(f"Failed to get user info: {e}")
             return None

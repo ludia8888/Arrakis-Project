@@ -3,8 +3,9 @@
 from typing import Dict, Any, List, Annotated
 from datetime import datetime
 from fastapi import APIRouter, HTTPException, Depends, Path, Body, Request
+from dependency_injector.wiring import inject, Provide
 
-from bootstrap.dependencies import get_schema_service_from_container
+from bootstrap.dependencies import Container
 from core.interfaces import SchemaServiceProtocol
 from middleware.auth_middleware import get_current_user
 from database.dependencies import get_secure_database
@@ -28,11 +29,12 @@ router = APIRouter(
     resource_id_func=lambda params: f"{params['branch']}_object_types",
     branch_func=lambda params: params['branch']
 )
+@inject
 async def list_object_types(
     branch: str,
-    schema_service: Annotated[SchemaServiceProtocol, Depends(get_schema_service_from_container)],
-    current_user: Annotated[UserContext, Depends(get_current_user)],
-    request: Request
+    request: Request,
+    schema_service: SchemaServiceProtocol = Depends(Provide[Container.schema_service_provider]),
+    current_user: UserContext = Depends(get_current_user)
 ) -> List[Dict[str, Any]]:
     """List all object types in a branch"""
     result = await schema_service.list_schemas(
@@ -49,12 +51,13 @@ async def list_object_types(
     resource_id_func=lambda params: params['type_name'],
     branch_func=lambda params: params['branch']
 )
+@inject
 async def get_object_type(
     branch: str,
     type_name: str,
-    schema_service: Annotated[SchemaServiceProtocol, Depends(get_schema_service_from_container)],
-    current_user: Annotated[UserContext, Depends(get_current_user)],
-    request: Request
+    request: Request,
+    schema_service: SchemaServiceProtocol = Depends(Provide[Container.schema_service_provider]),
+    current_user: UserContext = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """Get a specific object type by name."""
     schema = await schema_service.get_schema_by_name(name=type_name, branch=branch)
@@ -66,12 +69,13 @@ async def get_object_type(
     "/{branch}/object-types",
     dependencies=[Depends(require_scope([IAMScope.ONTOLOGIES_WRITE]))]
 )
+@inject
 async def create_object_type(
     branch: str,
     object_type: Dict[str, Any],
-    schema_service: Annotated[SchemaServiceProtocol, Depends(get_schema_service_from_container)],
-    current_user: Annotated[UserContext, Depends(get_current_user)],
-    request: Request
+    request: Request,
+    schema_service: SchemaServiceProtocol = Depends(Provide[Container.schema_service_provider]),
+    current_user: UserContext = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """Create a new object type in a branch"""
     

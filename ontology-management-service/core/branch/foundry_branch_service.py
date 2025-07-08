@@ -11,7 +11,12 @@ from models.exceptions import ConflictError, ConcurrencyError
 from models.branch_state import BranchState, BranchStateInfo
 from common_logging.setup import get_logger
 from middleware.three_way_merge import JsonMerger, MergeStrategy as JsonMergeStrategy
-from core.time_travel.service import TimeTravelQueryService
+from core.interfaces import ITimeTravelService
+from typing import TYPE_CHECKING
+
+# Import concrete type only for type checking
+if TYPE_CHECKING:
+    from core.time_travel.service import TimeTravelQueryService
 from core.versioning.version_service import VersionTrackingService
 from core.time_travel.models import TemporalResourceQuery, TemporalQuery, TemporalReference, TemporalOperator
 
@@ -28,7 +33,7 @@ class FoundryBranchService:
     def __init__(
         self,
         db_session: Any, # Changed from AsyncSession to Any to support PostgresClientSecure
-        time_travel_service: TimeTravelQueryService,
+        time_travel_service: ITimeTravelService,
         version_service: VersionTrackingService,
     ):
         self.session = db_session

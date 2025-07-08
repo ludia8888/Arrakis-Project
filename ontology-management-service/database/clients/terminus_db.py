@@ -20,6 +20,7 @@ import httpx
 from utils.retry_strategy import with_retry, DB_WRITE_CONFIG, DB_READ_CONFIG, DB_CRITICAL_CONFIG
 from common_logging.setup import get_logger
 # from .base import BaseDatabaseClient, DatabaseError, NotFoundError # 삭제됨
+from bootstrap.config import TerminusDBConfig
 
 logger = logging.getLogger(__name__)
 
@@ -37,24 +38,12 @@ def add_span_attributes(attrs):
 class TerminusDBClient:
     """TerminusDB 비동기 클라이언트 - 표준 httpx.AsyncClient 기반"""
 
-    def __init__(self, endpoint: str = "http://localhost:6363",
-                 username: str = "admin",
-                 password: str = "changeme-admin-pass",
-                 service_name: str = "schema-service"):
-        self.endpoint = endpoint
-        self.username = username
-        self.password = password
+    def __init__(self, config: TerminusDBConfig, service_name: str = "schema-service"):
+        self.config = config
         self.service_name = service_name
         self._client: Optional[httpx.AsyncClient] = None
-
-        # TerminusDB 내부 캐싱 설정
-        self.cache_size = int(os.getenv("TERMINUSDB_LRU_CACHE_SIZE", "500000000"))  # 500MB
-        self.enable_internal_cache = os.getenv("TERMINUSDB_CACHE_ENABLED", "true").lower() == "true"
-
-        # mTLS 설정
-        self.use_mtls = os.getenv("TERMINUSDB_USE_MTLS", "false").lower() == "true"
         
-        logger.info(f"TerminusDB client configured - service: {self.service_name}, mTLS: {self.use_mtls}")
+        logger.info(f"TerminusDB client configured - service: {self.service_name}, mTLS: {self.config.use_mtls}")
 
 
     async def __aenter__(self):
@@ -72,17 +61,18 @@ class TerminusDBClient:
         try:
             # Connection pool 설정을 httpx.Limits로 대체
             limits = httpx.Limits(
-                max_connections=int(os.getenv("DB_MAX_CONNECTIONS", "20")),
-                max_keepalive_connections=int(os.getenv("DB_MIN_CONNECTIONS", "5")),
-                keepalive_expiry=int(os.getenv("DB_MAX_IDLE_TIME", "300")),
+                max_connections=self.config.max_connections,
+                max_keepalive_connections=self.config.min_connections,
+                keepalive_expiry=self.config.max_idle_time,
             )
             
             # mTLS 설정 준비
             ssl_context = None
-            if self.use_mtls:
-                cert_path = os.getenv("TERMINUSDB_CERT_PATH")
-                key_path = os.getenv("TERMINUSDB_KEY_PATH")
-                ca_path = os.getenv("TERMINUSDB_CA_PATH")
+            endpoint = self.config.endpoint
+            if self.config.use_mtls:
+                cert_path = self.config.cert_path
+                key_path = self.config.key_path
+                ca_path = self.config.ca_path
                 
                 if cert_path and key_path:
                     ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
@@ -91,30 +81,28 @@ class TerminusDBClient:
                     ssl_context.load_cert_chain(cert_path, key_path)
                     ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2
                     
-                    if self.endpoint.startswith("http://"):
-                        self.endpoint = self.endpoint.replace("http://", "https://")
+                    if endpoint.startswith("http://"):
+                        endpoint = endpoint.replace("http://", "https://")
                     logger.info("TerminusDB mTLS configuration prepared")
                 else:
                     logger.warning("mTLS certificates not found, falling back to standard TLS")
-                    self.use_mtls = False
 
             self._client = httpx.AsyncClient(
-                base_url=self.endpoint,
-                auth=(self.username, self.password),
+                base_url=endpoint,
+                auth=(self.config.user, self.config.key),
                 verify=ssl_context if ssl_context else True,
                 limits=limits,
-                timeout=int(os.getenv("DB_CONNECTION_TIMEOUT", "30")),
+                timeout=self.config.connection_timeout,
             )
-            logger.info(f"TerminusDB httpx.AsyncClient initialized - mTLS: {self.use_mtls}")
+            logger.info(f"TerminusDB httpx.AsyncClient initialized - mTLS: {self.config.use_mtls}")
                 
         except Exception as e:
             logger.error(f"Failed to initialize TerminusDB client: {e}")
             # 최후의 fallback - 기본 클라이언트
             self._client = httpx.AsyncClient(
-                base_url=self.endpoint,
-                auth=(self.username, self.password)
+                base_url=self.config.endpoint,
+                auth=(self.config.user, self.config.key)
             )
-            self.use_mtls = False
             logger.info("TerminusDB client initialized with basic httpx configuration")
 
     async def close(self):

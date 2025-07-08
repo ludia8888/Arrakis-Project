@@ -20,7 +20,7 @@ TEST_EMAIL = f"{TEST_USERNAME}@arrakis.dune"
 # HTTP 클라이언트 (타임아웃 증가)
 http_client = httpx.AsyncClient(timeout=30.0)
 
-def print_request(method, url, headers=None, json_payload=None, data=None, params=None):
+def print_request(method, url, headers=None, json_payload=None, data=None, params=None, form_data=None):
     print(f"\n>>> REQUEST ---")
     print(f"  {method} {url}")
     if headers:
@@ -30,6 +30,8 @@ def print_request(method, url, headers=None, json_payload=None, data=None, param
         print(f"  JSON Body: {json.dumps(json_payload, indent=2)}")
     if data:
         print(f"  Form Data: {data}")
+    if form_data:
+        print(f"  Form Data: {form_data}")
     if params:
         print(f"  Params: {params}")
     print("----------------")
@@ -87,22 +89,36 @@ async def main():
     # --- 1단계: User Service에서 사용자 생성 및 토큰 획득 ---
     print("\n--- STEP 1: Create User and Get JWT from User Service ---")
     try:
-        # 사용자 생성
+        # 사용자 생성 시도
         create_user_payload = {"username": TEST_USERNAME, "password": TEST_PASSWORD, "email": TEST_EMAIL}
-        print_request("POST", f"{USER_SERVICE_URL}/api/v1/users", json_payload=create_user_payload)
-        response = await http_client.post(f"{USER_SERVICE_URL}/api/v1/users", json=create_user_payload)
-        print_response(response)
-        response.raise_for_status()
-        user_id = response.json().get("id")
-        print(f"User created successfully with ID: {user_id}")
+        print_request("POST", f"{USER_SERVICE_URL}/auth/register", json_payload=create_user_payload)
+        try:
+            response = await http_client.post(f"{USER_SERVICE_URL}/auth/register", json=create_user_payload)
+            print_response(response)
+            response.raise_for_status()
+            user_id = response.json().get("id")
+            print(f"User created successfully with ID: {user_id}")
+        except httpx.HTTPStatusError as e:
+            print(f"Registration failed (might already exist): {e}")
+            print("Attempting to login with existing user...")
 
-        # JWT 토큰 획득
-        login_payload = {"username": TEST_USERNAME, "password": TEST_PASSWORD}
-        print_request("POST", f"{USER_SERVICE_URL}/api/v1/auth/token", data=login_payload)
-        response = await http_client.post(f"{USER_SERVICE_URL}/api/v1/auth/token", data=login_payload)
+        # JWT 토큰 획득 - 2단계 로그인
+        login_payload = {"username": "admin", "password": "admin123"}
+        print_request("POST", f"{USER_SERVICE_URL}/auth/login", json_payload=login_payload)
+        response = await http_client.post(f"{USER_SERVICE_URL}/auth/login", json=login_payload)
         print_response(response)
         response.raise_for_status()
+        
+        # 2단계: 로그인 완료
+        challenge_token = response.json().get("challenge_token")
+        complete_payload = {"challenge_token": challenge_token, "mfa_code": "000000"}
+        print_request("POST", f"{USER_SERVICE_URL}/auth/login/complete", json_payload=complete_payload)
+        response = await http_client.post(f"{USER_SERVICE_URL}/auth/login/complete", json=complete_payload)
+        print_response(response)
+        response.raise_for_status()
+        
         jwt_token = response.json().get("access_token")
+        user_id = response.json().get("user_id")
         print(f"JWT token acquired successfully!")
 
     except httpx.HTTPStatusError as e:
@@ -118,13 +134,14 @@ async def main():
     new_branch_name = f"test-branch-{uuid.uuid4().hex[:8]}"
     try:
         headers = {"Authorization": f"Bearer {jwt_token}"}
-        create_branch_payload = {"name": new_branch_name, "base_branch": "main"}
-        print_request("POST", f"{OMS_SERVICE_URL}/api/v1/branches", headers=headers, json_payload=create_branch_payload)
+        params = {"name": new_branch_name, "from_branch": "main"}
+        print_request("POST", f"{OMS_SERVICE_URL}/api/v1/branches", headers=headers, params=params)
         
         response = await http_client.post(
-            f"{OMS_SERVICE_URL}/api/v1/branches", 
+            f"{OMS_SERVICE_URL}/api/v1/branches/", 
             headers=headers, 
-            json=create_branch_payload
+            params=params,
+            follow_redirects=True
         )
         print_response(response)
         response.raise_for_status()
@@ -144,10 +161,10 @@ async def main():
     await asyncio.sleep(5)  # 이벤트가 처리될 시간을 줌
 
     try:
-        params = {"user_id": user_id, "limit": 10}
-        print_request("GET", f"{AUDIT_SERVICE_URL}/api/v2/query/events", params=params)
+        params = {"user_id": user_id or "admin-001", "limit": 10}
+        print_request("GET", f"{AUDIT_SERVICE_URL}/api/v2/events/query", params=params)
         
-        response = await http_client.get(f"{AUDIT_SERVICE_URL}/api/v2/query/events", params=params)
+        response = await http_client.get(f"{AUDIT_SERVICE_URL}/api/v2/events/query", params=params)
         print_response(response)
         response.raise_for_status()
 

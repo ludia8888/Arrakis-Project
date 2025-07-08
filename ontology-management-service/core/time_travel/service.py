@@ -21,7 +21,12 @@ from .metrics import (
 )
 from .db_optimizations import TimeTravelDBOptimizer, TemporalCursorPagination
 from ..versioning.version_service import VersionTrackingService, get_version_service
-from ..branch.foundry_branch_service import FoundryBranchService
+from ..interfaces import IBranchService
+from typing import TYPE_CHECKING
+
+# Import concrete type only for type checking to avoid circular import
+if TYPE_CHECKING:
+    from ..branch.foundry_branch_service import FoundryBranchService
 from models.etag import ResourceVersion, VersionInfo
 from shared.database.sqlite_connector import SQLiteConnector
 from shared.cache.smart_cache import SmartCache
@@ -40,9 +45,11 @@ class TimeTravelQueryService:
         self,
         version_service: Optional[VersionTrackingService] = None,
         redis_client: Optional[redis.Redis] = None,
-        smart_cache: Optional[SmartCache] = None
+        smart_cache: Optional[SmartCache] = None,
+        branch_service: Optional[IBranchService] = None
     ):
         self.version_service = version_service
+        self.branch_service = branch_service
         self._connector: Optional[SQLiteConnector] = None
         self._cache = TemporalQueryCache(
             redis_client=redis_client,

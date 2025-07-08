@@ -1,130 +1,159 @@
 version: '3.8'
 
 services:
-  # PostgreSQL for OMS
-  oms-postgres:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_USER: oms_user
-      POSTGRES_PASSWORD: oms_password
-      POSTGRES_DB: oms_db
+  nginx-gateway:
+    image: nginx:latest
     ports:
-      - "5434:5432"
+      - "80:80"
     volumes:
-      - oms_postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U oms_user"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - oms-monolith
+      - user-service
+      - audit-service
 
-  # PostgreSQL for User Service
-  user-postgres:
-    image: postgres:15-alpine
+  audit-service:
+    image: arrakis-project-audit-service
+    build:
+      context: ./audit-service
     environment:
-      POSTGRES_USER: user_service
-      POSTGRES_PASSWORD: user_password
-      POSTGRES_DB: userdb
+      DATABASE_URL: postgresql+asyncpg://audit_user:audit_password@audit-postgres:5432/audit_db
+      JWT_SECRET: your_shared_secret_key_for_all_services_with_32_chars
+      JWT_AUDIENCE: oms
+      JWT_ISSUER: user-service
+    depends_on:
+      audit-postgres:
+        condition: service_healthy
+
+  # Ontology Management Service (Monolith)
+  oms-monolith:
+    image: arrakis-project-oms-monolith
+    build:
+      context: .
+      dockerfile: ontology-management-service/Dockerfile
     ports:
-      - "5435:5432"
+      - "8091:8000"  # Application port
+      - "8090:8090" # TerminusDB UI port
     volumes:
-      - user_postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user_service"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      - ./ontology-management-service:/app
+      - ./packages:/app/packages
+    environment:
+      SERVICE_NAME: oms-monolith
+      ENVIRONMENT: development
+      LOG_LEVEL: DEBUG
+      DATABASE_URL: postgresql+asyncpg://oms_user:oms_password@oms-postgres:5432/oms_db
+      REDIS_URL: redis://redis:6379/0
+      TERMINUSDB_URL: http://terminusdb:6363
+      TERMINUSDB_API_KEY: root
+      TERMINUSDB_USER: admin
+      TERMINUSDB_DB: arrakis
+      JWT_SECRET: your_shared_secret_key_for_all_services_with_32_chars
+      JWT_AUDIENCE: oms
+      JWT_ISSUER: user-service
+    depends_on:
+      oms-postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      terminusdb:
+        condition: service_started
+    networks:
+      - default
 
-  # Redis (shared)
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6389:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  # User Service (IAM)
+  # User Service
   user-service:
+    image: arrakis-project-user-service
     build:
       context: .
       dockerfile: user-service/Dockerfile
     environment:
-      DATABASE_URL: postgresql+asyncpg://user_service:user_password@user-postgres:5432/userdb
-      REDIS_URL: redis://redis:6379
-      JWT_SECRET: shared-jwt-secret-for-integration-testing
-      JWT_ISSUER: iam.company
+      DATABASE_URL: postgresql+asyncpg://user_user:user_password@user-postgres:5432/user_db
+      JWT_SECRET: your_shared_secret_key_for_all_services_with_32_chars
       JWT_AUDIENCE: oms
-      OMS_SERVICE_SECRET: oms-integration-secret
-      AUDIT_SERVICE_URL: http://audit-service:8002
-      PORT: 8001
-    ports:
-      - "8001:8001"
+      JWT_ISSUER: user-service
+      REDIS_URL: redis://redis:6379/0
     depends_on:
       user-postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    volumes:
-      - ./user-service:/app
-    entrypoint: /bin/sh -c "alembic upgrade head && uvicorn src.main:app --host 0.0.0.0 --port 8001 --reload"
-    command: ""
 
-  # Audit Service
-  audit-service:
-    build:
-      context: .
-      dockerfile: audit-service/Dockerfile
+  # Databases
+  oms-postgres:
+    image: postgres:15
     environment:
-      DATABASE_URL: postgresql+asyncpg://oms_user:oms_password@oms-postgres:5432/oms_db
+      POSTGRES_DB: oms_db
+      POSTGRES_USER: oms_user
+      POSTGRES_PASSWORD: oms_password
     ports:
-      - "8003:8002"
-    depends_on:
-      oms-postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U oms_user -d oms_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes:
-      - ./audit-service:/app
+      - oms_postgres_data:/var/lib/postgresql/data
 
-  # Ontology Management Service (Monolith)
-  oms-monolith:
-    build:
-      context: .
-      dockerfile: ontology-management-service/Dockerfile
+  user-postgres:
+    image: postgres:15
     environment:
-      DATABASE_URL: postgresql+asyncpg://oms_user:oms_password@oms-postgres:5432/oms_db
-      REDIS_URL: redis://redis:6379
-      JAEGER_AGENT_HOST: jaeger
-      USER_SERVICE_URL: http://user-service:8001
-      AUDIT_SERVICE_URL: http://audit-service:8003
+      POSTGRES_DB: user_db
+      POSTGRES_USER: user_user
+      POSTGRES_PASSWORD: user_password
     ports:
-      - "8000:8000"
-      - "8090:8090" # TerminusDB UI port
-    depends_on:
-      oms-postgres:
-        condition: service_healthy
-      user-postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      jaeger:
-        condition: service_started
-      user-service:
-        condition: service_started
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user_user -d user_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes:
-      - ./ontology-management-service:/app
-      - ./packages:/app/packages
+      - user_postgres_data:/var/lib/postgresql/data
+
+  audit-postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: audit_db
+      POSTGRES_USER: audit_user
+      POSTGRES_PASSWORD: audit_password
+    ports:
+      - "5435:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U audit_user -d audit_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - audit_postgres_data:/var/lib/postgresql/data
+
+  terminusdb:
+    image: terminusdb/terminusdb-server:latest
+    ports:
+      - "6363:6363"
+    environment:
+      TERMINUSDB_ADMIN_PASSWORD: root
+
+  # Other services
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   jaeger:
-    image: jaegertracing/all-in-one:1.53
+    image: jaegertracing/all-in-one:latest
     ports:
-      - "6832:6831/udp" # Use different host port to avoid conflict
-      - "16687:16686"   # Jaeger UI
-      - "14269:14268"   # Jaeger collector
+      - "16686:16686"
+      - "14268:14268"
+
+networks:
+  default:
+    driver: bridge
 
 volumes:
   oms_postgres_data:
   user_postgres_data:
+  audit_postgres_data:
