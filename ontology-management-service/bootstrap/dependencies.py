@@ -6,7 +6,7 @@ from dependency_injector.wiring import inject, Provide
 
 from .containers import Container 
 from bootstrap.config import AppConfig
-from core.branch.service import BranchService
+from core.branch.service_refactored import BranchService
 from core.schema.service import SchemaService
 from database.clients.unified_database_client import UnifiedDatabaseClient
 from bootstrap.providers.redis_provider import RedisProvider
@@ -28,38 +28,40 @@ def init_container(config: Optional[AppConfig] = None) -> Container:
         "api.v1.batch_routes",
         "api.v1.job_progress_routes",
         "api.v1.schema_generation.endpoints",
+        "api.v1.property_routes",
         # Add other modules that use `Depends(Provide[...])` here
     ])
     
     _container = container
     return container
 
-# Legacy dependency functions for backward compatibility
-async def get_branch_service() -> BranchService:
-    """Get branch service instance."""
-    if not _container:
-        raise RuntimeError("Container not initialized")
-    return _container.branch_service_provider()
+# Dependency injection functions for FastAPI
+@inject
+def get_branch_service(
+    branch_service: BranchService = Provide[Container.branch_service_provider]
+) -> BranchService:
+    """Get branch service instance through DI."""
+    return branch_service
 
-async def get_schema_service() -> SchemaService:
+def get_schema_service() -> SchemaService:
     """Get schema service instance."""
     if not _container:
         raise RuntimeError("Container not initialized")
     return _container.schema_service_provider()
 
-async def get_redis_client() -> RedisProvider:
+def get_redis_client() -> RedisProvider:
     """Get Redis client instance."""
     if not _container:
         raise RuntimeError("Container not initialized")
     return _container.redis_provider()
 
-async def get_db_client() -> UnifiedDatabaseClient:
+def get_db_client() -> UnifiedDatabaseClient:
     """Get database client instance."""
     if not _container:
         raise RuntimeError("Container not initialized")
     return _container.db_client_provider()
 
-async def get_job_service():
+def get_job_service():
     """Get job service instance."""
     if not _container:
         raise RuntimeError("Container not initialized")

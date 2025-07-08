@@ -6,10 +6,13 @@ from bootstrap.providers.redis_provider import RedisProvider
 from bootstrap.providers.circuit_breaker import CircuitBreakerProvider
 from bootstrap.providers.unified_provider import get_unified_db_client
 from bootstrap.providers.event import get_event_gateway
-from core.branch.service import BranchService
+from core.branch.service_refactored import BranchService
+from core.branch.diff_engine import DiffEngine
+from core.branch.conflict_resolver import ConflictResolver
 from core.schema.service import SchemaService
 from core.schema.repository import SchemaRepository
 from services.job_service import JobService
+from core.property.service import PropertyService
 
 class Container(containers.DeclarativeContainer):
     """
@@ -29,10 +32,23 @@ class Container(containers.DeclarativeContainer):
     event_gateway_provider = providers.Factory(get_event_gateway)
 
     # Branch Service Dependencies
+    # First create the dependencies that BranchService needs
+    diff_engine_provider = providers.Factory(
+        DiffEngine,
+        tdb_endpoint=config.provided.terminusdb.endpoint,
+    )
+    
+    conflict_resolver_provider = providers.Factory(
+        ConflictResolver,
+    )
+    
+    # Now create BranchService with all its dependencies
     branch_service_provider = providers.Factory(
         BranchService,
         db_client=db_client_provider,
         event_gateway=event_gateway_provider,
+        diff_engine=diff_engine_provider,
+        conflict_resolver=conflict_resolver_provider,
     )
 
     # Schema Service Dependencies
@@ -50,4 +66,10 @@ class Container(containers.DeclarativeContainer):
     # Job Service Dependencies
     job_service_provider = providers.Singleton(
         JobService,
+    )
+    
+    # Property Service Dependencies
+    property_service = providers.Factory(
+        PropertyService,
+        terminus_client=db_client_provider,
     ) 

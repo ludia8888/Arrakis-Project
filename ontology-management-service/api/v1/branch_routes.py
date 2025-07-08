@@ -3,6 +3,7 @@ Branch Management API
 Endpoints for creating, reading, updating, and deleting branches.
 """
 from typing import List, Dict, Any, Annotated
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 
 from core.auth_utils import UserContext
@@ -13,26 +14,35 @@ from bootstrap.dependencies import get_branch_service, get_job_service
 from monitoring.async_merge_metrics import track_api_performance, metrics_collector
 from middleware.auth_middleware import get_current_user
 
+# Import BranchService  
+from core.branch.service_refactored import BranchService
+
 # Import models (adjust paths as needed)
 try:
-    from models.branch import Branch
+    from models.branch import Branch as BranchModel
 except ImportError:
-    # Fallback for missing models
-    Branch = Dict[str, Any]
+    # Fallback for missing models - use Dict for API responses
+    BranchModel = Dict[str, Any]
 
-# Import BranchService
-from core.branch.service import BranchService
-
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/branches", tags=["Branch Management"])
 
-@router.get("/", dependencies=[Depends(require_scope([IAMScope.BRANCHES_READ]))])
+@router.get("/", response_model=List[Dict[str, Any]], dependencies=[Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def list_branches(
     branch_service: BranchService = Depends(get_branch_service)
 ):
     """List all branches"""
-    return await branch_service.list_branches()
+    try:
+        logger.info("🎯 Branch API: DI를 통한 브랜치 목록 요청")
+        branches = await branch_service.list_branches()
+        logger.info(f"✅ Branch API: {len(branches)}개 브랜치 반환 성공")
+        return branches
+        
+    except Exception as e:
+        logger.error(f"Branch service error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to list branches: {str(e)}")
 
-@router.post("/", response_model=Branch, status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_scope([IAMScope.BRANCHES_WRITE]))])
+@router.post("/", response_model=Dict[str, Any], status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_scope([IAMScope.BRANCHES_WRITE]))])
 async def create_branch(
     name: str,
     from_branch: str = "main",
@@ -44,7 +54,7 @@ async def create_branch(
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
-@router.get("/{branch_name}", response_model=Branch, dependencies=[Depends(require_scope([IAMScope.BRANCHES_READ]))])
+@router.get("/{branch_name}", response_model=Dict[str, Any], dependencies=[Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def get_branch(
     branch_name: str,
     branch_service: BranchService = Depends(get_branch_service)

@@ -59,6 +59,7 @@ from core.auth import UserContext
 from bootstrap.config import get_config
 from middleware.circuit_breaker import CircuitBreakerGroup, CircuitBreakerError
 from common_logging.setup import get_logger
+from config.secure_config import secure_config
 
 logger = get_logger(__name__)
 
@@ -73,9 +74,12 @@ class AuthMiddleware(BaseHTTPMiddleware):
     
     def __init__(self, app: ASGIApp):
         super().__init__(app)
-        config = get_config()
-        self.user_service_url = config.user_service.url
+        
+        # 보안 설정 관리자에서 설정 조회
+        self.jwt_config = secure_config.jwt_config
+        self.user_service_url = secure_config.get_service_url('user_service')
         self.client = httpx.AsyncClient(timeout=5.0)
+        
         self.public_paths = [
             "/health", "/metrics", "/docs", "/openapi.json", "/redoc",
             "/api/v1/health", "/api/v1/health/live", "/api/v1/health/ready",
@@ -83,6 +87,13 @@ class AuthMiddleware(BaseHTTPMiddleware):
             "/api/v1/auth"  # Allow all auth routes
         ]
         self.cache_ttl = 300
+        
+        # JWKS 설정
+        self.jwks_url = self.jwt_config.jwks_url
+        self.jwks_cache = {}
+        self.jwks_cache_ttl = self.jwt_config.cache_ttl
+        
+        logger.info(f"🔧 AuthMiddleware 초기화 - JWKS URL: {self.jwks_url}")
     
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         if request.method == "OPTIONS":
@@ -112,21 +123,28 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
             if not user:
                 user_data = None
+                
+                # JWKS 패턴으로 토큰 검증
                 try:
-                    container = request.app.state.container
-                    cb_group: CircuitBreakerGroup = container.circuit_breaker_provider()
-                    user_service_breaker = cb_group.get_breaker("user-service")
-                    if user_service_breaker:
-                        user_data = await user_service_breaker.call(self._validate_token, token)
-                    else:
-                        logger.warning("user-service circuit breaker not found. Calling service directly.")
+                    user_data = await self._validate_token_with_jwks(token)
+                except Exception as e:
+                    logger.error(f"JWKS token validation failed: {e}")
+                    # Fallback to user service validation
+                    try:
+                        container = request.app.state.container
+                        cb_group: CircuitBreakerGroup = container.circuit_breaker_provider()
+                        user_service_breaker = cb_group.get_breaker("user-service")
+                        if user_service_breaker:
+                            user_data = await user_service_breaker.call(self._validate_token, token)
+                        else:
+                            logger.warning("user-service circuit breaker not found. Calling service directly.")
+                            user_data = await self._validate_token(token)
+                    except CircuitBreakerError as e:
+                        logger.error(f"Circuit breaker open for user-service: {e}")
+                        return Response('{"detail": "User service unavailable"}', status_code=503)
+                    except (AttributeError, KeyError):
+                        logger.warning("Circuit breaker not in app state. Calling service directly.")
                         user_data = await self._validate_token(token)
-                except CircuitBreakerError as e:
-                    logger.error(f"Circuit breaker open for user-service: {e}")
-                    return Response('{"detail": "User service unavailable"}', status_code=503)
-                except (AttributeError, KeyError):
-                    logger.warning("Circuit breaker not in app state. Calling service directly.")
-                    user_data = await self._validate_token(token)
 
                 if user_data and isinstance(user_data, dict):
                     # Ensure required fields are present for UserContext
@@ -203,6 +221,85 @@ class AuthMiddleware(BaseHTTPMiddleware):
             return None
         except Exception as e:
             logger.error(f"AuthMiddleware: Token validation failed: {e}")
+            return None
+
+    async def _validate_token_with_jwks(self, token: str) -> Optional[Dict[str, Any]]:
+        """
+        JWKS 패턴으로 JWT 토큰 검증
+        User Service의 공개키를 사용하여 안전하게 토큰을 검증합니다.
+        """
+        import jwt
+        from jwt import PyJWKClient
+        import time
+        
+        try:
+            # JWKS 클라이언트 생성 (캐싱 포함)
+            jwks_client = PyJWKClient(
+                self.jwks_url,
+                cache_keys=True,
+                max_cached_keys=16,
+                cache_jwks_for=self.jwks_cache_ttl
+            )
+            
+            logger.debug(f"🔍 JWKS 클라이언트 생성: {self.jwks_url}")
+            
+            # 토큰 헤더에서 kid 추출
+            signing_key = jwks_client.get_signing_key_from_jwt(token)
+            
+            # 토큰 검증 (설정에서 허용된 알고리즘만 사용)
+            payload = jwt.decode(
+                token,
+                signing_key.key,
+                algorithms=self.jwt_config.algorithms,  # 설정에서 허용된 알고리즘
+                audience=self.jwt_config.audience,
+                issuer=self.jwt_config.issuer,
+                options={
+                    "verify_signature": True,
+                    "verify_exp": True,
+                    "verify_iss": True,
+                    "verify_aud": True
+                }
+            )
+            
+            logger.info(f"🔐 JWKS JWT 검증 성공: user_id={payload.get('sub')}")
+            
+            # 토큰에서 사용자 정보 추출
+            user_id = payload.get("sub") or payload.get("user_id")
+            if not user_id:
+                logger.error("JWKS JWT 검증 실패: 'sub' 또는 'user_id' 클레임이 없음")
+                return None
+            
+            # scope 문자열을 권한 리스트로 변환
+            scope_str = payload.get("scope", "")
+            scopes = scope_str.split() if scope_str else []
+            roles = payload.get("roles", [])
+            
+            # 사용자 데이터 구성
+            user_data = {
+                "user_id": user_id,
+                "username": payload.get("username", user_id),
+                "email": payload.get("email"),
+                "roles": roles,
+                "permissions": scopes,
+                "metadata": {
+                    "scopes": scopes,
+                    "tenant_id": payload.get("tenant_id"),
+                    "issuer": payload.get("iss"),
+                    "audience": payload.get("aud")
+                }
+            }
+            
+            logger.debug(f"🔐 JWKS JWT 검증 - 사용자 데이터: {user_data}")
+            return user_data
+            
+        except jwt.ExpiredSignatureError:
+            logger.error("JWKS JWT 검증 실패: 토큰이 만료됨")
+            return None
+        except jwt.InvalidTokenError as e:
+            logger.error(f"JWKS JWT 검증 실패: 유효하지 않은 토큰 - {e}")
+            return None
+        except Exception as e:
+            logger.error(f"JWKS JWT 검증 실패: {e}")
             return None
 
 
