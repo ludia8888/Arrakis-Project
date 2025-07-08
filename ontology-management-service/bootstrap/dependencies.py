@@ -36,12 +36,11 @@ def init_container(config: Optional[AppConfig] = None) -> Container:
     return container
 
 # Dependency injection functions for FastAPI
-@inject
-def get_branch_service(
-    branch_service: BranchService = Provide[Container.branch_service_provider]
-) -> BranchService:
+def get_branch_service():
     """Get branch service instance through DI."""
-    return branch_service
+    if not _container:
+        raise RuntimeError("Container not initialized")
+    return _container.branch_service_provider()
 
 def get_schema_service() -> SchemaService:
     """Get schema service instance."""
@@ -66,3 +65,9 @@ def get_job_service():
     if not _container:
         raise RuntimeError("Container not initialized")
     return _container.job_service_provider()
+
+def get_event_gateway():
+    """Get event gateway instance."""
+    if not _container:
+        raise RuntimeError("Container not initialized")
+    return _container.event_gateway_provider()

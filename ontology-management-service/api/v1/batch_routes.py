@@ -73,7 +73,7 @@ async def batch_get_object_types(
     request: BatchObjectTypesRequest,
     req: Request,
     current_user: UserContext = Depends(get_current_user),
-    schema_service: SchemaService = Depends(get_schema_service)
+    schema_service = Depends(get_schema_service)
 ):
     """
     Batch load multiple object types by IDs.
@@ -136,7 +136,7 @@ async def batch_get_properties(
     request: BatchPropertiesRequest,
     req: Request,
     current_user: UserContext = Depends(get_current_user),
-    schema_service: SchemaService = Depends(get_schema_service)
+    schema_service = Depends(get_schema_service)
 ):
     """
     Batch load properties for multiple object types.
@@ -202,7 +202,7 @@ async def batch_get_link_types(
     request: BatchLinkTypesRequest,
     req: Request,
     current_user: UserContext = Depends(get_current_user),
-    schema_service: SchemaService = Depends(get_schema_service)
+    schema_service = Depends(get_schema_service)
 ):
     """
     Batch load multiple link types by IDs.

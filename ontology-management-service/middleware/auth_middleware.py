@@ -225,32 +225,32 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
     async def _validate_token_with_jwks(self, token: str) -> Optional[Dict[str, Any]]:
         """
-        JWKS 패턴으로 JWT 토큰 검증
-        User Service의 공개키를 사용하여 안전하게 토큰을 검증합니다.
+        진짜 JWKS 패턴으로 JWT 토큰 검증
+        User Service의 JWKS 엔드포인트에서 공개키를 가져와 토큰을 검증합니다.
+        MSA 원칙: OMS는 키를 소유하지 않고, User Service만 믿습니다.
         """
         import jwt
         from jwt import PyJWKClient
         import time
         
         try:
-            # JWKS 클라이언트 생성 (캐싱 포함)
+            # 진짜 JWKS 클라이언트: User Service의 JWKS 엔드포인트 호출
             jwks_client = PyJWKClient(
-                self.jwks_url,
+                self.jwks_url,  # http://user-service:8000/.well-known/jwks.json
                 cache_keys=True,
-                max_cached_keys=16,
-                cache_jwks_for=self.jwks_cache_ttl
+                max_cached_keys=16
             )
             
-            logger.debug(f"🔍 JWKS 클라이언트 생성: {self.jwks_url}")
+            logger.debug(f"🔍 User Service JWKS에서 공개키 가져오기: {self.jwks_url}")
             
-            # 토큰 헤더에서 kid 추출
+            # 토큰 헤더에서 kid 추출하고 User Service에서 해당 키 가져오기
             signing_key = jwks_client.get_signing_key_from_jwt(token)
             
-            # 토큰 검증 (설정에서 허용된 알고리즘만 사용)
+            # 토큰 검증 (User Service의 공개키 사용)
             payload = jwt.decode(
                 token,
-                signing_key.key,
-                algorithms=self.jwt_config.algorithms,  # 설정에서 허용된 알고리즘
+                signing_key.key,  # User Service에서 가져온 실제 공개키
+                algorithms=self.jwt_config.algorithms,
                 audience=self.jwt_config.audience,
                 issuer=self.jwt_config.issuer,
                 options={

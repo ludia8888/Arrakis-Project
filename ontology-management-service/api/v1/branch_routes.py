@@ -29,14 +29,15 @@ router = APIRouter(prefix="/branches", tags=["Branch Management"])
 
 @router.get("/", response_model=List[Dict[str, Any]], dependencies=[Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def list_branches(
-    branch_service: BranchService = Depends(get_branch_service)
+    branch_service = Depends(get_branch_service)
 ):
     """List all branches"""
     try:
         logger.info("🎯 Branch API: DI를 통한 브랜치 목록 요청")
         branches = await branch_service.list_branches()
         logger.info(f"✅ Branch API: {len(branches)}개 브랜치 반환 성공")
-        return branches
+        # Convert Pydantic models to dicts for API response
+        return [branch.model_dump() for branch in branches]
         
     except Exception as e:
         logger.error(f"Branch service error: {e}")
@@ -46,7 +47,7 @@ async def list_branches(
 async def create_branch(
     name: str,
     from_branch: str = "main",
-    branch_service: BranchService = Depends(get_branch_service)
+    branch_service = Depends(get_branch_service)
 ):
     """Create a new branch"""
     try:
@@ -57,7 +58,7 @@ async def create_branch(
 @router.get("/{branch_name}", response_model=Dict[str, Any], dependencies=[Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def get_branch(
     branch_name: str,
-    branch_service: BranchService = Depends(get_branch_service)
+    branch_service = Depends(get_branch_service)
 ):
     """Get a specific branch by name"""
     branch = await branch_service.get_branch(branch_name)
@@ -75,7 +76,7 @@ async def get_branch_by_id(
     branch_id: str,
     req: Request,
     current_user: Annotated[UserContext, Depends(get_current_user)],
-    branch_service: BranchService = Depends(get_branch_service)
+    branch_service = Depends(get_branch_service)
 ) -> Dict[str, Any]:
     """Get details of a specific branch."""
     branch = await branch_service.get_branch(branch_id)
@@ -95,7 +96,7 @@ async def list_proposals(
     branch_id: str,
     req: Request,
     current_user: Annotated[UserContext, Depends(get_current_user)],
-    branch_service: BranchService = Depends(get_branch_service)
+    branch_service = Depends(get_branch_service)
 ) -> List[Dict[str, Any]]:
     """List all proposals for a specific branch."""
     return await branch_service.list_proposals(branch_name=branch_id)
@@ -111,7 +112,7 @@ async def get_proposal(
     proposal_id: str,
     req: Request,
     current_user: Annotated[UserContext, Depends(get_current_user)],
-    branch_service: BranchService = Depends(get_branch_service)
+    branch_service = Depends(get_branch_service)
 ) -> Dict[str, Any]:
     """Get details of a specific proposal."""
     proposal = await branch_service.get_proposal(proposal_id=proposal_id)
@@ -297,7 +298,7 @@ async def merge_proposal_sync(
     merge_request: Dict[str, Any],
     req: Request,
     current_user: Annotated[UserContext, Depends(get_current_user)],
-    branch_service: BranchService = Depends(get_branch_service)
+    branch_service = Depends(get_branch_service)
 ) -> Dict[str, Any]:
     """
     (DEPRECATED) Synchronously merge a proposal.
