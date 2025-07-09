@@ -13,6 +13,7 @@ from core.schema.service import SchemaService
 from core.schema.repository import SchemaRepository
 from services.job_service import JobService
 from core.property.service import PropertyService
+from core.document.service import DocumentService
 
 class Container(containers.DeclarativeContainer):
     """
@@ -71,5 +72,15 @@ class Container(containers.DeclarativeContainer):
     # Property Service Dependencies
     property_service = providers.Factory(
         PropertyService,
-        terminus_client=db_client_provider,
+        terminus_client=providers.Factory(
+            lambda unified_client: unified_client.terminus_client,
+            unified_client=db_client_provider
+        ),
+    )
+    
+    # Document Service Dependencies
+    document_service_provider = providers.Factory(
+        DocumentService,
+        db_client=db_client_provider,
+        event_publisher=event_gateway_provider,
     ) 

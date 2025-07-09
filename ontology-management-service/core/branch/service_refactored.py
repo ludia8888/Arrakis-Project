@@ -158,13 +158,16 @@ class BranchService:
                         branch = DomainBranch(
                             id=str(uuid.uuid4()),
                             name=tdb_branch.get('name', 'unknown'),
-                            parent_branch=tdb_branch.get('parent'),
-                            created_at=datetime.utcnow(),
-                            created_by=tdb_branch.get('created_by', 'system'),
-                            is_protected=tdb_branch.get('name') == 'main',
-                            is_default=tdb_branch.get('name') == 'main',
-                            description=f"Branch from TerminusDB: {tdb_branch.get('name')}",
-                            metadata=tdb_branch.get('metadata', {})
+                            displayName=tdb_branch.get('display_name', tdb_branch.get('name', 'unknown')),
+                            parentBranch=tdb_branch.get('parent'),
+                            createdAt=datetime.utcnow(),
+                            createdBy=tdb_branch.get('created_by', 'system'),
+                            modifiedAt=datetime.utcnow(),
+                            modifiedBy=tdb_branch.get('modified_by', 'system'),
+                            isProtected=tdb_branch.get('name') == 'main',
+                            isActive=True,
+                            versionHash=tdb_branch.get('version_hash', str(uuid.uuid4())),
+                            description=f"Branch from TerminusDB: {tdb_branch.get('name')}"
                         )
                         branches.append(branch)
                     
@@ -184,13 +187,16 @@ class BranchService:
                 DomainBranch(
                     id=str(uuid.uuid4()),
                     name="main",
-                    parent_branch=None,
-                    created_at=datetime.utcnow(),
-                    created_by="system",
-                    is_protected=True,
-                    is_default=True,
-                    description="Default main branch (system initialized)",
-                    metadata={"source": "system_default"}
+                    displayName="Main Branch",
+                    parentBranch=None,
+                    createdAt=datetime.utcnow(),
+                    createdBy="system",
+                    modifiedAt=datetime.utcnow(),
+                    modifiedBy="system",
+                    isProtected=True,
+                    isActive=True,
+                    versionHash=str(uuid.uuid4()),
+                    description="Default main branch (system initialized)"
                 )
             ]
             

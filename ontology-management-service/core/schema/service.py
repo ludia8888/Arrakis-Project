@@ -55,7 +55,7 @@ class SchemaService(SchemaServiceProtocol):
             # 예외를 다시 발생시킬 수 있습니다.
             return []
 
-    async def create_object_type(self, branch: str, data: ObjectTypeCreate, use_branch_workflow: bool = True) -> ObjectType:
+    async def create_object_type(self, branch: str, data: ObjectTypeCreate, use_branch_workflow: bool = True, created_by: Optional[str] = None) -> ObjectType:
         """
         새로운 ObjectType을 생성합니다.
         
@@ -65,10 +65,14 @@ class SchemaService(SchemaServiceProtocol):
             use_branch_workflow: True면 PR 워크플로우 사용, False면 직접 생성
         """
         try:
+            # created_by가 없으면 현재 사용자로 설정
+            if created_by is None:
+                created_by = get_author()
+                
             # 1. 권한 확인
-            user = {"user_id": get_author(), "branch": branch}
+            user = {"user_id": created_by, "branch": branch}
             if not await self._check_permission(user, "schema:write", branch):
-                raise PermissionError(f"사용자 {get_author()}는 스키마 쓰기 권한이 없습니다.")
+                raise PermissionError(f"사용자 {created_by}는 스키마 쓰기 권한이 없습니다.")
 
             # 2. 유효성 검증
             validation_result = await self._validate_object_type(data)
@@ -82,7 +86,7 @@ class SchemaService(SchemaServiceProtocol):
                 await self.branch_service.create_branch(
                     name=create_branch_name,
                     from_branch="main",
-                    user_id=get_author()
+                    created_by=created_by
                 )
                 
                 # 2. 새 브랜치에서 스키마 생성
@@ -190,7 +194,8 @@ class SchemaService(SchemaServiceProtocol):
             # 기존 create_object_type 메소드 사용
             result = await self.create_object_type(
                 branch=schema_def.get("branch", "main"),
-                data=object_type_data
+                data=object_type_data,
+                created_by=created_by
             )
             
             return {
@@ -208,13 +213,36 @@ class SchemaService(SchemaServiceProtocol):
             logger.error(f"Error creating schema: {e}")
             raise
 
-    async def get_schema(self, schema_id: str) -> Dict[str, Any]:
+    async def get_schema(self, schema_id: str, branch: str = "main") -> Dict[str, Any]:
         """스키마 조회 (ID로)"""
-        # 이 메소드는 리포지토리를 사용하도록 완전히 재작성되어야 합니다.
-        # 현재는 이전 로직을 임시로 유지합니다.
-        # all_types = await self.repository.list_all_object_types()
-        # ...
-        raise NotImplementedError
+        try:
+            # 권한 확인
+            user = {"user_id": get_author(), "branch": branch}
+            if not await self._check_permission(user, "schema:read", branch):
+                raise PermissionError(f"사용자 {get_author()}는 스키마 읽기 권한이 없습니다.")
+            
+            # Repository를 통해 스키마 조회
+            object_type = await self.repository.get_object_type_by_id(schema_id, branch)
+            
+            if not object_type:
+                raise ValueError(f"Schema not found: {schema_id}")
+            
+            return {
+                "id": object_type.get("id", schema_id),
+                "name": object_type.get("name"),
+                "display_name": object_type.get("display_name"),
+                "description": object_type.get("description"),
+                "properties": object_type.get("properties", []),
+                "version": object_type.get("version_hash"),
+                "created_by": object_type.get("created_by"),
+                "created_at": object_type.get("created_at"),
+                "modified_by": object_type.get("modified_by"),
+                "modified_at": object_type.get("modified_at")
+            }
+            
+        except Exception as e:
+            logger.error(f"Error getting schema {schema_id}: {e}")
+            raise
 
     async def update_schema(self, schema_id: str, name: Optional[str] = None,
                           schema_def: Optional[Dict[str, Any]] = None,
@@ -234,7 +262,7 @@ class SchemaService(SchemaServiceProtocol):
             await self.branch_service.create_branch(
                 name=change_branch_name,
                 from_branch="main",
-                user_id=updated_by
+                created_by=updated_by
             )
             logger.info(f"Created branch '{change_branch_name}' for schema update")
             
@@ -284,11 +312,110 @@ class SchemaService(SchemaServiceProtocol):
             raise
 
     async def delete_schema(self, schema_id: str, deleted_by: Optional[str] = None) -> None:
-        raise NotImplementedError
+        """
+        스키마를 삭제합니다.
+        브랜치 기반 워크플로우를 통해 안전하게 삭제를 수행합니다.
+        """
+        deleted_by = deleted_by or get_author()
+        
+        try:
+            # 1. 삭제를 위한 브랜치 생성
+            delete_branch_name = f"schema-delete/{schema_id}-{uuid.uuid4().hex[:8]}"
+            await self.branch_service.create_branch(
+                name=delete_branch_name,
+                from_branch="main",
+                created_by=deleted_by
+            )
+            
+            # 2. 새 브랜치에서 스키마 삭제 마크
+            success = await self.repository.mark_object_type_deleted(
+                schema_id=schema_id,
+                branch=delete_branch_name,
+                deleted_by=deleted_by
+            )
+            
+            if not success:
+                raise Exception(f"Failed to mark schema for deletion")
+            
+            # 3. 변경사항 커밋
+            await self.branch_service.commit_changes(
+                branch=delete_branch_name,
+                message=f"Delete schema '{schema_id}'",
+                author=deleted_by
+            )
+            
+            # 4. PR 생성
+            pr_result = await self.branch_service.create_pull_request(
+                source_branch=delete_branch_name,
+                target_branch="main",
+                title=f"Delete schema: {schema_id}",
+                description=f"Schema deletion requested by {deleted_by}",
+                created_by=deleted_by
+            )
+            
+            logger.info(f"Created PR for schema deletion: {pr_result.get('pr_id')}")
+            
+            # 이벤트 발행
+            await self._publish_schema_event("schema_delete_requested", {
+                "schema_id": schema_id,
+                "deleted_by": deleted_by,
+                "pr_id": pr_result.get("pr_id")
+            })
+            
+        except Exception as e:
+            logger.error(f"Error deleting schema '{schema_id}': {e}")
+            raise
 
     async def list_schemas(self, offset: int = 0, limit: int = 100,
                          filters: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        raise NotImplementedError
+        """
+        스키마 목록을 조회합니다.
+        """
+        try:
+            filters = filters or {}
+            branch = filters.get("branch", "main")
+            schema_type = filters.get("type", "object")
+            
+            # 권한 확인
+            user = {"user_id": get_author(), "branch": branch}
+            if not await self._check_permission(user, "schema:read", branch):
+                raise PermissionError(f"사용자 {get_author()}는 스키마 읽기 권한이 없습니다.")
+            
+            # Repository를 통해 스키마 목록 조회
+            if schema_type == "object":
+                schemas = await self.repository.list_all_object_types(branch)
+            else:
+                # 다른 타입의 스키마는 아직 구현되지 않음
+                schemas = []
+            
+            # 페이지네이션 적용
+            total = len(schemas)
+            paginated_schemas = schemas[offset:offset + limit]
+            
+            # 결과 포맷팅
+            items = []
+            for schema in paginated_schemas:
+                items.append({
+                    "id": schema.get("id", schema.get("name")),
+                    "name": schema.get("name"),
+                    "type": schema_type,
+                    "display_name": schema.get("display_name"),
+                    "description": schema.get("description"),
+                    "created_at": schema.get("created_at"),
+                    "modified_at": schema.get("modified_at")
+                })
+            
+            return {
+                "items": items,
+                "total": total,
+                "offset": offset,
+                "limit": limit,
+                "filters": filters
+            }
+            
+        except Exception as e:
+            logger.error(f"Error listing schemas: {e}")
+            raise
 
     async def validate_schema(self, schema_def: Dict[str, Any]) -> Dict[str, Any]:
         """Validate a schema definition."""

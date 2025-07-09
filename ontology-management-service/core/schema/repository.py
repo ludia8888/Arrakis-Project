@@ -5,6 +5,7 @@ Schema Repository
 이를 통해 비즈니스 로직과 데이터 접근 로직을 분리합니다.
 """
 import logging
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from database.clients.unified_database_client import UnifiedDatabaseClient
@@ -108,4 +109,47 @@ class SchemaRepository:
             return affected_rows > 0 if isinstance(affected_rows, int) else bool(affected_rows)
         except Exception as e:
             logger.error(f"Error updating object type '{schema_id}': {e}", exc_info=True)
+            return False
+    
+    async def get_object_type_by_id(self, schema_id: str, branch: str) -> Optional[Dict[str, Any]]:
+        """
+        ID로 특정 ObjectType을 조회합니다.
+        """
+        try:
+            # ID로 직접 조회
+            result = await self.db.get(collection="ObjectType", doc_id=schema_id)
+            if result:
+                logger.debug(f"Found ObjectType with ID '{schema_id}'")
+                return result
+            logger.warning(f"ObjectType with ID '{schema_id}' not found")
+            return None
+        except Exception as e:
+            logger.error(f"Error getting object type by ID '{schema_id}': {e}", exc_info=True)
+            return None
+    
+    async def mark_object_type_deleted(self, schema_id: str, branch: str, deleted_by: str) -> bool:
+        """
+        ObjectType을 삭제된 것으로 표시합니다.
+        실제 삭제 대신 status를 'deleted'로 변경합니다.
+        """
+        try:
+            # Soft delete - status를 deleted로 변경
+            updates = {
+                "status": "deleted",
+                "deleted_by": deleted_by,
+                "deleted_at": datetime.utcnow().isoformat()
+            }
+            
+            affected_rows = await self.db.update(
+                collection="ObjectType",
+                doc_id=schema_id,
+                updates=updates,
+                author=deleted_by,
+                message=f"Mark ObjectType {schema_id} as deleted"
+            )
+            
+            logger.info(f"Marked ObjectType '{schema_id}' as deleted in branch '{branch}'")
+            return affected_rows > 0 if isinstance(affected_rows, int) else bool(affected_rows)
+        except Exception as e:
+            logger.error(f"Error marking object type '{schema_id}' as deleted: {e}", exc_info=True)
             return False 
