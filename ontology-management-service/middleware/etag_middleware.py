@@ -145,7 +145,12 @@ class ETagMiddleware(BaseHTTPMiddleware):
                                 etag_cache_hits.labels(resource_type=resource_ctx["type"]).inc()
                                 etag_requests_total.labels(method='GET', resource_type=resource_ctx["type"], result="cache_hit").inc()
                                 logger.info("ETag cache hit", extra={"resource_ctx": resource_ctx, "etag": if_none_match})
-                                self.analytics.record_request(resource_type=resource_ctx["type"], is_cache_hit=True, etag=if_none_match)
+                                self.analytics.record_request(
+                                    resource_type=resource_ctx["type"], 
+                                    is_cache_hit=True, 
+                                    response_time_ms=validation_time * 1000,
+                                    etag=if_none_match
+                                )
                                 return Response(status_code=status.HTTP_304_NOT_MODIFIED, headers={"ETag": if_none_match})
 
                         except asyncio.TimeoutError:
@@ -192,7 +197,12 @@ class ETagMiddleware(BaseHTTPMiddleware):
                     etag_cache_misses.labels(resource_type=resource_ctx["type"]).inc()
                     etag_requests_total.labels(method='GET', resource_type=resource_ctx["type"], result="cache_miss").inc()
                     logger.info("ETag cache miss - generated new ETag", extra={"resource_ctx": resource_ctx, "etag": version.current_version.etag})
-                    self.analytics.record_request(resource_type=resource_ctx["type"], is_cache_hit=False, etag=version.current_version.etag)
+                    self.analytics.record_request(
+                        resource_type=resource_ctx["type"], 
+                        is_cache_hit=False, 
+                        response_time_ms=generation_time * 1000,
+                        etag=version.current_version.etag
+                    )
                     self._update_cache_effectiveness(resource_ctx["type"])
                 else:
                     # No version found, create initial version based on response content

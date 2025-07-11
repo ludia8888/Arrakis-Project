@@ -22,8 +22,8 @@ class HTTPError(Exception):
 
 def http_circuit_breaker(
     name: str,
-    failure_threshold: int = 5,
-    success_threshold: int = 3,
+    failure_threshold: int = 3,  # 더 낮은 임계값
+    success_threshold: int = 2,
     timeout_seconds: float = 30,
     error_status_codes: Optional[Set[int]] = None,
     **kwargs
@@ -57,26 +57,43 @@ def http_circuit_breaker(
         
         @wraps(func)
         async def wrapper(*args, **func_kwargs):
+            logger.info(f"Circuit breaker {name}: Processing request, current state: {breaker.state}")
+            
             async def protected_func(*args, **kwargs):
                 try:
                     result = await func(*args, **kwargs)
+                    logger.info(f"Circuit breaker {name}: Request succeeded")
                     return result
                 except HTTPException as e:
                     # HTTPException을 HTTP 상태 코드로 변환
                     if e.status_code in error_status_codes:
-                        logger.debug(f"HTTP {e.status_code} treated as circuit breaker failure")
+                        logger.warning(f"Circuit breaker {name}: HTTP {e.status_code} treated as failure - {e.detail}")
                         raise HTTPError(e.status_code, e.detail)
                     # 에러로 간주하지 않는 상태 코드는 그대로 통과
+                    logger.info(f"Circuit breaker {name}: HTTP {e.status_code} not treated as failure")
                     raise
                 except Exception as e:
-                    # 기타 예외는 그대로 처리
+                    logger.error(f"Circuit breaker {name}: Exception occurred - {type(e).__name__}: {e}")
                     raise
             
             try:
-                return await breaker.call(protected_func, *args, **func_kwargs)
+                result = await breaker.call(protected_func, *args, **func_kwargs)
+                logger.info(f"Circuit breaker {name}: Request completed successfully")
+                return result
             except HTTPError as e:
+                logger.warning(f"Circuit breaker {name}: Converting HTTPError back to HTTPException - {e.status_code}")
                 # HTTPError를 다시 HTTPException으로 변환
                 raise HTTPException(status_code=e.status_code, detail=e.detail)
+            except Exception as e:
+                # 서킷 브레이커가 열려있을 때의 처리
+                if "circuit" in str(e).lower() and "open" in str(e).lower():
+                    logger.warning(f"Circuit breaker {name}: Circuit is OPEN, returning 503")
+                    raise HTTPException(
+                        status_code=503,
+                        detail=f"Service temporarily unavailable - circuit breaker {name} is open"
+                    )
+                logger.error(f"Circuit breaker {name}: Unhandled exception - {type(e).__name__}: {e}")
+                raise
         
         # 서킷 브레이커 참조 추가 (디버깅용)
         wrapper._circuit_breaker = breaker
