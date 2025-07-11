@@ -1,0 +1,79 @@
+name: Middleware Dependency Check
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'ontology-management-service/middleware/**'
+      - 'ontology-management-service/bootstrap/app.py'
+      - 'ontology-management-service/core/iam/scope_rbac_middleware.py'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'ontology-management-service/middleware/**'
+      - 'ontology-management-service/bootstrap/app.py'
+      - 'ontology-management-service/core/iam/scope_rbac_middleware.py'
+
+jobs:
+  middleware-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt || echo "No requirements.txt found, skipping"
+    
+    - name: Run middleware dependency check
+      run: |
+        python ci_middleware_check.py --project-root . --strict
+    
+    - name: Upload CI report
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: middleware-ci-report
+        path: middleware_ci_report.json
+    
+    - name: Comment PR (if applicable)
+      if: github.event_name == 'pull_request' && failure()
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          const report = JSON.parse(fs.readFileSync('middleware_ci_report.json', 'utf8'));
+          
+          let comment = '## ❌ Middleware Dependency Check Failed\n\n';
+          
+          if (report.errors && report.errors.length > 0) {
+            comment += '### Errors:\n';
+            report.errors.forEach(error => {
+              comment += `- ${error}\n`;
+            });
+          }
+          
+          if (report.warnings && report.warnings.length > 0) {
+            comment += '\n### Warnings:\n';
+            report.warnings.forEach(warning => {
+              comment += `- ${warning}\n`;
+            });
+          }
+          
+          comment += '\n### Resolution:\n';
+          comment += '1. Review middleware execution order in `bootstrap/app.py`\n';
+          comment += '2. Ensure dependencies are provided before they are required\n';
+          comment += '3. Run `python ci_middleware_check.py` locally to verify fixes\n';
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });

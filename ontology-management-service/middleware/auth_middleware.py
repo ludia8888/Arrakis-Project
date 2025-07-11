@@ -107,6 +107,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
                     return Response('{"detail": "Invalid token"}', status_code=401)
             
             request.state.user = user
+            request.state.user_context = user
             
         except Exception as e:
             logger.error(f"Authentication error: {e}")

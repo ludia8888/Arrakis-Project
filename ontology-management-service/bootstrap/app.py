@@ -325,34 +325,34 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
     app.add_middleware(ETagMiddleware)
     logger.info("ETagMiddleware added")
     
-    # 4. Authentication
-    logger.info("Adding AuthMiddleware...")
-    app.add_middleware(AuthMiddleware)
-    logger.info("AuthMiddleware added")
-
-    # 5. TerminusDB Context
+    # 4. TerminusDB Context
     logger.info("Adding TerminusContextMiddleware...")
     app.add_middleware(TerminusContextMiddleware)
     logger.info("TerminusContextMiddleware added")
 
-    # 6. Database Context
+    # 5. Database Context
     logger.info("Adding CoreDatabaseContextMiddleware...")
     app.add_middleware(CoreDatabaseContextMiddleware)
     logger.info("CoreDatabaseContextMiddleware added")
 
-    # 7. Scope-based RBAC (with auth paths fixed)
+    # 6. Scope-based RBAC (with auth paths fixed)
     app.add_middleware(ScopeRBACMiddleware)
     logger.info("ScopeRBACMiddleware registered - security layer active")
     
-    # 8. Request ID Middleware
+    # 7. Audit Log Middleware
+    logger.info("Adding AuditLogMiddleware...")
+    app.add_middleware(AuditLogMiddleware)
+    logger.info("AuditLogMiddleware added")
+    
+    # 8. Request ID Middleware (must be after Audit Log for correct execution order)
     logger.info("Adding RequestIdMiddleware...")
     app.add_middleware(RequestIdMiddleware)
     logger.info("RequestIdMiddleware added")
     
-    # 9. Audit Log Middleware
-    logger.info("Adding AuditLogMiddleware...")
-    app.add_middleware(AuditLogMiddleware)
-    logger.info("AuditLogMiddleware added")
+    # 9. Authentication (must be after RBAC and Audit for correct execution order)
+    logger.info("Adding AuthMiddleware...")
+    app.add_middleware(AuthMiddleware)
+    logger.info("AuthMiddleware added")
     
     # 10. Schema Freeze Middleware
     logger.info("Adding SchemaFreezeMiddleware...")
