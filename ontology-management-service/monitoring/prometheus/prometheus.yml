@@ -15,6 +15,7 @@ alerting:
 # Load rules
 rule_files:
   - "/etc/prometheus/rules/*.yml"
+  - "/etc/prometheus/rules/enterprise_resilience_alerts.yml"
 
 # Scrape configurations
 scrape_configs:
@@ -99,3 +100,11 @@ scrape_configs:
         labels:
           service: 'jaeger'
           type: 'tracing'
+
+  # Pyroscope (Continuous Profiling)
+  - job_name: 'pyroscope'
+    static_configs:
+      - targets: ['pyroscope:4040']
+        labels:
+          service: 'pyroscope'
+          type: 'profiling'

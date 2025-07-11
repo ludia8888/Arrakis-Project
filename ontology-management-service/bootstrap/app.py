@@ -10,6 +10,8 @@ from typing import Optional
 from bootstrap.dependencies import init_container
 from bootstrap.config import get_config, AppConfig
 from common_logging.setup import get_logger
+# Enterprise Observability Integration
+from observability.enterprise_integration import enterprise_observability_lifespan
 # from infra.tracing.otel_init import get_otel_manager # Temporarily disabled
 # --- Middleware Imports ---
 from middleware.auth_middleware import AuthMiddleware
@@ -77,7 +79,8 @@ from api.v1 import (
     property_routes, audit_routes, batch_routes, branch_lock_routes, 
     branch_routes, document_routes, document_crud_routes, graph_health_routes, idempotent_routes,
     issue_tracking_routes, job_progress_routes, shadow_index_routes,
-    time_travel_routes, version_routes, test_routes
+    time_travel_routes, version_routes, test_routes, circuit_breaker_routes
+    # resilience_dashboard_routes - REMOVED: Replaced with enterprise observability stack
 )
 from api.v1 import auth_proxy_routes  # Direct import
 from api.graphql.modular_main import graphql_app as modular_graphql_app
@@ -96,26 +99,107 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         """
-        Application lifespan context manager.
-        Handles startup and shutdown events.
+        Enterprise Application lifespan with integrated observability.
+        Handles startup and shutdown events with full monitoring stack.
         """
-        logger.info("Application lifespan: startup sequence initiated.")
+        logger.info("🚀 Enterprise Application lifespan: startup sequence initiated.")
         
         try:
             logger.info("Initializing container resources...")
             await container.init_resources()
             logger.info("Container resources initialized successfully.")
             
-            # Initialize Redis client for ETag middleware
+            # Initialize Redis client for ETag middleware and Global Circuit Breaker
             try:
                 from bootstrap.providers.redis_provider import RedisProvider
                 redis_provider = RedisProvider()
                 redis_client = await redis_provider.provide()
                 app.state.redis_client = redis_client
                 logger.info("Redis client initialized for ETag middleware")
+                
+                # Initialize Global Circuit Breaker
+                from middleware.circuit_breaker_global import (
+                    GlobalCircuitBreaker, GlobalCircuitConfig, set_global_circuit_breaker
+                )
+                circuit_config = GlobalCircuitConfig(
+                    service_name="oms",
+                    failure_threshold=5,
+                    error_rate_threshold=0.6,
+                    timeout_seconds=60
+                )
+                global_circuit_breaker = GlobalCircuitBreaker(circuit_config, redis_client)
+                set_global_circuit_breaker(global_circuit_breaker)
+                app.state.global_circuit_breaker = global_circuit_breaker
+                logger.info("Global Circuit Breaker initialized")
+                
             except Exception as e:
-                logger.warning(f"Failed to initialize Redis client: {e}")
+                logger.warning(f"Failed to initialize Redis client and Global Circuit Breaker: {e}")
                 app.state.redis_client = None
+                app.state.global_circuit_breaker = None
+            
+            # Initialize Enterprise Observability Stack
+            try:
+                from observability.enterprise_integration import initialize_enterprise_observability
+                observability_manager = await initialize_enterprise_observability(app)
+                app.state.observability_manager = observability_manager
+                logger.info("🎯 Enterprise Observability Stack initialized successfully!")
+                
+                # Log migration information
+                logger.info("📋 Legacy resilience dashboard API has been replaced with:")
+                logger.info("  📊 Prometheus metrics: /metrics")
+                logger.info("  📈 Grafana dashboards: http://grafana:3000")
+                logger.info("  🔍 Jaeger tracing: http://jaeger:16686")
+                logger.info("  🚨 AlertManager: Comprehensive enterprise alerting")
+                
+            except Exception as e:
+                logger.warning(f"Failed to initialize Enterprise Observability: {e}")
+                app.state.observability_manager = None
+                
+            # Initialize Advanced GC Monitoring
+            try:
+                from observability.advanced_gc_monitoring import start_advanced_gc_monitoring
+                gc_monitor = start_advanced_gc_monitoring(interval=30)
+                app.state.gc_monitor = gc_monitor
+                logger.info("🗑️ Advanced GC Monitoring initialized with:")
+                logger.info("  📊 gc.get_stats() - GC statistics collection")
+                logger.info("  🔍 tracemalloc - Memory allocation tracking")
+                logger.info("  💾 psutil - Real-time process memory monitoring")
+                logger.info("  📈 Prometheus integration - Enterprise metrics export")
+                logger.info("  🚨 Memory leak detection - Automatic suspect identification")
+                
+            except Exception as e:
+                logger.warning(f"Failed to initialize Advanced GC Monitoring: {e}")
+                app.state.gc_monitor = None
+                
+            # Initialize Pyroscope Continuous Profiling
+            try:
+                from observability.pyroscope_integration import PyroscopeConfig, setup_fastapi_profiling
+                
+                pyroscope_config = PyroscopeConfig(
+                    server_address="http://pyroscope:4040",
+                    application_name="oms-service",
+                    tags={
+                        "version": "2.0.0",
+                        "component": "ontology-management",
+                        "team": "platform",
+                    },
+                    sample_rate=100,  # 100 Hz sampling
+                    upload_rate=10,   # Upload every 10 seconds
+                )
+                
+                profiler = setup_fastapi_profiling(app, pyroscope_config)
+                app.state.pyroscope_profiler = profiler
+                
+                logger.info("🔥 Pyroscope Continuous Profiling initialized!")
+                logger.info("  🎯 Real-time CPU profiling")
+                logger.info("  💾 Memory allocation profiling")
+                logger.info("  🔍 Goroutine/Thread profiling")
+                logger.info("  📊 Flame graph visualization")
+                logger.info("  🌐 UI available at: http://localhost:4040")
+                
+            except Exception as e:
+                logger.warning(f"Failed to initialize Pyroscope Profiling: {e}")
+                app.state.pyroscope_profiler = None
                 
         except Exception as e:
             logger.critical(f"Failed to initialize container resources: {e}", exc_info=True)
@@ -123,7 +207,7 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
 
         yield
 
-        logger.info("Application lifespan: shutdown sequence initiated.")
+        logger.info("🛑 Enterprise Application lifespan: shutdown sequence initiated.")
         try:
             logger.info("Shutting down container resources...")
             await container.shutdown_resources()
@@ -133,6 +217,22 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
             if hasattr(app.state, 'redis_client') and app.state.redis_client:
                 await app.state.redis_client.aclose()
                 logger.info("Redis client closed")
+            
+            # Cleanup observability (if needed)
+            if hasattr(app.state, 'observability_manager') and app.state.observability_manager:
+                logger.info("Enterprise Observability shutdown completed")
+                
+            # Cleanup GC monitoring
+            if hasattr(app.state, 'gc_monitor') and app.state.gc_monitor:
+                logger.info("Advanced GC Monitoring shutdown completed")
+                
+            # Cleanup Pyroscope profiling
+            if hasattr(app.state, 'pyroscope_profiler') and app.state.pyroscope_profiler:
+                try:
+                    app.state.pyroscope_profiler.stop_profiling()
+                    logger.info("Pyroscope Profiling shutdown completed")
+                except Exception as e:
+                    logger.error(f"Error stopping Pyroscope profiling: {e}")
                 
         except Exception as e:
             logger.error(f"Error during container resource shutdown: {e}", exc_info=True)
@@ -173,7 +273,8 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
         audit_routes, batch_routes, branch_lock_routes, branch_routes,
         document_routes, document_crud_routes, graph_health_routes, idempotent_routes,
         issue_tracking_routes, job_progress_routes, shadow_index_routes, 
-        time_travel_routes, version_routes, test_routes
+        time_travel_routes, version_routes, test_routes, circuit_breaker_routes
+        # resilience_dashboard_routes - REMOVED: Replaced with enterprise observability stack
     ]
     for router_module in v1_routers:
         app.include_router(router_module.router, prefix="/api/v1")
@@ -190,6 +291,22 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
     
     # MIDDLEWARE CHAIN CONFIGURATION (Correct Order)
     logger.info("Adding middleware chain...")
+    
+    # 0. Global Circuit Breaker (First-level protection)
+    logger.info("Adding Global Circuit Breaker Middleware...")
+    try:
+        from middleware.circuit_breaker_global import GlobalCircuitBreakerMiddleware, GlobalCircuitConfig
+        redis_client = getattr(app.state, 'redis_client', None)
+        circuit_config = GlobalCircuitConfig(
+            service_name="oms",
+            failure_threshold=5,
+            error_rate_threshold=0.6,
+            timeout_seconds=60
+        )
+        app.add_middleware(GlobalCircuitBreakerMiddleware, config=circuit_config, redis_client=redis_client)
+        logger.info("Global Circuit Breaker Middleware added")
+    except Exception as e:
+        logger.warning(f"Failed to add Global Circuit Breaker Middleware: {e}")
     
     # 1. Error Handler (Top-level)
     logger.info("Adding ErrorHandlerMiddleware...")

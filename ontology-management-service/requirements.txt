@@ -106,6 +106,9 @@ backoff==2.2.1
 # System monitoring
 psutil==5.9.6
 
+# Continuous Profiling
+pyroscope-io==0.8.5
+
 # GraphQL data loading
 aiodataloader==0.2.1
 
