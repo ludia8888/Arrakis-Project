@@ -1,0 +1,768 @@
+{
+  "timestamp": "2025-07-11T22:02:21.959575",
+  "test_phases": [
+    {
+      "phase": "baseline_check",
+      "tests": [
+        {
+          "endpoint": "/health",
+          "status_code": 200,
+          "response_time": 0.17795181274414062,
+          "success": true
+        },
+        {
+          "endpoint": "/api/v1/health",
+          "status_code": 200,
+          "response_time": 0.15181732177734375,
+          "success": true
+        }
+      ],
+      "success": true,
+      "working_endpoints": 2
+    },
+    {
+      "phase": "server_error_generation",
+      "error_attacks": [
+        {
+          "type": "concurrent_overload",
+          "total_requests": 100,
+          "requests": [
+            {
+              "request_id": 0,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 1,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 2,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 3,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 4,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 5,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 6,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 7,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 8,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 9,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 10,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 11,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 12,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 13,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 14,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 15,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 16,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 17,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 18,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 19,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 20,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 21,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 22,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 23,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 24,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 25,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 26,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 27,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 28,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 29,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 30,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 31,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 32,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 33,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 34,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 35,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 36,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 37,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 38,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 39,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 40,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 41,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 42,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 43,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 44,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 45,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 46,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 47,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 48,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 49,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 50,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 51,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 52,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 53,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 54,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 55,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 56,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 57,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 58,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 59,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 60,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 61,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 62,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 63,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 64,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 65,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 66,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 67,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 68,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 69,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 70,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 71,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 72,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 73,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 74,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 75,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 76,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 77,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 78,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 79,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 80,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 81,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 82,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 83,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 84,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 85,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 86,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 87,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 88,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 89,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 90,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 91,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 92,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 93,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 94,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 95,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 96,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 97,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 98,
+              "error": "",
+              "is_server_error": true
+            },
+            {
+              "request_id": 99,
+              "error": "",
+              "is_server_error": true
+            }
+          ],
+          "server_errors": 100
+        },
+        {
+          "type": "invalid_data_attack",
+          "total_requests": 5,
+          "requests": [
+            {
+              "pattern_id": 0,
+              "status_code": 401,
+              "response_time": 0.05795097351074219,
+              "is_server_error": false
+            },
+            {
+              "pattern_id": 1,
+              "status_code": 401,
+              "response_time": 0.01022481918334961,
+              "is_server_error": false
+            },
+            {
+              "pattern_id": 2,
+              "status_code": 401,
+              "response_time": 0.0038611888885498047,
+              "is_server_error": false
+            },
+            {
+              "pattern_id": 3,
+              "status_code": 401,
+              "response_time": 0.0036542415618896484,
+              "is_server_error": false
+            },
+            {
+              "pattern_id": 4,
+              "status_code": 401,
+              "response_time": 0.0032181739807128906,
+              "is_server_error": false
+            }
+          ],
+          "server_errors": 0
+        }
+      ],
+      "response_analysis": {
+        "total_requests": 105,
+        "server_errors": 100,
+        "server_error_rate": 0.9523809523809523
+      },
+      "success": true
+    },
+    {
+      "phase": "circuit_verification",
+      "state_checks": [
+        {
+          "check_num": 1,
+          "status_code": 200,
+          "response_time": 0.1776590347290039,
+          "potential_circuit_open": false
+        },
+        {
+          "check_num": 2,
+          "status_code": 200,
+          "response_time": 0.15919804573059082,
+          "potential_circuit_open": false
+        },
+        {
+          "check_num": 3,
+          "status_code": 200,
+          "response_time": 0.15556907653808594,
+          "potential_circuit_open": false
+        },
+        {
+          "check_num": 4,
+          "status_code": 200,
+          "response_time": 0.1517777442932129,
+          "potential_circuit_open": false
+        },
+        {
+          "check_num": 5,
+          "status_code": 200,
+          "response_time": 0.15053296089172363,
+          "potential_circuit_open": false
+        },
+        {
+          "check_num": 6,
+          "status_code": 200,
+          "response_time": 0.15161776542663574,
+          "potential_circuit_open": false
+        },
+        {
+          "check_num": 7,
+          "status_code": 200,
+          "response_time": 0.15249919891357422,
+          "potential_circuit_open": false
+        },
+        {
+          "check_num": 8,
+          "status_code": 200,
+          "response_time": 0.14956378936767578,
+          "potential_circuit_open": false
+        },
+        {
+          "check_num": 9,
+          "status_code": 200,
+          "response_time": 0.15803313255310059,
+          "potential_circuit_open": false
+        },
+        {
+          "check_num": 10,
+          "status_code": 200,
+          "response_time": 0.15201091766357422,
+          "potential_circuit_open": false
+        }
+      ],
+      "behavioral_analysis": {
+        "total_checks": 10,
+        "circuit_indicators": 0,
+        "circuit_indication_rate": 0.0
+      },
+      "success": false
+    },
+    {
+      "phase": "global_blocking_verification",
+      "endpoint_tests": [
+        {
+          "endpoint": "/health",
+          "attempt": 1,
+          "status_code": 200,
+          "response_time": 0.15341711044311523,
+          "blocked": false
+        },
+        {
+          "endpoint": "/health",
+          "attempt": 2,
+          "status_code": 200,
+          "response_time": 0.1522982120513916,
+          "blocked": false
+        },
+        {
+          "endpoint": "/health",
+          "attempt": 3,
+          "status_code": 200,
+          "response_time": 0.15657544136047363,
+          "blocked": false
+        },
+        {
+          "endpoint": "/health",
+          "attempt": 4,
+          "status_code": 200,
+          "response_time": 0.1233367919921875,
+          "blocked": false
+        },
+        {
+          "endpoint": "/health",
+          "attempt": 5,
+          "status_code": 200,
+          "response_time": 0.15407109260559082,
+          "blocked": false
+        },
+        {
+          "endpoint": "/api/v1/health",
+          "attempt": 1,
+          "status_code": 200,
+          "response_time": 0.1515951156616211,
+          "blocked": false
+        },
+        {
+          "endpoint": "/api/v1/health",
+          "attempt": 2,
+          "status_code": 200,
+          "response_time": 0.14963984489440918,
+          "blocked": false
+        },
+        {
+          "endpoint": "/api/v1/health",
+          "attempt": 3,
+          "status_code": 200,
+          "response_time": 0.1555190086364746,
+          "blocked": false
+        },
+        {
+          "endpoint": "/api/v1/health",
+          "attempt": 4,
+          "status_code": 200,
+          "response_time": 0.15662407875061035,
+          "blocked": false
+        },
+        {
+          "endpoint": "/api/v1/health",
+          "attempt": 5,
+          "status_code": 200,
+          "response_time": 0.15469908714294434,
+          "blocked": false
+        },
+        {
+          "endpoint": "/api/v1/test/simple",
+          "attempt": 1,
+          "status_code": 401,
+          "response_time": 0.02113795280456543,
+          "blocked": false
+        },
+        {
+          "endpoint": "/api/v1/test/simple",
+          "attempt": 2,
+          "status_code": 401,
+          "response_time": 0.012904882431030273,
+          "blocked": false
+        },
+        {
+          "endpoint": "/api/v1/test/simple",
+          "attempt": 3,
+          "status_code": 401,
+          "response_time": 0.017861127853393555,
+          "blocked": false
+        },
+        {
+          "endpoint": "/api/v1/test/simple",
+          "attempt": 4,
+          "status_code": 401,
+          "response_time": 0.01633930206298828,
+          "blocked": false
+        },
+        {
+          "endpoint": "/api/v1/test/simple",
+          "attempt": 5,
+          "status_code": 401,
+          "response_time": 0.014874935150146484,
+          "blocked": false
+        }
+      ],
+      "global_effect": {
+        "total_endpoints_tested": 3,
+        "blocked_endpoints": 0,
+        "total_tests": 15,
+        "global_blocking_rate": 0.0
+      },
+      "success": false
+    }
+  ],
+  "circuit_breaker_analysis": {}
+}

@@ -1,0 +1,169 @@
+{
+  "timestamp": "2025-07-11T22:16:27.619516",
+  "test_suites": [
+    {
+      "suite": "dashboard_basics",
+      "tests": [
+        {
+          "test": "main_dashboard_access",
+          "status_code": 401,
+          "response_time": 0.064461,
+          "success": false,
+          "has_data": false
+        },
+        {
+          "test": "time_range_1h",
+          "time_range": "1h",
+          "status_code": 401,
+          "success": false
+        },
+        {
+          "test": "time_range_24h",
+          "time_range": "24h",
+          "status_code": 401,
+          "success": false
+        },
+        {
+          "test": "time_range_7d",
+          "time_range": "7d",
+          "status_code": 401,
+          "success": false
+        },
+        {
+          "test": "component_filter_circuit_breaker",
+          "component": "circuit_breaker",
+          "status_code": 401,
+          "success": false
+        },
+        {
+          "test": "component_filter_etag_caching",
+          "component": "etag_caching",
+          "status_code": 401,
+          "success": false
+        },
+        {
+          "test": "component_filter_distributed_caching",
+          "component": "distributed_caching",
+          "status_code": 401,
+          "success": false
+        },
+        {
+          "test": "component_filter_backpressure",
+          "component": "backpressure",
+          "status_code": 401,
+          "success": false
+        }
+      ],
+      "success": false,
+      "success_rate": 0.0
+    },
+    {
+      "suite": "component_metrics",
+      "tests": [
+        {
+          "test": "circuit_breaker_detailed_metrics",
+          "component": "circuit_breaker",
+          "status_code": 401,
+          "success": false,
+          "has_metrics": false,
+          "metric_categories": []
+        },
+        {
+          "test": "etag_caching_detailed_metrics",
+          "component": "etag_caching",
+          "status_code": 401,
+          "success": false,
+          "has_metrics": false,
+          "metric_categories": []
+        },
+        {
+          "test": "distributed_caching_detailed_metrics",
+          "component": "distributed_caching",
+          "status_code": 401,
+          "success": false,
+          "has_metrics": false,
+          "metric_categories": []
+        },
+        {
+          "test": "backpressure_detailed_metrics",
+          "component": "backpressure",
+          "status_code": 401,
+          "success": false,
+          "has_metrics": false,
+          "metric_categories": []
+        }
+      ],
+      "success": false,
+      "success_rate": 0.0
+    },
+    {
+      "suite": "health_check",
+      "tests": [
+        {
+          "test": "overall_health_check",
+          "status_code": 401,
+          "success": false,
+          "health_data": null
+        }
+      ],
+      "success": false,
+      "success_rate": 0.0
+    },
+    {
+      "suite": "alerts_monitoring",
+      "tests": [
+        {
+          "test": "alerts_list",
+          "status_code": 401,
+          "success": false,
+          "alert_count": 0,
+          "alert_severities": []
+        },
+        {
+          "test": "alerts_filter_critical",
+          "severity": "critical",
+          "status_code": 401,
+          "success": false
+        },
+        {
+          "test": "alerts_filter_warning",
+          "severity": "warning",
+          "status_code": 401,
+          "success": false
+        },
+        {
+          "test": "alerts_filter_info",
+          "severity": "info",
+          "status_code": 401,
+          "success": false
+        }
+      ],
+      "success": false,
+      "success_rate": 0.0
+    },
+    {
+      "suite": "performance",
+      "tests": [
+        {
+          "test": "response_time_measurement",
+          "avg_response_time": 0.0031471729278564455,
+          "max_response_time": 0.003342151641845703,
+          "min_response_time": 0.0029838085174560547,
+          "total_requests": 5,
+          "success": true
+        },
+        {
+          "test": "concurrent_requests",
+          "total_requests": 10,
+          "successful_responses": 0,
+          "total_time": 0.05410575866699219,
+          "requests_per_second": 184.82321006803681,
+          "success": false
+        }
+      ],
+      "success": true,
+      "success_rate": 0.5
+    }
+  ],
+  "dashboard_analysis": {}
+}

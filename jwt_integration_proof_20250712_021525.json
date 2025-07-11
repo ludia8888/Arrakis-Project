@@ -1,0 +1,193 @@
+{
+  "test_timestamp": "2025-07-11T17:15:25.501250",
+  "test_type": "jwt_integration_proof",
+  "duplicate_elimination": {
+    "status": "완료",
+    "eliminated_functions": [
+      "create_access_token (user-service)",
+      "create_refresh_token (user-service)",
+      "decode_token (user-service)",
+      "verify_token (user-service)",
+      "decode_token_with_scopes (user-service)",
+      "validate_token_scopes (user-service)",
+      "create_short_lived_token (user-service)",
+      "get_jwt_secret (audit-service)",
+      "get_jwt_algorithm (audit-service)",
+      "get_jwt_issuer (audit-service)",
+      "sample_jwt_token (audit-service)",
+      "validate_jwt_secret (user-service)"
+    ],
+    "total_eliminated": 12,
+    "unified_in": "arrakis-common/auth/jwt_handler.py"
+  },
+  "new_capabilities": {
+    "token_types": 4,
+    "security_features": [
+      "scope_validation",
+      "advanced_validation",
+      "token_analysis"
+    ],
+    "migration_support": [
+      "global_functions",
+      "backward_compatibility"
+    ],
+    "debugging_tools": [
+      "token_analysis",
+      "secure_secret_generation"
+    ]
+  },
+  "test_results": {
+    "duplicate_elimination_test": {
+      "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLTEyMzQ1IiwidXNlcm5hbWUiOiJ1bHRyYV90ZXN0X3VzZXIiLCJlbWFpbCI6InVsdHJhQHRlc3QuY29tIiwidHlwZSI6ImFjY2VzcyIsInJvbGVzIjpbInVzZXIiLCJhZG1pbiIsIm9udG9sb2d5X21hbmFnZXIiXSwicGVybWlzc2lvbnMiOlsicmVhZCIsIndyaXRlIiwiYWRtaW4iLCJzY2hlbWE6Y3JlYXRlIiwiYnJhbmNoOm1hbmFnZSJdLCJzY29wZXMiOlsicm9sZTp1c2VyIiwicm9sZTphZG1pbiIsInJvbGU6b250b2xvZ3lfbWFuYWdlciIsInBlcm06cmVhZCIsInBlcm06d3JpdGUiLCJwZXJtOmFkbWluIiwicGVybTpzY2hlbWE6Y3JlYXRlIiwicGVybTpicmFuY2g6bWFuYWdlIl0sInRlbmFudF9pZCI6InRlc3QtdGVuYW50Iiwic2Vzc2lvbl9pZCI6InNlc3MtMTIzIiwiZXhwIjoxNzUyMjU3NzI1LCJpYXQiOjE3NTIyNTQxMjUsImlzcyI6InVzZXItc2VydmljZSIsImF1ZCI6Im9tcyJ9.L1AO2g1wI61lBhMRzwjuh1yRMI7foyVIvka2dCzM8JzbHgc6e6Jd7unPUIXbzs0gGyLBsUT6hdCOdgFOjAVVpi_PkBqivLWzvNvRT-tatCVGMglUu9rM2coiPFkVMXYAeFoQTWKR5OrZEeQBNrRMEyZlHuwXEvP6y0WDVCBRdUIb7SmRqQ56JCNKg14jwAostHEOk1KL77jiv7GhAhnEBCCuYhZA5Lu-yC_7qLbZZ3uXQJbn0lJEuXuzebNJObNhbzB96RkTFmDfNQcxtFmZLxJFRUy5Oj5Djq8HM4G4kbdVOmqonXiMThhqIRssIKNXhBa4r7hfPmDABBJrOMPvdg",
+      "refresh_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLTEyMzQ1IiwidXNlcm5hbWUiOiJ1bHRyYV90ZXN0X3VzZXIiLCJ0eXBlIjoicmVmcmVzaCIsImV4cCI6MTc1NDg0NjEyNSwiaWF0IjoxNzUyMjU0MTI1LCJpc3MiOiJ1c2VyLXNlcnZpY2UiLCJhdWQiOiJvbXMifQ.IY4EZUDusOgHHMvCF3r-Wi_9F1R-LBz3DVHJKytXcEb0tcd9eQfEG8tLxV2LPLlwqgO9o3zzDqXH56dgH8rf15jDEmsYUzuyUDzz9LeC5riw10910SVkns-vdIi6Tou2egoJcWLCHbyNb0bGcKDtXPLJHfV69Tcokom7Qn9-QoVLM3qrGARaTMRvBC52wNpcVIaLeNE9uLDR-Qqhl-pw6KDXFuT9CfaGg3vsbTmfimRMg9fO6MrnQ51hgtQ12ZTg5qdMeYcAekJXBRCZ_nBu8x7XboLmre8lJX4UJGxspUgVSZsxIs2JR1FfPJohDvV8-JqwUkLjHiCIDsiLOptCDg",
+      "short_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLTEyMzQ1IiwidHlwZSI6InNob3J0X2xpdmVkIiwicHVycG9zZSI6InBhc3N3b3JkX3Jlc2V0IiwiZXhwIjoxNzUyMjU0NDI1LCJpYXQiOjE3NTIyNTQxMjUsImlzcyI6InVzZXItc2VydmljZSIsImF1ZCI6Im9tcyJ9.J1zhP1HbufPThwCNyDygNSC-t0Rq5epGQ_r4jr4GkF75mR3gtIYzSzttgLyknIii3FdK7h6Mfe7gzqt5-SGWXpBuBeBDsxAas57N0CyR7LZ7I88lVRuVQ7Nd9WSx-T063sPRgWo-75AUn_bblEKOEs3r2EtlPHu8pMauy048D92Wej8bwUMl3SHj2Q4MBRcvNkwW8bpyMteYUyQ8zhdhQOG9_ZAMQPOxtELPteg5-JlGTdnw8c2rjuMTzfeBlFQJBQzq5U58IZ-WnschgFz5mt18q6CS8xzl3iRWMWmbIl84ReIckh0uWCJm6yxbLE0mswYZmHhLqq_03BJgk_l5aQ",
+      "service_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJvbnRvbG9neS1tYW5hZ2VtZW50LXNlcnZpY2UiLCJ0eXBlIjoic2VydmljZSIsInNlcnZpY2UiOiJvbnRvbG9neS1tYW5hZ2VtZW50LXNlcnZpY2UiLCJpc19zZXJ2aWNlX2FjY291bnQiOnRydWUsInNjb3BlcyI6WyJzZXJ2aWNlOm9tcyIsInNlcnZpY2U6YXVkaXQiXSwiZXhwIjoxNzUyMzQwNTI1LCJpYXQiOjE3NTIyNTQxMjUsImlzcyI6InVzZXItc2VydmljZSIsImF1ZCI6Im9tcyJ9.ob8V4Z0zQ1O3kHqoK1M5_luOll6FudTWfzr46IAa-N2uK5jvWMurIvrJgDV2LmO1aZvLOra5Q_zrj53G5ag6MfpB8fyiwMhw26Tj-4BoRxUBaQx3gHvRjkjXZAk11Z7s-qH7Q3hOvHrBSMgHOexAh8rXjptxo_KRYqmvx2zghoECMXNj9cozX6b1Veo65QxYHnEKLHUwR4xz29kFSfiiOlp9tR1L_K91f6lPacMptEfLW4X2-zFD1877ZtxlR5V6rOC9DR4gjirQtHZIpqdvnlMGEr99poJP0pSadnPWKw3R1KhCX15E5bOR4o6esvn2c76yM4qrODgCIf5tRF8x4Q",
+      "decoded": {
+        "sub": "user-12345",
+        "username": "ultra_test_user",
+        "email": "ultra@test.com",
+        "type": "access",
+        "roles": [
+          "user",
+          "admin",
+          "ontology_manager"
+        ],
+        "permissions": [
+          "read",
+          "write",
+          "admin",
+          "schema:create",
+          "branch:manage"
+        ],
+        "scopes": [
+          "role:user",
+          "role:admin",
+          "role:ontology_manager",
+          "perm:read",
+          "perm:write",
+          "perm:admin",
+          "perm:schema:create",
+          "perm:branch:manage"
+        ],
+        "tenant_id": "test-tenant",
+        "session_id": "sess-123",
+        "exp": 1752257725,
+        "iat": 1752254125,
+        "iss": "user-service",
+        "aud": "oms",
+        "parsed_scopes": {
+          "roles": [
+            "user",
+            "admin",
+            "ontology_manager"
+          ],
+          "permissions": [
+            "read",
+            "write",
+            "admin",
+            "schema:create",
+            "branch:manage"
+          ],
+          "raw_scopes": [
+            "role:user",
+            "role:admin",
+            "role:ontology_manager",
+            "perm:read",
+            "perm:write",
+            "perm:admin",
+            "perm:schema:create",
+            "perm:branch:manage"
+          ]
+        }
+      },
+      "analysis": {
+        "header": {
+          "alg": "RS256",
+          "typ": "JWT"
+        },
+        "payload": {
+          "sub": "user-12345",
+          "username": "ultra_test_user",
+          "email": "ultra@test.com",
+          "type": "access",
+          "roles": [
+            "user",
+            "admin",
+            "ontology_manager"
+          ],
+          "permissions": [
+            "read",
+            "write",
+            "admin",
+            "schema:create",
+            "branch:manage"
+          ],
+          "scopes": [
+            "role:user",
+            "role:admin",
+            "role:ontology_manager",
+            "perm:read",
+            "perm:write",
+            "perm:admin",
+            "perm:schema:create",
+            "perm:branch:manage"
+          ],
+          "tenant_id": "test-tenant",
+          "session_id": "sess-123",
+          "exp": 1752257725,
+          "iat": 1752254125,
+          "iss": "user-service",
+          "aud": "oms"
+        },
+        "issued_at": "2025-07-12T02:15:25",
+        "expires_at": "2025-07-12T03:15:25",
+        "is_expired": false,
+        "time_to_expiry_seconds": 35999.723828,
+        "token_type": "access",
+        "subject": "user-12345",
+        "issuer": "user-service",
+        "audience": "oms",
+        "scopes": [
+          "role:user",
+          "role:admin",
+          "role:ontology_manager",
+          "perm:read",
+          "perm:write",
+          "perm:admin",
+          "perm:schema:create",
+          "perm:branch:manage"
+        ]
+      },
+      "validations": {
+        "scope_valid": true,
+        "advanced_valid": true
+      }
+    },
+    "real_world_scenario_test": {
+      "scenario": "schema_creation_workflow",
+      "tokens_issued": 3,
+      "validation_passed": true,
+      "audit_data": {
+        "user_id": "user-67890",
+        "action": "schema_creation_attempted",
+        "timestamp": "2025-07-12T02:15:25",
+        "token_expiry": "2025-07-12T03:15:25",
+        "permissions_used": [
+          "role:ontology_manager",
+          "role:user",
+          "perm:schema:create",
+          "perm:schema:read",
+          "perm:branch:create",
+          "perm:audit:read"
+        ]
+      }
+    }
+  },
+  "architecture_improvements": {
+    "centralized_jwt_management": true,
+    "consistent_security": true,
+    "reduced_code_duplication": true,
+    "enhanced_debugging": true,
+    "migration_friendly": true
+  }
+}

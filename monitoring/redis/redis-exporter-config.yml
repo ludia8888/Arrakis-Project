@@ -1,0 +1,50 @@
+# Redis Exporter Configuration for Prometheus
+# This config enables Redis monitoring in the OMS system
+
+redis:
+  # Redis connection details
+  addr: "redis://redis:6379"
+  password: ""
+  
+  # Monitoring settings
+  check-keys: "*"
+  check-single-keys: 
+    - "circuit_breaker:*"
+    - "cache:*"
+    - "oms:cache:*"
+  
+  # Export settings
+  namespace: "redis"
+  
+  # Connection pool monitoring
+  connection-timeout: "15s"
+  
+  # Metrics to expose
+  metrics:
+    - connections
+    - memory
+    - persistence
+    - stats
+    - replication
+    - cpu
+    - commandstats
+    - cluster
+    - keyspace
+    
+# Circuit breaker specific metrics
+circuit_breaker_metrics:
+  enabled: true
+  patterns:
+    - "circuit_breaker:*:state"
+    - "circuit_breaker:*:failures"
+    - "circuit_breaker:*:successes"
+    - "circuit_breaker:*:last_failure"
+    
+# Cache metrics
+cache_metrics:
+  enabled: true
+  patterns:
+    - "cache:hit_rate"
+    - "cache:miss_rate"
+    - "cache:evictions"
+    - "oms:cache:*"

@@ -1,0 +1,128 @@
+# ARRAKIS PROJECT - UNIFIED PROMETHEUS CONFIGURATION
+# =================================================
+# 마이크로서비스 아키텍처를 위한 통합 설정
+# Last Updated: 2025-07-12
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'arrakis-msa'
+    environment: 'production'
+
+# Alertmanager 설정
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets:
+      - host.docker.internal:9093  # Alertmanager
+
+# 알람 규칙 파일
+rule_files:
+  - "/etc/prometheus/rules/*.yml"
+
+# 스크랩 설정
+scrape_configs:
+  # ========== CORE SERVICES ==========
+  - job_name: 'user-service'
+    static_configs:
+    - targets: ['user-service:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+
+  - job_name: 'oms'
+    static_configs:
+    - targets: ['oms:8090']
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+
+  - job_name: 'audit-service'
+    static_configs:
+    - targets: ['audit-service:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+
+  # ========== MICROSERVICES ==========
+  - job_name: 'data-kernel-service'
+    static_configs:
+    - targets: ['data-kernel-service:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+
+  - job_name: 'embedding-service'
+    static_configs:
+    - targets: ['embedding-service:8001']
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+
+  - job_name: 'scheduler-service'
+    static_configs:
+    - targets: ['scheduler-service:8002']
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+
+  - job_name: 'event-gateway'
+    static_configs:
+    - targets: ['event-gateway:8003']
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+
+  # ========== EXPORTERS ==========
+  - job_name: 'node-exporter'
+    static_configs:
+    - targets: ['host.docker.internal:9100']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  - job_name: 'redis-exporter'
+    static_configs:
+    - targets: ['host.docker.internal:9121']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  - job_name: 'postgres-exporter'
+    static_configs:
+    - targets: ['host.docker.internal:9187']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # ========== MONITORING INFRASTRUCTURE ==========
+  - job_name: 'prometheus'
+    static_configs:
+    - targets: ['localhost:9090']
+
+  - job_name: 'alertmanager'
+    static_configs:
+    - targets: ['host.docker.internal:9093']
+
+  - job_name: 'grafana'
+    static_configs:
+    - targets: ['host.docker.internal:3000']
+
+  # ========== TRACING & PROFILING ==========
+  - job_name: 'jaeger'
+    static_configs:
+    - targets: ['host.docker.internal:14269']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # ========== CUSTOM SERVICES ==========
+  - job_name: 'alerting-webhook'
+    static_configs:
+    - targets: ['host.docker.internal:8080']
+    metrics_path: '/health'
+    scrape_interval: 30s
+
+  # ========== FUTURE SERVICES (준비됨) ==========
+  # Real Services (활성화 시 주석 해제)
+  #- job_name: 'user-service-real'
+  #  static_configs:
+  #  - targets: ['host.docker.internal:8080']
+  #
+  #- job_name: 'oms-monolith-real'
+  #  static_configs:
+  #  - targets: ['host.docker.internal:8091']
+  #
+  #- job_name: 'audit-service-real'
+  #  static_configs:
+  #  - targets: ['host.docker.internal:8092']

@@ -5,7 +5,7 @@ echo "Starting Data-Kernel Gateway services..."
 
 # Start FastAPI server in background
 echo "Starting FastAPI server on port 8080..."
-python -m uvicorn data_kernel.main:app --host 0.0.0.0 --port 8080 &
+python -m uvicorn main:app --host 0.0.0.0 --port 8080 &
 FASTAPI_PID=$!
 
 # Give FastAPI time to start
@@ -13,7 +13,7 @@ sleep 2
 
 # Start gRPC server
 echo "Starting gRPC server on port 50051..."
-python -m data_kernel.grpc_server &
+python -m grpc_server &
 GRPC_PID=$!
 
 # Function to handle shutdown

@@ -1,0 +1,31 @@
+services:
+  # Pyroscope - Continuous Profiling Platform
+  pyroscope:
+    image: grafana/pyroscope:latest
+    container_name: oms-pyroscope
+    ports:
+      - "4040:4040"  # Pyroscope UI
+    environment:
+      - PYROSCOPE_ANALYTICS_OPT_OUT=true
+      - PYROSCOPE_LOG_LEVEL=info
+    volumes:
+      - pyroscope-data:/var/lib/pyroscope
+      - ./pyroscope/pyroscope.yml:/etc/pyroscope/config.yml:ro
+    command:
+      - "server"
+      - "-config.file=/etc/pyroscope/config.yml"
+    networks:
+      - oms-network
+    restart: unless-stopped
+    labels:
+      - "prometheus.io/scrape=true"
+      - "prometheus.io/port=4040"
+      - "prometheus.io/path=/metrics"
+
+volumes:
+  pyroscope-data:
+    driver: local
+
+networks:
+  oms-network:
+    external: true

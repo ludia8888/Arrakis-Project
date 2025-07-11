@@ -1,0 +1,500 @@
+groups:
+  - name: enterprise_resilience_critical
+    interval: 30s
+    rules:
+      # ========================================
+      # Circuit Breaker Critical Alerts
+      # ========================================
+      - alert: CircuitBreakerOpen
+        expr: circuit_breaker_state > 0
+        for: 1m
+        labels:
+          severity: critical
+          component: circuit_breaker
+          team: platform
+          service: "{{ $labels.service }}"
+        annotations:
+          summary: "Circuit breaker {{ $labels.circuit_name }} is open in {{ $labels.service }}"
+          description: |
+            Circuit breaker {{ $labels.circuit_name }} in service {{ $labels.service }} has opened.
+            This indicates a high failure rate and requests are being rejected.
+            
+            Current state: {{ $value }}
+            Service: {{ $labels.service }}
+            Circuit: {{ $labels.circuit_name }}
+            
+            Immediate action required to restore service functionality.
+          runbook_url: "https://docs.company.com/runbooks/circuit-breaker-open"
+          dashboard_url: "http://grafana:3000/d/enterprise-resilience"
+
+      - alert: CircuitBreakerHighFailureRate
+        expr: rate(circuit_breaker_calls_total{result="failure"}[5m]) / rate(circuit_breaker_calls_total[5m]) > 0.5
+        for: 2m
+        labels:
+          severity: warning
+          component: circuit_breaker
+          team: platform
+          service: "{{ $labels.service }}"
+        annotations:
+          summary: "High failure rate detected in circuit breaker {{ $labels.circuit_name }}"
+          description: |
+            Circuit breaker {{ $labels.circuit_name }} is experiencing high failure rate.
+            Current failure rate: {{ $value | humanizePercentage }}
+            
+            This may lead to circuit breaker opening if not addressed.
+          runbook_url: "https://docs.company.com/runbooks/high-failure-rate"
+
+      - alert: CircuitBreakerFlapping
+        expr: increase(circuit_breaker_state_transitions_total[10m]) > 5
+        for: 1m
+        labels:
+          severity: warning
+          component: circuit_breaker
+          team: platform
+          service: "{{ $labels.service }}"
+        annotations:
+          summary: "Circuit breaker {{ $labels.circuit_name }} is flapping"
+          description: |
+            Circuit breaker {{ $labels.circuit_name }} has changed state {{ $value }} times in the last 10 minutes.
+            This indicates an unstable service that needs investigation.
+
+  - name: enterprise_resilience_performance
+    interval: 30s
+    rules:
+      # ========================================
+      # Cache Performance Alerts
+      # ========================================
+      - alert: ETagCacheLowHitRate
+        expr: rate(etag_cache_requests_total{result="hit"}[5m]) / rate(etag_cache_requests_total[5m]) < 0.7
+        for: 5m
+        labels:
+          severity: warning
+          component: etag_cache
+          team: platform
+        annotations:
+          summary: "E-Tag cache hit rate is below threshold"
+          description: |
+            E-Tag cache hit rate for {{ $labels.resource_type }} is {{ $value | humanizePercentage }}.
+            This is below the recommended 70% threshold.
+            
+            Poor cache performance may impact system responsiveness.
+          runbook_url: "https://docs.company.com/runbooks/cache-performance"
+
+      - alert: RedisCacheHighErrorRate
+        expr: rate(redis_operations_total{result="failure"}[5m]) / rate(redis_operations_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+          component: redis_cache
+          team: platform
+        annotations:
+          summary: "Redis cache high error rate detected"
+          description: |
+            Redis cache error rate is {{ $value | humanizePercentage }}.
+            This indicates connectivity or performance issues with Redis.
+            
+            Operation: {{ $labels.operation }}
+            Error rate: {{ $value | humanizePercentage }}
+
+      - alert: AdaptiveTTLAnomalous
+        expr: rate(etag_cache_adaptive_adjustments_total[5m]) > 10
+        for: 3m
+        labels:
+          severity: info
+          component: etag_cache
+          team: platform
+        annotations:
+          summary: "High adaptive TTL adjustment rate"
+          description: |
+            Adaptive TTL is making frequent adjustments ({{ $value }}/sec).
+            This may indicate unstable cache access patterns.
+
+      # ========================================
+      # Backpressure Alerts
+      # ========================================
+      - alert: BackpressureQueueHigh
+        expr: backpressure_queue_size > 800
+        for: 2m
+        labels:
+          severity: warning
+          component: backpressure
+          team: platform
+          service: "{{ $labels.service }}"
+        annotations:
+          summary: "Backpressure queue size is high"
+          description: |
+            Queue size for {{ $labels.service }} {{ $labels.queue_type }} is {{ $value }}.
+            This indicates high load and potential performance degradation.
+            
+            Consider scaling or investigating the root cause.
+
+      - alert: BackpressureQueueFull
+        expr: backpressure_queue_size >= 1000
+        for: 30s
+        labels:
+          severity: critical
+          component: backpressure
+          team: platform
+          service: "{{ $labels.service }}"
+        annotations:
+          summary: "Backpressure queue is at capacity"
+          description: |
+            Queue for {{ $labels.service }} {{ $labels.queue_type }} is at or near capacity ({{ $value }}).
+            New requests are likely being rejected.
+            
+            Immediate scaling or load reduction required.
+
+      - alert: BackpressureHighRejectionRate
+        expr: rate(backpressure_requests_rejected_total[5m]) > 1
+        for: 1m
+        labels:
+          severity: critical
+          component: backpressure
+          team: platform
+          service: "{{ $labels.service }}"
+        annotations:
+          summary: "High request rejection rate due to backpressure"
+          description: |
+            Service {{ $labels.service }} is rejecting {{ $value }} requests/sec due to {{ $labels.reason }}.
+            This indicates system overload.
+
+  - name: enterprise_garbage_collection
+    interval: 60s
+    rules:
+      # ========================================
+      # Garbage Collection Alerts
+      # ========================================
+      - alert: GCHighFrequency
+        expr: rate(python_gc_collections_total[5m]) > 1
+        for: 3m
+        labels:
+          severity: warning
+          component: garbage_collection
+          team: platform
+        annotations:
+          summary: "High garbage collection frequency"
+          description: |
+            Garbage collection for generation {{ $labels.generation }} is occurring {{ $value }} times/sec.
+            This may indicate memory pressure or inefficient memory usage.
+            
+            Consider memory optimization or heap tuning.
+
+      - alert: GCLongDuration
+        expr: histogram_quantile(0.95, rate(python_gc_collection_duration_seconds_bucket[5m])) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          component: garbage_collection
+          team: platform
+        annotations:
+          summary: "Long garbage collection duration"
+          description: |
+            95th percentile GC duration for generation {{ $labels.generation }} is {{ $value }}s.
+            Long GC pauses can impact application responsiveness.
+
+      - alert: MemoryLeakSuspected
+        expr: increase(python_memory_objects_count{type="dict"}[30m]) > 100000
+        for: 5m
+        labels:
+          severity: critical
+          component: memory_management
+          team: platform
+        annotations:
+          summary: "Potential memory leak detected"
+          description: |
+            Dictionary object count has increased by {{ $value }} in the last 30 minutes.
+            This may indicate a memory leak.
+            
+            Investigation and possible restart may be required.
+
+      - alert: HighUncollectableObjects
+        expr: rate(python_gc_objects_uncollectable_total[5m]) > 10
+        for: 3m
+        labels:
+          severity: warning
+          component: garbage_collection
+          team: platform
+        annotations:
+          summary: "High rate of uncollectable objects"
+          description: |
+            Generation {{ $labels.generation }} has {{ $value }} uncollectable objects/sec.
+            This may indicate circular references or resource leaks.
+
+  - name: enterprise_system_health
+    interval: 30s
+    rules:
+      # ========================================
+      # System Resource Alerts
+      # ========================================
+      - alert: HighCPUUsage
+        expr: avg(system_cpu_usage_percent) > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+          team: infrastructure
+        annotations:
+          summary: "High CPU usage detected"
+          description: |
+            Average CPU usage is {{ $value }}%.
+            This may impact application performance.
+
+      - alert: CriticalCPUUsage
+        expr: avg(system_cpu_usage_percent) > 95
+        for: 2m
+        labels:
+          severity: critical
+          component: system
+          team: infrastructure
+        annotations:
+          summary: "Critical CPU usage"
+          description: |
+            Average CPU usage is {{ $value }}%.
+            System is at critical load level.
+
+      - alert: HighMemoryUsage
+        expr: system_memory_usage_percent > 85
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+          team: infrastructure
+        annotations:
+          summary: "High memory usage"
+          description: |
+            Memory usage is {{ $value }}%.
+            Monitor for potential memory exhaustion.
+
+      - alert: CriticalMemoryUsage
+        expr: system_memory_usage_percent > 95
+        for: 1m
+        labels:
+          severity: critical
+          component: system
+          team: infrastructure
+        annotations:
+          summary: "Critical memory usage"
+          description: |
+            Memory usage is {{ $value }}%.
+            Immediate action required to prevent OOM.
+
+      - alert: HighDiskUsage
+        expr: (system_disk_usage_bytes{type="used"} / system_disk_usage_bytes{type="total"}) * 100 > 80
+        for: 10m
+        labels:
+          severity: warning
+          component: storage
+          team: infrastructure
+        annotations:
+          summary: "High disk usage on {{ $labels.mountpoint }}"
+          description: |
+            Disk usage on {{ $labels.mountpoint }} is {{ $value }}%.
+            Consider cleanup or expansion.
+
+  - name: enterprise_security_alerts
+    interval: 30s
+    rules:
+      # ========================================
+      # Security & Authentication Alerts
+      # ========================================
+      - alert: HighAuthenticationFailureRate
+        expr: rate(auth_attempts_total{result="failure"}[5m]) > 5
+        for: 2m
+        labels:
+          severity: warning
+          component: authentication
+          team: security
+        annotations:
+          summary: "High authentication failure rate"
+          description: |
+            Authentication failures for {{ $labels.method }} are occurring at {{ $value }}/sec.
+            This may indicate a brute force attack or configuration issue.
+
+      - alert: SecurityEventDetected
+        expr: rate(security_events_total{severity="critical"}[5m]) > 0
+        for: 0s
+        labels:
+          severity: critical
+          component: security
+          team: security
+        annotations:
+          summary: "Critical security event detected"
+          description: |
+            Critical security event of type {{ $labels.event_type }} detected.
+            Immediate investigation required.
+
+      - alert: AuthorizationDenialSpike
+        expr: rate(authz_checks_total{result="denied"}[5m]) > 10
+        for: 3m
+        labels:
+          severity: warning
+          component: authorization
+          team: security
+        annotations:
+          summary: "High authorization denial rate"
+          description: |
+            Authorization denials for {{ $labels.resource }} are at {{ $value }}/sec.
+            This may indicate misconfigured permissions or unauthorized access attempts.
+
+  - name: enterprise_business_metrics
+    interval: 60s
+    rules:
+      # ========================================
+      # Business Logic Alerts
+      # ========================================
+      - alert: SchemaValidationFailureSpike
+        expr: rate(schema_operations_total{operation="validate",result="failure"}[5m]) > 1
+        for: 3m
+        labels:
+          severity: warning
+          component: schema_validation
+          team: platform
+        annotations:
+          summary: "High schema validation failure rate"
+          description: |
+            Schema validation failures are occurring at {{ $value }}/sec.
+            This may indicate data quality issues or schema problems.
+
+      - alert: DocumentOperationHighLatency
+        expr: histogram_quantile(0.95, rate(document_operations_total[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+          component: document_processing
+          team: platform
+        annotations:
+          summary: "High document operation latency"
+          description: |
+            95th percentile latency for {{ $labels.operation }} operations is {{ $value }}s.
+            This may impact user experience.
+
+      - alert: AuditEventProcessingLag
+        expr: histogram_quantile(0.95, rate(audit_processing_duration_seconds_bucket[5m])) > 1
+        for: 3m
+        labels:
+          severity: warning
+          component: audit
+          team: compliance
+        annotations:
+          summary: "High audit event processing latency"
+          description: |
+            95th percentile audit processing time is {{ $value }}s.
+            This may impact compliance reporting.
+
+  - name: enterprise_application_health
+    interval: 30s
+    rules:
+      # ========================================
+      # Application Health Alerts
+      # ========================================
+      - alert: ServiceDown
+        expr: up == 0
+        for: 30s
+        labels:
+          severity: critical
+          component: service_availability
+          team: platform
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: |
+            Service {{ $labels.job }} on {{ $labels.instance }} is not responding.
+            This indicates a complete service outage.
+
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status_code=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.1
+        for: 3m
+        labels:
+          severity: critical
+          component: application
+          team: platform
+          service: "{{ $labels.service }}"
+        annotations:
+          summary: "High error rate for {{ $labels.service }}"
+          description: |
+            Error rate for {{ $labels.service }} {{ $labels.endpoint }} is {{ $value | humanizePercentage }}.
+            This indicates application issues requiring immediate attention.
+
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+          component: performance
+          team: platform
+          service: "{{ $labels.service }}"
+        annotations:
+          summary: "High response time for {{ $labels.service }}"
+          description: |
+            95th percentile response time for {{ $labels.service }} {{ $labels.endpoint }} is {{ $value }}s.
+            This may impact user experience.
+
+      - alert: TooManyOpenFileDescriptors
+        expr: process_open_fds / process_max_fds > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          component: system_resources
+          team: platform
+        annotations:
+          summary: "High file descriptor usage"
+          description: |
+            File descriptor usage is {{ $value | humanizePercentage }}.
+            Application may exhaust file descriptors.
+
+      - alert: AsyncioTaskBacklog
+        expr: asyncio_tasks_pending > 100
+        for: 3m
+        labels:
+          severity: warning
+          component: asyncio
+          team: platform
+        annotations:
+          summary: "High asyncio task backlog"
+          description: |
+            Pending asyncio tasks: {{ $value }}.
+            This may indicate event loop congestion.
+
+  - name: enterprise_database_performance
+    interval: 60s
+    rules:
+      # ========================================
+      # Database Performance Alerts
+      # ========================================
+      - alert: SlowDatabaseQueries
+        expr: histogram_quantile(0.95, rate(database_query_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+          team: platform
+        annotations:
+          summary: "Slow database queries detected"
+          description: |
+            95th percentile query time for {{ $labels.database }} {{ $labels.operation }} is {{ $value }}s.
+            Consider query optimization or index tuning.
+
+      - alert: DatabaseConnectionPoolExhaustion
+        expr: database_connections_active / database_connections_max > 0.9
+        for: 2m
+        labels:
+          severity: critical
+          component: database
+          team: platform
+        annotations:
+          summary: "Database connection pool near exhaustion"
+          description: |
+            Connection pool for {{ $labels.database }} is {{ $value | humanizePercentage }} full.
+            Risk of connection exhaustion.
+
+      - alert: HighSlowQueryRate
+        expr: rate(database_slow_queries_total[5m]) > 1
+        for: 3m
+        labels:
+          severity: warning
+          component: database
+          team: platform
+        annotations:
+          summary: "High slow query rate"
+          description: |
+            Slow queries for {{ $labels.database }} {{ $labels.table }} are occurring at {{ $value }}/sec.
+            Database performance optimization may be needed.

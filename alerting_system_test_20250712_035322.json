@@ -1,0 +1,185 @@
+{
+  "timestamp": "2025-07-12T03:53:22.150787",
+  "prometheus_targets": [
+    {
+      "discoveredLabels": {
+        "__address__": "host.docker.internal:8011",
+        "__metrics_path__": "/metrics",
+        "__scheme__": "http",
+        "__scrape_interval__": "5s",
+        "__scrape_timeout__": "5s",
+        "job": "audit-service"
+      },
+      "labels": {
+        "instance": "host.docker.internal:8011",
+        "job": "audit-service"
+      },
+      "scrapePool": "audit-service",
+      "scrapeUrl": "http://host.docker.internal:8011/metrics",
+      "globalUrl": "http://host.docker.internal:8011/metrics",
+      "lastError": "",
+      "lastScrape": "2025-07-11T18:53:16.150526522Z",
+      "lastScrapeDuration": 0.005956525,
+      "health": "up",
+      "scrapeInterval": "5s",
+      "scrapeTimeout": "5s"
+    },
+    {
+      "discoveredLabels": {
+        "__address__": "localhost:14269",
+        "__metrics_path__": "/metrics",
+        "__scheme__": "http",
+        "__scrape_interval__": "15s",
+        "__scrape_timeout__": "10s",
+        "job": "jaeger"
+      },
+      "labels": {
+        "instance": "localhost:14269",
+        "job": "jaeger"
+      },
+      "scrapePool": "jaeger",
+      "scrapeUrl": "http://localhost:14269/metrics",
+      "globalUrl": "http://a3833365f527:14269/metrics",
+      "lastError": "Get \"http://localhost:14269/metrics\": dial tcp [::1]:14269: connect: connection refused",
+      "lastScrape": "2025-07-11T18:53:07.861955012Z",
+      "lastScrapeDuration": 0.001688534,
+      "health": "down",
+      "scrapeInterval": "15s",
+      "scrapeTimeout": "10s"
+    },
+    {
+      "discoveredLabels": {
+        "__address__": "localhost:9100",
+        "__metrics_path__": "/metrics",
+        "__scheme__": "http",
+        "__scrape_interval__": "15s",
+        "__scrape_timeout__": "10s",
+        "job": "node-exporter"
+      },
+      "labels": {
+        "instance": "localhost:9100",
+        "job": "node-exporter"
+      },
+      "scrapePool": "node-exporter",
+      "scrapeUrl": "http://localhost:9100/metrics",
+      "globalUrl": "http://a3833365f527:9100/metrics",
+      "lastError": "Get \"http://localhost:9100/metrics\": dial tcp [::1]:9100: connect: connection refused",
+      "lastScrape": "2025-07-11T18:53:10.996499975Z",
+      "lastScrapeDuration": 0.001549732,
+      "health": "down",
+      "scrapeInterval": "15s",
+      "scrapeTimeout": "10s"
+    },
+    {
+      "discoveredLabels": {
+        "__address__": "host.docker.internal:8010",
+        "__metrics_path__": "/metrics",
+        "__scheme__": "http",
+        "__scrape_interval__": "5s",
+        "__scrape_timeout__": "5s",
+        "job": "oms-service"
+      },
+      "labels": {
+        "instance": "host.docker.internal:8010",
+        "job": "oms-service"
+      },
+      "scrapePool": "oms-service",
+      "scrapeUrl": "http://host.docker.internal:8010/metrics",
+      "globalUrl": "http://host.docker.internal:8010/metrics",
+      "lastError": "",
+      "lastScrape": "2025-07-11T18:53:20.9778061Z",
+      "lastScrapeDuration": 0.001674444,
+      "health": "up",
+      "scrapeInterval": "5s",
+      "scrapeTimeout": "5s"
+    },
+    {
+      "discoveredLabels": {
+        "__address__": "localhost:9187",
+        "__metrics_path__": "/metrics",
+        "__scheme__": "http",
+        "__scrape_interval__": "15s",
+        "__scrape_timeout__": "10s",
+        "job": "postgres-exporter"
+      },
+      "labels": {
+        "instance": "localhost:9187",
+        "job": "postgres-exporter"
+      },
+      "scrapePool": "postgres-exporter",
+      "scrapeUrl": "http://localhost:9187/metrics",
+      "globalUrl": "http://a3833365f527:9187/metrics",
+      "lastError": "Get \"http://localhost:9187/metrics\": dial tcp [::1]:9187: connect: connection refused",
+      "lastScrape": "2025-07-11T18:53:18.761205507Z",
+      "lastScrapeDuration": 0.001942255,
+      "health": "down",
+      "scrapeInterval": "15s",
+      "scrapeTimeout": "10s"
+    },
+    {
+      "discoveredLabels": {
+        "__address__": "localhost:9121",
+        "__metrics_path__": "/metrics",
+        "__scheme__": "http",
+        "__scrape_interval__": "15s",
+        "__scrape_timeout__": "10s",
+        "job": "redis-exporter"
+      },
+      "labels": {
+        "instance": "localhost:9121",
+        "job": "redis-exporter"
+      },
+      "scrapePool": "redis-exporter",
+      "scrapeUrl": "http://localhost:9121/metrics",
+      "globalUrl": "http://a3833365f527:9121/metrics",
+      "lastError": "Get \"http://localhost:9121/metrics\": dial tcp [::1]:9121: connect: connection refused",
+      "lastScrape": "2025-07-11T18:53:07.872007204Z",
+      "lastScrapeDuration": 0.00137322,
+      "health": "down",
+      "scrapeInterval": "15s",
+      "scrapeTimeout": "10s"
+    },
+    {
+      "discoveredLabels": {
+        "__address__": "host.docker.internal:8012",
+        "__metrics_path__": "/metrics",
+        "__scheme__": "http",
+        "__scrape_interval__": "5s",
+        "__scrape_timeout__": "5s",
+        "job": "user-service"
+      },
+      "labels": {
+        "instance": "host.docker.internal:8012",
+        "job": "user-service"
+      },
+      "scrapePool": "user-service",
+      "scrapeUrl": "http://host.docker.internal:8012/metrics",
+      "globalUrl": "http://host.docker.internal:8012/metrics",
+      "lastError": "",
+      "lastScrape": "2025-07-11T18:53:19.237093282Z",
+      "lastScrapeDuration": 0.002511875,
+      "health": "up",
+      "scrapeInterval": "5s",
+      "scrapeTimeout": "5s"
+    }
+  ],
+  "alertmanager_healthy": false,
+  "webhook_healthy": true,
+  "exporter_results": {
+    "Node Exporter": {
+      "status": "✅",
+      "metrics": 568
+    },
+    "Redis Exporter": {
+      "status": "✅",
+      "metrics": 586
+    },
+    "Postgres Exporter": {
+      "status": "✅",
+      "metrics": 94
+    }
+  },
+  "alert_rules_count": 70,
+  "active_alerts_count": 42,
+  "overall_score": 62.857142857142854
+}

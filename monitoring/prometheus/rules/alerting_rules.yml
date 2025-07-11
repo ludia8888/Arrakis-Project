@@ -1,0 +1,53 @@
+groups:
+- name: msa_service_alerts
+  rules:
+  - alert: ServiceDown
+    annotations:
+      description: Service {{ $labels.job }} has been down for more than 1 minute.
+      summary: Service {{ $labels.job }} is down
+    expr: up == 0
+    for: 1m
+    labels:
+      severity: critical
+  - alert: HighErrorRate
+    annotations:
+      description: Error rate is {{ $value }} for service {{ $labels.job }}
+      summary: High error rate detected
+    expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
+    for: 2m
+    labels:
+      severity: warning
+  - alert: HighResponseTime
+    annotations:
+      description: 95th percentile response time is {{ $value }}s for {{ $labels.job
+        }}
+      summary: High response time
+    expr: histogram_quantile(0.95, http_request_duration_seconds_bucket) > 2
+    for: 5m
+    labels:
+      severity: warning
+  - alert: LowDiskSpace
+    annotations:
+      description: Disk space is {{ $value }}% on {{ $labels.instance }}
+      summary: Low disk space
+    expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) * 100 < 10
+    for: 5m
+    labels:
+      severity: critical
+  - alert: HighMemoryUsage
+    annotations:
+      description: Memory usage is {{ $value }}% on {{ $labels.instance }}
+      summary: High memory usage
+    expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100
+      > 85
+    for: 5m
+    labels:
+      severity: warning
+  - alert: DatabaseConnectionFailure
+    annotations:
+      description: PostgreSQL database is unreachable
+      summary: Database connection failure
+    expr: pg_up == 0
+    for: 30s
+    labels:
+      severity: critical

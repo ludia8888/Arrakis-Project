@@ -1,0 +1,89 @@
+{
+  "test_metadata": {
+    "timestamp": "2025-07-11T22:49:39.173186",
+    "test_type": "enterprise_observability_integration",
+    "version": "1.0.0"
+  },
+  "test_phases": [
+    {
+      "phase": "enterprise_metrics",
+      "start_time": "2025-07-11T22:49:39.180084",
+      "tests": [
+        {
+          "test": "oms_service_health",
+          "error": "All connection attempts failed",
+          "success": false
+        }
+      ],
+      "success": false,
+      "success_rate": 0.0
+    },
+    {
+      "phase": "observability_stack_availability",
+      "start_time": "2025-07-11T22:49:39.182694",
+      "tests": [
+        {
+          "test": "prometheus_server",
+          "status_code": 200,
+          "targets_count": 11,
+          "success": true
+        },
+        {
+          "test": "grafana_server",
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "test": "jaeger_server",
+          "error": "object of type 'NoneType' has no len()",
+          "success": false
+        }
+      ],
+      "success": true,
+      "success_rate": 0.6666666666666666
+    },
+    {
+      "phase": "integrated_monitoring",
+      "start_time": "2025-07-11T22:49:39.209479",
+      "tests": [
+        {
+          "test": "metrics_data_flow",
+          "error": "All connection attempts failed",
+          "success": false
+        },
+        {
+          "test": "enterprise_metrics_verification",
+          "total_metrics_checked": 4,
+          "found_metrics": 1,
+          "success": false
+        }
+      ],
+      "success": false,
+      "success_rate": 0.0
+    },
+    {
+      "phase": "dashboard_access",
+      "start_time": "2025-07-11T22:49:39.222799",
+      "tests": [
+        {
+          "test": "grafana_dashboards",
+          "status_code": 401,
+          "success": false
+        },
+        {
+          "test": "prometheus_web_ui",
+          "status_code": 200,
+          "success": true
+        },
+        {
+          "test": "jaeger_web_ui",
+          "status_code": 200,
+          "success": true
+        }
+      ],
+      "success": true,
+      "success_rate": 0.6666666666666666
+    }
+  ],
+  "overall_status": "unknown"
+}

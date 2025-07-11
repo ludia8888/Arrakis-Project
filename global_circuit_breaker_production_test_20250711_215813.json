@@ -1,0 +1,277 @@
+{
+  "timestamp": "2025-07-11T21:58:00.748048",
+  "test_phases": [
+    {
+      "phase": "initialization",
+      "steps": [
+        {
+          "step": "initial_status_check",
+          "status_code": 401,
+          "response_time": 0.052322,
+          "success": false
+        },
+        {
+          "step": "circuit_reset",
+          "status_code": 401,
+          "success": false
+        }
+      ],
+      "success": true
+    },
+    {
+      "phase": "global_circuit_trigger",
+      "attack_patterns": [
+        {
+          "type": "500_errors",
+          "total_requests": 8,
+          "requests": [
+            {
+              "request_num": 1,
+              "status_code": 401,
+              "response_time": 0.008243083953857422,
+              "success": true
+            },
+            {
+              "request_num": 2,
+              "status_code": 401,
+              "response_time": 0.016363143920898438,
+              "success": true
+            },
+            {
+              "request_num": 3,
+              "status_code": 401,
+              "response_time": 0.015172004699707031,
+              "success": true
+            },
+            {
+              "request_num": 4,
+              "status_code": 401,
+              "response_time": 0.014718055725097656,
+              "success": true
+            },
+            {
+              "request_num": 5,
+              "status_code": 401,
+              "response_time": 0.01436614990234375,
+              "success": true
+            },
+            {
+              "request_num": 6,
+              "status_code": 401,
+              "response_time": 0.015867948532104492,
+              "success": true
+            },
+            {
+              "request_num": 7,
+              "status_code": 401,
+              "response_time": 0.00625300407409668,
+              "success": true
+            },
+            {
+              "request_num": 8,
+              "status_code": 401,
+              "response_time": 0.013669967651367188,
+              "success": true
+            }
+          ],
+          "avg_response_time": 0.013081669807434082
+        },
+        {
+          "type": "mixed_errors",
+          "total_requests": 15,
+          "requests": [
+            {
+              "request_num": 1,
+              "status_code": 401,
+              "response_time": 0.013303041458129883,
+              "success": true
+            },
+            {
+              "request_num": 2,
+              "status_code": 401,
+              "response_time": 0.015223026275634766,
+              "success": true
+            },
+            {
+              "request_num": 3,
+              "status_code": 401,
+              "response_time": 0.013795614242553711,
+              "success": true
+            },
+            {
+              "request_num": 4,
+              "status_code": 401,
+              "response_time": 0.005362749099731445,
+              "success": true
+            },
+            {
+              "request_num": 5,
+              "status_code": 401,
+              "response_time": 0.01149892807006836,
+              "success": true
+            },
+            {
+              "request_num": 6,
+              "status_code": 401,
+              "response_time": 0.013724803924560547,
+              "success": true
+            },
+            {
+              "request_num": 7,
+              "status_code": 401,
+              "response_time": 0.015074014663696289,
+              "success": true
+            },
+            {
+              "request_num": 8,
+              "status_code": 401,
+              "response_time": 0.015254020690917969,
+              "success": true
+            },
+            {
+              "request_num": 9,
+              "status_code": 401,
+              "response_time": 0.016109943389892578,
+              "success": true
+            },
+            {
+              "request_num": 10,
+              "status_code": 401,
+              "response_time": 0.01459813117980957,
+              "success": true
+            },
+            {
+              "request_num": 11,
+              "status_code": 401,
+              "response_time": 0.01958179473876953,
+              "success": true
+            },
+            {
+              "request_num": 12,
+              "status_code": 401,
+              "response_time": 0.014311075210571289,
+              "success": true
+            },
+            {
+              "request_num": 13,
+              "status_code": 401,
+              "response_time": 0.012094974517822266,
+              "success": true
+            },
+            {
+              "request_num": 14,
+              "status_code": 401,
+              "response_time": 0.013704776763916016,
+              "success": true
+            },
+            {
+              "request_num": 15,
+              "status_code": 401,
+              "response_time": 0.017153024673461914,
+              "success": true
+            }
+          ],
+          "avg_response_time": 0.014052661259969075
+        }
+      ],
+      "circuit_transitions": [
+        {
+          "state": "unknown",
+          "error": "Status code: 401"
+        },
+        {
+          "state": "unknown",
+          "error": "Status code: 401"
+        }
+      ],
+      "success": false
+    },
+    {
+      "phase": "global_blocking_verification",
+      "blocking_tests": [
+        {
+          "endpoint": "/api/v1/schemas",
+          "status_code": 401,
+          "blocked": false,
+          "response_time": 0.011615
+        },
+        {
+          "endpoint": "/api/v1/documents",
+          "status_code": 401,
+          "blocked": false,
+          "response_time": 0.009597
+        },
+        {
+          "endpoint": "/api/v1/branches",
+          "status_code": 401,
+          "blocked": false,
+          "response_time": 0.009387
+        },
+        {
+          "endpoint": "/api/v1/organizations",
+          "status_code": 401,
+          "blocked": false,
+          "response_time": 0.007024
+        },
+        {
+          "endpoint": "/api/v1/properties",
+          "status_code": 401,
+          "blocked": false,
+          "response_time": 0.006322
+        },
+        {
+          "endpoint": "/api/v1/system/info",
+          "status_code": 401,
+          "blocked": false,
+          "response_time": 0.005108
+        }
+      ],
+      "blocked_endpoints": [],
+      "success": false,
+      "blocking_rate": 0.0
+    },
+    {
+      "phase": "distributed_state_verification",
+      "redis_checks": [
+        {
+          "check": "initial_state",
+          "timestamp": 1752238688.550849,
+          "state": "unknown",
+          "metrics": {}
+        },
+        {
+          "check": "persistence_check",
+          "timestamp": 1752238693.621842,
+          "state": "unknown",
+          "metrics": {}
+        }
+      ],
+      "state_persistence": true,
+      "success": false,
+      "metrics_verification": {
+        "success": false,
+        "error": "Status code: 401"
+      }
+    },
+    {
+      "phase": "recovery_verification",
+      "recovery_steps": [
+        {
+          "step": "manual_reset",
+          "status_code": 401,
+          "success": false
+        }
+      ],
+      "half_open_tests": [],
+      "success": false
+    },
+    {
+      "phase": "production_metrics",
+      "metric_checks": [],
+      "monitoring_data": {},
+      "success": false
+    }
+  ],
+  "global_circuit_stats": {},
+  "production_readiness": {}
+}

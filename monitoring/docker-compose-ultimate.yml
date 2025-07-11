@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  # Ultimate Prometheus with corrected configuration
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: oms-prometheus-ultimate
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/rules:/etc/prometheus/rules:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  # AlertManager with corrected configuration
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: oms-alertmanager-ultimate
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager/alertmanager-complete.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager-data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  # Redis Exporter (fixed to connect to host Redis)
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: oms-redis-exporter-ultimate
+    ports:
+      - "9121:9121"
+    environment:
+      - REDIS_ADDR=host.docker.internal:6379
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  # Postgres Exporter (fixed to connect to host Postgres)
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: oms-postgres-exporter-ultimate
+    ports:
+      - "9187:9187"
+    environment:
+      - DATA_SOURCE_NAME=postgresql://oms_user:oms_password@host.docker.internal:5432/oms_db?sslmode=disable
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  # Node Exporter (host metrics)
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: oms-node-exporter-ultimate
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    restart: unless-stopped
+
+volumes:
+  prometheus-data:
+  alertmanager-data:

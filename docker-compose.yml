@@ -4,204 +4,366 @@ networks:
   arrakis-net:
     driver: bridge
 
+volumes:
+  terminus-data:
+  redis-data:
+  postgres-data:
+  prometheus-data:
+  grafana-data:
+  embedding-cache:
+
 services:
-  nginx-gateway:
-    image: nginx:latest
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - oms-monolith
-      - user-service
-      - audit-service
-    networks:
-      - arrakis-net
-
-  audit-service:
-    image: arrakis-project-audit-service
-    build:
-      context: ./audit-service
-    ports:
-      - "8092:8002"
-    environment:
-      DATABASE_URL: postgresql+asyncpg://audit_user:audit_password@audit-postgres:5432/audit_db
-      JWT_ALGORITHM: RS256
-      JWT_AUDIENCE: oms
-      JWT_ISSUER: user-service
-      JWT_PUBLIC_KEY_BASE64: LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUF3RXluUDYzNHhraytNTWVHQWI4aAo4SmZpNlludTRGODZCeHNrb3JWc0MvRkxiTkNCUGY1ZlU3OGdQV3Y2cU1PNStBYXZnK2xBbUFOMzl3eHFzQitBCjlCNXk5OXA4V3V6YUk1NXczdHlld1g1OFQxcEQzUWNWY00zNzlvdDFLVFlPNE1sam5RcUhnYy8xc0lTQjhZSkMKSWdMajJ0d21DZ3hnVmM5djJDbExJc21LYVV1ZmFaVnUyQkpidE1wV0gzdFNLOVdSQmJoUEJxS3VieXZNQldkegpuSkIrMVo0R05JczAvSVkrMUJTMVYwNkx1amZEd01JRHBaamYwMWJMUjgrNXNJakRqTlNMbWVaU2JBSTQ0Q1VqCm1oZjB3Q2FCVGtjOU5BMTB4NlFFeGs5YTFhMUVvOUVoSGN2ZXgvRlROdTNkSkJSQW00OTlyOTUvTWF1TGdtY2gKTndJREFRQUIKLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg==
-      USER_SERVICE_URL: http://user-service:8000
-      ENVIRONMENT: development
-      TZ: UTC
-    depends_on:
-      audit-postgres:
-        condition: service_healthy
-    networks:
-      - arrakis-net
-
-  oms-monolith:
-    image: arrakis-project-oms-monolith
-    build:
-      context: .
-      dockerfile: ontology-management-service/Dockerfile
-    ports:
-      - "8091:8000"
-      - "8090:8090"
-    volumes:
-      - ./ontology-management-service:/app
-      - ./packages:/app/packages
-    environment:
-      SERVICE_NAME: oms-monolith
-      ENVIRONMENT: development
-      LOG_LEVEL: DEBUG
-      DATABASE_URL: postgresql+asyncpg://oms_user:oms_password@oms-postgres:5432/oms_db
-      REDIS_URL: redis://redis:6379/0
-      TERMINUSDB_ENDPOINT: http://terminusdb:6363
-      TERMINUSDB_KEY: root
-      TERMINUSDB_API_KEY: root
-      TERMINUSDB_URL: http://terminusdb:6363
-      TERMINUSDB_USER: admin
-      TERMINUSDB_DB: arrakis
-      JWT_ALGORITHMS: 'RS256'
-      JWT_AUDIENCE: oms
-      JWT_ISSUER: user-service
-      USER_SERVICE_URL: http://user-service:8000
-      OMS_SERVICE_URL: http://oms-monolith:8000
-      AUDIT_SERVICE_URL: http://audit-service:8002
-      USE_AUDIT_SERVICE: "true"
-      OMS_CLIENT_ID: oms-monolith-client
-      OMS_CLIENT_SECRET: syZ6etlkN7S4BgguNYpn13QTUJy5MRoPQtwfC4rDv8s
-      TZ: UTC
-      # Circuit Breaker Configuration
-      CIRCUIT_BREAKER_FAILURE_THRESHOLD: "10"
-      CIRCUIT_BREAKER_SUCCESS_THRESHOLD: "2"
-      CIRCUIT_BREAKER_TIMEOUT_SECONDS: "30"
-      CIRCUIT_BREAKER_ERROR_RATE_THRESHOLD: "0.5"
-      # E-Tag Configuration  
-      ENABLE_ETAG_CACHING: "true"
-      ETAG_CACHE_TTL: "300"
-      # Backpressure Configuration
-      BACKPRESSURE_ENABLED: "true"
-      BACKPRESSURE_MAX_QUEUE_SIZE: "2000"
-      BACKPRESSURE_MAX_CONCURRENT: "200"
-    depends_on:
-      oms-postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      terminusdb:
-        condition: service_started
-    networks:
-      - arrakis-net
-
-  user-service:
-    image: arrakis-project-user-service
-    build:
-      context: .
-      dockerfile: user-service/Dockerfile
-    ports:
-      - "8080:8000"
-    environment:
-      DATABASE_URL: postgresql+asyncpg://user_user:user_password@user-postgres:5432/user_db
-      JWT_SECRET: ZAEcLwEe19c_Z-DwmKiwzYpM2ZYh7EaW46RX4QkCVUc
-      JWT_ALGORITHM: RS256
-      JWT_AUDIENCE: oms
-      JWT_ISSUER: user-service
-      JWT_PRIVATE_KEY_BASE64: LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSUV2d0lCQURBTkJna3Foa2lHOXcwQkFRRUZBQVNDQktrd2dnU2xBZ0VBQW9JQkFRREFUS2MvcmZqR1NUNHcKeDRZQnZ5SHdsK0xwaWU3Z1h6b0hHeVNpdFd3TDhVdHMwSUU5L2w5VHZ5QTlhL3FvdzduNEJxK0Q2VUNZQTNmMwpER3F3SDREMEhuTDMybnhhN05vam5uRGUzSjdCZm54UFdrUGRCeFZ3emZ2MmkzVXBOZzdneVdPZENvZUJ6L1d3CmhJSHhna0lpQXVQYTNDWUtER0JWejIvWUtVc2l5WXBwUzU5cGxXN1lFbHUweWxZZmUxSXIxWkVGdUU4R29xNXYKSzh3RlozT2NrSDdWbmdZMGl6VDhoajdVRkxWWFRvdTZOOFBBd2dPbG1OL1RWc3RIejdtd2lNT00xSXVaNWxKcwpBampnSlNPYUYvVEFKb0ZPUnowMERYVEhwQVRHVDFyVnJVU2owU0VkeTk3SDhWTTI3ZDBrRkVDYmozMnYzbjh4CnE0dUNaeUUzQWdNQkFBRUNnZ0VBR1IxSnV6Ylk1cE5QNmRDbnhKaExuSitjUDl6eHFPQmhuenVoSEJaRDlMRlYKcFBIOFFjdWV5VHkzdjEzWUFFSXVYN2F4SmR5emxodzBodWJhYU5oM0g5VjVpcnVWckhoWGdFOE9pd1NzUCtBVQpQY3d2cGNacGtKc2pwNDQzY0hqc3dOaDhjb09hc1U1UmdQVmxWU25WRjVwaUJodVBaT3VRaWY4aFZTS3cwSlkyCkpxNzF6bHRNSU12TUVxL0NQRUQxQjJVQW96clZSbFVScURuY2VMUlZRMVNYTExRYkxyZytIRTIxWmJyYjFpUFAKZlpmSktoS1BIOVgydFAwZXArZTYwTHRJRlJWbGUwU0FGc0crZXBLQkRUbTBEeGw4RU40bSt3WTZjei8xMjR4eQpiZHNPSGdxVkNKSUkxR0UyaGxLMGRjaXk1anVKbE5hYzdMSFlWcEl2blFLQmdRRGUzMUFtRXZ2Y2h3Tlh6cWMyCmxJMk43NWxWeTU3VXE0U01vNzgrUkFJb0ROdGdMS3BTZnJhMjYzZ25uRE5IMTYwNmxQU2VoYncxdVM0Q2w0R0kKQTZicUh3TllJL1J0NkJmbm1TTjlySlRxVWFmQWE1OXUzZmQvbnA2V1FudlhUYWY3OWxTKzVWNFNpMnYyVGhNbwpkZjhqbUZSRXBqY1krdDZZTkdQTHBQQ2p2UUtCZ1FEYzRmelFzd1doUDZZS3ZSOFZNWkxSZ25KZ1lLVEtnMmZLCkVrT1hnUVExeGIwQ3Z1TWJERE5wQWt6VnNFSXErWmkwUWliTEpjUHNSUkVCUkJ6NTcvOWxBeDZPZWtEa0hTdjkKQWlseGFRcS94aUFKMytlRkpCSWNsejhQU2NUNFFJeXNEZ0ZJU0RpcjRzM2FiNlhDdVBXelBzeFNST2ErTnZ3NwpCQWxtK01KdUF3S0JnUURXN2FKY1pWaFA3ai95RU04K21ubjhWQUNhTlhoaGZWcWhTbFJtbHExQnRFeG03Z3YrCjdFWUdGd1JUcHBYcGhYdUFFQi9yTStzeUgvZlg5Z1dyaG1JVVMzNHRKTmRXbWtsYlJscHNtdDh0TFR2S0c3K3YKNmcwQkhKV3hNRUkvZXBzeUovYkg5V2dJR0Q0d1ZGQ3paejk2TXkrbzJHWXdCOVpjRDhIaHBKbVFQUUtCZ1FDLwpPR1ZGeDdYNEFzSWNTZDIrMjB2ZlZLN3dBTHFwRjFtaTltek5uRU9veWFiMzJZbUN3TzFBMjF6cEljNG1waTRzCjM1ZjJCcHUyejVRSkpJNXhVZlFuM3F0MWJTRUFXc0RhS0NUNHFaZEVycURONjZqaStuY3ppVHh1WDg3Rm5Cd3MKVjNPRXdBRlB6T21wVVQ2UGROQkFmUDBsdThDR3E5Tnd3KzNmMXp0N1FRS0JnUUNhcE5QMDRSM1BSVzZ5cml6dApIeDZKRXpnRmRhRVFKQmZxNzN1UCt1Z0RnOWNvdU9BWUt2S1MvdHl0bkZsa3p0SFUyM1VwcnFQZldpd1JuZFltCjVIQTRzK0RpaWNLS2E2blE4NGlZVWx6ZkluSnFPaFc3eUJQbEhwaSsvcldjazcvWm5Ca3oxQll3aWdoK1IyY1kKNCtnSEN1Qm9oejNQdStTZEpHRkJIcHA5a0E9PQotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0tCg==
-      JWT_PUBLIC_KEY_BASE64: LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUF3RXluUDYzNHhraytNTWVHQWI4aAo4SmZpNlludTRGODZCeHNrb3JWc0MvRkxiTkNCUGY1ZlU3OGdQV3Y2cU1PNStBYXZnK2xBbUFOMzl3eHFzQitBCjlCNXk5OXA4V3V6YUk1NXczdHlld1g1OFQxcEQzUWNWY00zNzlvdDFLVFlPNE1sam5RcUhnYy8xc0lTQjhZSkMKSWdMajJ0d21DZ3hnVmM5djJDbExJc21LYVV1ZmFaVnUyQkpidE1wV0gzdFNLOVdSQmJoUEJxS3VieXZNQldkegpuSkIrMVo0R05JczAvSVkrMUJTMVYwNkx1amZEd01JRHBaamYwMWJMUjgrNXNJakRqTlNMbWVaU2JBSTQ0Q1VqCm1oZjB3Q2FCVGtjOU5BMTB4NlFFeGs5YTFhMUVvOUVoSGN2ZXgvRlROdTNkSkJSQW00OTlyOTUvTWF1TGdtY2gKTndJREFRQUIKLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg==
-      REDIS_URL: redis://redis:6379/0
-      TZ: UTC
-      ENVIRONMENT: development
-    depends_on:
-      user-postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - arrakis-net
-
-  oms-postgres:
-    image: postgres:15
-    environment:
-      POSTGRES_DB: oms_db
-      POSTGRES_USER: oms_user
-      POSTGRES_PASSWORD: oms_password
-    ports:
-      - "5433:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U oms_user -d oms_db"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    volumes:
-      - oms_postgres_data:/var/lib/postgresql/data
-    networks:
-      - arrakis-net
-
-  user-postgres:
-    image: postgres:15
-    environment:
-      POSTGRES_DB: user_db
-      POSTGRES_USER: user_user
-      POSTGRES_PASSWORD: user_password
-    ports:
-      - "5434:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user_user -d user_db"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    volumes:
-      - user_postgres_data:/var/lib/postgresql/data
-    networks:
-      - arrakis-net
-
-  audit-postgres:
-    image: postgres:15
-    environment:
-      POSTGRES_DB: audit_db
-      POSTGRES_USER: audit_user
-      POSTGRES_PASSWORD: audit_password
-    ports:
-      - "5435:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U audit_user -d audit_db"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    volumes:
-      - audit_postgres_data:/var/lib/postgresql/data
-    networks:
-      - arrakis-net
-
+  # Core Infrastructure
   terminusdb:
     image: terminusdb/terminusdb-server:latest
+    container_name: arrakis-terminusdb
+    environment:
+      - TERMINUSDB_SERVER_PORT=6363
+      - TERMINUSDB_ADMIN_PASS=changeme-admin-pass
     ports:
       - "6363:6363"
-    environment:
-      TERMINUSDB_ADMIN_PASSWORD: root
+    volumes:
+      - terminus-data:/app/terminusdb/storage
     networks:
       - arrakis-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6363/api/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   redis:
     image: redis:7-alpine
+    container_name: arrakis-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - arrakis-net
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: arrakis-postgres
+    environment:
+      - POSTGRES_USER=arrakis_user
+      - POSTGRES_PASSWORD=arrakis_password
+      - POSTGRES_DB=arrakis_db
+      - POSTGRES_INITDB_ARGS=-E UTF8
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - arrakis-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U arrakis_user -d arrakis_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nats:
+    image: nats:2.10-alpine
+    container_name: arrakis-nats
+    ports:
+      - "4222:4222"
+      - "6222:6222"
+      - "8222:8222"
+    networks:
+      - arrakis-net
+    restart: unless-stopped
+
+  # Core Services
+  user-service:
+    image: arrakis-user-service
+    build:
+      context: ./user-service
+    container_name: arrakis-user-service
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://arrakis_user:arrakis_password@postgres:5432/user_service_db
+      - JWT_SECRET=${JWT_SECRET:-your-very-secure-jwt-secret-key}
+      - JWT_ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=30
+      - REFRESH_TOKEN_EXPIRE_DAYS=7
+    ports:
+      - "8010:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - arrakis-net
+    restart: unless-stopped
+
+  audit-service:
+    image: arrakis-audit-service
+    build:
+      context: ./audit-service
+    container_name: arrakis-audit-service
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://arrakis_user:arrakis_password@postgres:5432/audit_db
+      - JWT_SECRET=${JWT_SECRET:-your-very-secure-jwt-secret-key}
+      - USER_SERVICE_URL=http://user-service:8000
+    ports:
+      - "8011:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - arrakis-net
+    restart: unless-stopped
+
+  # Microservices (점진적 마이그레이션)
+  data-kernel-service:
+    image: arrakis-data-kernel
+    build:
+      context: ./data-kernel-service
+    container_name: arrakis-data-kernel
+    environment:
+      - TERMINUSDB_ENDPOINT=http://terminusdb:6363
+      - TERMINUSDB_USER=admin
+      - TERMINUSDB_PASS=changeme-admin-pass
+      - JWT_SECRET=${JWT_SECRET:-your-very-secure-jwt-secret-key}
+      - USE_IAM_VALIDATION=${USE_IAM_VALIDATION:-false}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - DATA_KERNEL_PORT=8080
+      - GRPC_PORT=50051
+    ports:
+      - "8080:8080"     # REST API
+      - "50051:50051"   # gRPC
+    depends_on:
+      - terminusdb
+    networks:
+      - arrakis-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  embedding-service:
+    image: arrakis-embedding-service
+    build:
+      context: ./embedding-service
+    container_name: arrakis-embedding-service
+    environment:
+      - SERVICE_NAME=embedding-service
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - REDIS_URL=redis://redis:6379/5
+      - DATA_KERNEL_GRPC_ENDPOINT=data-kernel-service:50051
+      - USE_DATA_KERNEL_GATEWAY=${USE_DATA_KERNEL_GATEWAY:-true}
+      - DEFAULT_MODEL=sentence-transformers/all-MiniLM-L6-v2
+      - GRPC_PORT=50055
+      - EMBEDDING_SERVICE_PORT=8001
+    ports:
+      - "8001:8001"   # REST API
+      - "50055:50055" # gRPC
+    depends_on:
+      - redis
+      - data-kernel-service
+    networks:
+      - arrakis-net
+    restart: unless-stopped
+    volumes:
+      - embedding-cache:/app/.cache/models
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  scheduler-service:
+    image: arrakis-scheduler-service
+    build:
+      context: ./scheduler-service
+    container_name: arrakis-scheduler-service
+    environment:
+      - SERVICE_NAME=scheduler-service
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - REDIS_URL=redis://redis:6379/6
+      - DATA_KERNEL_GRPC_ENDPOINT=data-kernel-service:50051
+      - USE_DATA_KERNEL_GATEWAY=${USE_DATA_KERNEL_GATEWAY:-true}
+      - SCHEDULER_PORT=8002
+      - GRPC_PORT=50056
+    ports:
+      - "8002:8002"   # REST API
+      - "50056:50056" # gRPC
+    depends_on:
+      - redis
+      - data-kernel-service
+    networks:
+      - arrakis-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  event-gateway:
+    image: arrakis-event-gateway
+    build:
+      context: ./event-gateway
+    container_name: arrakis-event-gateway
+    environment:
+      - SERVICE_NAME=event-gateway
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - NATS_URL=nats://nats:4222
+      - REDIS_URL=redis://redis:6379/7
+      - EVENT_GATEWAY_PORT=8003
+      - GRPC_PORT=50057
+      - ENABLE_WEBHOOKS=${ENABLE_WEBHOOKS:-true}
+    ports:
+      - "8003:8003"   # REST API
+      - "50057:50057" # gRPC
+    depends_on:
+      - nats
+      - redis
+    networks:
+      - arrakis-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # OMS Service (모놀리스 -> 마이크로서비스 전환 중)
+  oms:
+    image: arrakis-oms
+    build:
+      context: ./ontology-management-service
+    container_name: arrakis-oms
+    environment:
+      # Database Configuration
+      - TERMINUSDB_ENDPOINT=http://terminusdb:6363
+      - REDIS_URL=redis://redis:6379
+      - NATS_URL=nats://nats:4222
+      - DATABASE_URL=postgresql://arrakis_user:arrakis_password@postgres:5432/oms_db
+      
+      # Service URLs
+      - USER_SERVICE_URL=http://user-service:8000
+      - AUDIT_SERVICE_URL=http://audit-service:8000
+      
+      # JWT Configuration
+      - JWT_SECRET=${JWT_SECRET:-your-very-secure-jwt-secret-key}
+      
+      # Microservices Mode (점진적 활성화)
+      - USE_DATA_KERNEL_GATEWAY=${USE_DATA_KERNEL_GATEWAY:-false}
+      - DATA_KERNEL_GRPC_ENDPOINT=data-kernel-service:50051
+      - USE_EMBEDDING_MS=${USE_EMBEDDING_MS:-false}
+      - EMBEDDING_SERVICE_ENDPOINT=embedding-service:50055
+      - USE_SCHEDULER_MS=${USE_SCHEDULER_MS:-false}
+      - SCHEDULER_SERVICE_ENDPOINT=scheduler-service:50056
+      - USE_EVENT_GATEWAY=${USE_EVENT_GATEWAY:-false}
+      - EVENT_GATEWAY_ENDPOINT=event-gateway:50057
+      
+      # Monitoring
+      - ENABLE_TELEMETRY=${ENABLE_TELEMETRY:-true}
+      - ENABLE_METRICS=${ENABLE_METRICS:-true}
+      - PROMETHEUS_PORT=8090
+    ports:
+      - "8000:8000"      # Main API
+      - "8004:8004"      # WebSocket
+      - "8006:8006"      # GraphQL
+      - "8090:8090"      # Prometheus metrics
+    depends_on:
+      - terminusdb
+      - redis
+      - nats
+      - postgres
+      - user-service
+      - audit-service
+    networks:
+      - arrakis-net
+    restart: unless-stopped
+
+  # Monitoring Stack
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: arrakis-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/prometheus/rules:/etc/prometheus/rules:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+    networks:
+      - arrakis-net
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: arrakis-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    networks:
+      - arrakis-net
+    restart: unless-stopped
 
   jaeger:
     image: jaegertracing/all-in-one:latest
+    container_name: arrakis-jaeger
+    environment:
+      - COLLECTOR_ZIPKIN_HTTP_PORT=9411
+      - COLLECTOR_OTLP_ENABLED=true
     ports:
+      - "6831:6831/udp"
       - "16686:16686"
       - "14268:14268"
+      - "4317:4317"     # OTLP gRPC
+      - "4318:4318"     # OTLP HTTP
     networks:
       - arrakis-net
+    restart: unless-stopped
 
-volumes:
-  oms_postgres_data:
-  user_postgres_data:
-  audit_postgres_data:
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: arrakis-alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+    networks:
+      - arrakis-net
+    restart: unless-stopped
+
+  # API Gateway (Optional - for production)
+  nginx:
+    image: nginx:alpine
+    container_name: arrakis-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - oms
+      - user-service
+      - audit-service
+    networks:
+      - arrakis-net
+    restart: unless-stopped

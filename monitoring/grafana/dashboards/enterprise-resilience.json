@@ -1,0 +1,662 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Enterprise Resilience & Performance Dashboard",
+    "description": "Complete enterprise-grade monitoring for resilience mechanisms, GC, and system performance",
+    "tags": ["enterprise", "resilience", "performance", "gc", "system"],
+    "timezone": "browser",
+    "refresh": "10s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h"],
+      "time_options": ["5m", "15m", "1h", "6h", "12h", "24h", "2d", "7d", "30d"]
+    },
+    "templating": {
+      "list": [
+        {
+          "name": "service",
+          "type": "query",
+          "query": "label_values(http_requests_total, service)",
+          "refresh": 1,
+          "includeAll": true,
+          "multi": true,
+          "allValue": ".*"
+        },
+        {
+          "name": "instance",
+          "type": "query", 
+          "query": "label_values(up, instance)",
+          "refresh": 1,
+          "includeAll": true,
+          "multi": true
+        }
+      ]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "🎯 System Overview",
+        "type": "row",
+        "collapsed": false,
+        "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Service Health Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "up{job=~\".*\"}",
+            "legendFormat": "{{job}} - {{instance}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {"options": {"0": {"text": "DOWN", "color": "red"}}, "type": "value"},
+              {"options": {"1": {"text": "UP", "color": "green"}}, "type": "value"}
+            ]
+          }
+        },
+        "gridPos": {"h": 4, "w": 8, "x": 0, "y": 1}
+      },
+      {
+        "id": 3,
+        "title": "Overall Resilience Score",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "(\n  (1 - rate(circuit_breaker_calls_total{result=\"failure\"}[5m]) / rate(circuit_breaker_calls_total[5m])) * 30 +\n  (rate(etag_cache_requests_total{result=\"hit\"}[5m]) / rate(etag_cache_requests_total[5m])) * 25 +\n  (rate(redis_operations_total{result=\"success\"}[5m]) / rate(redis_operations_total[5m])) * 25 +\n  (1 - rate(backpressure_requests_rejected_total[5m]) / rate(http_requests_total[5m])) * 20\n)",
+            "legendFormat": "Resilience Score"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "min": 0,
+            "max": 100,
+            "unit": "percent",
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 70},
+                {"color": "green", "value": 85}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 4, "w": 8, "x": 8, "y": 1}
+      },
+      {
+        "id": 4,
+        "title": "Request Rate & Latency",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{service=~\"$service\"}[5m])",
+            "legendFormat": "{{service}} RPS"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{service=~\"$service\"}[5m]))",
+            "legendFormat": "{{service}} P95 Latency"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        },
+        "gridPos": {"h": 4, "w": 8, "x": 16, "y": 1}
+      },
+      {
+        "id": 10,
+        "title": "🛡️ Circuit Breaker Metrics",
+        "type": "row",
+        "collapsed": false,
+        "gridPos": {"h": 1, "w": 24, "x": 0, "y": 5}
+      },
+      {
+        "id": 11,
+        "title": "Circuit Breaker States",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "circuit_breaker_state{service=~\"$service\"}",
+            "legendFormat": "{{service}} - {{circuit_name}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {"options": {"0": {"text": "CLOSED", "color": "green"}}, "type": "value"},
+              {"options": {"1": {"text": "OPEN", "color": "red"}}, "type": "value"},
+              {"options": {"2": {"text": "HALF_OPEN", "color": "yellow"}}, "type": "value"}
+            ]
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 6}
+      },
+      {
+        "id": 12,
+        "title": "Circuit Breaker Failure Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(circuit_breaker_calls_total{result=\"failure\",service=~\"$service\"}[5m]) / rate(circuit_breaker_calls_total{service=~\"$service\"}[5m])",
+            "legendFormat": "{{service}} - {{circuit_name}} Failure Rate"
+          }
+        ],
+        "yAxes": [
+          {"min": 0, "max": 1, "unit": "percentunit"}
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [0.5], "type": "gt"},
+              "query": {"params": ["A", "5m", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "for": "1m",
+          "frequency": "10s",
+          "handler": 1,
+          "name": "High Circuit Breaker Failure Rate",
+          "noDataState": "no_data",
+          "message": "Circuit breaker failure rate is above 50%"
+        },
+        "gridPos": {"h": 4, "w": 9, "x": 6, "y": 6}
+      },
+      {
+        "id": 13,
+        "title": "Circuit Breaker State Transitions",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "increase(circuit_breaker_state_transitions_total{service=~\"$service\"}[1m])",
+            "legendFormat": "{{service}} {{from_state}} → {{to_state}}"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 9, "x": 15, "y": 6}
+      },
+      {
+        "id": 20,
+        "title": "💾 Caching Performance",
+        "type": "row", 
+        "collapsed": false,
+        "gridPos": {"h": 1, "w": 24, "x": 0, "y": 10}
+      },
+      {
+        "id": 21,
+        "title": "E-Tag Cache Performance",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(etag_cache_requests_total{result=\"hit\"}[5m]) / rate(etag_cache_requests_total[5m])",
+            "legendFormat": "{{resource_type}} Hit Rate"
+          },
+          {
+            "expr": "rate(etag_cache_requests_total{result=\"miss\"}[5m]) / rate(etag_cache_requests_total[5m])",
+            "legendFormat": "{{resource_type}} Miss Rate"
+          }
+        ],
+        "yAxes": [
+          {"min": 0, "max": 1, "unit": "percentunit"}
+        ],
+        "gridPos": {"h": 4, "w": 8, "x": 0, "y": 11}
+      },
+      {
+        "id": 22,
+        "title": "E-Tag TTL Distribution",
+        "type": "histogram",
+        "targets": [
+          {
+            "expr": "increase(etag_cache_ttl_seconds_bucket[5m])",
+            "legendFormat": "{{resource_type}} TTL {{le}}s"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 8, "x": 8, "y": 11}
+      },
+      {
+        "id": 23,
+        "title": "Redis Cache Performance",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(redis_operations_total{result=\"success\"}[5m])",
+            "legendFormat": "{{operation}} Success/sec"
+          },
+          {
+            "expr": "rate(redis_operations_total{result=\"failure\"}[5m])",
+            "legendFormat": "{{operation}} Failure/sec"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(redis_operation_duration_seconds_bucket[5m]))",
+            "legendFormat": "{{operation}} P95 Duration"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 8, "x": 16, "y": 11}
+      },
+      {
+        "id": 30,
+        "title": "🔄 Backpressure & Queue Management", 
+        "type": "row",
+        "collapsed": false,
+        "gridPos": {"h": 1, "w": 24, "x": 0, "y": 15}
+      },
+      {
+        "id": 31,
+        "title": "Queue Sizes",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "backpressure_queue_size{service=~\"$service\"}",
+            "legendFormat": "{{service}} {{queue_type}} Queue"
+          }
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [800], "type": "gt"},
+              "query": {"params": ["A", "5m", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "for": "2m",
+          "frequency": "10s",
+          "handler": 1,
+          "name": "High Queue Size",
+          "noDataState": "no_data",
+          "message": "Queue size is approaching capacity"
+        },
+        "gridPos": {"h": 4, "w": 8, "x": 0, "y": 16}
+      },
+      {
+        "id": 32,
+        "title": "Request Rejection Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(backpressure_requests_rejected_total{service=~\"$service\"}[5m])",
+            "legendFormat": "{{service}} {{reason}} Rejections/sec"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 8, "x": 8, "y": 16}
+      },
+      {
+        "id": 33,
+        "title": "Queue Wait Times",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(backpressure_queue_wait_seconds_bucket{service=~\"$service\"}[5m]))",
+            "legendFormat": "{{service}} {{priority}} P50"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(backpressure_queue_wait_seconds_bucket{service=~\"$service\"}[5m]))",
+            "legendFormat": "{{service}} {{priority}} P95"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(backpressure_queue_wait_seconds_bucket{service=~\"$service\"}[5m]))",
+            "legendFormat": "{{service}} {{priority}} P99"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 8, "x": 16, "y": 16}
+      },
+      {
+        "id": 40,
+        "title": "🗑️ Garbage Collection & Memory Management",
+        "type": "row",
+        "collapsed": false, 
+        "gridPos": {"h": 1, "w": 24, "x": 0, "y": 20}
+      },
+      {
+        "id": 41,
+        "title": "GC Collections by Generation",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(python_gc_collections_total[5m])",
+            "legendFormat": "Generation {{generation}} Collections/sec"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 8, "x": 0, "y": 21}
+      },
+      {
+        "id": 42,
+        "title": "GC Collection Duration",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(python_gc_collection_duration_seconds_bucket[5m]))",
+            "legendFormat": "Generation {{generation}} P50"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(python_gc_collection_duration_seconds_bucket[5m]))",
+            "legendFormat": "Generation {{generation}} P95"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(python_gc_collection_duration_seconds_bucket[5m]))",
+            "legendFormat": "Generation {{generation}} P99"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 8, "x": 8, "y": 21}
+      },
+      {
+        "id": 43,
+        "title": "Memory Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "process_memory_rss_bytes",
+            "legendFormat": "RSS Memory"
+          },
+          {
+            "expr": "process_memory_vms_bytes", 
+            "legendFormat": "Virtual Memory"
+          },
+          {
+            "expr": "python_memory_heap_size_bytes",
+            "legendFormat": "Python Heap"
+          }
+        ],
+        "yAxes": [
+          {"unit": "bytes"}
+        ],
+        "gridPos": {"h": 4, "w": 8, "x": 16, "y": 21}
+      },
+      {
+        "id": 44,
+        "title": "Object Count by Type (Top 10)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "topk(10, python_memory_objects_count)",
+            "legendFormat": "{{type}} Objects"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 12, "x": 0, "y": 25}
+      },
+      {
+        "id": 45,
+        "title": "GC Objects Collected vs Uncollectable",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(python_gc_objects_collected_total[5m])",
+            "legendFormat": "Generation {{generation}} Collected/sec"
+          },
+          {
+            "expr": "rate(python_gc_objects_uncollectable_total[5m])",
+            "legendFormat": "Generation {{generation}} Uncollectable/sec"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 12, "x": 12, "y": 25}
+      },
+      {
+        "id": 50,
+        "title": "💻 System Performance",
+        "type": "row",
+        "collapsed": false,
+        "gridPos": {"h": 1, "w": 24, "x": 0, "y": 29}
+      },
+      {
+        "id": 51,
+        "title": "CPU Usage by Core",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "system_cpu_usage_percent",
+            "legendFormat": "{{core}}"
+          }
+        ],
+        "yAxes": [
+          {"min": 0, "max": 100, "unit": "percent"}
+        ],
+        "gridPos": {"h": 4, "w": 8, "x": 0, "y": 30}
+      },
+      {
+        "id": 52,
+        "title": "Memory Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "system_memory_usage_bytes{type=\"used\"}",
+            "legendFormat": "Used Memory"
+          },
+          {
+            "expr": "system_memory_usage_bytes{type=\"available\"}",
+            "legendFormat": "Available Memory"
+          },
+          {
+            "expr": "system_memory_usage_bytes{type=\"free\"}",
+            "legendFormat": "Free Memory"
+          }
+        ],
+        "yAxes": [
+          {"unit": "bytes"}
+        ],
+        "gridPos": {"h": 4, "w": 8, "x": 8, "y": 30}
+      },
+      {
+        "id": 53,
+        "title": "Load Average",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "system_cpu_load_average{interval=\"1m\"}",
+            "legendFormat": "1 minute"
+          },
+          {
+            "expr": "system_cpu_load_average{interval=\"5m\"}",
+            "legendFormat": "5 minutes"
+          },
+          {
+            "expr": "system_cpu_load_average{interval=\"15m\"}",
+            "legendFormat": "15 minutes"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 8, "x": 16, "y": 30}
+      },
+      {
+        "id": 60,
+        "title": "🔐 Security & Auth Metrics",
+        "type": "row",
+        "collapsed": false,
+        "gridPos": {"h": 1, "w": 24, "x": 0, "y": 34}
+      },
+      {
+        "id": 61,
+        "title": "Authentication Success/Failure Rate",
+        "type": "graph", 
+        "targets": [
+          {
+            "expr": "rate(auth_attempts_total{result=\"success\"}[5m])",
+            "legendFormat": "{{method}} Success/sec"
+          },
+          {
+            "expr": "rate(auth_attempts_total{result=\"failure\"}[5m])",
+            "legendFormat": "{{method}} Failure/sec"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 8, "x": 0, "y": 35}
+      },
+      {
+        "id": 62,
+        "title": "Authorization Check Results",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(authz_checks_total{result=\"allowed\"}[5m])",
+            "legendFormat": "{{resource}} Allowed/sec"
+          },
+          {
+            "expr": "rate(authz_checks_total{result=\"denied\"}[5m])",
+            "legendFormat": "{{resource}} Denied/sec"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 8, "x": 8, "y": 35}
+      },
+      {
+        "id": 63,
+        "title": "Security Events",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(security_events_total[5m])",
+            "legendFormat": "{{event_type}} {{severity}}/sec"
+          }
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [0.1], "type": "gt"},
+              "query": {"params": ["A", "5m", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "for": "1m",
+          "frequency": "10s",
+          "handler": 1,
+          "name": "Security Event Alert", 
+          "noDataState": "no_data",
+          "message": "Security events detected"
+        },
+        "gridPos": {"h": 4, "w": 8, "x": 16, "y": 35}
+      },
+      {
+        "id": 70,
+        "title": "📊 Business Metrics",
+        "type": "row",
+        "collapsed": false,
+        "gridPos": {"h": 1, "w": 24, "x": 0, "y": 39}
+      },
+      {
+        "id": 71,
+        "title": "Schema Operations",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(schema_operations_total{result=\"success\"}[5m])",
+            "legendFormat": "{{operation}} {{branch}} Success/sec"
+          },
+          {
+            "expr": "rate(schema_operations_total{result=\"failure\"}[5m])",
+            "legendFormat": "{{operation}} {{branch}} Failure/sec"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 8, "x": 0, "y": 40}
+      },
+      {
+        "id": 72,
+        "title": "Document Operations",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(document_operations_total{result=\"success\"}[5m])",
+            "legendFormat": "{{operation}} {{document_type}} Success/sec"
+          },
+          {
+            "expr": "rate(document_operations_total{result=\"failure\"}[5m])",
+            "legendFormat": "{{operation}} {{document_type}} Failure/sec"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 8, "x": 8, "y": 40}
+      },
+      {
+        "id": 73,
+        "title": "Audit Events Processing",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(audit_events_total{result=\"success\"}[5m])",
+            "legendFormat": "{{event_type}} {{service}} Success/sec"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(audit_processing_duration_seconds_bucket[5m]))",
+            "legendFormat": "{{event_type}} P95 Duration"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 8, "x": 16, "y": 40}
+      },
+      {
+        "id": 80,
+        "title": "⚡ Performance & Database",
+        "type": "row",
+        "collapsed": false,
+        "gridPos": {"h": 1, "w": 24, "x": 0, "y": 44}
+      },
+      {
+        "id": 81,
+        "title": "Database Query Performance",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(database_query_duration_seconds_bucket[5m]))",
+            "legendFormat": "{{database}} {{operation}} P50"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(database_query_duration_seconds_bucket[5m]))",
+            "legendFormat": "{{database}} {{operation}} P95"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(database_query_duration_seconds_bucket[5m]))",
+            "legendFormat": "{{database}} {{operation}} P99"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 8, "x": 0, "y": 45}
+      },
+      {
+        "id": 82,
+        "title": "Database Connections",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "database_connections_active",
+            "legendFormat": "{{database}} {{pool}} Active"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 8, "x": 8, "y": 45}
+      },
+      {
+        "id": 83,
+        "title": "API Throughput",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "api_throughput_requests_per_second",
+            "legendFormat": "{{endpoint}} RPS"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 8, "x": 16, "y": 45}
+      }
+    ],
+    "annotations": {
+      "list": [
+        {
+          "name": "Deployments",
+          "datasource": "prometheus",
+          "enable": true,
+          "expr": "increase(up[1m]) > 0",
+          "iconColor": "green",
+          "title": "Service Started"
+        },
+        {
+          "name": "Circuit Breaker Events",
+          "datasource": "prometheus", 
+          "enable": true,
+          "expr": "increase(circuit_breaker_state_transitions_total[1m]) > 0",
+          "iconColor": "red",
+          "title": "Circuit Breaker State Change"
+        }
+      ]
+    }
+  }
+}

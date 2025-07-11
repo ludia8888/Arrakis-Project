@@ -41,7 +41,7 @@ from api.v1 import (
     property_routes, audit_routes, batch_routes, branch_lock_routes, 
     branch_routes, document_routes, document_crud_routes, graph_health_routes, idempotent_routes,
     issue_tracking_routes, job_progress_routes, shadow_index_routes,
-    time_travel_routes, version_routes, test_routes, circuit_breaker_routes
+    time_travel_routes, version_routes, test_routes, circuit_breaker_routes, config_routes
     # resilience_dashboard_routes - REMOVED: Replaced with enterprise observability stack
 )
 from api.v1 import auth_proxy_routes  # Direct import
@@ -271,7 +271,7 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
         audit_routes, batch_routes, branch_lock_routes, branch_routes,
         document_routes, document_crud_routes, graph_health_routes, idempotent_routes,
         issue_tracking_routes, job_progress_routes, shadow_index_routes, 
-        time_travel_routes, version_routes, test_routes, circuit_breaker_routes
+        time_travel_routes, version_routes, test_routes, circuit_breaker_routes, config_routes
         # resilience_dashboard_routes - REMOVED: Replaced with enterprise observability stack
     ]
     for router_module in v1_routers:

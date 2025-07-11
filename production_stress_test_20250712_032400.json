@@ -1,0 +1,34 @@
+{
+  "timestamp": "2025-07-12T03:23:51.463036",
+  "stress_tests": {
+    "concurrent_load": {
+      "concurrent_users": 200,
+      "success_rate": 100.0,
+      "total_time": 0.048490047454833984,
+      "requests_per_second": 4124.557728805892,
+      "success_count": 200,
+      "error_count": 0
+    },
+    "bulk_processing": {
+      "total_operations": 350,
+      "schema_success_rate": 100.0,
+      "branch_success_rate": 100.0,
+      "audit_success_rate": 100.0,
+      "total_time": 0.07059574127197266,
+      "operations_per_second": 4957.806146572104
+    }
+  },
+  "performance_metrics": {},
+  "failure_recovery": {
+    "invalid_token_handling": false,
+    "malformed_request_handling": false,
+    "high_error_rate_recovery": true,
+    "service_resilience": true
+  },
+  "final_stress_score": {
+    "concurrent_performance": 100,
+    "bulk_processing": 100,
+    "failure_recovery": 50.0,
+    "overall_resilience": 85.0
+  }
+}

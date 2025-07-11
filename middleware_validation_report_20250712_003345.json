@@ -1,0 +1,20 @@
+{
+  "timestamp": "2025-07-12T00:33:45.011195",
+  "validations": [
+    {
+      "check": "RequestIdMiddleware before AuditLogMiddleware",
+      "passed": true,
+      "details": "RequestIdMiddleware (index 6) is before AuditLogMiddleware (index 8)"
+    },
+    {
+      "check": "AuthMiddleware provides user_context",
+      "passed": true,
+      "details": "AuthMiddleware correctly sets request.state.user_context"
+    }
+  ],
+  "summary": {
+    "total": 2,
+    "passed": 2,
+    "failed": 0
+  }
+}

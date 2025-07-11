@@ -79,4 +79,11 @@ venv.bak/
 # =============================================================================
 **/k8s/secrets/
 **/kubernetes/secrets/
-**/manifests/secrets/
+**/manifests/secrets/# Large data files
+comprehensive_duplicate_analysis_*.json
+duplicate_code_report.json
+semantic_duplicate_analysis_*.json
+*_test_*.json
+*_validation_*.json
+*_report_*.json
+

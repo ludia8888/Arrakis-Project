@@ -1,0 +1,88 @@
+{
+  "summary": {
+    "total_tests": 11,
+    "passed_tests": 11,
+    "success_rate": 100.0,
+    "total_duration_ms": 5678,
+    "timestamp": "2025-07-11T16:48:10.102120"
+  },
+  "test_results": [
+    {
+      "test_name": "서비스 헬스 체크",
+      "status": "PASS",
+      "details": "모든 서비스 정상: User(healthy), Audit(healthy), OMS(healthy)",
+      "duration_ms": 13,
+      "timestamp": "2025-07-11T16:48:04.436933"
+    },
+    {
+      "test_name": "JWKS 엔드포인트",
+      "status": "PASS",
+      "details": "키 개수: 1",
+      "duration_ms": 14,
+      "timestamp": "2025-07-11T16:48:04.952449"
+    },
+    {
+      "test_name": "사용자 등록",
+      "status": "PASS",
+      "details": "사용자 ID: test-user-123",
+      "duration_ms": 20,
+      "timestamp": "2025-07-11T16:48:05.474007"
+    },
+    {
+      "test_name": "사용자 로그인",
+      "status": "PASS",
+      "details": "JWT 토큰 획득 성공",
+      "duration_ms": 14,
+      "timestamp": "2025-07-11T16:48:05.990093"
+    },
+    {
+      "test_name": "인증된 OMS 접근",
+      "status": "PASS",
+      "details": "스키마 개수: 1",
+      "duration_ms": 13,
+      "timestamp": "2025-07-11T16:48:06.505037"
+    },
+    {
+      "test_name": "스키마 생성",
+      "status": "PASS",
+      "details": "스키마 ID: schema-123",
+      "duration_ms": 13,
+      "timestamp": "2025-07-11T16:48:07.019379"
+    },
+    {
+      "test_name": "브랜치 생성",
+      "status": "PASS",
+      "details": "브랜치 ID: branch-123",
+      "duration_ms": 16,
+      "timestamp": "2025-07-11T16:48:07.537251"
+    },
+    {
+      "test_name": "감사 로깅",
+      "status": "PASS",
+      "details": "로그 ID: audit-log-123",
+      "duration_ms": 10,
+      "timestamp": "2025-07-11T16:48:08.048829"
+    },
+    {
+      "test_name": "감사 로그 조회",
+      "status": "PASS",
+      "details": "로그 수: 1",
+      "duration_ms": 14,
+      "timestamp": "2025-07-11T16:48:08.564278"
+    },
+    {
+      "test_name": "서비스 간 감사 연동",
+      "status": "PASS",
+      "details": "이벤트 수: 1",
+      "duration_ms": 14,
+      "timestamp": "2025-07-11T16:48:09.079942"
+    },
+    {
+      "test_name": "에러 처리",
+      "status": "PASS",
+      "details": "올바른 HTTP 상태 코드 반환",
+      "duration_ms": 19,
+      "timestamp": "2025-07-11T16:48:09.600680"
+    }
+  ]
+}

@@ -1,0 +1,138 @@
+{
+  "timestamp": "2025-07-12T02:50:36.425951",
+  "production_ready_score": 72.08333333333333,
+  "user_scenarios": {
+    "alice_schema_designer": {
+      "user": "alice",
+      "role": "schema_designer",
+      "steps": [
+        {
+          "step": "user_registration",
+          "success": true
+        },
+        {
+          "step": "user_login",
+          "success": true
+        },
+        {
+          "step": "schema_creation",
+          "success": true
+        },
+        {
+          "step": "schema_versioning",
+          "success": true
+        },
+        {
+          "step": "schema_permissions",
+          "success": true
+        }
+      ],
+      "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJ0ZXN0LXVzZXItMTIzIiwidXNlcm5hbWUiOiJ0ZXN0X2ludGVncmF0aW9uX3VzZXIiLCJyb2xlcyI6WyJ1c2VyIiwiYWRtaW4iXSwicGVybWlzc2lvbnMiOlsicmVhZCIsIndyaXRlIiwiYWRtaW4iXSwiZXhwIjo5OTk5OTk5OTk5LCJpYXQiOjE3MDczNDgwMDAsImlzcyI6InVzZXItc2VydmljZSIsImF1ZCI6Im9tcyJ9"
+    },
+    "bob_data_manager": {
+      "user": "bob",
+      "role": "data_manager",
+      "steps": [
+        {
+          "step": "user_registration",
+          "success": true
+        },
+        {
+          "step": "user_login",
+          "success": true
+        },
+        {
+          "step": "document_creation",
+          "success": true
+        },
+        {
+          "step": "document_crud",
+          "success": true
+        },
+        {
+          "step": "branch_management",
+          "success": true
+        }
+      ],
+      "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJ0ZXN0LXVzZXItMTIzIiwidXNlcm5hbWUiOiJ0ZXN0X2ludGVncmF0aW9uX3VzZXIiLCJyb2xlcyI6WyJ1c2VyIiwiYWRtaW4iXSwicGVybWlzc2lvbnMiOlsicmVhZCIsIndyaXRlIiwiYWRtaW4iXSwiZXhwIjo5OTk5OTk5OTk5LCJpYXQiOjE3MDczNDgwMDAsImlzcyI6InVzZXItc2VydmljZSIsImF1ZCI6Im9tcyJ9"
+    },
+    "charlie_system_admin": {
+      "user": "charlie",
+      "role": "admin",
+      "steps": [
+        {
+          "step": "admin_login",
+          "success": true
+        },
+        {
+          "step": "system_monitoring",
+          "success": false
+        },
+        {
+          "step": "user_management",
+          "success": true
+        },
+        {
+          "step": "audit_review",
+          "success": true
+        },
+        {
+          "step": "system_config",
+          "success": true
+        }
+      ],
+      "token": ""
+    }
+  },
+  "service_integration": {
+    "basic_health": {
+      "user_service": true,
+      "ontology_service": true,
+      "audit_service": true
+    }
+  },
+  "concurrent_users": {
+    "total_users": 10,
+    "successful_users": 10,
+    "success_rate": 100.0
+  },
+  "error_recovery": {
+    "invalid_token": false,
+    "network_timeout": false,
+    "invalid_data": false,
+    "service_unavailable": true
+  },
+  "performance": {
+    "system_resources": {
+      "cpu_usage_percent": 5.6,
+      "memory_usage_percent": 71.3,
+      "disk_usage_percent": 3.209284041837055,
+      "available_memory_gb": 4.5961151123046875
+    },
+    "response_times": {
+      "average_ms": 2.2805588585989818,
+      "maximum_ms": 3.4198760986328125,
+      "total_requests": 14
+    },
+    "performance_thresholds": {
+      "cpu_ok": true,
+      "memory_ok": true,
+      "response_time_ok": true
+    }
+  },
+  "security": {
+    "jwt_validation": false,
+    "role_based_access": false,
+    "audit_logging": false,
+    "data_sanitization": false
+  },
+  "detailed_results": [],
+  "score_breakdown": {
+    "service_integration": 20.0,
+    "user_scenarios": 23.333333333333332,
+    "concurrent_users": 15.0,
+    "error_recovery": 3.75,
+    "performance": 10.0,
+    "security": 0.0
+  }
+}

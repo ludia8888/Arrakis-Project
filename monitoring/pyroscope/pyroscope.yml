@@ -1,0 +1,71 @@
+# Pyroscope Server Configuration
+# Enterprise-grade continuous profiling
+
+# Server configuration
+server:
+  http_listen_port: 4040
+  log_level: info
+
+# Storage configuration
+storage:
+  backend: filesystem
+  filesystem:
+    path: /var/lib/pyroscope
+
+# Distributor configuration for receiving profiles
+distributor:
+  receivers_timeout: 10s
+
+# Ingester configuration
+ingester:
+  lifecycler:
+    address: 127.0.0.1
+    ring:
+      kvstore:
+        store: inmemory
+      replication_factor: 1
+    final_sleep: 0s
+  num_tokens: 512
+  max_transfer_retries: 0
+
+# Querier configuration
+querier:
+  max_concurrent: 20
+
+# Frontend configuration
+frontend:
+  max_outstanding_per_tenant: 100
+
+# Limits configuration
+limits_config:
+  max_global_series_per_user: 5000
+  max_series_per_query: 2500
+  max_samples_per_query: 50000000
+  max_query_lookback: 7d
+  max_query_length: 0
+  max_label_names_per_series: 30
+
+# Scrape configuration for self-profiling
+scrape_configs:
+  - job_name: 'pyroscope-self'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['localhost:4040']
+        labels:
+          service_name: 'pyroscope'
+          
+  # Profile OMS service if it exports pprof endpoints
+  - job_name: 'oms-service'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['oms:8000']
+        labels:
+          service_name: 'oms'
+          namespace: 'production'
+
+# Multi-tenancy (disabled for single-tenant setup)
+multi_tenancy_enabled: false
+
+# Target configuration
+target:
+  all: true

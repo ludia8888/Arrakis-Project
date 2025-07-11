@@ -1,0 +1,323 @@
+{
+  "timestamp": "2025-07-12T00:15:10.331068",
+  "current_order": [
+    "RateLimitingMiddleware",
+    "ComponentMiddleware",
+    "IssueTrackingMiddleware",
+    "EventStateStoreMiddleware",
+    "ThreeWayMergeMiddleware",
+    "SchemaFreezeMiddleware",
+    "AuditLogMiddleware",
+    "RequestIdMiddleware",
+    "ScopeRBACMiddleware",
+    "CoreDatabaseContextMiddleware",
+    "TerminusContextMiddleware",
+    "AuthMiddleware",
+    "ETagMiddleware",
+    "CORSMiddleware",
+    "ErrorHandlerMiddleware",
+    "GlobalCircuitBreakerMiddleware"
+  ],
+  "dependencies": {
+    "GlobalCircuitBreakerMiddleware": {
+      "requires": [],
+      "provides": [],
+      "modifies": [],
+      "headers_required": [],
+      "headers_added": []
+    },
+    "ErrorHandlerMiddleware": {
+      "requires": [],
+      "provides": [],
+      "modifies": [],
+      "headers_required": [],
+      "headers_added": []
+    },
+    "ETagMiddleware": {
+      "requires": [],
+      "provides": [],
+      "modifies": [],
+      "headers_required": [
+        "If-None-Match",
+        "Cache-Control"
+      ],
+      "headers_added": [
+        "Cache-Control",
+        "X-Version",
+        "X-Cache-Strategy",
+        "ETag",
+        "Vary"
+      ]
+    },
+    "AuthMiddleware": {
+      "requires": [
+        "user"
+      ],
+      "provides": [
+        "user"
+      ],
+      "modifies": [
+        "user"
+      ],
+      "headers_required": [
+        "Authorization"
+      ],
+      "headers_added": []
+    },
+    "TerminusContextMiddleware": {
+      "requires": [],
+      "provides": [],
+      "modifies": [],
+      "headers_required": [
+        "X-Branch"
+      ],
+      "headers_added": [
+        "X-Terminus-Branch",
+        "X-Terminus-Author",
+        "X-Terminus-Trace"
+      ]
+    },
+    "CoreDatabaseContextMiddleware": {
+      "requires": [],
+      "provides": [],
+      "modifies": [],
+      "headers_required": [],
+      "headers_added": []
+    },
+    "ScopeRBACMiddleware": {
+      "requires": [
+        "permissions",
+        "user"
+      ],
+      "provides": [
+        "permissions"
+      ],
+      "modifies": [
+        "permissions"
+      ],
+      "headers_required": [
+        "Authorization"
+      ],
+      "headers_added": []
+    },
+    "RequestIdMiddleware": {
+      "requires": [],
+      "provides": [
+        "request_id"
+      ],
+      "modifies": [
+        "request_id"
+      ],
+      "headers_required": [
+        "X-Request-Id"
+      ],
+      "headers_added": [
+        "X-Request-Id"
+      ]
+    },
+    "AuditLogMiddleware": {
+      "requires": [
+        "request_id",
+        "user_context"
+      ],
+      "provides": [],
+      "modifies": [],
+      "headers_required": [
+        "user-agent"
+      ],
+      "headers_added": []
+    },
+    "SchemaFreezeMiddleware": {
+      "requires": [],
+      "provides": [
+        "schema_freeze_checked",
+        "branch_name"
+      ],
+      "modifies": [
+        "schema_freeze_checked",
+        "branch_name"
+      ],
+      "headers_required": [
+        "X-OMS-Branch"
+      ],
+      "headers_added": [
+        "Retry-After"
+      ]
+    },
+    "ThreeWayMergeMiddleware": {
+      "requires": [
+        "merge_result"
+      ],
+      "provides": [
+        "merge_context"
+      ],
+      "modifies": [
+        "merge_context"
+      ],
+      "headers_required": [],
+      "headers_added": [
+        "X-Merge-Status",
+        "X-Merge-Conflicts"
+      ]
+    },
+    "EventStateStoreMiddleware": {
+      "requires": [
+        "user_context"
+      ],
+      "provides": [
+        "event_store",
+        "event_metadata",
+        "state_store"
+      ],
+      "modifies": [
+        "event_store",
+        "event_metadata",
+        "state_store"
+      ],
+      "headers_required": [],
+      "headers_added": []
+    },
+    "IssueTrackingMiddleware": {
+      "requires": [],
+      "provides": [
+        "emergency_override",
+        "issue_refs",
+        "override_justification"
+      ],
+      "modifies": [
+        "emergency_override",
+        "issue_refs",
+        "override_justification"
+      ],
+      "headers_required": [
+        "X-Override-Justification",
+        "X-Emergency-Override",
+        "X-Issue-ID",
+        "X-Issue-IDs",
+        "X-Change-ID"
+      ],
+      "headers_added": []
+    },
+    "ComponentMiddleware": {
+      "requires": [],
+      "provides": [
+        "component_manager"
+      ],
+      "modifies": [
+        "component_manager"
+      ],
+      "headers_required": [],
+      "headers_added": []
+    },
+    "RateLimitingMiddleware": {
+      "requires": [
+        "user_context"
+      ],
+      "provides": [],
+      "modifies": [],
+      "headers_required": [],
+      "headers_added": [
+        "X-RateLimit-Remaining",
+        "X-RateLimit-Limit",
+        "X-RateLimit-Reset"
+      ]
+    }
+  },
+  "validation": {
+    "valid": false,
+    "violations": [
+      {
+        "type": "순서 위반",
+        "middleware": "AuditLogMiddleware",
+        "requires": "request_id",
+        "provided_by": "RequestIdMiddleware",
+        "current_position": 6,
+        "provider_position": 7,
+        "fix": "RequestIdMiddleware를 AuditLogMiddleware 앞으로 이동"
+      },
+      {
+        "type": "순서 위반",
+        "middleware": "ScopeRBACMiddleware",
+        "requires": "user",
+        "provided_by": "AuthMiddleware",
+        "current_position": 8,
+        "provider_position": 11,
+        "fix": "AuthMiddleware를 ScopeRBACMiddleware 앞으로 이동"
+      }
+    ],
+    "warnings": [
+      {
+        "type": "제공자 없음",
+        "middleware": "RateLimitingMiddleware",
+        "requires": "user_context",
+        "suggestion": "'user_context'를 제공하는 미들웨어를 RateLimitingMiddleware 앞에 추가"
+      },
+      {
+        "type": "제공자 없음",
+        "middleware": "EventStateStoreMiddleware",
+        "requires": "user_context",
+        "suggestion": "'user_context'를 제공하는 미들웨어를 EventStateStoreMiddleware 앞에 추가"
+      },
+      {
+        "type": "제공자 없음",
+        "middleware": "ThreeWayMergeMiddleware",
+        "requires": "merge_result",
+        "suggestion": "'merge_result'를 제공하는 미들웨어를 ThreeWayMergeMiddleware 앞에 추가"
+      },
+      {
+        "type": "제공자 없음",
+        "middleware": "AuditLogMiddleware",
+        "requires": "user_context",
+        "suggestion": "'user_context'를 제공하는 미들웨어를 AuditLogMiddleware 앞에 추가"
+      },
+      {
+        "type": "제공자 없음",
+        "middleware": "ScopeRBACMiddleware",
+        "requires": "permissions",
+        "suggestion": "'permissions'를 제공하는 미들웨어를 ScopeRBACMiddleware 앞에 추가"
+      },
+      {
+        "type": "제공자 없음",
+        "middleware": "AuthMiddleware",
+        "requires": "user",
+        "suggestion": "'user'를 제공하는 미들웨어를 AuthMiddleware 앞에 추가"
+      }
+    ],
+    "cycles": [
+      [
+        "ScopeRBACMiddleware",
+        "ScopeRBACMiddleware"
+      ]
+    ]
+  },
+  "optimal_order": [
+    "RateLimitingMiddleware",
+    "ComponentMiddleware",
+    "IssueTrackingMiddleware",
+    "EventStateStoreMiddleware",
+    "ThreeWayMergeMiddleware",
+    "SchemaFreezeMiddleware",
+    "RequestIdMiddleware",
+    "CoreDatabaseContextMiddleware",
+    "TerminusContextMiddleware",
+    "ETagMiddleware",
+    "ErrorHandlerMiddleware",
+    "GlobalCircuitBreakerMiddleware",
+    "AuditLogMiddleware",
+    "ScopeRBACMiddleware",
+    "AuthMiddleware",
+    "CORSMiddleware"
+  ],
+  "dependency_graph": {
+    "AuthMiddleware": [
+      "ScopeRBACMiddleware",
+      "AuthMiddleware"
+    ],
+    "ScopeRBACMiddleware": [
+      "ScopeRBACMiddleware"
+    ],
+    "RequestIdMiddleware": [
+      "AuditLogMiddleware"
+    ]
+  }
+}

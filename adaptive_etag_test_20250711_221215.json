@@ -1,0 +1,196 @@
+{
+  "timestamp": "2025-07-11T22:12:01.636668",
+  "test_scenarios": [
+    {
+      "scenario": "basic_etag_functionality",
+      "requests": [
+        {
+          "request_num": 1,
+          "status_code": 200,
+          "headers": {
+            "date": "Fri, 11 Jul 2025 13:12:01 GMT",
+            "server": "uvicorn",
+            "content-length": "647",
+            "content-type": "application/json"
+          },
+          "has_etag": false,
+          "has_cache_control": false,
+          "cache_strategy": null
+        }
+      ],
+      "etag_headers": [],
+      "success": false
+    },
+    {
+      "scenario": "cache_statistics_buildup",
+      "total_requests": 10,
+      "cache_hits": 0,
+      "etag_evolution": [
+        {
+          "request_num": 1,
+          "status_code": 200,
+          "etag": null,
+          "cache_control": null,
+          "cache_strategy": null,
+          "cache_hit": false
+        },
+        {
+          "request_num": 2,
+          "status_code": 200,
+          "etag": null,
+          "cache_control": null,
+          "cache_strategy": null,
+          "cache_hit": false
+        },
+        {
+          "request_num": 3,
+          "status_code": 200,
+          "etag": null,
+          "cache_control": null,
+          "cache_strategy": null,
+          "cache_hit": false
+        },
+        {
+          "request_num": 4,
+          "status_code": 200,
+          "etag": null,
+          "cache_control": null,
+          "cache_strategy": null,
+          "cache_hit": false
+        },
+        {
+          "request_num": 5,
+          "status_code": 200,
+          "etag": null,
+          "cache_control": null,
+          "cache_strategy": null,
+          "cache_hit": false
+        },
+        {
+          "request_num": 6,
+          "status_code": 200,
+          "etag": null,
+          "cache_control": null,
+          "cache_strategy": null,
+          "cache_hit": false
+        },
+        {
+          "request_num": 7,
+          "status_code": 200,
+          "etag": null,
+          "cache_control": null,
+          "cache_strategy": null,
+          "cache_hit": false
+        },
+        {
+          "request_num": 8,
+          "status_code": 200,
+          "etag": null,
+          "cache_control": null,
+          "cache_strategy": null,
+          "cache_hit": false
+        },
+        {
+          "request_num": 9,
+          "status_code": 200,
+          "etag": null,
+          "cache_control": null,
+          "cache_strategy": null,
+          "cache_hit": false
+        },
+        {
+          "request_num": 10,
+          "status_code": 200,
+          "etag": null,
+          "cache_control": null,
+          "cache_strategy": null,
+          "cache_hit": false
+        }
+      ],
+      "success": false,
+      "hit_rate": 0.0
+    },
+    {
+      "scenario": "adaptive_ttl_observation",
+      "ttl_observations": [
+        {
+          "endpoint": "/api/v1/health",
+          "attempt": 1,
+          "status_code": 200,
+          "cache_control": null,
+          "cache_strategy": null,
+          "vary_header": null,
+          "max_age_seconds": 0
+        },
+        {
+          "endpoint": "/api/v1/health",
+          "attempt": 2,
+          "status_code": 200,
+          "cache_control": null,
+          "cache_strategy": null,
+          "vary_header": null,
+          "max_age_seconds": 0
+        },
+        {
+          "endpoint": "/api/v1/health",
+          "attempt": 3,
+          "status_code": 200,
+          "cache_control": null,
+          "cache_strategy": null,
+          "vary_header": null,
+          "max_age_seconds": 0
+        },
+        {
+          "endpoint": "/api/v1/health",
+          "attempt": 1,
+          "status_code": 200,
+          "cache_control": null,
+          "cache_strategy": null,
+          "vary_header": null,
+          "max_age_seconds": 0
+        },
+        {
+          "endpoint": "/api/v1/health",
+          "attempt": 2,
+          "status_code": 200,
+          "cache_control": null,
+          "cache_strategy": null,
+          "vary_header": null,
+          "max_age_seconds": 0
+        },
+        {
+          "endpoint": "/api/v1/health",
+          "attempt": 3,
+          "status_code": 200,
+          "cache_control": null,
+          "cache_strategy": null,
+          "vary_header": null,
+          "max_age_seconds": 0
+        }
+      ],
+      "success": true,
+      "ttl_variation": false
+    },
+    {
+      "scenario": "resource_type_strategies",
+      "resource_strategies": [
+        {
+          "url": "/api/v1/health",
+          "expected_resource_type": "system",
+          "status_code": 200,
+          "cache_control": null,
+          "cache_strategy": null,
+          "vary_header": null,
+          "has_adaptive_headers": false,
+          "has_public": false,
+          "has_must_revalidate": false,
+          "has_no_cache": false,
+          "max_age": 0
+        }
+      ],
+      "success": true,
+      "strategy_diversity": false
+    }
+  ],
+  "adaptive_caching_analysis": {}
+}

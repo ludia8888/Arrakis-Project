@@ -1,0 +1,53 @@
+{
+  "test_metadata": {
+    "timestamp": "2025-07-11T23:09:00.074083",
+    "duration_seconds": 0.03,
+    "test_type": "pyroscope_integration"
+  },
+  "pyroscope_health": {
+    "status": "healthy",
+    "ready": true
+  },
+  "api_endpoints": {
+    "status": {
+      "status": "success",
+      "data_received": true,
+      "sample": "{'status': 'success', 'data': {'version': '1.14.0', 'revision': 'f12fce4b0', 'branch': 'HEAD', 'buil..."
+    },
+    "apps": {
+      "status": "error",
+      "error": "HTTP Error 404: Not Found"
+    },
+    "label_names": {
+      "status": "error",
+      "error": "HTTP Error 404: Not Found"
+    },
+    "label_values": {
+      "status": "error",
+      "error": "HTTP Error 404: Not Found"
+    }
+  },
+  "prometheus_integration": {
+    "status": "success",
+    "pyroscope_up": true,
+    "scraping_active": true
+  },
+  "metrics_export": {
+    "status": "success",
+    "total_metrics": 1888,
+    "pyroscope_metrics": 1679,
+    "go_metrics": 200,
+    "process_metrics": 9,
+    "sample_metrics": [
+      "pyroscope_build_info{branch=\"HEAD\",goarch=\"arm64\",goos=\"linux\",goversion=\"go1.23.10\",revision=\"f12fce4b0\",tags=\"netgo,embedassets\",version=\"1.14.0\"} 1",
+      "pyroscope_distributor_ingester_clients 1",
+      "pyroscope_distributor_received_compressed_bytes_bucket{tenant=\"anonymous\",type=\"block\",le=\"10240\"} 0"
+    ]
+  },
+  "summary": {
+    "tests_passed": "3/4",
+    "success_rate": 75.0,
+    "integration_status": "partial",
+    "ready_for_profiling": true
+  }
+}
