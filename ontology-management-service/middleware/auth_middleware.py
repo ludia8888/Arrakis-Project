@@ -41,7 +41,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
             "/health", "/metrics", "/docs", "/openapi.json", "/redoc",
             "/api/v1/health", "/api/v1/health/live", "/api/v1/health/ready",
             "/auth/login", "/auth/register", "/auth/refresh", "/auth/logout",
-            "/api/v1/auth"
+            "/api/v1/auth", "/api/v1/test/health"
         ]
         self.cache_ttl = 300
         

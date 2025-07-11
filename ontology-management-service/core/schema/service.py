@@ -13,6 +13,8 @@ from shared.terminus_context import get_author, get_branch
 from core.interfaces.schema import SchemaServiceProtocol
 from .repository import SchemaRepository
 from shared.audit_client import AuditServiceClient, AuditEvent
+from middleware.circuit_breaker_http import http_circuit_breaker
+from fastapi import HTTPException
 
 logger = logging.getLogger(__name__)
 
@@ -530,6 +532,12 @@ class SchemaService(SchemaServiceProtocol):
             logger.error(f"Error rejecting schema change PR {pr_id}: {e}")
             raise
 
+    @http_circuit_breaker(
+        name="schema_service_get_by_name",
+        failure_threshold=10,  # 설정에서 가져온 값
+        timeout_seconds=30,
+        error_status_codes={404, 500, 502, 503, 504}  # 404도 실패로 간주
+    )
     async def get_schema_by_name(self, name: str, branch: str) -> Optional[Dict[str, Any]]:
         """이름으로 스키마를 조회합니다 (실제 구현)"""
         try:
@@ -538,7 +546,17 @@ class SchemaService(SchemaServiceProtocol):
             if not await self._check_permission(user, "schema:read", branch):
                 raise PermissionError(f"사용자 {get_author()}는 스키마 읽기 권한이 없습니다.")
 
-            return await self.repository.get_object_type_by_name(name=name, branch=branch)
+            result = await self.repository.get_object_type_by_name(name=name, branch=branch)
+            
+            # 스키마를 찾지 못한 경우 404 에러 발생
+            if result is None:
+                raise HTTPException(status_code=404, detail=f"Object type '{name}' not found in branch '{branch}'")
+            
+            return result
+        except HTTPException:
+            # HTTPException은 그대로 전파
+            raise
         except Exception as e:
             logger.error(f"Error getting schema by name '{name}' in service: {e}", exc_info=True)
-            return None
+            # 기타 예외는 500 에러로 변환
+            raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")

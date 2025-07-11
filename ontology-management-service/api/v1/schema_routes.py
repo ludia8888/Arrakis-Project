@@ -12,6 +12,7 @@ from database.dependencies import get_secure_database
 from database.clients.secure_database_adapter import SecureDatabaseAdapter
 from core.auth_utils import UserContext
 from middleware.etag_middleware import enable_etag
+from middleware.circuit_breaker_http import http_circuit_breaker
 from core.iam.dependencies import require_scope
 from core.iam.iam_integration import IAMScope
 
@@ -24,12 +25,12 @@ router = APIRouter(
     "/{branch}/object-types",
     dependencies=[Depends(require_scope([IAMScope.ONTOLOGIES_READ]))]
 )
+@inject
 @enable_etag(
     resource_type_func=lambda params: "object_types_collection",
     resource_id_func=lambda params: f"{params['branch']}_object_types",
     branch_func=lambda params: params['branch']
 )
-@inject
 async def list_object_types(
     branch: str,
     request: Request,
@@ -46,12 +47,18 @@ async def list_object_types(
     "/{branch}/object-types/{type_name}",
     dependencies=[Depends(require_scope([IAMScope.ONTOLOGIES_READ]))]
 )
+@inject
+@http_circuit_breaker(
+    name="schema_route_get_object_type",
+    failure_threshold=5,  # 라우트 레벨에서는 더 민감하게 설정
+    timeout_seconds=30,
+    error_status_codes={404, 500, 502, 503, 504}
+)
 @enable_etag(
     resource_type_func=lambda params: "object_type",
     resource_id_func=lambda params: params['type_name'],
     branch_func=lambda params: params['branch']
 )
-@inject
 async def get_object_type(
     branch: str,
     type_name: str,

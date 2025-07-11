@@ -13,6 +13,7 @@ import hashlib
 from datetime import datetime, timezone
 import time
 import asyncio
+import os
 from functools import wraps
 from prometheus_client import Counter, Histogram, Gauge
 
@@ -95,6 +96,10 @@ class ETagMiddleware(BaseHTTPMiddleware):
     
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """Process request with ETag handling"""
+        # Check if E-Tag caching is enabled
+        if not os.getenv('ENABLE_ETAG_CACHING', 'false').lower() == 'true':
+            return await call_next(request)
+
         # Initialize version service if needed (lazy initialization)
         if not self.version_service:
             # Get redis client from app state
@@ -106,59 +111,63 @@ class ETagMiddleware(BaseHTTPMiddleware):
                 logger.warning("Redis client not available, skipping ETag functionality")
                 return await call_next(request)
 
-        # Check if the endpoint for this request has ETag enabled via decorator
+        # Process the request normally first
+        response = await call_next(request)
+        
+        # For GET requests with conditional headers, check if we can return 304
+        if request.method == "GET":
+            if_none_match = request.headers.get("If-None-Match")
+            if if_none_match:
+                # Check if the endpoint has ETag enabled (after routing)
+                etag_info = self._get_etag_info_from_request(request)
+                if etag_info:
+                    # Extract resource context using functions provided by the decorator
+                    resource_ctx = self._build_resource_context(request.path_params, etag_info)
+                    if resource_ctx:
+                        # --- Resilience Pattern: Timeout and Fallback ---
+                        try:
+                            start_time = time.time()
+                            # Validate ETag with a strict timeout
+                            is_valid, _ = await asyncio.wait_for(
+                                self.version_service.validate_etag(
+                                    resource_type=resource_ctx["type"],
+                                    resource_id=resource_ctx["id"],
+                                    branch=resource_ctx["branch"],
+                                    client_etag=if_none_match
+                                ),
+                                timeout=self.timeout
+                            )
+                            validation_time = time.time() - start_time
+                            etag_validation_duration.labels(resource_type=resource_ctx["type"]).observe(validation_time)
+
+                            if is_valid:
+                                # Cache hit - return 304 Not Modified
+                                etag_cache_hits.labels(resource_type=resource_ctx["type"]).inc()
+                                etag_requests_total.labels(method='GET', resource_type=resource_ctx["type"], result="cache_hit").inc()
+                                logger.info("ETag cache hit", extra={"resource_ctx": resource_ctx, "etag": if_none_match})
+                                self.analytics.record_request(resource_type=resource_ctx["type"], is_cache_hit=True, etag=if_none_match)
+                                return Response(status_code=status.HTTP_304_NOT_MODIFIED, headers={"ETag": if_none_match})
+
+                        except asyncio.TimeoutError:
+                            # Fallback: ETag 검사를 포기하고 실제 응답 반환
+                            logger.warning(
+                                "ETag version service timed out, bypassing ETag check",
+                                timeout=self.timeout
+                            )
+                            self.analytics.record_timeout()
+                        except Exception as e:
+                            logger.error(f"ETag validation failed with an unexpected error: {e}", extra={"resource_ctx": resource_ctx})
+            
+        # Now check if the endpoint has ETag enabled (after routing)
         etag_info = self._get_etag_info_from_request(request)
         if not etag_info:
-            return await call_next(request)
+            return response
 
         # Extract resource context using functions provided by the decorator
         resource_ctx = self._build_resource_context(request.path_params, etag_info)
         if not resource_ctx:
             logger.warning(f"ETag: Could not build resource context for {request.url.path}")
-            return await call_next(request)
-        
-        # Handle conditional GET requests
-        if request.method == "GET":
-            if_none_match = request.headers.get("If-None-Match")
-            if if_none_match:
-                # --- Resilience Pattern: Timeout and Fallback ---
-                try:
-                    start_time = time.time()
-                    # Validate ETag with a strict timeout
-                    is_valid, _ = await asyncio.wait_for(
-                        self.version_service.validate_etag(
-                            resource_type=resource_ctx["type"],
-                            resource_id=resource_ctx["id"],
-                            branch=resource_ctx["branch"],
-                            client_etag=if_none_match
-                        ),
-                        timeout=self.timeout
-                    )
-                    validation_time = time.time() - start_time
-                    etag_validation_duration.labels(resource_type=resource_ctx["type"]).observe(validation_time)
-
-                    if is_valid:
-                        # Cache hit - return 304 Not Modified
-                        etag_cache_hits.labels(resource_type=resource_ctx["type"]).inc()
-                        etag_requests_total.labels(method='GET', resource_type=resource_ctx["type"], result="cache_hit").inc()
-                        logger.info("ETag cache hit", extra={"resource_ctx": resource_ctx, "etag": if_none_match})
-                        self.analytics.record_request(resource_type=resource_ctx["type"], is_cache_hit=True, etag=if_none_match)
-                        return Response(status_code=status.HTTP_304_NOT_MODIFIED, headers={"ETag": if_none_match})
-
-                except asyncio.TimeoutError:
-                    # Fallback: ETag 검사를 포기하고 실제 응답 반환
-                    logger.warning(
-                        "ETag version service timed out, bypassing ETag check",
-                        timeout=self.timeout
-                    )
-                    self.analytics.record_timeout()
-                    return await call_next(request)
-                except Exception as e:
-                    logger.error(f"ETag validation failed with an unexpected error: {e}", extra={"resource_ctx": resource_ctx})
-                    # Let the request proceed to get a full response
-        
-        # Process request normally to get the response
-        response = await call_next(request)
+            return response
         
         # Add ETag to successful GET responses
         if response.status_code == 200 and request.method == "GET":
@@ -185,6 +194,56 @@ class ETagMiddleware(BaseHTTPMiddleware):
                     logger.info("ETag cache miss - generated new ETag", extra={"resource_ctx": resource_ctx, "etag": version.current_version.etag})
                     self.analytics.record_request(resource_type=resource_ctx["type"], is_cache_hit=False, etag=version.current_version.etag)
                     self._update_cache_effectiveness(resource_ctx["type"])
+                else:
+                    # No version found, create initial version based on response content
+                    try:
+                        from core.auth_utils import UserContext
+                        
+                        # Get response content for hashing
+                        response_body = b""
+                        if hasattr(response, 'body'):
+                            response_body = response.body
+                        elif hasattr(response, 'content'):
+                            response_body = response.content
+                            
+                        # Create a user context for version creation
+                        user_context = UserContext(
+                            user_id="system",
+                            username="system",
+                            email="system@oms.local",
+                            roles=["system"],
+                            tenant_id="default"
+                        )
+                        
+                        # Create initial version
+                        import json
+                        content_dict = {}
+                        try:
+                            content_str = response_body.decode('utf-8') if response_body else "{}"
+                            content_dict = json.loads(content_str) if content_str != "{}" else {}
+                        except:
+                            content_dict = {"raw_content": response_body.decode('utf-8', errors='ignore')}
+                            
+                        initial_version = await self.version_service.track_change(
+                            resource_type=resource_ctx["type"],
+                            resource_id=resource_ctx["id"],
+                            branch=resource_ctx["branch"],
+                            content=content_dict,
+                            change_type="initial_version",
+                            user=user_context,
+                            change_summary="Initial version created by ETag middleware"
+                        )
+                        
+                        if initial_version:
+                            response.headers["ETag"] = initial_version.current_version.etag
+                            response.headers["X-Version"] = str(initial_version.current_version.version)
+                            logger.info("ETag - created initial version", extra={
+                                "resource_ctx": resource_ctx, 
+                                "etag": initial_version.current_version.etag
+                            })
+                        
+                    except Exception as e:
+                        logger.error(f"Failed to create initial ETag version: {e}", extra={"resource_ctx": resource_ctx})
 
             except asyncio.TimeoutError:
                 # Fallback: ETag 검사를 포기하고 실제 응답 반환
@@ -201,9 +260,53 @@ class ETagMiddleware(BaseHTTPMiddleware):
 
     def _get_etag_info_from_request(self, request: Request) -> Optional[Dict[str, Any]]:
         """Check if the matched route's endpoint has ETag info attached by the decorator."""
+        # Try multiple ways to get the endpoint
         endpoint = request.scope.get("endpoint")
-        if endpoint and hasattr(endpoint, "_etag_info"):
-            return endpoint._etag_info
+        route = request.scope.get("route")
+        path = request.scope.get("path")
+        
+        logger.debug(f"Request scope keys: {list(request.scope.keys())}")
+        logger.debug(f"Endpoint: {endpoint}, Route: {route}, Path: {path}")
+        
+        # If endpoint is not directly available, try to extract from route
+        if not endpoint and route:
+            endpoint = getattr(route, "endpoint", None)
+            logger.debug(f"Got endpoint from route: {endpoint}")
+        
+        # Check various ways the ETag info might be attached
+        if endpoint:
+            # Direct attachment
+            if hasattr(endpoint, "_etag_info"):
+                logger.debug(f"Found ETag info directly on endpoint")
+                return endpoint._etag_info
+            
+            # Check wrapped function (common with @inject decorator)
+            if hasattr(endpoint, "__wrapped__"):
+                wrapped = endpoint.__wrapped__
+                logger.debug(f"Checking wrapped function: {wrapped}")
+                if hasattr(wrapped, "_etag_info"):
+                    logger.debug(f"Found ETag info on wrapped endpoint")
+                    return wrapped._etag_info
+                
+                # Check double wrapped (when multiple decorators are used)
+                if hasattr(wrapped, "__wrapped__") and hasattr(wrapped.__wrapped__, "_etag_info"):
+                    logger.debug(f"Found ETag info on double-wrapped endpoint")
+                    return wrapped.__wrapped__._etag_info
+            
+            # Check if it's a dependency_injector wrapped function
+            if hasattr(endpoint, "func") and hasattr(endpoint.func, "_etag_info"):
+                logger.debug(f"Found ETag info on DI wrapped function")
+                return endpoint.func._etag_info
+            
+            # Last resort: check all attributes
+            for attr_name in dir(endpoint):
+                if not attr_name.startswith('_'):
+                    attr = getattr(endpoint, attr_name, None)
+                    if attr and hasattr(attr, "_etag_info"):
+                        logger.debug(f"Found ETag info on attribute {attr_name}")
+                        return attr._etag_info
+        
+        logger.debug(f"No ETag info found for {request.url.path}")
         return None
 
     def _build_resource_context(self, path_params: Dict, etag_info: Dict[str, Callable]) -> Optional[Dict[str, str]]:

@@ -1,0 +1,114 @@
+{
+  "dashboard": {
+    "title": "OMS Resilience Dashboard",
+    "description": "Monitor circuit breakers, caching, and backpressure mechanisms",
+    "tags": ["oms", "resilience", "circuit-breaker", "cache"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "title": "Circuit Breaker States",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "circuit_breaker_state{service=\"oms\"}",
+            "legendFormat": "{{circuit_name}} - {{state}}"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 12, "x": 0, "y": 0}
+      },
+      {
+        "title": "Circuit Breaker Error Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(circuit_breaker_failures_total[5m]) / rate(circuit_breaker_calls_total[5m])",
+            "legendFormat": "{{circuit_name}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+      },
+      {
+        "title": "E-Tag Cache Hit Rate",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "etag_cache_hits_total / (etag_cache_hits_total + etag_cache_misses_total)",
+            "legendFormat": "Hit Rate"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 4}
+      },
+      {
+        "title": "Redis Cache Performance",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "redis_keyspace_hits_total / (redis_keyspace_hits_total + redis_keyspace_misses_total)",
+            "legendFormat": "Hit Rate"
+          },
+          {
+            "expr": "rate(redis_commands_processed_total[5m])",
+            "legendFormat": "Commands/sec"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+      },
+      {
+        "title": "Backpressure Queue Size",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "backpressure_queue_size{service=\"oms\"}",
+            "legendFormat": "{{circuit_name}}"
+          }
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [800], "type": "gt"},
+              "query": {"params": ["A", "5m", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            }
+          ],
+          "message": "Backpressure queue is getting full"
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+      },
+      {
+        "title": "System Response Time",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "p95"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "p99"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+      },
+      {
+        "title": "Resilience Score",
+        "type": "singlestat",
+        "targets": [
+          {
+            "expr": "(1 - (rate(circuit_breaker_opened_total[1h]) / 100)) * (redis_keyspace_hits_total / (redis_keyspace_hits_total + redis_keyspace_misses_total)) * 100",
+            "legendFormat": "Score"
+          }
+        ],
+        "format": "percent",
+        "thresholds": "70,90",
+        "colors": ["red", "yellow", "green"],
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 4}
+      }
+    ],
+    "refresh": "10s",
+    "time": {"from": "now-1h", "to": "now"},
+    "timepicker": {
+      "refresh_intervals": ["5s", "10s", "30s", "1m", "5m"]
+    }
+  }
+}

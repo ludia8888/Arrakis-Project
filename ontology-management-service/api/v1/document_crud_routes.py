@@ -14,6 +14,7 @@ from core.document.service import DocumentService
 from shared.models.domain import Document, DocumentCreate, DocumentUpdate
 from bootstrap.dependencies import get_db_client, get_event_gateway
 from common_logging.setup import get_logger
+from middleware.etag_middleware import enable_etag
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/documents/crud", tags=["Document CRUD"])
@@ -71,6 +72,11 @@ async def create_document(
 
 @router.get("/{document_id}", response_model=Document,
             dependencies=[Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
+@enable_etag(
+    resource_type_func=lambda params: "document",
+    resource_id_func=lambda params: params['document_id'],
+    branch_func=lambda params: params.get('branch', 'main')
+)
 async def get_document(
     document_id: str,
     branch: str = Query("main", description="Branch name"),

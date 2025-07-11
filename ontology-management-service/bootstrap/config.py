@@ -124,6 +124,17 @@ class RedisConfig(BaseSettings):
 
     model_config = SettingsConfigDict(env_prefix="REDIS_")
 
+class CircuitBreakerConfig(BaseSettings):
+    """Circuit Breaker configuration"""
+    failure_threshold: int = Field(default=5, validation_alias="CIRCUIT_BREAKER_FAILURE_THRESHOLD")
+    success_threshold: int = Field(default=3, validation_alias="CIRCUIT_BREAKER_SUCCESS_THRESHOLD")
+    timeout_seconds: float = Field(default=60, validation_alias="CIRCUIT_BREAKER_TIMEOUT_SECONDS")
+    error_rate_threshold: float = Field(default=0.5, validation_alias="CIRCUIT_BREAKER_ERROR_RATE_THRESHOLD")
+    window_size: int = Field(default=60, validation_alias="CIRCUIT_BREAKER_WINDOW_SIZE")
+    half_open_max_calls: int = Field(default=3, validation_alias="CIRCUIT_BREAKER_HALF_OPEN_MAX_CALLS")
+    
+    model_config = SettingsConfigDict(env_prefix="CIRCUIT_BREAKER_")
+
 class AppConfig(BaseSettings):
     """Application configuration"""
     terminusdb: Optional[TerminusDBConfig] = Field(default_factory=TerminusDBConfig)
@@ -135,6 +146,7 @@ class AppConfig(BaseSettings):
     user_service: UserServiceConfig = Field(default_factory=UserServiceConfig)
     lock: LockConfig = Field(default_factory=LockConfig)
     redis: Optional[RedisConfig] = Field(default_factory=RedisConfig)
+    circuit_breaker: CircuitBreakerConfig = Field(default_factory=CircuitBreakerConfig)
     scope_mapping: Dict[str, Any] = Field(default_factory=dict)
     
     def __init__(self, **values: Any):

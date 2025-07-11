@@ -77,7 +77,7 @@ from api.v1 import (
     property_routes, audit_routes, batch_routes, branch_lock_routes, 
     branch_routes, document_routes, document_crud_routes, graph_health_routes, idempotent_routes,
     issue_tracking_routes, job_progress_routes, shadow_index_routes,
-    time_travel_routes, version_routes
+    time_travel_routes, version_routes, test_routes
 )
 from api.v1 import auth_proxy_routes  # Direct import
 from api.graphql.modular_main import graphql_app as modular_graphql_app
@@ -105,6 +105,18 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
             logger.info("Initializing container resources...")
             await container.init_resources()
             logger.info("Container resources initialized successfully.")
+            
+            # Initialize Redis client for ETag middleware
+            try:
+                from bootstrap.providers.redis_provider import RedisProvider
+                redis_provider = RedisProvider()
+                redis_client = await redis_provider.provide()
+                app.state.redis_client = redis_client
+                logger.info("Redis client initialized for ETag middleware")
+            except Exception as e:
+                logger.warning(f"Failed to initialize Redis client: {e}")
+                app.state.redis_client = None
+                
         except Exception as e:
             logger.critical(f"Failed to initialize container resources: {e}", exc_info=True)
             raise
@@ -116,6 +128,12 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
             logger.info("Shutting down container resources...")
             await container.shutdown_resources()
             logger.info("Container resources shut down successfully.")
+            
+            # Cleanup Redis client
+            if hasattr(app.state, 'redis_client') and app.state.redis_client:
+                await app.state.redis_client.aclose()
+                logger.info("Redis client closed")
+                
         except Exception as e:
             logger.error(f"Error during container resource shutdown: {e}", exc_info=True)
 
@@ -155,7 +173,7 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
         audit_routes, batch_routes, branch_lock_routes, branch_routes,
         document_routes, document_crud_routes, graph_health_routes, idempotent_routes,
         issue_tracking_routes, job_progress_routes, shadow_index_routes, 
-        time_travel_routes, version_routes
+        time_travel_routes, version_routes, test_routes
     ]
     for router_module in v1_routers:
         app.include_router(router_module.router, prefix="/api/v1")
