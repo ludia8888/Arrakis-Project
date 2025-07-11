@@ -20,58 +20,20 @@ from core.auth_utils.database_context import DatabaseContextMiddleware as CoreDa
 from middleware.error_handler import ErrorHandlerMiddleware
 from middleware.etag_middleware import ETagMiddleware
 from core.iam.scope_rbac_middleware import ScopeRBACMiddleware
-# Optional middlewares – create no-op fallbacks when the real implementation is missing
 
-try:
-    from middleware.request_id import RequestIdMiddleware  # type: ignore
-except ImportError:  # pragma: no cover
-    class RequestIdMiddleware:  # pylint: disable=too-few-public-methods
-        """Fallback RequestIdMiddleware (noop)."""
+# Additional Active Middlewares
+from middleware.schema_freeze_middleware import SchemaFreezeMiddleware
+from middleware.three_way_merge import ThreeWayMergeMiddleware
+from middleware.event_state_store import EventStateStoreMiddleware
+from middleware.dlq.coordinator import DLQCoordinator
+from middleware.discovery.coordinator import DiscoveryCoordinator
+from middleware.request_id import RequestIdMiddleware
+from middleware.audit_log import AuditLogMiddleware
+from middleware.issue_tracking_middleware import IssueTrackingMiddleware
+from middleware.component_middleware import ComponentMiddleware
+from middleware.rate_limiting.middleware import RateLimitingMiddleware
 
-        def __init__(self, app, **kwargs):
-            self.app = app
-
-        async def __call__(self, scope, receive, send):  # noqa: D401
-            await self.app(scope, receive, send)
-
-
-try:
-    from middleware.scope_rbac import ScopeRBACMiddleware  # type: ignore
-except ImportError:  # pragma: no cover
-    class ScopeRBACMiddleware:  # pylint: disable=too-few-public-methods
-        """Fallback RBAC middleware (noop)."""
-
-        def __init__(self, app, **kwargs):
-            self.app = app
-
-        async def __call__(self, scope, receive, send):
-            await self.app(scope, receive, send)
-
-
-try:
-    from middleware.audit_log import AuditLogMiddleware  # type: ignore
-except ImportError:  # pragma: no cover
-    class AuditLogMiddleware:
-        """Fallback audit log middleware (noop)."""
-
-        def __init__(self, app, **kwargs):
-            self.app = app
-
-        async def __call__(self, scope, receive, send):
-            await self.app(scope, receive, send)
-
-
-try:
-    from middleware.circuit_breaker import CircuitBreakerMiddleware  # type: ignore
-except ImportError:  # pragma: no cover
-    class CircuitBreakerMiddleware:
-        """Fallback circuit breaker middleware (noop)."""
-
-        def __init__(self, app, **kwargs):
-            self.app = app
-
-        async def __call__(self, scope, receive, send):
-            await self.app(scope, receive, send)
+# All middlewares are imported above, no fallbacks needed
 
 # --- API Router Imports ---
 from api.v1 import (
@@ -171,6 +133,26 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
                 logger.warning(f"Failed to initialize Advanced GC Monitoring: {e}")
                 app.state.gc_monitor = None
                 
+            # Initialize DLQ Coordinator
+            try:
+                dlq_coordinator = DLQCoordinator()
+                await dlq_coordinator.initialize()
+                app.state.dlq_coordinator = dlq_coordinator
+                logger.info("📨 DLQ (Dead Letter Queue) initialized")
+            except Exception as e:
+                logger.warning(f"Failed to initialize DLQ: {e}")
+                app.state.dlq_coordinator = None
+                
+            # Initialize Discovery Coordinator
+            try:
+                discovery_coordinator = DiscoveryCoordinator()
+                await discovery_coordinator.initialize()
+                app.state.discovery_coordinator = discovery_coordinator
+                logger.info("🔍 Service Discovery initialized")
+            except Exception as e:
+                logger.warning(f"Failed to initialize Discovery: {e}")
+                app.state.discovery_coordinator = None
+                
             # Initialize Pyroscope Continuous Profiling
             try:
                 from observability.pyroscope_integration import PyroscopeConfig, setup_fastapi_profiling
@@ -233,6 +215,22 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
                     logger.info("Pyroscope Profiling shutdown completed")
                 except Exception as e:
                     logger.error(f"Error stopping Pyroscope profiling: {e}")
+                    
+            # Cleanup DLQ
+            if hasattr(app.state, 'dlq_coordinator') and app.state.dlq_coordinator:
+                try:
+                    await app.state.dlq_coordinator.shutdown()
+                    logger.info("DLQ shutdown completed")
+                except Exception as e:
+                    logger.error(f"Error stopping DLQ: {e}")
+                    
+            # Cleanup Discovery
+            if hasattr(app.state, 'discovery_coordinator') and app.state.discovery_coordinator:
+                try:
+                    await app.state.discovery_coordinator.shutdown()
+                    logger.info("Discovery shutdown completed")
+                except Exception as e:
+                    logger.error(f"Error stopping Discovery: {e}")
                 
         except Exception as e:
             logger.error(f"Error during container resource shutdown: {e}", exc_info=True)
@@ -345,6 +343,59 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
     # 7. Scope-based RBAC (with auth paths fixed)
     app.add_middleware(ScopeRBACMiddleware)
     logger.info("ScopeRBACMiddleware registered - security layer active")
+    
+    # 8. Request ID Middleware
+    logger.info("Adding RequestIdMiddleware...")
+    app.add_middleware(RequestIdMiddleware)
+    logger.info("RequestIdMiddleware added")
+    
+    # 9. Audit Log Middleware
+    logger.info("Adding AuditLogMiddleware...")
+    app.add_middleware(AuditLogMiddleware)
+    logger.info("AuditLogMiddleware added")
+    
+    # 10. Schema Freeze Middleware
+    logger.info("Adding SchemaFreezeMiddleware...")
+    app.add_middleware(SchemaFreezeMiddleware)
+    logger.info("SchemaFreezeMiddleware added")
+    
+    # 11. Three Way Merge Middleware
+    logger.info("Adding ThreeWayMergeMiddleware...")
+    app.add_middleware(ThreeWayMergeMiddleware)
+    logger.info("ThreeWayMergeMiddleware added")
+    
+    # 12. Event State Store Middleware
+    logger.info("Adding EventStateStoreMiddleware...")
+    try:
+        app.add_middleware(EventStateStoreMiddleware)
+        logger.info("EventStateStoreMiddleware added")
+    except Exception as e:
+        logger.warning(f"Failed to add EventStateStoreMiddleware: {e}")
+    
+    # 13. Issue Tracking Middleware
+    logger.info("Adding IssueTrackingMiddleware...")
+    app.add_middleware(IssueTrackingMiddleware)
+    logger.info("IssueTrackingMiddleware added")
+    
+    # 14. Component Middleware
+    logger.info("Adding ComponentMiddleware...")
+    app.add_middleware(ComponentMiddleware)
+    logger.info("ComponentMiddleware added")
+    
+    # 15. Rate Limiting Middleware
+    logger.info("Adding RateLimitingMiddleware...")
+    try:
+        # Rate limiting configuration
+        from middleware.rate_limiting.config import RateLimitConfig
+        rate_config = RateLimitConfig(
+            default_limit=100,  # 100 requests
+            default_window=60,  # per minute
+            strategy="sliding_window"
+        )
+        app.add_middleware(RateLimitingMiddleware, config=rate_config)
+        logger.info("RateLimitingMiddleware added")
+    except Exception as e:
+        logger.warning(f"Failed to add RateLimitingMiddleware: {e}")
 
     # Optional: Instrumenting for OpenTelemetry
     # try:

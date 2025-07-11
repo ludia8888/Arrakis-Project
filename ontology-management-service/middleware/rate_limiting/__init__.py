@@ -13,6 +13,7 @@ from .strategies.leaky_bucket import LeakyBucketStrategy
 from .adaptive import AdaptiveRateLimiter
 from .limiter import RateLimiter
 from .coordinator import RateLimitCoordinator
+from .fastapi_middleware import RateLimitingMiddleware
 
 __all__ = [
     'RateLimitConfig',
@@ -27,4 +28,5 @@ __all__ = [
     'AdaptiveRateLimiter',
     'RateLimiter',
     'RateLimitCoordinator',
+    'RateLimitingMiddleware',
 ]

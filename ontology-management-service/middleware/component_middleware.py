@@ -25,6 +25,7 @@ import logging
 import traceback
 from collections import defaultdict, OrderedDict
 import functools
+from fastapi import Request, Response
 
 logger = logging.getLogger(__name__)
 
@@ -547,6 +548,25 @@ class SecurityMiddleware(Middleware):
             )
         
         return await next_middleware(context)
+
+
+class ComponentMiddleware:
+    """
+    FastAPI middleware for component management
+    """
+    
+    def __init__(self):
+        self.component_manager = ComponentManager()
+        
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+        """Process request through component middleware"""
+        # Store component manager in request state for access by endpoints
+        request.state.component_manager = self.component_manager
+        
+        # Process request
+        response = await call_next(request)
+        
+        return response
 
 
 class ComponentManager:

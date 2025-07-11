@@ -52,6 +52,10 @@ class IssueTrackingMiddleware:
     def __init__(self):
         self.issue_service = None
     
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+        """FastAPI middleware dispatch method"""
+        return await self.__call__(request, call_next)
+    
     async def __call__(self, request: Request, call_next: Callable) -> Response:
         """Process request and enforce issue tracking"""
         # Skip if not a tracked operation

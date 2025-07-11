@@ -58,6 +58,23 @@ class DiscoveryCoordinator:
             # Default to Redis
             return RedisDiscoveryProvider()
     
+    async def initialize(self):
+        """Initialize discovery components"""
+        logger.info("Initializing Discovery Coordinator")
+        self._is_running = True
+        # Start health checker
+        await self.health_checker.start()
+        return self
+    
+    async def shutdown(self):
+        """Shutdown discovery components"""
+        logger.info("Shutting down Discovery Coordinator")
+        self._is_running = False
+        # Stop health checker
+        await self.health_checker.stop()
+        if self._cleanup_task:
+            self._cleanup_task.cancel()
+    
     async def start(self):
         """Start discovery coordinator"""
         if self._is_running:

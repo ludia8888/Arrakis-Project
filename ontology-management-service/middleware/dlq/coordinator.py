@@ -45,6 +45,23 @@ class DLQCoordinator:
         self._cleanup_task: Optional[asyncio.Task] = None
         self._is_running = False
     
+    async def initialize(self):
+        """Initialize DLQ components"""
+        logger.info("Initializing DLQ Coordinator")
+        # Store might need initialization
+        # For now, just log
+        self._is_running = True
+        return self
+    
+    async def shutdown(self):
+        """Shutdown DLQ components"""
+        logger.info("Shutting down DLQ Coordinator")
+        self._is_running = False
+        if self._processing_task:
+            self._processing_task.cancel()
+        if self._cleanup_task:
+            self._cleanup_task.cancel()
+    
     def register_retry_handler(
         self,
         queue_name: str,

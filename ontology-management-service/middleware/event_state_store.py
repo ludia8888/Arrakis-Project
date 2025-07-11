@@ -711,3 +711,53 @@ class OrderAggregate(Aggregate[Dict[str, Any]]):
         if self.status != "shipped":
             raise ValueError("Can only deliver shipped orders")
         self.raise_event('OrderDelivered', {})
+
+
+# Middleware implementation
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+class EventStateStoreMiddleware(BaseHTTPMiddleware):
+    """
+    Middleware for event sourcing and state management
+    """
+    
+    def __init__(self, app, event_store: EventStore = None):
+        super().__init__(app)
+        self.event_store = event_store or InMemoryEventStore()
+        self.state_store = StateStore(self.event_store)
+    
+    async def dispatch(self, request: Request, call_next):
+        # Store event store in request state for access by endpoints
+        request.state.event_store = self.event_store
+        request.state.state_store = self.state_store
+        
+        # Track request as an event if it modifies data
+        if request.method in ["POST", "PUT", "PATCH", "DELETE"]:
+            event_metadata = {
+                "method": request.method,
+                "path": request.url.path,
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+            
+            # Add user context if available
+            if hasattr(request.state, "user_context"):
+                event_metadata["user_id"] = request.state.user_context.user_id
+                event_metadata["username"] = request.state.user_context.username
+            
+            # Store metadata for later use
+            request.state.event_metadata = event_metadata
+        
+        # Process request
+        response = await call_next(request)
+        
+        # Log successful state-changing operations
+        if (request.method in ["POST", "PUT", "PATCH", "DELETE"] and 
+            200 <= response.status_code < 300):
+            logger.info(f"State change event: {request.method} {request.url.path} - Status: {response.status_code}")
+        
+        return response

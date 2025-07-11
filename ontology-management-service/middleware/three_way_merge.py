@@ -690,3 +690,69 @@ class JsonMerger(SemanticMerger):
 
 
 import uuid
+
+
+# Middleware implementation
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import JSONResponse
+
+
+class ThreeWayMergeMiddleware(BaseHTTPMiddleware):
+    """
+    Middleware for handling three-way merge operations in API requests
+    """
+    
+    def __init__(self, app, merge_paths: List[str] = None):
+        super().__init__(app)
+        self.merge_paths = merge_paths or ["/api/v1/merge", "/api/v1/schemas/*/merge"]
+        self.merge_manager = MergeManager()
+        self.json_merger = JsonMerger()
+    
+    async def dispatch(self, request: Request, call_next):
+        # Only process merge endpoints
+        if not self._is_merge_endpoint(request.url.path):
+            return await call_next(request)
+        
+        # Check if this is a merge request
+        if request.method == "POST" and "merge" in request.url.path:
+            try:
+                # Get merge data from request
+                body = await request.body()
+                merge_data = json.loads(body) if body else {}
+                
+                # Store merge context in request state
+                request.state.merge_context = {
+                    "strategy": merge_data.get("strategy", MergeStrategy.AUTO_RESOLVE.value),
+                    "validate": merge_data.get("validate", True),
+                    "track_history": merge_data.get("track_history", True)
+                }
+                
+            except Exception as e:
+                logger.error(f"Error processing merge request: {e}")
+                return JSONResponse(
+                    status_code=400,
+                    content={"error": "Invalid merge request data"}
+                )
+        
+        # Process request
+        response = await call_next(request)
+        
+        # Add merge metadata to response if applicable
+        if hasattr(request.state, "merge_result"):
+            response.headers["X-Merge-Status"] = request.state.merge_result.get("status", "unknown")
+            response.headers["X-Merge-Conflicts"] = str(request.state.merge_result.get("conflicts", 0))
+        
+        return response
+    
+    def _is_merge_endpoint(self, path: str) -> bool:
+        """Check if the path is a merge endpoint"""
+        for pattern in self.merge_paths:
+            if "*" in pattern:
+                # Simple wildcard matching
+                parts = pattern.split("*")
+                if path.startswith(parts[0]) and path.endswith(parts[-1]):
+                    return True
+            elif path == pattern:
+                return True
+        return False
