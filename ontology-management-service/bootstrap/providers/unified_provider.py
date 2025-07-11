@@ -26,7 +26,7 @@ async def get_unified_db_client() -> UnifiedDatabaseClient:
     
     logger.debug("get_unified_db_client called")
     
-    if _db_client_instance is not None and _db_client_instance._connected:
+    if _db_client_instance is not None:
         logger.debug("Returning existing database client instance")
         return _db_client_instance
     

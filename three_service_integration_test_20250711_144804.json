@@ -1,0 +1,24 @@
+{
+  "timestamp": "2025-07-11T14:48:04.435486",
+  "services": {
+    "user-service": {
+      "status": "healthy",
+      "issues": [
+        "Registration failed: {\"detail\":\"Internal server error. Please contact support if this persists.\"}"
+      ]
+    },
+    "audit-service": {
+      "status": "healthy",
+      "issues": []
+    },
+    "oms-service": {
+      "status": "healthy",
+      "issues": []
+    },
+    "integration": {
+      "status": "unknown",
+      "issues": []
+    }
+  },
+  "overall_status": "failure"
+}

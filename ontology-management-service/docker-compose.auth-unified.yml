@@ -23,7 +23,6 @@ services:
       - JWT_VALIDATION_MODE=jwks
       - JWT_ISSUER=user-service
       - JWT_AUDIENCE=oms
-      - JWT_LOCAL_VALIDATION=false
       
       # Database
       - DATABASE_URL=postgresql+asyncpg://oms_user:oms_password@postgres:5432/oms_db

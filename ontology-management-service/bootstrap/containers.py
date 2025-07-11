@@ -14,6 +14,7 @@ from core.schema.repository import SchemaRepository
 from services.job_service import JobService
 from core.property.service import PropertyService
 from core.document.service import DocumentService
+from shared.audit_client import AuditServiceClient
 
 class Container(containers.DeclarativeContainer):
     """
@@ -31,6 +32,9 @@ class Container(containers.DeclarativeContainer):
 
     # Event Gateway
     event_gateway_provider = providers.Factory(get_event_gateway)
+    
+    # Audit Service Client
+    audit_client_provider = providers.Singleton(AuditServiceClient)
 
     # Branch Service Dependencies
     # First create the dependencies that BranchService needs
@@ -50,6 +54,7 @@ class Container(containers.DeclarativeContainer):
         event_gateway=event_gateway_provider,
         diff_engine=diff_engine_provider,
         conflict_resolver=conflict_resolver_provider,
+        audit_client=audit_client_provider,
     )
 
     # Schema Service Dependencies
@@ -62,6 +67,7 @@ class Container(containers.DeclarativeContainer):
         repository=schema_repository_provider,
         branch_service=branch_service_provider,
         event_publisher=event_gateway_provider,
+        audit_client=audit_client_provider,
     )
     
     # Job Service Dependencies

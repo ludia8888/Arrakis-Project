@@ -1,0 +1,26 @@
+{
+  "summary": {
+    "total": 12,
+    "passed": 10,
+    "success_rate": "83.3%",
+    "timestamp": "2025-07-08T14:22:00.840019"
+  },
+  "results": {
+    "Advanced Tests": {
+      "Concurrent Requests": true,
+      "Rate Limiting": true,
+      "Token Expiry": true,
+      "Large Payload": true,
+      "Special Characters": true,
+      "Method Validation": true,
+      "Cache Behavior": true,
+      "Partial Authorization": true,
+      "Request Timeout": false,
+      "Transaction Rollback": true
+    },
+    "Performance Tests": {
+      "Response Times": false,
+      "Memory Leak Detection": true
+    }
+  }
+}

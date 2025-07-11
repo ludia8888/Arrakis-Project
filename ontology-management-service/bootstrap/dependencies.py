@@ -54,11 +54,11 @@ def get_redis_client() -> RedisProvider:
         raise RuntimeError("Container not initialized")
     return _container.redis_provider()
 
-def get_db_client() -> UnifiedDatabaseClient:
+async def get_db_client() -> UnifiedDatabaseClient:
     """Get database client instance."""
-    if not _container:
-        raise RuntimeError("Container not initialized")
-    return _container.db_client_provider()
+    # Use the singleton pattern from unified_provider directly
+    from bootstrap.providers.unified_provider import get_unified_db_client
+    return await get_unified_db_client()
 
 def get_job_service():
     """Get job service instance."""

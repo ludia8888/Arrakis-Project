@@ -19,7 +19,7 @@ logger = get_logger(__name__)
 router = APIRouter(prefix="/documents/crud", tags=["Document CRUD"])
 
 
-def get_document_service(
+async def get_document_service(
     db_client=Depends(get_db_client),
     event_gateway=Depends(get_event_gateway)
 ) -> DocumentService:

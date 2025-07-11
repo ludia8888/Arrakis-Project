@@ -1,0 +1,25 @@
+{
+  "timestamp": "2025-07-11T14:50:46.833275",
+  "services": {
+    "user-service": {
+      "status": "healthy",
+      "issues": []
+    },
+    "audit-service": {
+      "status": "healthy",
+      "issues": []
+    },
+    "oms-service": {
+      "status": "healthy",
+      "issues": []
+    },
+    "integration": {
+      "status": "unknown",
+      "issues": [
+        "Nginx to User Service routing failed",
+        "Nginx to OMS Service routing failed"
+      ]
+    }
+  },
+  "overall_status": "failure"
+}

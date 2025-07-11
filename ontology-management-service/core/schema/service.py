@@ -12,6 +12,7 @@ from models.domain import ObjectType, ObjectTypeCreate
 from shared.terminus_context import get_author, get_branch
 from core.interfaces.schema import SchemaServiceProtocol
 from .repository import SchemaRepository
+from shared.audit_client import AuditServiceClient, AuditEvent
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +32,8 @@ class SchemaService(SchemaServiceProtocol):
         self, 
         repository: SchemaRepository,
         branch_service: 'BranchService',  # 브랜치 관리를 위한 서비스
-        event_publisher: Optional[Any] = None
+        event_publisher: Optional[Any] = None,
+        audit_client: Optional[AuditServiceClient] = None
     ):
         """
         서비스 초기화.
@@ -44,6 +46,7 @@ class SchemaService(SchemaServiceProtocol):
         self.repository = repository
         self.branch_service = branch_service
         self.event_publisher = event_publisher
+        self.audit_client = audit_client or AuditServiceClient()
 
     async def list_object_types(self, branch: str = "main") -> List[Dict[str, Any]]:
         """모든 ObjectType의 목록을 조회합니다."""

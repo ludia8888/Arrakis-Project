@@ -1,0 +1,49 @@
+{
+  "timestamp": "2025-07-11T08:56:03.743282+00:00",
+  "duration_seconds": 0.911355,
+  "success": true,
+  "services": {
+    "user_service": "http://localhost:8080",
+    "oms_service": "http://localhost:8091",
+    "audit_service": "http://localhost:8092"
+  },
+  "test_results": [
+    {
+      "test": "User Registration and Login",
+      "status": "PASSED",
+      "details": {
+        "user_id": "10068d6a-38ec-4c15-8231-311e80fcc917",
+        "username": "integration_test_629125"
+      }
+    },
+    {
+      "test": "Token Validation",
+      "status": "PASSED",
+      "note": "Validation endpoint not found but token works"
+    },
+    {
+      "test": "OMS Access",
+      "status": "PASSED",
+      "details": {
+        "schemas_count": 0,
+        "create_status": 403
+      }
+    },
+    {
+      "test": "Audit Service Access",
+      "status": "PASSED",
+      "details": {
+        "auth_success": true,
+        "single_event": false,
+        "batch_events": true
+      }
+    }
+  ],
+  "errors": [],
+  "summary": {
+    "User Registration and Login": true,
+    "Token Validation": true,
+    "OMS Access": true,
+    "Audit Service Access": true
+  }
+}

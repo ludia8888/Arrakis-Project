@@ -1,0 +1,36 @@
+{
+  "header": {
+    "alg": "RS256",
+    "kid": "key-env-df26d738",
+    "typ": "JWT"
+  },
+  "payload": {
+    "sub": "51b049f7-cc06-454c-8b8a-9892ec39083b",
+    "user_id": "51b049f7-cc06-454c-8b8a-9892ec39083b",
+    "username": "testuser_correct",
+    "email": "testcorrect@example.com",
+    "type": "access",
+    "exp": 1752052941,
+    "iat": 1752051141,
+    "iss": "user-service",
+    "aud": "oms",
+    "kid": "key-env-df26d738",
+    "sid": "63b48805-e9ae-479c-b410-373e06933ade",
+    "roles": [
+      "admin"
+    ],
+    "scope": "api:schemas:write api:schemas:read api:system:admin api:ontologies:admin api:ontologies:write api:schemas:admin api:ontologies:read",
+    "scopes": [
+      "api:schemas:write",
+      "api:schemas:read",
+      "api:system:admin",
+      "api:ontologies:admin",
+      "api:ontologies:write",
+      "api:schemas:admin",
+      "api:ontologies:read"
+    ],
+    "tenant_id": "default"
+  },
+  "raw_token": "eyJhbGciOiJSUzI1NiIsImtpZCI6ImtleS1lbnYtZGYyNmQ3MzgiLCJ0eXAiOiJKV1QifQ.eyJzdWIiOiI1MWIwNDlmNy1jYzA2LTQ1NGMtOGI4YS05ODkyZWMzOTA4M2IiLCJ1c2VyX2lkIjoiNTFiMDQ5ZjctY2MwNi00NTRjLThiOGEtOTg5MmVjMzkwODNiIiwidXNlcm5hbWUiOiJ0ZXN0dXNlcl9jb3JyZWN0IiwiZW1haWwiOiJ0ZXN0Y29ycmVjdEBleGFtcGxlLmNvbSIsInR5cGUiOiJhY2Nlc3MiLCJleHAiOjE3NTIwNTI5NDEsImlhdCI6MTc1MjA1MTE0MSwiaXNzIjoidXNlci1zZXJ2aWNlIiwiYXVkIjoib21zIiwia2lkIjoia2V5LWVudi1kZjI2ZDczOCIsInNpZCI6IjYzYjQ4ODA1LWU5YWUtNDc5Yy1iNDEwLTM3M2UwNjkzM2FkZSIsInJvbGVzIjpbImFkbWluIl0sInNjb3BlIjoiYXBpOnNjaGVtYXM6d3JpdGUgYXBpOnNjaGVtYXM6cmVhZCBhcGk6c3lzdGVtOmFkbWluIGFwaTpvbnRvbG9naWVzOmFkbWluIGFwaTpvbnRvbG9naWVzOndyaXRlIGFwaTpzY2hlbWFzOmFkbWluIGFwaTpvbnRvbG9naWVzOnJlYWQiLCJzY29wZXMiOlsiYXBpOnNjaGVtYXM6d3JpdGUiLCJhcGk6c2NoZW1hczpyZWFkIiwiYXBpOnN5c3RlbTphZG1pbiIsImFwaTpvbnRvbG9naWVzOmFkbWluIiwiYXBpOm9udG9sb2dpZXM6d3JpdGUiLCJhcGk6c2NoZW1hczphZG1pbiIsImFwaTpvbnRvbG9naWVzOnJlYWQiXSwidGVuYW50X2lkIjoiZGVmYXVsdCJ9.t63aYEZfPUdOBERQ2Csl4XtYjm5bOPZda5nVXxEXFHn0UpWtpjMbxYEF6T2iVyBcuuFqjWe4fcQZ8ygrIyvE54lPOtid286iWljWHwqC-WzwU12JzDcWK77QXT4FvPTYXhLDbN7FbGkE34jx-ZlMvt6XhMv2SMVH-_QxTkf0pLX8Mxxrz-c4K1DODf8mxC1olq2qZ8QePHOLN-Q4BN_z5_sZN5DR-i477zriG3uskDtwdlwt08bNphHhtS4xzQic8CzwIOlYZumoULUUsKQHVr383AyQjYKLJ21m6p_SV_yTCMqxMQrXNYgYNz-2NDOpz2c1n57t8hBWVJP8UHljCg",
+  "timestamp": "2025-07-09T17:52:21.011560"
+}

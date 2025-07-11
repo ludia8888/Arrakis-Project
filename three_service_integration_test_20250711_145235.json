@@ -1,0 +1,24 @@
+{
+  "timestamp": "2025-07-11T14:52:35.753961",
+  "services": {
+    "user-service": {
+      "status": "healthy",
+      "issues": [
+        "Registration failed: {\"detail\":\"Rate limit exceeded\"}"
+      ]
+    },
+    "audit-service": {
+      "status": "healthy",
+      "issues": []
+    },
+    "oms-service": {
+      "status": "healthy",
+      "issues": []
+    },
+    "integration": {
+      "status": "unknown",
+      "issues": []
+    }
+  },
+  "overall_status": "failure"
+}

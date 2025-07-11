@@ -413,6 +413,41 @@ class InterfaceUpdate(BaseModel):
     status: Optional[Status] = None
 
 
+class Document(BaseModel):
+    """Document domain model - 문서 관리"""
+    id: str
+    name: str
+    object_type: str  # 문서가 속한 ObjectType
+    content: Dict[str, Any]  # 문서의 실제 내용
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+    tags: List[str] = Field(default_factory=list)
+    status: str = "draft"  # draft, published, archived
+    created_by: str
+    created_at: datetime
+    modified_by: str
+    modified_at: datetime
+    version: int = 1
+
+
+class DocumentCreate(BaseModel):
+    """Document creation request"""
+    name: str
+    object_type: str
+    content: Dict[str, Any]
+    metadata: Optional[Dict[str, Any]] = None
+    tags: Optional[List[str]] = None
+    status: Optional[str] = "draft"
+
+
+class DocumentUpdate(BaseModel):
+    """Document update request"""
+    name: Optional[str] = None
+    content: Optional[Dict[str, Any]] = None
+    metadata: Optional[Dict[str, Any]] = None
+    tags: Optional[List[str]] = None
+    status: Optional[str] = None
+
+
 class SharedProperty(BaseModel):
     """SharedProperty domain model - reusable property definitions"""
     id: str

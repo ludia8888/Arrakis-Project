@@ -56,13 +56,14 @@ class IAMIntegration:
         self._redis_client = None
         self._init_redis_client()
         
-        # Initialize JWKS client for key rotation support
+        # Initialize JWKS client for proper JWT validation
         self.jwks_client = None
-        if not os.getenv("JWT_LOCAL_VALIDATION", "true").lower() == "true":
-            try:
-                self.jwks_client = PyJWKClient(self.jwks_url)
-            except Exception as e:
-                logger.warning(f"Failed to initialize JWKS client: {e}")
+        try:
+            self.jwks_client = PyJWKClient(self.jwks_url)
+            logger.info(f"🔑 JWKS client initialized: {self.jwks_url}")
+        except Exception as e:
+            logger.error(f"❌ Failed to initialize JWKS client: {e}")
+            logger.error("IAM integration will fall back to user service validation")
         
         # Cache for role mappings
         self._role_scope_cache: Dict[str, Set[str]] = {}

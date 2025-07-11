@@ -306,12 +306,12 @@ class TerminusDBClient:
             "db.branch": branch_name,
             "db.operation": "insert_document"
         })
-        url = f"/api/document/admin/{db_name}/{branch_name}"
+        from urllib.parse import quote
+        message = quote(commit_msg or f"Inserted document into {branch_name}")
+        url = f"/api/document/admin/{db_name}/{branch_name}?author=oms@arrakis&message={message}"
         
-        payload = {
-            "commit_info": {"message": commit_msg or f"Inserted document into {branch_name}"},
-            "document": document
-        }
+        # TerminusDB expects 'instance' not 'document' when inserting
+        payload = [document]  # Send as array directly
 
         response = await self._client.post(url, json=payload)
         response.raise_for_status()

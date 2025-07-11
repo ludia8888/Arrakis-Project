@@ -1,0 +1,21 @@
+{
+  "timestamp": "2025-07-09T18:45:47.567807",
+  "tests": [
+    {
+      "name": "health_check",
+      "status": "passed"
+    },
+    {
+      "name": "authentication",
+      "status": "passed"
+    },
+    {
+      "name": "schema_create",
+      "status": "passed"
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0
+  }
+}

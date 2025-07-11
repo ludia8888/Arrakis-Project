@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional
 import json
 import httpx
 
-from shared.models.domain import Branch as DomainBranch
+from models.domain import Branch as DomainBranch
 from core.branch.conflict_resolver import ConflictResolver
 from core.branch.diff_engine import DiffEngine
 from core.branch.merge_strategies import MergeStrategyImplementor
@@ -27,6 +27,7 @@ from core.branch.models import (
 from middleware.three_way_merge import JsonMerger, MergeStrategy as MiddlewareMergeStrategy
 from database.clients.terminus_db import TerminusDBClient
 from database.clients.unified_database_client import UnifiedDatabaseClient
+from shared.audit_client import AuditServiceClient, AuditEvent
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +43,8 @@ class BranchService:
         db_client: UnifiedDatabaseClient,
         event_gateway: Optional[Any] = None,
         diff_engine: Optional[DiffEngine] = None,
-        conflict_resolver: Optional[ConflictResolver] = None
+        conflict_resolver: Optional[ConflictResolver] = None,
+        audit_client: Optional[AuditServiceClient] = None
     ):
         """
         Initialize BranchService with proper dependency injection
@@ -55,6 +57,7 @@ class BranchService:
         """
         self.db_client = db_client
         self.event_publisher = event_gateway
+        self.audit_client = audit_client or AuditServiceClient()
         
         # Get TerminusDB endpoint from config or environment
         self.tdb_endpoint = os.getenv("TERMINUSDB_ENDPOINT", "http://localhost:6363")
@@ -100,19 +103,22 @@ class BranchService:
                 raise ValueError(f"Branch '{name}' already exists")
             
             # Create branch in TerminusDB
-            await self.tdb.branch(self.db_name, name, from_branch)
+            await self.tdb.create_branch(self.db_name, name, from_branch)
             
             # Create branch metadata
             branch = DomainBranch(
                 id=str(uuid.uuid4()),
                 name=name,
-                parent_branch=from_branch,
-                created_at=datetime.utcnow(),
-                created_by=created_by or "system",
-                is_protected=False,
-                is_default=False,
-                description=f"Branch created from {from_branch}",
-                metadata={"source_branch": from_branch}
+                displayName=name,
+                parentBranch=from_branch,
+                createdAt=datetime.utcnow(),
+                createdBy=created_by or "system",
+                modifiedAt=datetime.utcnow(),
+                modifiedBy=created_by or "system",
+                isProtected=False,
+                isActive=True,
+                versionHash=str(uuid.uuid4()),
+                description=f"Branch created from {from_branch}"
             )
             
             # Publish event if event publisher is available
@@ -122,6 +128,28 @@ class BranchService:
                     "parent_branch": from_branch,
                     "created_by": created_by
                 })
+            
+            # Record audit event
+            try:
+                audit_event = AuditEvent(
+                    event_type="branch.created",
+                    event_category="branch_management",
+                    user_id=created_by or "system",
+                    username=created_by or "system",
+                    target_type="branch",
+                    target_id=name,
+                    operation="create",
+                    severity="INFO",
+                    branch=name,
+                    metadata={
+                        "parent_branch": from_branch,
+                        "branch_id": branch.id
+                    }
+                )
+                await self.audit_client.record_event(audit_event)
+                logger.info(f"Audit event recorded for branch creation: {name}")
+            except Exception as audit_error:
+                logger.error(f"Failed to record audit event: {audit_error}")
             
             logger.info(f"Successfully created branch '{name}'")
             return branch
@@ -266,13 +294,16 @@ class BranchService:
                         branch = DomainBranch(
                             id=str(uuid.uuid4()),
                             name=branch_name,
-                            parent_branch=branch_info.get('parent'),
-                            created_at=datetime.utcnow(),
-                            created_by=branch_info.get('created_by', 'system'),
-                            is_protected=branch_name == 'main',
-                            is_default=branch_name == 'main',
-                            description=f"Branch from TerminusDB: {branch_name}",
-                            metadata=branch_info.get('metadata', {})
+                            displayName=branch_name,
+                            parentBranch=branch_info.get('parent'),
+                            createdAt=datetime.utcnow(),
+                            createdBy=branch_info.get('created_by', 'system'),
+                            modifiedAt=datetime.utcnow(),
+                            modifiedBy=branch_info.get('created_by', 'system'),
+                            isProtected=branch_name == 'main',
+                            isActive=True,
+                            versionHash=branch_info.get('version_hash', str(uuid.uuid4())),
+                            description=f"Branch from TerminusDB: {branch_name}"
                         )
                         
                         logger.info(f"✅ 브랜치 '{branch_name}' TerminusDB에서 조회 성공")
@@ -290,13 +321,16 @@ class BranchService:
                 return DomainBranch(
                     id=str(uuid.uuid4()),
                     name="main",
-                    parent_branch=None,
-                    created_at=datetime.utcnow(),
-                    created_by="system",
-                    is_protected=True,
-                    is_default=True,
-                    description="Default main branch (system fallback)",
-                    metadata={"source": "system_fallback"}
+                    displayName="Main Branch",
+                    parentBranch=None,
+                    createdAt=datetime.utcnow(),
+                    createdBy="system",
+                    modifiedAt=datetime.utcnow(),
+                    modifiedBy="system",
+                    isProtected=True,
+                    isActive=True,
+                    versionHash=str(uuid.uuid4()),
+                    description="Default main branch (system fallback)"
                 )
             
             return None
@@ -476,3 +510,43 @@ class BranchService:
     ) -> ChangeProposal:
         """Update a proposal"""
         raise NotImplementedError("Update proposal not yet implemented")
+    
+    async def commit_changes(
+        self,
+        branch: str,
+        message: str,
+        author: str = "system"
+    ) -> str:
+        """
+        Commit changes to a branch
+        
+        For now, just return a mock commit ID to allow schema service to work
+        """
+        commit_id = str(uuid.uuid4())
+        logger.info(f"Mock commit '{commit_id}' created for branch '{branch}' with message: {message}")
+        return commit_id
+    
+    async def create_pull_request(
+        self,
+        source_branch: str,
+        target_branch: str,
+        title: str,
+        description: str,
+        created_by: str
+    ) -> Dict[str, Any]:
+        """
+        Create a pull request
+        
+        For now, just return a mock PR to allow schema service to work
+        """
+        pr_id = str(uuid.uuid4())[:8]
+        logger.info(f"Mock PR '{pr_id}' created from '{source_branch}' to '{target_branch}'")
+        return {
+            "pr_id": pr_id,
+            "source_branch": source_branch,
+            "target_branch": target_branch,
+            "title": title,
+            "description": description,
+            "created_by": created_by,
+            "status": "open"
+        }

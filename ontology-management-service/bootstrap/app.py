@@ -75,7 +75,7 @@ except ImportError:  # pragma: no cover
 from api.v1 import (
     system_routes, health_routes, schema_routes, organization_routes,
     property_routes, audit_routes, batch_routes, branch_lock_routes, 
-    branch_routes, document_routes, graph_health_routes, idempotent_routes,
+    branch_routes, document_routes, document_crud_routes, graph_health_routes, idempotent_routes,
     issue_tracking_routes, job_progress_routes, shadow_index_routes,
     time_travel_routes, version_routes
 )
@@ -153,7 +153,7 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
     
     v1_routers = [
         audit_routes, batch_routes, branch_lock_routes, branch_routes,
-        document_routes, graph_health_routes, idempotent_routes,
+        document_routes, document_crud_routes, graph_health_routes, idempotent_routes,
         issue_tracking_routes, job_progress_routes, shadow_index_routes, 
         time_travel_routes, version_routes
     ]

@@ -10,8 +10,9 @@ import time
 from typing import Dict, Any
 
 # Service URLs
-USER_SERVICE_URL = "http://localhost:8001"
-OMS_SERVICE_URL = "http://localhost:8000"
+USER_SERVICE_URL = "http://localhost:8080"
+OMS_SERVICE_URL = "http://localhost:8091"
+AUDIT_SERVICE_URL = "http://localhost:8092"
 
 # Test credentials
 TEST_USER = {
@@ -42,9 +43,11 @@ class IntegrationTester:
                     user_resp = await client.get(f"{USER_SERVICE_URL}/health")
                     # Check OMS health
                     oms_resp = await client.get(f"{OMS_SERVICE_URL}/health")
+                    # Check Audit Service health
+                    audit_resp = await client.get(f"{AUDIT_SERVICE_URL}/api/v2/events/health")
                     
-                    if user_resp.status_code == 200 and oms_resp.status_code == 200:
-                        print("✓ Both services are ready!")
+                    if user_resp.status_code == 200 and oms_resp.status_code == 200 and audit_resp.status_code == 200:
+                        print("✓ All services are ready!")
                         return True
             except:
                 pass

@@ -1,7 +1,7 @@
 """Branch service provider"""
 from typing import Optional
 
-from core.branch.service import BranchService
+from core.branch.service_refactored import BranchService
 from database.clients.unified_database_client import UnifiedDatabaseClient
 from .base import Provider
 from .event import EventProvider
@@ -26,14 +26,12 @@ class BranchProvider(Provider[BranchService]):
         if self._instance is None:
             event_service = await self.event_provider.provide()
             
-            # TODO: This is a temporary fix. BranchService needs to be refactored
-            # to accept UnifiedDatabaseClient and other dependencies via DI.
-            # We are providing dummy values to allow the application to load.
+            # Create BranchService with proper dependencies
             self._instance = BranchService(
-                tdb_endpoint="", # This should come from config via UDC
-                diff_engine=DiffEngine(tdb_endpoint=""), # Dummy
-                conflict_resolver=ConflictResolver(), # Dummy
-                event_publisher=event_service
+                db_client=self.db_client,
+                event_gateway=event_service,
+                diff_engine=DiffEngine(tdb_endpoint="http://terminusdb:6363"),
+                conflict_resolver=ConflictResolver()
             )
         return self._instance
     

@@ -1,0 +1,28 @@
+{
+  "summary": {
+    "total": 13,
+    "passed": 12,
+    "failed": 1,
+    "success_rate": "92.3%",
+    "timestamp": "2025-07-08T14:19:57.006806"
+  },
+  "results": {
+    "Middleware": {
+      "Error Handler": true,
+      "CORS": false,
+      "ETag": true,
+      "Auth": true,
+      "TerminusContext": true,
+      "DatabaseContext": true,
+      "Scope RBAC": true
+    },
+    "Core Services": {
+      "Health Service": true,
+      "Schema Service": true,
+      "Branch Service": true,
+      "Document Service": true,
+      "Organization Service": true,
+      "Property Service": true
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "timestamp": "2025-07-11T14:01:30.943453",
+  "services": {
+    "user-service": {
+      "status": "healthy",
+      "issues": [
+        "Registration failed: {\"detail\":\"Not Found\"}"
+      ]
+    },
+    "audit-service": {
+      "status": "unknown",
+      "issues": [
+        "Health check failed with status 404"
+      ]
+    },
+    "oms-service": {
+      "status": "healthy",
+      "issues": []
+    },
+    "integration": {
+      "status": "unknown",
+      "issues": []
+    }
+  },
+  "overall_status": "failure"
+}

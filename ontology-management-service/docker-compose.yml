@@ -34,7 +34,7 @@ services:
       - DATA_KERNEL_HOST=0.0.0.0
       - GRPC_PORT=50051
     ports:
-      - "8080:8080"     # FastAPI REST
+      - "8082:8080"     # FastAPI REST
       - "50051:50051"   # gRPC
     depends_on:
       - terminusdb
@@ -53,7 +53,7 @@ services:
     image: redis:7-alpine
     container_name: oms-redis
     ports:
-      - "6379:6379"
+      - "6381:6379"
     volumes:
       - redis-data:/data
     networks:
@@ -86,7 +86,7 @@ services:
       - POSTGRES_PASSWORD=oms_password
       - POSTGRES_DB=oms_db
     ports:
-      - "5432:5432"
+      - "5437:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:
@@ -111,7 +111,7 @@ services:
       - ACCESS_TOKEN_EXPIRE_MINUTES=30
       - REFRESH_TOKEN_EXPIRE_DAYS=7
     ports:
-      - "8002:8000"
+      - "8081:8000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -132,7 +132,6 @@ services:
       - DATABASE_URL=postgresql://oms_user:oms_password@postgres:5432/oms_db
       - USER_SERVICE_URL=http://user-service:8000
       - JWT_SECRET=${JWT_SECRET}
-      - JWT_LOCAL_VALIDATION=true
       - ENABLE_TELEMETRY=false
       # Data-Kernel Gateway settings
       - USE_DATA_KERNEL_GATEWAY=${USE_DATA_KERNEL_GATEWAY:-false}
@@ -145,7 +144,7 @@ services:
       - USE_EVENT_GATEWAY=${USE_EVENT_GATEWAY:-false}
       - EVENT_GATEWAY_ENDPOINT=event-gateway:50057
     ports:
-      - "8000:8000"      # Main API
+      - "8083:8000"      # Main API
       - "8004:8004"      # WebSocket
       - "8006:8006"      # GraphQL HTTP
       - "8091:8090"      # Prometheus metrics

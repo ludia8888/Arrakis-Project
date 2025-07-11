@@ -6,7 +6,7 @@ import os
 import asyncio
 import uuid
 from typing import Dict, List, Optional, Any
-from datetime import datetime
+from datetime import datetime, timedelta
 from dataclasses import dataclass, asdict
 import httpx
 import json
@@ -87,11 +87,20 @@ class AuditServiceClient:
     """Audit Service HTTP 클라이언트"""
     
     def __init__(self):
-        self.base_url = os.getenv('AUDIT_SERVICE_URL', 'http://audit-service:8004')
-        self.api_key = os.getenv('AUDIT_SERVICE_API_KEY', '')
+        self.base_url = os.getenv('AUDIT_SERVICE_URL', 'http://audit-service:8002')
         self.timeout = float(os.getenv('AUDIT_SERVICE_TIMEOUT', '30.0'))
         self.max_retries = int(os.getenv('AUDIT_SERVICE_MAX_RETRIES', '3'))
         self.circuit_breaker_threshold = int(os.getenv('AUDIT_SERVICE_CB_THRESHOLD', '5'))
+        
+        # 토큰 교환 설정
+        self.user_service_url = os.getenv('USER_SERVICE_URL', 'http://user-service:8000')
+        self.client_id = os.getenv('OMS_CLIENT_ID', 'oms-monolith-client')
+        self.client_secret = os.getenv('OMS_CLIENT_SECRET', '')
+        self.service_name = os.getenv('SERVICE_NAME', 'oms-monolith')
+        
+        # 토큰 캐시
+        self._cached_token = None
+        self._token_expires_at = None
         
         # HTTP 클라이언트 설정
         self._client: Optional[httpx.AsyncClient] = None
@@ -102,16 +111,53 @@ class AuditServiceClient:
         # 백그라운드 큐 (옵션)
         self._background_queue: Optional[asyncio.Queue] = None
         self._background_task: Optional[asyncio.Task] = None
+    
+    async def _get_service_token(self) -> str:
+        """User Service에서 토큰 교환을 통해 서비스 토큰 획득"""
+        # 캐시된 토큰이 유효한지 확인
+        if self._cached_token and self._token_expires_at:
+            if datetime.utcnow() < self._token_expires_at:
+                return self._cached_token
+        
+        # 토큰 교환 요청
+        auth = httpx.BasicAuth(self.client_id, self.client_secret)
+        
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.post(
+                    f"{self.user_service_url}/token/exchange",
+                    data={
+                        "grant_type": "client_credentials",
+                        "scope": "audit:write audit:read",
+                        "audience": "audit-service"  # Specify the target audience
+                    },
+                    auth=auth,
+                    timeout=10.0
+                )
+                response.raise_for_status()
+                
+                token_data = response.json()
+                self._cached_token = token_data["access_token"]
+                # 만료 시간 계산 (여유를 두고 5분 전에 갱신)
+                expires_in = token_data.get("expires_in", 3600)
+                self._token_expires_at = datetime.utcnow() + timedelta(seconds=expires_in - 300)
+                
+                return self._cached_token
+                
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code == 401:
+                    raise Exception(f"Service authentication failed: {e.response.text}")
+                raise Exception(f"Token exchange failed: {e.response.status_code}")
+            except Exception as e:
+                raise Exception(f"Failed to get service token: {e}")
         
     async def _get_client(self) -> httpx.AsyncClient:
         """HTTP 클라이언트 가져오기 (지연 초기화)"""
         if self._client is None:
             headers = {
                 "Content-Type": "application/json",
-                "User-Agent": "oms-monolith/audit-client"
+                "User-Agent": f"{self.service_name}/audit-client"
             }
-            if self.api_key:
-                headers["Authorization"] = f"Bearer {self.api_key}"
             
             self._client = httpx.AsyncClient(
                 base_url=self.base_url,
@@ -169,11 +215,16 @@ class AuditServiceClient:
         
         client = await self._get_client()
         
+        # 토큰 교환을 통해 서비스 토큰 획득
+        token = await self._get_service_token()
+        headers = {"Authorization": f"Bearer {token}"}
+        
         for attempt in range(self.max_retries):
             try:
                 response = await client.post(
                     "/api/v2/events/single",
-                    json=event.to_dict()
+                    json=event.to_dict(),
+                    headers=headers  # 요청별 헤더 오버라이드
                 )
                 response.raise_for_status()
                 result = response.json()
