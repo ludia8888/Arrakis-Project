@@ -18,6 +18,12 @@ from .metadata_frames import (
     SchemaDocumentationGenerator
 )
 
+from .storage import (
+    StoredDocument,
+    DocumentStorage,
+    get_document_storage
+)
+
 __all__ = [
     # Unfoldable
     "UnfoldLevel",
@@ -30,5 +36,10 @@ __all__ = [
     "MetadataFrame",
     "MetadataFrameParser",
     "SchemaDocumentation",
-    "SchemaDocumentationGenerator"
+    "SchemaDocumentationGenerator",
+    
+    # Storage
+    "StoredDocument",
+    "DocumentStorage",
+    "get_document_storage"
 ]

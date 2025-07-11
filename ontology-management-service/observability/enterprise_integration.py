@@ -56,10 +56,13 @@ class EnterpriseObservabilityManager:
                 service_version="2.0.0",
                 sampling_rate=1.0  # 100% sampling for enterprise
             )
+            logger.info(f"Initializing tracing with config: {tracing_config}")
             self.enterprise_tracer = initialize_enterprise_tracing(tracing_config)
             self.resilience_tracing = get_resilience_tracing()
             self.business_tracing = get_business_tracing()
             logger.info("✅ Enterprise tracing initialized")
+            logger.info(f"Tracer type: {type(self.enterprise_tracer)}")
+            logger.info(f"Tracer instance: {self.enterprise_tracer}")
             
             # 3. Auto-instrumentation 설정
             setup_auto_instrumentation()
@@ -85,6 +88,18 @@ class EnterpriseObservabilityManager:
         """FastAPI와 통합"""
         # Metrics endpoint 추가
         app.add_api_route("/metrics", metrics_endpoint, methods=["GET"])
+        
+        # FastAPI OpenTelemetry instrumentation
+        try:
+            from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+            FastAPIInstrumentor.instrument_app(
+                app,
+                tracer_provider=self.enterprise_tracer.get_tracer().trace.get_tracer_provider() if self.enterprise_tracer else None,
+                excluded_urls="/health,/metrics,/api/v1/health"
+            )
+            logger.info("✅ FastAPI instrumented for OpenTelemetry tracing")
+        except Exception as e:
+            logger.warning(f"Failed to instrument FastAPI for tracing: {e}")
         
         # Health check endpoint에 관찰성 정보 추가
         @app.get("/observability/health")

@@ -62,10 +62,17 @@ class EnterpriseTracer:
             trace.set_tracer_provider(provider)
             
             # Jaeger Exporter 설정
+            import os
+            jaeger_host = os.getenv("JAEGER_AGENT_HOST", "localhost")
+            jaeger_port = int(os.getenv("JAEGER_AGENT_PORT", "6831"))
+            collector_endpoint = os.getenv("JAEGER_COLLECTOR_ENDPOINT", self.config.jaeger_endpoint)
+            
+            logger.info(f"Configuring Jaeger: host={jaeger_host}, port={jaeger_port}, collector={collector_endpoint}")
+            
             jaeger_exporter = JaegerExporter(
-                agent_host_name="localhost",
-                agent_port=6831,
-                collector_endpoint=self.config.jaeger_endpoint,
+                agent_host_name=jaeger_host,
+                agent_port=jaeger_port,
+                collector_endpoint=collector_endpoint if collector_endpoint else None,
             )
             
             # Batch Span Processor 설정
@@ -576,7 +583,7 @@ async def trace_operation(
 # Auto-instrumentation for FastAPI
 # =============================================================================
 
-def setup_auto_instrumentation():
+def setup_auto_instrumentation(app=None):
     """자동 계측 설정"""
     try:
         from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
@@ -584,8 +591,11 @@ def setup_auto_instrumentation():
         from opentelemetry.instrumentation.redis import RedisInstrumentor
         from opentelemetry.instrumentation.asyncio import AsyncioInstrumentor
         
-        # FastAPI 자동 계측
-        FastAPIInstrumentor.instrument()
+        # FastAPI 자동 계측 - app이 제공되면 특정 app 계측
+        if app:
+            FastAPIInstrumentor.instrument_app(app)
+        else:
+            FastAPIInstrumentor.instrument()
         
         # HTTP 클라이언트 자동 계측
         RequestsInstrumentor.instrument()

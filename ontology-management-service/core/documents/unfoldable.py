@@ -365,3 +365,79 @@ class UnfoldableProcessor:
         main_doc = process_object(document, main_doc, unfoldable_content)
         
         return main_doc, unfoldable_content
+    
+    @staticmethod
+    def auto_mark_unfoldable(
+        content: Dict[str, Any],
+        size_threshold: int = 10240,
+        array_threshold: int = 100,
+        text_threshold: int = 1000
+    ) -> Dict[str, Any]:
+        """
+        Automatically mark large content as unfoldable
+        
+        Args:
+            content: Document content to process
+            size_threshold: Size threshold in bytes for objects
+            array_threshold: Length threshold for arrays
+            text_threshold: Character threshold for text content
+            
+        Returns:
+            Document with unfoldable annotations added
+        """
+        processed = json.loads(json.dumps(content))  # Deep copy
+        unfoldable_paths = []
+        
+        def scan_and_mark(obj: Any, path: str = "") -> Any:
+            if isinstance(obj, dict):
+                result = {}
+                for key, value in obj.items():
+                    new_path = f"{path}.{key}" if path else key
+                    
+                    if isinstance(value, dict):
+                        # Check if object is large enough to be unfoldable
+                        obj_size = len(json.dumps(value))
+                        if obj_size > size_threshold:
+                            result[key] = {
+                                "@unfoldable": True,
+                                "@display_name": key,
+                                "@summary": f"Object with {len(value)} fields ({obj_size} bytes)",
+                                "@content": value
+                            }
+                            unfoldable_paths.append(new_path)
+                        else:
+                            result[key] = scan_and_mark(value, new_path)
+                    elif isinstance(value, list):
+                        # Check if array is large enough to be unfoldable
+                        if len(value) > array_threshold:
+                            result[key] = {
+                                "@unfoldable": True,
+                                "@display_name": key,
+                                "@summary": f"Array with {len(value)} items",
+                                "@content": value
+                            }
+                            unfoldable_paths.append(new_path)
+                        else:
+                            result[key] = [scan_and_mark(item, f"{new_path}[{i}]") for i, item in enumerate(value)]
+                    elif isinstance(value, str):
+                        # Check if text is large enough to be unfoldable
+                        if len(value) > text_threshold:
+                            preview = value[:100] + "..." if len(value) > 100 else value
+                            result[key] = {
+                                "@unfoldable": True,
+                                "@display_name": key,
+                                "@summary": f"Text content ({len(value)} chars): {preview}",
+                                "@content": value
+                            }
+                            unfoldable_paths.append(new_path)
+                        else:
+                            result[key] = value
+                    else:
+                        result[key] = value
+                return result
+            elif isinstance(obj, list):
+                return [scan_and_mark(item, f"{path}[{i}]") for i, item in enumerate(obj)]
+            else:
+                return obj
+        
+        return scan_and_mark(processed)

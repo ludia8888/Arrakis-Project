@@ -1,0 +1,22 @@
+# GraphQL Service Requirements
+fastapi==0.109.2
+uvicorn[standard]==0.27.0.post1
+strawberry-graphql[fastapi]==0.217.1
+httpx==0.26.0
+pydantic==2.5.3
+python-dotenv==1.0.0
+redis==5.0.1
+asyncio==3.4.3
+websockets==12.0
+
+# Authentication
+PyJWT==2.8.0
+
+# Monitoring
+prometheus-client==0.19.0
+opentelemetry-api==1.22.0
+opentelemetry-sdk==1.22.0
+opentelemetry-instrumentation-fastapi==0.43b0
+
+# Utilities
+python-json-logger==2.0.7

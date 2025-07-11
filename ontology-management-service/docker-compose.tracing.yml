@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  # Jaeger All-in-One for local testing
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: oms-jaeger-local
+    environment:
+      - COLLECTOR_ZIPKIN_HTTP_PORT=9411
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "6831:6831/udp"     # UDP agent port (Thrift compact protocol)
+      - "6832:6832/udp"     # UDP agent port (Thrift binary protocol)
+      - "16686:16686"       # Jaeger UI
+      - "14268:14268"       # HTTP collector
+      - "14269:14269"       # Admin port (health check)
+      - "4317:4317"         # OTLP gRPC
+      - "4318:4318"         # OTLP HTTP
+    networks:
+      - tracing-network
+
+  # Redis for caching and other services
+  redis:
+    image: redis:7-alpine
+    container_name: oms-redis-local
+    ports:
+      - "6379:6379"
+    networks:
+      - tracing-network
+
+networks:
+  tracing-network:
+    driver: bridge

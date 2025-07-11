@@ -220,10 +220,22 @@ class SchemaDocumentationGenerator:
         object_type: Dict[str, Any]
     ) -> SchemaDocumentation:
         """Generate documentation for an object type"""
+        # Handle different object type formats
+        if "@id" in object_type:
+            # RDF/OWL format
+            name = object_type["@id"]
+            title = object_type.get("@documentation", {}).get("@label", name) if "@documentation" in object_type else name
+            description = object_type.get("@documentation", {}).get("@comment", "") if "@documentation" in object_type else ""
+        else:
+            # Standard format
+            name = object_type.get('name', object_type.get('@id', 'Unknown'))
+            title = object_type.get('displayName', object_type.get('title', name))
+            description = object_type.get('description', '')
+        
         doc = SchemaDocumentation(
-            name=object_type['name'],
-            title=object_type.get('displayName', object_type['name']),
-            description=object_type.get('description', ''),
+            name=name,
+            title=title,
+            description=description,
             version=object_type.get('version', '1.0.0'),
             created_at=datetime.fromisoformat(object_type['createdAt']) if 'createdAt' in object_type else None,
             updated_at=datetime.fromisoformat(object_type['modifiedAt']) if 'modifiedAt' in object_type else None,
@@ -244,6 +256,25 @@ class SchemaDocumentationGenerator:
                 if 'description' in prop:
                     content_parts.append(f"- **Description**: {prop['description']}")
                 content_parts.append('')
+        elif "@id" in object_type:
+            # Handle RDF/OWL format properties
+            content_parts.append('## Properties\n')
+            for key, value in object_type.items():
+                if not key.startswith('@') and key not in ['name', 'displayName', 'description', 'version', 'createdAt', 'modifiedAt', 'tags']:
+                    prop_name = key.replace('_', ' ').title()
+                    if isinstance(value, dict):
+                        if "@type" in value:
+                            content_parts.append(f"### {prop_name}")
+                            content_parts.append(f"- **Name**: `{key}`")
+                            content_parts.append(f"- **Type**: `{value['@type']}`")
+                            if "@class" in value:
+                                content_parts.append(f"- **Class**: `{value['@class']}`")
+                            content_parts.append('')
+                    elif isinstance(value, str):
+                        content_parts.append(f"### {prop_name}")
+                        content_parts.append(f"- **Name**: `{key}`")
+                        content_parts.append(f"- **Type**: `{value}`")
+                        content_parts.append('')
         
         doc.content = '\n'.join(content_parts)
         
@@ -254,7 +285,7 @@ class SchemaDocumentationGenerator:
             frame_type='schema',
             content={
                 'type': 'object_type',
-                'name': object_type['name'],
+                'name': name,
                 'extends': object_type.get('extends'),
                 'implements': object_type.get('implements', []),
                 'status': object_type.get('status', 'active')
@@ -262,6 +293,40 @@ class SchemaDocumentationGenerator:
             position=(0, 0)
         )
         doc.metadata_frames.append(schema_frame)
+        
+        # Example frame for RDF/OWL format
+        if "@id" in object_type:
+            example_content = {
+                "instance": {
+                    "@type": object_type["@type"],
+                    "@id": f"example:{name.lower()}_1"
+                }
+            }
+            
+            # Add example properties
+            for key, value in object_type.items():
+                if not key.startswith('@') and key not in ['name', 'displayName', 'description', 'version']:
+                    if isinstance(value, str) and value.startswith('xsd:'):
+                        # Add example value based on XSD type
+                        if value == 'xsd:string':
+                            example_content["instance"][key] = f"example_{key}"
+                        elif value == 'xsd:integer':
+                            example_content["instance"][key] = 123
+                        elif value == 'xsd:boolean':
+                            example_content["instance"][key] = True
+                        elif value == 'xsd:dateTime':
+                            example_content["instance"][key] = "2024-01-15T10:30:00Z"
+                        elif value == 'xsd:decimal':
+                            example_content["instance"][key] = 99.99
+                        else:
+                            example_content["instance"][key] = f"example_{key}"
+            
+            example_frame = MetadataFrame(
+                frame_type='example',
+                content=example_content,
+                position=(0, 0)
+            )
+            doc.metadata_frames.append(example_frame)
         
         # Validation frame if there are validation rules
         validation_rules = {}
@@ -326,8 +391,32 @@ class SchemaDocumentationGenerator:
         markdown_content: str
     ) -> Dict[str, Any]:
         """Extract summary of all metadata from a markdown document"""
-        _, frames = self.parser.parse_document(markdown_content)
+        _, frames = self.parse_document(markdown_content)
         
+        summary = {
+            'total_frames': len(frames),
+            'frame_types': {},
+            'metadata': {}
+        }
+        
+        for frame in frames:
+            # Count frame types
+            if frame.frame_type not in summary['frame_types']:
+                summary['frame_types'][frame.frame_type] = 0
+            summary['frame_types'][frame.frame_type] += 1
+            
+            # Merge metadata
+            if frame.frame_type == 'document':
+                summary['metadata'].update(frame.content)
+            else:
+                if frame.frame_type not in summary['metadata']:
+                    summary['metadata'][frame.frame_type] = []
+                summary['metadata'][frame.frame_type].append(frame.content)
+        
+        return summary
+    
+    def generate_summary(self, frames: List[MetadataFrame]) -> Dict[str, Any]:
+        """Generate summary from a list of metadata frames (for testing compatibility)"""
         summary = {
             'total_frames': len(frames),
             'frame_types': {},
