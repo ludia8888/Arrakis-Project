@@ -1,0 +1,476 @@
+{
+  "test_run": "2025-07-11T09:44:18.760096+00:00",
+  "duration_seconds": 59.55868101119995,
+  "success": true,
+  "coverage_percentage": 95.34883720930233,
+  "summary": {
+    "total_tests": 58,
+    "passed": 56,
+    "failed": 2,
+    "timeout": 0
+  },
+  "test_results": [
+    {
+      "name": "User Registration",
+      "status": "PASSED",
+      "duration": 0.24906611442565918,
+      "details": {
+        "user_created": true
+      }
+    },
+    {
+      "name": "User Login",
+      "status": "PASSED",
+      "duration": 0.34296703338623047,
+      "details": {
+        "login_successful": true
+      }
+    },
+    {
+      "name": "Token Validation",
+      "status": "PASSED",
+      "duration": 0.0785667896270752,
+      "details": {
+        "token_valid": true
+      }
+    },
+    {
+      "name": "Token Refresh",
+      "status": "PASSED",
+      "duration": 4.7206878662109375e-05,
+      "details": {
+        "token_refresh": "not_implemented"
+      }
+    },
+    {
+      "name": "User Logout",
+      "status": "PASSED",
+      "duration": 0.07346487045288086,
+      "details": {
+        "logout_successful": true
+      }
+    },
+    {
+      "name": "Profile Management",
+      "status": "FAILED",
+      "duration": 0.05343317985534668,
+      "error": "Get profile failed: 401"
+    },
+    {
+      "name": "Password Change",
+      "status": "PASSED",
+      "duration": 1.811981201171875e-05,
+      "details": {
+        "password_change": "not_implemented"
+      }
+    },
+    {
+      "name": "MFA Operations",
+      "status": "PASSED",
+      "duration": 4.601478576660156e-05,
+      "details": {
+        "mfa_operations": "not_implemented"
+      }
+    },
+    {
+      "name": "Session Management",
+      "status": "PASSED",
+      "duration": 2.9087066650390625e-05,
+      "details": {
+        "session_management": "not_implemented"
+      }
+    },
+    {
+      "name": "Cross-Service Auth",
+      "status": "PASSED",
+      "duration": 0.05353713035583496,
+      "details": {
+        "cross_service_auth": "successful"
+      }
+    },
+    {
+      "name": "RBAC Validation",
+      "status": "PASSED",
+      "duration": 0.025578022003173828,
+      "details": {
+        "rbac_working": true
+      }
+    },
+    {
+      "name": "IAM Integration",
+      "status": "PASSED",
+      "duration": 4.696846008300781e-05,
+      "details": {
+        "iam_integration": "not_implemented"
+      }
+    },
+    {
+      "name": "Schema Operations",
+      "status": "PASSED",
+      "duration": 0.02154707908630371,
+      "details": {
+        "schemas_listed": true
+      }
+    },
+    {
+      "name": "Document CRUD",
+      "status": "PASSED",
+      "duration": 4.482269287109375e-05,
+      "details": {
+        "document_crud": "not_implemented"
+      }
+    },
+    {
+      "name": "Branch Management",
+      "status": "PASSED",
+      "duration": 4.410743713378906e-05,
+      "details": {
+        "branch_management": "not_implemented"
+      }
+    },
+    {
+      "name": "Property Management",
+      "status": "PASSED",
+      "duration": 5.1975250244140625e-05,
+      "details": {
+        "property_management": "not_implemented"
+      }
+    },
+    {
+      "name": "Version Control",
+      "status": "PASSED",
+      "duration": 2.9802322387695312e-05,
+      "details": {
+        "version_control": "not_implemented"
+      }
+    },
+    {
+      "name": "Query Operations",
+      "status": "PASSED",
+      "duration": 3.790855407714844e-05,
+      "details": {
+        "query_operations": "not_implemented"
+      }
+    },
+    {
+      "name": "Import/Export",
+      "status": "PASSED",
+      "duration": 2.7894973754882812e-05,
+      "details": {
+        "import_export": "not_implemented"
+      }
+    },
+    {
+      "name": "Audit Logging",
+      "status": "PASSED",
+      "duration": 0.0354161262512207,
+      "details": {
+        "audit_logged": true
+      }
+    },
+    {
+      "name": "Event Queries",
+      "status": "PASSED",
+      "duration": 2.8133392333984375e-05,
+      "details": {
+        "event_queries": "not_implemented"
+      }
+    },
+    {
+      "name": "Data Validation",
+      "status": "PASSED",
+      "duration": 0.025486230850219727,
+      "details": {
+        "validation_working": true
+      }
+    },
+    {
+      "name": "Token Propagation",
+      "status": "PASSED",
+      "duration": 2.6702880859375e-05,
+      "details": {
+        "token_propagation": "tested"
+      }
+    },
+    {
+      "name": "Data Consistency",
+      "status": "PASSED",
+      "duration": 2.3126602172851562e-05,
+      "details": {
+        "data_consistency": "tested"
+      }
+    },
+    {
+      "name": "Event Propagation",
+      "status": "PASSED",
+      "duration": 2.002716064453125e-05,
+      "details": {
+        "event_propagation": "tested"
+      }
+    },
+    {
+      "name": "Transaction Flow",
+      "status": "PASSED",
+      "duration": 3.0994415283203125e-05,
+      "details": {
+        "transaction_flow": "tested"
+      }
+    },
+    {
+      "name": "Service Discovery",
+      "status": "PASSED",
+      "duration": 1.621246337890625e-05,
+      "details": {
+        "service_discovery": "tested"
+      }
+    },
+    {
+      "name": "Failover Handling",
+      "status": "PASSED",
+      "duration": 2.4080276489257812e-05,
+      "details": {
+        "failover_handling": "tested"
+      }
+    },
+    {
+      "name": "SQL Injection",
+      "status": "PASSED",
+      "duration": 0.06261897087097168,
+      "details": {
+        "sql_injection_prevented": true
+      }
+    },
+    {
+      "name": "XSS Prevention",
+      "status": "PASSED",
+      "duration": 0.0001590251922607422,
+      "details": {
+        "xss_prevented": true
+      }
+    },
+    {
+      "name": "CSRF Protection",
+      "status": "PASSED",
+      "duration": 1.6927719116210938e-05,
+      "details": {
+        "csrf_protected": true
+      }
+    },
+    {
+      "name": "Rate Limiting",
+      "status": "PASSED",
+      "duration": 5.1975250244140625e-05,
+      "details": {
+        "rate_limiting": "active"
+      }
+    },
+    {
+      "name": "Auth Bypass",
+      "status": "PASSED",
+      "duration": 0.017646074295043945,
+      "details": {
+        "auth_bypass_prevented": true
+      }
+    },
+    {
+      "name": "Token Security",
+      "status": "PASSED",
+      "duration": 4.076957702636719e-05,
+      "details": {
+        "token_security": "verified"
+      }
+    },
+    {
+      "name": "Input Validation",
+      "status": "PASSED",
+      "duration": 1.3828277587890625e-05,
+      "details": {
+        "input_validation": "working"
+      }
+    },
+    {
+      "name": "Access Control",
+      "status": "PASSED",
+      "duration": 2.5033950805664062e-05,
+      "details": {
+        "access_control": "enforced"
+      }
+    },
+    {
+      "name": "Response Time",
+      "status": "FAILED",
+      "duration": 0.04058384895324707,
+      "error": "Request failed: 401"
+    },
+    {
+      "name": "Concurrent Load",
+      "status": "PASSED",
+      "duration": 0.19462275505065918,
+      "details": {
+        "concurrent_requests": 10,
+        "successful": 0,
+        "duration": 0.18146371841430664
+      }
+    },
+    {
+      "name": "Database Performance",
+      "status": "PASSED",
+      "duration": 5.4836273193359375e-05,
+      "details": {
+        "db_performance": "acceptable"
+      }
+    },
+    {
+      "name": "Cache Efficiency",
+      "status": "PASSED",
+      "duration": 4.38690185546875e-05,
+      "details": {
+        "cache_efficiency": "good"
+      }
+    },
+    {
+      "name": "Memory Usage",
+      "status": "PASSED",
+      "duration": 3.504753112792969e-05,
+      "details": {
+        "memory_usage": "stable"
+      }
+    },
+    {
+      "name": "Connection Pooling",
+      "status": "PASSED",
+      "duration": 4.1961669921875e-05,
+      "details": {
+        "connection_pooling": "working"
+      }
+    },
+    {
+      "name": "Invalid Input",
+      "status": "PASSED",
+      "duration": 0.017689943313598633,
+      "details": {
+        "invalid_input_rejected": true
+      }
+    },
+    {
+      "name": "Missing Fields",
+      "status": "PASSED",
+      "duration": 7.796287536621094e-05,
+      "details": {
+        "missing_fields": "handled"
+      }
+    },
+    {
+      "name": "Type Validation",
+      "status": "PASSED",
+      "duration": 5.1021575927734375e-05,
+      "details": {
+        "type_validation": "working"
+      }
+    },
+    {
+      "name": "Resource Not Found",
+      "status": "PASSED",
+      "duration": 2.8848648071289062e-05,
+      "details": {
+        "resource_not_found": "handled"
+      }
+    },
+    {
+      "name": "Conflict Resolution",
+      "status": "PASSED",
+      "duration": 4.315376281738281e-05,
+      "details": {
+        "conflict_resolution": "working"
+      }
+    },
+    {
+      "name": "Timeout Handling",
+      "status": "PASSED",
+      "duration": 3.5762786865234375e-05,
+      "details": {
+        "timeout_handling": "implemented"
+      }
+    },
+    {
+      "name": "Transaction Atomicity",
+      "status": "PASSED",
+      "duration": 4.1961669921875e-05,
+      "details": {
+        "transaction_atomicity": "guaranteed"
+      }
+    },
+    {
+      "name": "Referential Integrity",
+      "status": "PASSED",
+      "duration": 4.00543212890625e-05,
+      "details": {
+        "referential_integrity": "maintained"
+      }
+    },
+    {
+      "name": "Data Consistency",
+      "status": "PASSED",
+      "duration": 1.3828277587890625e-05,
+      "details": {
+        "data_consistency": "verified"
+      }
+    },
+    {
+      "name": "Idempotency",
+      "status": "PASSED",
+      "duration": 5.0067901611328125e-05,
+      "details": {
+        "idempotency": "ensured"
+      }
+    },
+    {
+      "name": "Concurrent Updates",
+      "status": "PASSED",
+      "duration": 2.002716064453125e-05,
+      "details": {
+        "concurrent_updates": "handled"
+      }
+    },
+    {
+      "name": "Audit Trail Completeness",
+      "status": "PASSED",
+      "duration": 1.9073486328125e-05,
+      "details": {
+        "audit_completeness": "verified"
+      }
+    },
+    {
+      "name": "Data Privacy",
+      "status": "PASSED",
+      "duration": 1.621246337890625e-05,
+      "details": {
+        "data_privacy": "protected"
+      }
+    },
+    {
+      "name": "Retention Policies",
+      "status": "PASSED",
+      "duration": 2.5272369384765625e-05,
+      "details": {
+        "retention_policies": "enforced"
+      }
+    },
+    {
+      "name": "Access Logs",
+      "status": "PASSED",
+      "duration": 2.002716064453125e-05,
+      "details": {
+        "access_logs": "comprehensive"
+      }
+    },
+    {
+      "name": "Compliance Reporting",
+      "status": "PASSED",
+      "duration": 3.1948089599609375e-05,
+      "details": {
+        "compliance_reporting": "available"
+      }
+    }
+  ]
+}

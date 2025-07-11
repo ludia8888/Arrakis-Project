@@ -1,0 +1,42 @@
+{
+  "test_run": "2025-07-11T09:22:08.348723+00:00",
+  "summary": {
+    "total": 5,
+    "passed": 5,
+    "failed": 0
+  },
+  "results": [
+    {
+      "scenario": "User Onboarding (Single User)",
+      "status": "PASSED",
+      "timestamp": "2025-07-11T09:22:08.221247+00:00"
+    },
+    {
+      "scenario": "Schema Management",
+      "status": "PASSED",
+      "timestamp": "2025-07-11T09:22:08.274900+00:00"
+    },
+    {
+      "scenario": "Document Operations",
+      "status": "PASSED",
+      "timestamp": "2025-07-11T09:22:08.286556+00:00"
+    },
+    {
+      "scenario": "Audit Trail Verification",
+      "status": "PASSED",
+      "timestamp": "2025-07-11T09:22:08.312833+00:00"
+    },
+    {
+      "scenario": "Cross-Service Data Consistency",
+      "status": "PASSED",
+      "timestamp": "2025-07-11T09:22:08.348642+00:00"
+    }
+  ],
+  "created_data": {
+    "users": [
+      "test_user"
+    ],
+    "schemas": 0,
+    "documents": 0
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "timestamp": "2025-07-11T09:10:51.217385+00:00",
+  "duration_seconds": 0.420261,
+  "success": false,
+  "services": {
+    "user_service": "http://localhost:8080",
+    "oms_service": "http://localhost:8091",
+    "audit_service": "http://localhost:8092"
+  },
+  "test_results": [
+    {
+      "test": "Audit Service Access",
+      "status": "PASSED",
+      "details": {
+        "auth_success": false,
+        "single_event": false,
+        "batch_events": false
+      }
+    }
+  ],
+  "errors": [
+    {
+      "test": "User Registration and Login",
+      "step": "registration",
+      "error": "Registration failed: 429 - {\"detail\":\"Rate limit exceeded\"}",
+      "response": "{\"detail\":\"Rate limit exceeded\"}"
+    },
+    {
+      "test": "Token Validation",
+      "error": "No validation endpoint worked"
+    },
+    {
+      "test": "OMS Access",
+      "step": "get_schemas",
+      "error": "OMS schema access failed: 401 - {\"detail\": \"Invalid token\"}"
+    }
+  ],
+  "summary": {
+    "User Registration and Login": false,
+    "Token Validation": false,
+    "OMS Access": false,
+    "Audit Service Access": true
+  }
+}
