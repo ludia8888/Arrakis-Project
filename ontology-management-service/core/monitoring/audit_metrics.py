@@ -41,12 +41,7 @@ audit_service_connection_pool = Gauge(
     'Active connections in audit service pool'
 )
 
-# Legacy audit system metrics (deprecated)
-legacy_audit_events_total = Counter(
-    'oms_legacy_audit_events_total',
-    'Total legacy audit events (deprecated)',
-    ['source']
-)
+# Legacy metrics removed - all audit events now go through audit-service
 
 # Service info
 audit_service_info = Info(
@@ -97,10 +92,7 @@ class AuditServiceMetrics:
         """활성 연결 수 설정"""
         audit_service_connection_pool.set(count)
     
-    def record_legacy_event(self, source: str):
-        """레거시 audit 이벤트 기록 (deprecated)"""
-        legacy_audit_events_total.labels(source=source).inc()
-        logger.warning(f"Legacy audit event from {source} - consider migrating to audit-service")
+    # Legacy event recording removed - use audit-service client directly
 
 
 # 전역 메트릭 인스턴스
@@ -134,19 +126,7 @@ def set_audit_circuit_breaker_state(is_open: bool):
     metrics.set_circuit_breaker_state(is_open)
 
 
-# 백워드 호환성을 위한 deprecated 함수들
-def record_audit_event(action: str, resource_type: str, success: bool = True, **kwargs):
-    """Deprecated: Use audit-service directly"""
-    logger.warning("record_audit_event is deprecated. Use audit-service client directly.")
-    metrics = get_audit_metrics()
-    metrics.record_legacy_event("monolith_legacy")
-
-
-def record_audit_failure(action: str, resource_type: str, failure_reason: str, **kwargs):
-    """Deprecated: Use audit-service directly"""
-    logger.warning("record_audit_failure is deprecated. Use audit-service client directly.")
-    metrics = get_audit_metrics()
-    metrics.record_legacy_event("monolith_legacy")
+# Legacy audit functions removed - use audit-service client directly
 
 
 async def get_audit_metrics_summary() -> Dict[str, Any]:
@@ -165,9 +145,6 @@ async def get_audit_metrics_summary() -> Dict[str, Any]:
             "oms_audit_service_errors_total",
             "oms_audit_service_circuit_breaker_open",
             "oms_audit_service_connection_pool_active"
-        ],
-        "deprecated_metrics": [
-            "oms_legacy_audit_events_total"
         ]
     }
 

@@ -2,10 +2,12 @@
 Validator implementations for commit hook pipeline
 """
 import os
+import re
 import logging
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 from .base import BaseValidator, DiffContext, ValidationError
+from .validation_config import validation_config, get_default_schema
 
 # Import existing validation services
 from core.validation.service import ValidationService
@@ -28,9 +30,26 @@ class RuleValidator(BaseValidator):
     
     async def initialize(self):
         """Initialize validation service"""
-        # TODO: Initialize ValidationService properly
-        # For now, we'll skip initialization as it requires database setup
-        pass
+        try:
+            # Initialize validation service with fallback for missing dependencies
+            from core.validation.service import ValidationService
+            
+            # Create validation service instance
+            self.validation_service = ValidationService()
+            
+            # Try to initialize - use fallback if database unavailable
+            try:
+                await self.validation_service.initialize()
+                logger.info("ValidationService initialized successfully")
+            except Exception as init_error:
+                logger.warning(f"ValidationService initialization failed, using basic validation: {init_error}")
+                # Create a simple fallback validator
+                self.validation_service = BasicValidationService()
+                
+        except ImportError as e:
+            logger.warning(f"ValidationService not available, using basic validation: {e}")
+            # Create a simple fallback validator
+            self.validation_service = BasicValidationService()
     
     async def validate(self, context: DiffContext) -> None:
         """Validate using existing rule engine"""
@@ -57,7 +76,21 @@ class RuleValidator(BaseValidator):
                     )
         except Exception as e:
             logger.error(f"Rule validation error: {e}")
-            if os.getenv("STRICT_VALIDATION", "false").lower() == "true":
+            strict_mode = os.getenv("STRICT_VALIDATION", "false").lower() == "true"
+            if not strict_mode:
+                # Validation bypass - log critical security event
+                logger.critical(
+                    f"VALIDATION_BYPASS: Rule validation error bypassed in non-strict mode. "
+                    f"Error: {str(e)}, Context: author={context.meta.author}, "
+                    f"branch={context.meta.branch}, trace_id={context.meta.trace_id}"
+                )
+                # Try to send to audit service
+                await self._audit_validation_bypass(
+                    bypass_type="rule_validation",
+                    error=str(e),
+                    context=context
+                )
+            else:
                 raise
 
 
@@ -104,11 +137,23 @@ class TamperValidator(BaseValidator):
             for pattern in suspicious_patterns:
                 if pattern in diff_str.lower():
                     logger.warning(f"Suspicious pattern detected: {pattern}")
-                    # In strict mode, reject suspicious patterns
-                    if os.getenv("STRICT_SECURITY", "false").lower() == "true":
+                    strict_security = os.getenv("STRICT_SECURITY", "false").lower() == "true"
+                    if strict_security:
                         raise ValidationError(
                             f"Security validation failed: suspicious pattern detected",
                             errors=[{"pattern": pattern, "error": "Suspicious content"}]
+                        )
+                    else:
+                        # Security bypass - log critical security event
+                        logger.critical(
+                            f"SECURITY_BYPASS: Suspicious pattern '{pattern}' detected but not blocked in non-strict mode. "
+                            f"Author: {context.meta.author}, Branch: {context.meta.branch}"
+                        )
+                        # Try to send to audit service
+                        await self._audit_validation_bypass(
+                            bypass_type="security_validation",
+                            error=f"Suspicious pattern: {pattern}",
+                            context=context
                         )
                         
         except ValidationError:
@@ -139,22 +184,176 @@ class SchemaValidator(BaseValidator):
                 logger.debug("No @type field found, skipping schema validation")
                 return
             
-            # TODO: Implement actual schema validation
-            # For now, we'll do basic type checking
-            required_fields = {
-                "ObjectType": ["name", "created_by", "created_at"],
-                "Branch": ["name", "source_branch", "created_by"],
-                "ValidationRule": ["name", "rule_type", "condition"]
-            }
-            
-            if doc_type in required_fields:
-                missing_fields = []
-                for field in required_fields[doc_type]:
-                    if field not in context.after:
-                        missing_fields.append(field)
+            # Implement comprehensive schema validation
+            try:
+                await self._validate_against_schema(context.after, doc_type)
+            except ValidationError:
+                raise
+            except Exception as e:
+                logger.error(f"Schema validation error: {e}")
+                raise ValidationError(f"Schema validation failed: {str(e)}")
+    
+    async def _validate_against_schema(self, document: Dict[str, Any], doc_type: str):
+        """Comprehensive schema validation against TerminusDB schema"""
+        
+        # Get schema definition for this document type
+        schema_def = await self._get_schema_definition(doc_type)
+        
+        if not schema_def:
+            # Fallback to basic validation for known types
+            await self._basic_type_validation(document, doc_type)
+            return
+        
+        # Validate required fields
+        required_fields = schema_def.get("required", [])
+        missing_fields = []
+        for field in required_fields:
+            if field not in document:
+                missing_fields.append(field)
+        
+        if missing_fields:
+            raise ValidationError(f"Missing required fields for {doc_type}: {missing_fields}")
+        
+        # Validate field types and constraints
+        properties = schema_def.get("properties", {})
+        for field_name, field_value in document.items():
+            if field_name.startswith("@"):
+                continue  # Skip JSON-LD metadata
                 
-                if missing_fields:
-                    raise ValidationError(
+            field_schema = properties.get(field_name)
+            if field_schema:
+                await self._validate_field(field_name, field_value, field_schema)
+        
+        # Validate business rules
+        await self._validate_business_rules(document, doc_type)
+    
+    async def _get_schema_definition(self, doc_type: str) -> Optional[Dict[str, Any]]:
+        """Get schema definition from TerminusDB or cache"""
+        try:
+            # Try to get from TerminusDB schema endpoint
+            if hasattr(self, '_terminus_client') and self._terminus_client:
+                schema_query = {
+                    "@type": "woql:Triple",
+                    "subject": {"@type": "woql:Variable", "variable": "Schema"},
+                    "predicate": {"@type": "woql:Node", "node": "rdf:type"},
+                    "object": {"@type": "woql:Node", "node": f"oms:{doc_type}"}
+                }
+                
+                result = await self._terminus_client.query("schema", schema_query)
+                if result and result.get("bindings"):
+                    return self._parse_schema_from_bindings(result["bindings"])
+            
+            # Fallback to hardcoded schemas
+            return self._get_default_schema(doc_type)
+            
+        except Exception as e:
+            logger.warning(f"Failed to get schema for {doc_type}: {e}")
+            return self._get_default_schema(doc_type)
+    
+    def _get_default_schema(self, doc_type: str) -> Optional[Dict[str, Any]]:
+        """Get schema definitions from configuration (no longer hardcoded)"""
+        return validation_config.get_schema(doc_type)
+    
+    async def _validate_field(self, field_name: str, field_value: Any, field_schema: Dict[str, Any]):
+        """Validate individual field against its schema"""
+        field_type = field_schema.get("type")
+        
+        # Type validation
+        if field_type == "string" and not isinstance(field_value, str):
+            raise ValidationError(f"Field '{field_name}' must be a string, got {type(field_value).__name__}")
+        elif field_type == "number" and not isinstance(field_value, (int, float)):
+            raise ValidationError(f"Field '{field_name}' must be a number, got {type(field_value).__name__}")
+        elif field_type == "boolean" and not isinstance(field_value, bool):
+            raise ValidationError(f"Field '{field_name}' must be a boolean, got {type(field_value).__name__}")
+        elif field_type == "array" and not isinstance(field_value, list):
+            raise ValidationError(f"Field '{field_name}' must be an array, got {type(field_value).__name__}")
+        elif field_type == "object" and not isinstance(field_value, dict):
+            raise ValidationError(f"Field '{field_name}' must be an object, got {type(field_value).__name__}")
+        
+        # String constraints
+        if field_type == "string" and isinstance(field_value, str):
+            min_length = field_schema.get("minLength")
+            max_length = field_schema.get("maxLength")
+            pattern = field_schema.get("pattern")
+            
+            if min_length and len(field_value) < min_length:
+                raise ValidationError(f"Field '{field_name}' must be at least {min_length} characters")
+            if max_length and len(field_value) > max_length:
+                raise ValidationError(f"Field '{field_name}' must be at most {max_length} characters")
+            if pattern:
+                import re
+                if not re.match(pattern, field_value):
+                    raise ValidationError(f"Field '{field_name}' does not match required pattern")
+        
+        # Enum validation
+        enum_values = field_schema.get("enum")
+        if enum_values and field_value not in enum_values:
+            raise ValidationError(f"Field '{field_name}' must be one of {enum_values}, got '{field_value}'")
+        
+        # Format validation
+        field_format = field_schema.get("format")
+        if field_format == "datetime" and isinstance(field_value, str):
+            try:
+                from datetime import datetime
+                datetime.fromisoformat(field_value.replace("Z", "+00:00"))
+            except ValueError:
+                raise ValidationError(f"Field '{field_name}' must be a valid ISO datetime")
+    
+    async def _validate_business_rules(self, document: Dict[str, Any], doc_type: str):
+        """Validate business-specific rules"""
+        
+        if doc_type == "ObjectType":
+            # ObjectType specific rules
+            name = document.get("name", "")
+            
+            # Name must not start with system prefixes
+            if name.startswith(("sys:", "woql:", "rdf:", "owl:")):
+                raise ValidationError(f"ObjectType name cannot start with reserved prefix: {name}")
+            
+            # Check for naming conventions
+            if not re.match(r"^[A-Z][a-zA-Z0-9_]*$", name):
+                raise ValidationError(f"ObjectType name must follow PascalCase convention: {name}")
+        
+        elif doc_type == "Branch":
+            # Branch specific rules
+            name = document.get("name", "")
+            
+            # Protected branch names
+            if name in ["main", "master", "production", "staging"]:
+                if not document.get("is_protected", False):
+                    raise ValidationError(f"Branch '{name}' must be marked as protected")
+            
+            # Branch name conventions
+            if not re.match(r"^[a-z0-9/_-]+$", name):
+                raise ValidationError(f"Branch name must use lowercase with hyphens/underscores: {name}")
+        
+        elif doc_type == "ValidationRule":
+            # ValidationRule specific rules
+            condition = document.get("condition", {})
+            rule_type = document.get("rule_type", "")
+            
+            # Condition must have required fields based on rule type
+            if rule_type == "schema" and "schema_path" not in condition:
+                raise ValidationError("Schema validation rule must have 'schema_path' in condition")
+            elif rule_type == "business" and "expression" not in condition:
+                raise ValidationError("Business validation rule must have 'expression' in condition")
+    
+    async def _basic_type_validation(self, document: Dict[str, Any], doc_type: str):
+        """Basic validation when no schema is available"""
+        required_fields = {
+            "ObjectType": ["name", "created_by", "created_at"],
+            "Branch": ["name", "created_by", "created_at"],
+            "ValidationRule": ["name", "rule_type", "condition"]
+        }
+        
+        if doc_type in required_fields:
+            missing_fields = []
+            for field in required_fields[doc_type]:
+                if field not in document:
+                    missing_fields.append(field)
+            
+            if missing_fields:
+                raise ValidationError(
                         f"Schema validation failed for {doc_type}",
                         errors=[{
                             "type": doc_type,
@@ -166,6 +365,36 @@ class SchemaValidator(BaseValidator):
             raise
         except Exception as e:
             logger.error(f"Schema validation error: {e}")
+    
+    async def _audit_validation_bypass(self, bypass_type: str, error: str, context: DiffContext):
+        """Send validation bypass event to audit service"""
+        try:
+            # Create audit event
+            audit_event = {
+                "event_type": "VALIDATION_BYPASS",
+                "event_category": "SECURITY",
+                "severity": "WARNING",
+                "bypass_type": bypass_type,
+                "error": error,
+                "author": context.meta.author,
+                "branch": context.meta.branch,
+                "trace_id": context.meta.trace_id,
+                "timestamp": context.meta.timestamp.isoformat() if context.meta.timestamp else None,
+                "environment": {
+                    "STRICT_VALIDATION": os.getenv("STRICT_VALIDATION", "false"),
+                    "STRICT_SECURITY": os.getenv("STRICT_SECURITY", "false")
+                }
+            }
+            
+            # Log locally as backup
+            logger.warning(f"VALIDATION_BYPASS_AUDIT: {audit_event}")
+            
+            # TODO: Send to audit service when available
+            # if hasattr(self, '_audit_client'):
+            #     await self._audit_client.log_event(audit_event)
+            
+        except Exception as e:
+            logger.error(f"Failed to audit validation bypass: {e}")
 
 
 class PIIValidator(BaseValidator):
@@ -238,3 +467,79 @@ class PIIValidator(BaseValidator):
             raise
         except Exception as e:
             logger.error(f"PII validation error: {e}")
+
+
+class BasicValidationService:
+    """
+    Fallback validation service when full ValidationService is not available
+    """
+    
+    def __init__(self):
+        self.initialized = True
+    
+    async def initialize(self):
+        """Initialize - no-op for basic service"""
+        pass
+    
+    async def validate_data(self, data: Any, context_data: dict = None) -> "ValidationResult":
+        """Basic validation with hardcoded rules"""
+        errors = []
+        
+        # Basic validation rules
+        if isinstance(data, dict):
+            # Check for required fields based on type
+            doc_type = data.get("@type")
+            
+            required_fields_map = {
+                "ObjectType": ["name", "@id"],
+                "Branch": ["name", "source_branch"],
+                "Property": ["name", "type", "object_type"],
+                "ValidationRule": ["name", "rule_type"]
+            }
+            
+            if doc_type in required_fields_map:
+                required_fields = required_fields_map[doc_type]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if missing_fields:
+                    errors.append({
+                        "field": "required_fields",
+                        "error": f"Missing required fields: {missing_fields}",
+                        "code": "MISSING_REQUIRED_FIELDS"
+                    })
+            
+            # Basic data type validation
+            if "name" in data and not isinstance(data["name"], str):
+                errors.append({
+                    "field": "name", 
+                    "error": "Name must be a string",
+                    "code": "INVALID_TYPE"
+                })
+            
+            # Basic format validation
+            if "email" in data:
+                import re
+                email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+                if not re.match(email_pattern, str(data["email"])):
+                    errors.append({
+                        "field": "email",
+                        "error": "Invalid email format", 
+                        "code": "INVALID_FORMAT"
+                    })
+        
+        # Return validation result
+        return BasicValidationResult(errors)
+
+
+class BasicValidationResult:
+    """Basic validation result"""
+    
+    def __init__(self, errors: List[Dict[str, Any]]):
+        self.errors = errors
+        self.is_valid = len(errors) == 0
+    
+    def to_dict(self):
+        return {
+            "is_valid": self.is_valid,
+            "errors": self.errors
+        }

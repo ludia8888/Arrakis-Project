@@ -43,6 +43,11 @@ class SchedulerService:
         )
         self.executor = JobExecutor()
         self._is_initialized = False
+    
+    @property
+    def is_initialized(self) -> bool:
+        """Public property to check if service is initialized."""
+        return self._is_initialized
         
         # Register event listeners
         self.scheduler.add_listener(

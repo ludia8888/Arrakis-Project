@@ -40,9 +40,55 @@ class SchemaRepository:
                 raise ValueError("TerminusDB client not available")
                 
             # Query for all documents of type SchemaDefinition
-            # Since we can't rely on TerminusDB schema, we'll use a prefix-based approach
-            # Get all documents and filter by type
-            return []  # Return empty for now to avoid errors
+            # Using a simple WOQL query to get all documents of type SchemaDefinition
+            woql_query = """
+            WOQL.triple("v:Doc", "rdf:type", "doc:SchemaDefinition")
+            """
+            
+            if hasattr(self.db, 'terminus_client') and self.db.terminus_client:
+                query_result = await self.db.terminus_client.query_branch(
+                    db_name=self.db_name,
+                    branch_name=branch,
+                    query=woql_query
+                )
+                # Extract documents from WOQL result
+                documents = []
+                if query_result and 'bindings' in query_result:
+                    for binding in query_result['bindings']:
+                        if 'Doc' in binding:
+                            doc_id = binding['Doc']
+                            # Get full document details
+                            doc = await self.db.terminus_client.get_document(
+                                db_name=self.db_name,
+                                branch_name=branch,
+                                document_id=doc_id
+                            )
+                            if doc and doc.get('schemaType') == 'ObjectType':
+                                documents.append(doc)
+                query_result = documents
+            else:
+                logger.error("TerminusDB client not available")
+                return []
+            
+            # Convert to list format
+            schemas = []
+            if query_result and isinstance(query_result, list):
+                for doc in query_result:
+                    schemas.append({
+                        "@type": "ObjectType",
+                        "@id": doc.get("@id", ""),
+                        "name": doc.get("name", ""),
+                        "displayName": doc.get("displayName", ""),
+                        "description": doc.get("description", ""),
+                        "properties": doc.get("properties", []),
+                        "isActive": doc.get("isActive", True),
+                        "createdBy": doc.get("createdBy", ""),
+                        "createdAt": doc.get("createdAt", ""),
+                        "modifiedBy": doc.get("modifiedBy", ""),
+                        "modifiedAt": doc.get("modifiedAt", "")
+                    })
+            
+            return schemas
             
         except Exception as e:
             logger.error(f"Error listing all object types from branch '{branch}': {e}")
@@ -77,31 +123,67 @@ class SchemaRepository:
                 "isActive": True
             }
             
-            # For now, just log success and return True
-            # In a real implementation, we'd store this in a different way
-            logger.info(f"Schema definition for '{data.name}' created (simulated)")
-            return True
+            # Actually store the document in the database
+            if hasattr(self.db, 'terminus_client') and self.db.terminus_client:
+                result = await self.db.terminus_client.insert_document(
+                    db_name=self.db_name,
+                    branch_name=branch,
+                    document=doc,
+                    commit_msg=f"Created ObjectType: {data.name}"
+                )
+            else:
+                logger.error("TerminusDB client not available")
+                return False
+            
+            if result:
+                logger.info(f"Schema definition for '{data.name}' successfully created in database")
+                return True
+            else:
+                logger.error(f"Failed to insert schema definition for '{data.name}'")
+                return False
             
         except Exception as e:
             logger.error(f"Error creating new object type '{data.name}': {e}")
-            # Return True anyway to allow testing to continue
-            return True
+            return False
 
     async def get_object_type_by_name(self, name: str, branch: str) -> Optional[Dict[str, Any]]:
         """
         Get ObjectType by name
         """
         try:
-            # Return a mock object for testing
-            return {
-                "@type": "ObjectType",
-                "@id": f"ObjectType/{name}",
-                "name": name,
-                "displayName": name,
-                "description": f"{name} object type",
-                "properties": [],
-                "isActive": True
-            }
+            if not self.tdb:
+                raise ValueError("TerminusDB client not available")
+                
+            # Query for the specific schema document
+            if hasattr(self.db, 'terminus_client') and self.db.terminus_client:
+                query_result = await self.db.terminus_client.get_document(
+                    db_name=self.db_name,
+                    branch_name=branch,
+                    document_id=f"SchemaDefinition/{name}"
+                )
+            else:
+                logger.error("TerminusDB client not available")
+                return None
+            
+            if query_result:
+                # Convert to ObjectType format
+                return {
+                    "@type": "ObjectType",
+                    "@id": f"ObjectType/{name}",
+                    "name": query_result.get("name", name),
+                    "displayName": query_result.get("displayName", name),
+                    "description": query_result.get("description", ""),
+                    "properties": query_result.get("properties", []),
+                    "isActive": query_result.get("isActive", True),
+                    "createdBy": query_result.get("createdBy", ""),
+                    "createdAt": query_result.get("createdAt", ""),
+                    "modifiedBy": query_result.get("modifiedBy", ""),
+                    "modifiedAt": query_result.get("modifiedAt", ""),
+                    "versionHash": query_result.get("versionHash", "")
+                }
+            
+            return None
+            
         except Exception as e:
             logger.error(f"Error getting object type by name '{name}': {e}", exc_info=True)
             return None
@@ -111,8 +193,58 @@ class SchemaRepository:
         Update ObjectType
         """
         try:
-            logger.info(f"Updated ObjectType '{schema_id}' (simulated)")
-            return True
+            if not self.tdb:
+                raise ValueError("TerminusDB client not available")
+                
+            # Extract name from schema_id if it contains prefix
+            name = schema_id.replace("ObjectType/", "").replace("SchemaDefinition/", "")
+            
+            # Get existing document
+            if hasattr(self.db, 'terminus_client') and self.db.terminus_client:
+                existing = await self.db.terminus_client.get_document(
+                    db_name=self.db_name,
+                    branch_name=branch,
+                    document_id=f"SchemaDefinition/{name}"
+                )
+            else:
+                logger.error("TerminusDB client not available")
+                return False
+            
+            if not existing:
+                logger.error(f"ObjectType '{schema_id}' not found for update")
+                return False
+            
+            # Update the document
+            updated_doc = {
+                **existing,
+                **schema_def,
+                "@type": "SchemaDefinition",
+                "@id": f"SchemaDefinition/{name}",
+                "schemaType": "ObjectType",
+                "modifiedBy": updated_by,
+                "modifiedAt": datetime.utcnow().isoformat(),
+                "versionHash": str(uuid.uuid4())
+            }
+            
+            # Replace the document
+            if hasattr(self.db, 'terminus_client') and self.db.terminus_client:
+                result = await self.db.terminus_client.update_document(
+                    db_name=self.db_name,
+                    branch_name=branch,
+                    document=updated_doc,
+                    commit_msg=f"Updated ObjectType: {name}"
+                )
+            else:
+                logger.error("TerminusDB client not available")
+                return False
+            
+            if result:
+                logger.info(f"Updated ObjectType '{schema_id}' successfully")
+                return True
+            else:
+                logger.error(f"Failed to update ObjectType '{schema_id}'")
+                return False
+                
         except Exception as e:
             logger.error(f"Error updating object type '{schema_id}': {e}", exc_info=True)
             return False
@@ -130,8 +262,56 @@ class SchemaRepository:
         Mark ObjectType as deleted (soft delete)
         """
         try:
-            logger.info(f"Marked ObjectType '{schema_id}' as deleted (simulated)")
-            return True
+            if not self.tdb:
+                raise ValueError("TerminusDB client not available")
+                
+            # Extract name from schema_id if it contains prefix
+            name = schema_id.replace("ObjectType/", "").replace("SchemaDefinition/", "")
+            
+            # Get existing document
+            if hasattr(self.db, 'terminus_client') and self.db.terminus_client:
+                existing = await self.db.terminus_client.get_document(
+                    db_name=self.db_name,
+                    branch_name=branch,
+                    document_id=f"SchemaDefinition/{name}"
+                )
+            else:
+                logger.error("TerminusDB client not available")
+                return False
+            
+            if not existing:
+                logger.error(f"ObjectType '{schema_id}' not found for deletion")
+                return False
+            
+            # Mark as deleted (soft delete)
+            updated_doc = {
+                **existing,
+                "isActive": False,
+                "deletedBy": deleted_by,
+                "deletedAt": datetime.utcnow().isoformat(),
+                "modifiedBy": deleted_by,
+                "modifiedAt": datetime.utcnow().isoformat()
+            }
+            
+            # Replace the document
+            if hasattr(self.db, 'terminus_client') and self.db.terminus_client:
+                result = await self.db.terminus_client.update_document(
+                    db_name=self.db_name,
+                    branch_name=branch,
+                    document=updated_doc,
+                    commit_msg=f"Soft delete ObjectType: {name}"
+                )
+            else:
+                logger.error("TerminusDB client not available")
+                return False
+            
+            if result:
+                logger.info(f"Marked ObjectType '{schema_id}' as deleted successfully")
+                return True
+            else:
+                logger.error(f"Failed to mark ObjectType '{schema_id}' as deleted")
+                return False
+                
         except Exception as e:
             logger.error(f"Error marking object type '{schema_id}' as deleted: {e}", exc_info=True)
             return False

@@ -308,8 +308,9 @@ class TestBranchServiceValidation:
     @pytest.mark.asyncio
     async def test_is_protected_branch_not_protected(self):
         """Test protected branch detection for regular branches."""
-        # Simple implementation just checks hardcoded list
-        non_protected_branches = ["feature/test", "bugfix/issue-123", "dev/user"]
+        # Get test branches from configuration instead of hardcoding
+        from tests.config.test_config import get_non_protected_branches
+        non_protected_branches = get_non_protected_branches()
         
         for branch in non_protected_branches:
             result = await self.service._is_protected_branch(branch)

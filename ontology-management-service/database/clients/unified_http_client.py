@@ -647,6 +647,4 @@ def create_iam_client(
     return UnifiedHTTPClient(config=config)
 
 
-# Backward compatibility aliases
-SecureHTTPClient = create_secure_client  # Deprecated
-ServiceClient = create_service_client     # Deprecated
+# Legacy aliases removed - use create_secure_client or create_service_client directly

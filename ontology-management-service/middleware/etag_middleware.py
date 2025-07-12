@@ -580,18 +580,27 @@ class ETagMiddleware(BaseHTTPMiddleware):
 
     def _get_etag_info_from_request(self, request: Request) -> Optional[Dict[str, Any]]:
         """Check if the matched route's endpoint has ETag info attached by the decorator."""
-        # Try multiple ways to get the endpoint
-        endpoint = request.scope.get("endpoint")
-        route = request.scope.get("route")
-        path = request.scope.get("path")
+        # Use official FastAPI attributes for accessing route information
+        # Note: These are accessed after routing is complete in middleware
+        endpoint = None
+        route = None
         
-        logger.debug(f"Request scope keys: {list(request.scope.keys())}")
-        logger.debug(f"Endpoint: {endpoint}, Route: {route}, Path: {path}")
-        
-        # If endpoint is not directly available, try to extract from route
-        if not endpoint and route:
-            endpoint = getattr(route, "endpoint", None)
-            logger.debug(f"Got endpoint from route: {endpoint}")
+        # Safely access scope data with fallbacks
+        try:
+            # request.scope is the official way to access ASGI scope
+            # but we should use it carefully and defensively
+            route = request.scope.get("route") if "route" in request.scope else None
+            endpoint = request.scope.get("endpoint") if "endpoint" in request.scope else None
+            
+            logger.debug(f"Route found: {route is not None}, Endpoint found: {endpoint is not None}")
+            
+            # If endpoint is not directly available, try to extract from route
+            if not endpoint and route:
+                endpoint = getattr(route, "endpoint", None)
+                logger.debug(f"Got endpoint from route: {endpoint}")
+        except Exception as e:
+            logger.debug(f"Failed to access route info from scope: {e}")
+            return None
         
         # Check various ways the ETag info might be attached
         if endpoint:

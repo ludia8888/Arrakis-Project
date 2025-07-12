@@ -1,0 +1,67 @@
+# Simplified Docker Compose for Testing
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=arrakis_user
+      - POSTGRES_PASSWORD=arrakis_password
+      - POSTGRES_DB=arrakis_db
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U arrakis_user -d arrakis_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://arrakis_user:arrakis_password@postgres:5432/user_service_db
+      - JWT_SECRET=test-jwt-secret
+      - REDIS_URL=redis://redis:6379
+    ports:
+      - "8010:8000"
+    depends_on:
+      - postgres
+      - redis
+
+  audit-service:
+    build:
+      context: ./audit-service
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://arrakis_user:arrakis_password@postgres:5432/audit_db
+      - JWT_SECRET=test-jwt-secret
+      - REDIS_URL=redis://redis:6379
+    ports:
+      - "8011:8000"
+    depends_on:
+      - postgres
+      - redis
+
+  oms:
+    build:
+      context: ./ontology-management-service
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://arrakis_user:arrakis_password@postgres:5432/oms_db
+      - JWT_SECRET=test-jwt-secret
+      - REDIS_URL=redis://redis:6379
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - redis

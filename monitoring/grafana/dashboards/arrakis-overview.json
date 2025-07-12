@@ -1,0 +1,61 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Arrakis Project Overview",
+    "tags": ["arrakis"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "id": 1,
+        "title": "Service Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "up",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "id": 2,
+        "title": "Request Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total[5m])",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "id": 3,
+        "title": "Error Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{status=~\"5..\"}[5m])",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "id": 4,
+        "title": "Response Time",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
+            "refId": "A"
+          }
+        ]
+      }
+    ],
+    "schemaVersion": 22,
+    "version": 0
+  },
+  "overwrite": true
+}

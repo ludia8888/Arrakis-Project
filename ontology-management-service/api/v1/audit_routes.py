@@ -205,17 +205,6 @@ async def get_migration_status(
     }
 
 
-# Deprecated endpoint warnings
-@router.post("/events", deprecated=True, summary="Create audit event (deprecated)")
-async def create_audit_event_deprecated():
-    """
-    Deprecated: Direct audit event creation
-    
-    Audit events are now automatically created by the audit-service
-    when operations are performed through the OMS API.
-    """
-    raise HTTPException(
-        status_code=status.HTTP_410_GONE,
-        detail="Direct audit event creation is no longer supported. "
+# Deprecated endpoint removed - audit events are automatically created by audit-service
                "Audit events are automatically created by audit-service."
     )

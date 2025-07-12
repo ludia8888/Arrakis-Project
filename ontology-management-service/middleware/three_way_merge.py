@@ -717,8 +717,14 @@ class ThreeWayMergeMiddleware(BaseHTTPMiddleware):
         # Check if this is a merge request
         if request.method == "POST" and "merge" in request.url.path:
             try:
-                # Get merge data from request
-                body = await request.body()
+                # Get merge data from request (cached for downstream use)
+                # Check if body was already read by another middleware
+                if hasattr(request.state, 'body'):
+                    body = request.state.body
+                else:
+                    body = await request.body()
+                    request.state.body = body  # Cache for downstream use
+                
                 merge_data = json.loads(body) if body else {}
                 
                 # Store merge context in request state

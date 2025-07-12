@@ -108,11 +108,11 @@ class DatabaseHealthCheck(HealthCheck):
             # This is simplified - real implementation would parse properly
             conn = await asyncio.wait_for(
                 aiomysql.connect(
-                    host='localhost',
-                    port=3306,
-                    user='user',
-                    password='password',
-                    db='database'
+                    host=os.getenv('DB_HOST', 'localhost'),
+                    port=int(os.getenv('DB_PORT', '3306')),
+                    user=os.getenv('DB_USER', 'user'),
+                    password=os.getenv('DB_PASSWORD', ''),  # Empty default for security
+                    db=os.getenv('DB_NAME', 'database')
                 ),
                 timeout=self.timeout
             )

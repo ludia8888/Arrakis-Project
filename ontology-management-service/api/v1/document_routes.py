@@ -1284,7 +1284,7 @@ async def export_documentation(
     <p><strong>Version:</strong> {doc.version}</p>
     <p><strong>Description:</strong> {doc.description}</p>
     <div>
-        {markdown_content.replace('\n', '<br>').replace('```', '</code></pre><pre><code>').replace('# ', '<h1>').replace('## ', '<h2>').replace('### ', '<h3>')}
+        {markdown_content.replace(chr(10), '<br>').replace('```', '</code></pre><pre><code>').replace('# ', '<h1>').replace('## ', '<h2>').replace('### ', '<h3>')}
     </div>
 </body>
 </html>"""

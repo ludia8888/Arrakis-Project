@@ -22,14 +22,165 @@ class EventPublisher:
     """Abstract event publisher interface"""
     
     async def publish(self, channel: str, payload: Any) -> PublishResult:
-        raise NotImplementedError
+        """Publish event to channel"""
+        import json
+        import time
+        import uuid
+        
+        # Default implementation using HTTP fallback
+        try:
+            import httpx
+            import os
+            
+            # Try to use configured event gateway
+            event_gateway_url = os.getenv("EVENT_GATEWAY_URL", "http://oms:8000/events")
+            
+            event_data = {
+                "channel": channel,
+                "payload": payload,
+                "timestamp": time.time(),
+                "message_id": str(uuid.uuid4()),
+                "publisher": "oms-event-sdk"
+            }
+            
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{event_gateway_url}/publish",
+                    json=event_data,
+                    timeout=10.0
+                )
+                
+                if response.status_code == 200:
+                    return PublishResult(
+                        success=True,
+                        message_id=event_data["message_id"],
+                        timestamp=event_data["timestamp"]
+                    )
+                else:
+                    return PublishResult(
+                        success=False,
+                        error=f"HTTP {response.status_code}: {response.text}",
+                        message_id=event_data["message_id"]
+                    )
+                    
+        except Exception as e:
+            return PublishResult(
+                success=False,
+                error=str(e),
+                message_id=str(uuid.uuid4())
+            )
 
 
 class EventSubscriber:
     """Abstract event subscriber interface"""
     
     async def subscribe(self, channel: str, handler: Callable[[Any], Awaitable[None]]) -> Subscription:
-        raise NotImplementedError
+        """Subscribe to events on a channel"""
+        import asyncio
+        import json
+        import uuid
+        import time
+        import os
+        
+        subscription_id = str(uuid.uuid4())
+        
+        try:
+            # Try WebSocket connection first
+            websocket_url = os.getenv("EVENT_WEBSOCKET_URL", "ws://oms:8000/events/ws")
+            
+            try:
+                import websockets
+                
+                async def websocket_subscriber():
+                    try:
+                        async with websockets.connect(f"{websocket_url}?channel={channel}") as websocket:
+                            await websocket.send(json.dumps({
+                                "action": "subscribe",
+                                "channel": channel,
+                                "subscription_id": subscription_id
+                            }))
+                            
+                            async for message in websocket:
+                                try:
+                                    data = json.loads(message)
+                                    await handler(data.get("payload"))
+                                except Exception as e:
+                                    print(f"Error handling message: {e}")
+                                    
+                    except Exception as ws_error:
+                        print(f"WebSocket error: {ws_error}")
+                        # Fallback to polling
+                        await self._polling_subscriber(channel, handler, subscription_id)
+                
+                # Start the WebSocket subscriber in background
+                task = asyncio.create_task(websocket_subscriber())
+                
+                return Subscription(
+                    id=subscription_id,
+                    channel=channel,
+                    active=True,
+                    transport="websocket",
+                    task=task
+                )
+                
+            except ImportError:
+                # WebSocket library not available, use polling
+                return await self._polling_subscriber(channel, handler, subscription_id)
+                
+        except Exception as e:
+            # Fallback to polling subscription
+            return await self._polling_subscriber(channel, handler, subscription_id)
+    
+    async def _polling_subscriber(self, channel: str, handler: Callable[[Any], Awaitable[None]], subscription_id: str) -> Subscription:
+        """Fallback polling-based subscription"""
+        import asyncio
+        import httpx
+        import os
+        
+        event_gateway_url = os.getenv("EVENT_GATEWAY_URL", "http://oms:8000/events")
+        poll_interval = float(os.getenv("EVENT_POLL_INTERVAL", "5.0"))
+        
+        async def polling_loop():
+            last_timestamp = time.time()
+            
+            while True:
+                try:
+                    async with httpx.AsyncClient() as client:
+                        response = await client.get(
+                            f"{event_gateway_url}/poll",
+                            params={
+                                "channel": channel,
+                                "since": last_timestamp,
+                                "subscription_id": subscription_id
+                            },
+                            timeout=10.0
+                        )
+                        
+                        if response.status_code == 200:
+                            events = response.json().get("events", [])
+                            for event in events:
+                                try:
+                                    await handler(event.get("payload"))
+                                    last_timestamp = max(last_timestamp, event.get("timestamp", last_timestamp))
+                                except Exception as e:
+                                    print(f"Error handling polled event: {e}")
+                        
+                        await asyncio.sleep(poll_interval)
+                        
+                except Exception as e:
+                    print(f"Polling error: {e}")
+                    await asyncio.sleep(poll_interval)
+        
+        # Start polling in background
+        task = asyncio.create_task(polling_loop())
+        
+        return Subscription(
+            id=subscription_id,
+            channel=channel,
+            active=True,
+            transport="polling",
+            task=task
+        )
 
 
 class OMSEventClient:
@@ -61,9 +212,35 @@ class OMSEventClient:
         nats_url = config.nats_url or 'nats://nats.oms.company.com:4222'
         ws_url = config.websocket_url or 'ws://localhost:8080'
         
-        # Implementation would depend on the actual transport libraries
-        # This is a placeholder for the interface
-        raise NotImplementedError("Please implement transport-specific adapters")
+        # Create concrete implementations of publisher and subscriber
+        publisher = EventPublisher()
+        subscriber = EventSubscriber()
+        
+        # Create and return the client
+        client = cls(publisher, subscriber)
+        
+        # Test connection to verify it's working
+        await client._test_connection(config)
+        
+        return client
+    
+    async def _test_connection(self, config: ClientConfig):
+        """Test the connection to event services"""
+        import time
+        
+        try:
+            # Test publish capability
+            test_result = await self.publisher.publish("_test_channel", {
+                "test": True,
+                "timestamp": time.time(),
+                "source": "oms-event-sdk"
+            })
+            
+            if not test_result.success:
+                print(f"Warning: Event publishing test failed: {test_result.error}")
+                
+        except Exception as e:
+            print(f"Warning: Event connection test failed: {e}")
 
     # Generated client methods
 

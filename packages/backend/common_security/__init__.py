@@ -1,4 +1,4 @@
-# Mock common_security package for development/testing
+# Production-ready common_security package for Arrakis Project
 import hashlib
 import base64
 import json
@@ -6,37 +6,113 @@ import os
 from typing import Any, Dict, Optional, List, Union
 from datetime import datetime, timedelta
 import time
+import logging
+import secrets
+from cryptography.fernet import Fernet
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import rsa, padding
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
+logger = logging.getLogger(__name__)
 
 class SecurityConfig:
-    """Security configuration class"""
+    """Production security configuration with strong defaults"""
     def __init__(self):
-        self.encryption_key = os.getenv("ENCRYPTION_KEY", "default-dev-key")
+        self.encryption_key = self._get_or_generate_key("ENCRYPTION_KEY")
+        self.signing_key = self._get_or_generate_key("SIGNING_KEY") 
         self.hash_algorithm = "sha256"
-        self.token_expiry = 3600  # 1 hour
+        self.token_expiry = int(os.getenv("TOKEN_EXPIRY", "3600"))  # 1 hour
+        self.password_iterations = 100000  # PBKDF2 iterations
+        self.salt_length = 32
+        
+    def _get_or_generate_key(self, env_var: str) -> bytes:
+        """Get encryption key from environment or generate new one"""
+        key_b64 = os.getenv(env_var)
+        if key_b64:
+            try:
+                return base64.urlsafe_b64decode(key_b64)
+            except Exception as e:
+                logger.warning(f"Invalid {env_var} in environment, generating new key")
+        
+        # Generate new key
+        key = Fernet.generate_key()
+        logger.warning(f"Generated new {env_var}. Set environment variable: {env_var}={key.decode()}")
+        return key
 
-# Encryption/Decryption functions (simplified for development)
+_config = SecurityConfig()
+
+# Strong encryption/decryption functions using Fernet (AES 128)
 def encrypt(data: bytes) -> bytes:
-    """Mock encryption - just base64 encode for development"""
-    return base64.b64encode(data)
+    """Production encryption using Fernet (AES 128 in CBC mode)"""
+    try:
+        f = Fernet(_config.encryption_key)
+        return f.encrypt(data)
+    except Exception as e:
+        logger.error(f"Encryption failed: {e}")
+        raise
 
 def decrypt(data: bytes) -> bytes:
-    """Mock decryption - just base64 decode for development"""
-    return base64.b64decode(data)
+    """Production decryption using Fernet"""
+    try:
+        f = Fernet(_config.encryption_key)
+        return f.decrypt(data)
+    except Exception as e:
+        logger.error(f"Decryption failed: {e}")
+        raise
 
 def encrypt_text(text: str) -> str:
-    """Encrypt text data"""
-    return base64.b64encode(text.encode()).decode()
+    """Encrypt text data and return base64 encoded result"""
+    try:
+        encrypted_bytes = encrypt(text.encode('utf-8'))
+        return base64.urlsafe_b64encode(encrypted_bytes).decode('utf-8')
+    except Exception as e:
+        logger.error(f"Text encryption failed: {e}")
+        raise
 
 def decrypt_text(encrypted_text: str) -> str:
-    """Decrypt text data"""
-    return base64.b64decode(encrypted_text.encode()).decode()
+    """Decrypt base64 encoded text data"""
+    try:
+        encrypted_bytes = base64.urlsafe_b64decode(encrypted_text.encode('utf-8'))
+        decrypted_bytes = decrypt(encrypted_bytes)
+        return decrypted_bytes.decode('utf-8')
+    except Exception as e:
+        logger.error(f"Text decryption failed: {e}")
+        raise
 
-# Hashing functions
-def hash_data(data: Union[str, bytes]) -> str:
-    """Hash data using SHA256"""
+# Secure hashing functions with salting
+def hash_data(data: Union[str, bytes], salt: Optional[bytes] = None) -> str:
+    """Hash data using SHA256 with optional salt"""
     if isinstance(data, str):
-        data = data.encode()
+        data = data.encode('utf-8')
+    
+    if salt:
+        data = salt + data
+    
     return hashlib.sha256(data).hexdigest()
+
+def hash_password(password: str, salt: Optional[bytes] = None) -> tuple[str, bytes]:
+    """Hash password using PBKDF2 with salt"""
+    if salt is None:
+        salt = secrets.token_bytes(_config.salt_length)
+    
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=salt,
+        iterations=_config.password_iterations,
+    )
+    
+    password_hash = kdf.derive(password.encode('utf-8'))
+    return base64.urlsafe_b64encode(password_hash).decode('utf-8'), salt
+
+def verify_password(password: str, hashed_password: str, salt: bytes) -> bool:
+    """Verify password against hash"""
+    try:
+        computed_hash, _ = hash_password(password, salt)
+        return secrets.compare_digest(computed_hash, hashed_password)
+    except Exception as e:
+        logger.error(f"Password verification failed: {e}")
+        return False
 
 # Validation functions
 def validate_input(data: Any) -> Any:
@@ -70,72 +146,164 @@ def validate_password(password: str) -> Dict[str, Any]:
         "issues": issues
     }
 
-# Token functions
-def generate_token(payload: Dict[str, Any], expiry_seconds: int = 3600) -> str:
-    """Generate a simple token"""
-    payload["exp"] = time.time() + expiry_seconds
-    token_data = json.dumps(payload)
-    return encrypt_text(token_data)
+# Production JWT-like token functions
+def generate_token(payload: Dict[str, Any], expiry_seconds: Optional[int] = None) -> str:
+    """Generate secure token with signature"""
+    if expiry_seconds is None:
+        expiry_seconds = _config.token_expiry
+    
+    # Add standard claims
+    token_payload = {
+        **payload,
+        "iat": int(time.time()),  # Issued at
+        "exp": int(time.time()) + expiry_seconds,  # Expires at
+        "jti": secrets.token_hex(16),  # JWT ID
+    }
+    
+    try:
+        # Serialize and encrypt payload
+        token_data = json.dumps(token_payload, separators=(',', ':'))
+        encrypted_token = encrypt_text(token_data)
+        
+        # Add signature to prevent tampering
+        signature = sign_data(encrypted_token)
+        
+        # Combine token and signature
+        return f"{encrypted_token}.{signature}"
+        
+    except Exception as e:
+        logger.error(f"Token generation failed: {e}")
+        raise
 
 def verify_token(token: str) -> Optional[Dict[str, Any]]:
-    """Verify and decode token"""
+    """Verify and decode secure token"""
     try:
-        token_data = decrypt_text(token)
+        # Split token and signature
+        if '.' not in token:
+            logger.warning("Invalid token format - missing signature")
+            return None
+            
+        encrypted_token, signature = token.rsplit('.', 1)
+        
+        # Verify signature first
+        if not verify_signature(encrypted_token, signature):
+            logger.warning("Token signature verification failed")
+            return None
+        
+        # Decrypt and parse payload
+        token_data = decrypt_text(encrypted_token)
         payload = json.loads(token_data)
         
+        # Check expiration
         if payload.get("exp", 0) < time.time():
-            return None  # Token expired
+            logger.debug("Token expired")
+            return None
+            
+        # Check issued at (not too far in future)
+        iat = payload.get("iat", 0)
+        if iat > time.time() + 300:  # 5 minutes clock skew allowance
+            logger.warning("Token issued in future")
+            return None
             
         return payload
-    except:
+        
+    except Exception as e:
+        logger.warning(f"Token verification failed: {e}")
         return None
 
-# Signature functions
-def sign_data(data: Union[str, bytes], key: Optional[str] = None) -> str:
-    """Sign data with HMAC"""
+# Production HMAC signature functions
+def sign_data(data: Union[str, bytes], key: Optional[bytes] = None) -> str:
+    """Sign data with HMAC-SHA256"""
     import hmac
-    if isinstance(data, str):
-        data = data.encode()
-    if key is None:
-        key = os.getenv("SIGNING_KEY", "default-signing-key")
     
-    signature = hmac.new(key.encode(), data, hashlib.sha256)
-    return signature.hexdigest()
+    if isinstance(data, str):
+        data = data.encode('utf-8')
+    
+    if key is None:
+        key = _config.signing_key
+    elif isinstance(key, str):
+        key = key.encode('utf-8')
+    
+    try:
+        signature = hmac.new(key, data, hashlib.sha256)
+        return signature.hexdigest()
+    except Exception as e:
+        logger.error(f"Data signing failed: {e}")
+        raise
 
-def calculate_hmac(data: Union[str, bytes], key: Optional[str] = None) -> str:
+def calculate_hmac(data: Union[str, bytes], key: Optional[bytes] = None) -> str:
     """Calculate HMAC for data - alias for sign_data"""
     return sign_data(data, key)
 
-def verify_signature(data: Union[str, bytes], signature: str, key: Optional[str] = None) -> bool:
-    """Verify HMAC signature"""
-    expected_signature = sign_data(data, key)
-    return expected_signature == signature
+def verify_signature(data: Union[str, bytes], signature: str, key: Optional[bytes] = None) -> bool:
+    """Verify HMAC signature using constant-time comparison"""
+    try:
+        expected_signature = sign_data(data, key)
+        return secrets.compare_digest(expected_signature, signature)
+    except Exception as e:
+        logger.error(f"Signature verification failed: {e}")
+        return False
 
-def verify_hmac(data: Union[str, bytes], signature: str, key: Optional[str] = None) -> bool:
+def verify_hmac(data: Union[str, bytes], signature: str, key: Optional[bytes] = None) -> bool:
     """Verify HMAC - alias for verify_signature"""
     return verify_signature(data, signature, key)
 
-def sign(data: Union[str, bytes], key: Optional[str] = None) -> str:
+def sign(data: Union[str, bytes], key: Optional[bytes] = None) -> str:
     """Sign data - alias for sign_data"""
     return sign_data(data, key)
 
-def verify(data: Union[str, bytes], signature: str, key: Optional[str] = None) -> bool:
+def verify(data: Union[str, bytes], signature: str, key: Optional[bytes] = None) -> bool:
     """Verify signature - alias for verify_signature"""
     return verify_signature(data, signature, key)
 
-# Key management
+# Cryptographically secure key management
 def generate_key(length: int = 32) -> str:
-    """Generate random key"""
-    import secrets
+    """Generate cryptographically secure random key"""
     return secrets.token_hex(length)
+
+def generate_fernet_key() -> bytes:
+    """Generate Fernet-compatible encryption key"""
+    return Fernet.generate_key()
 
 def generate_signing_key(length: int = 32) -> str:
     """Generate signing key - alias for generate_key"""
     return generate_key(length)
 
-def derive_key(master_key: str, context: str) -> str:
-    """Derive a key from master key and context"""
-    return hash_data(f"{master_key}:{context}")
+def derive_key(master_key: Union[str, bytes], context: str, length: int = 32) -> bytes:
+    """Derive a key from master key and context using PBKDF2"""
+    if isinstance(master_key, str):
+        master_key = master_key.encode('utf-8')
+    
+    salt = hash_data(context).encode('utf-8')[:16]  # Use context as deterministic salt
+    
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=length,
+        salt=salt,
+        iterations=10000,  # Lower iterations for key derivation
+    )
+    
+    return kdf.derive(master_key)
+
+def generate_rsa_keypair(key_size: int = 2048) -> tuple[bytes, bytes]:
+    """Generate RSA public/private key pair"""
+    private_key = rsa.generate_private_key(
+        public_exponent=65537,
+        key_size=key_size,
+    )
+    
+    private_pem = private_key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption()
+    )
+    
+    public_pem = private_key.public_key().public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+    )
+    
+    return private_pem, public_pem
 
 # Sanitization functions
 def sanitize_html(html: str) -> str:

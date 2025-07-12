@@ -59,7 +59,7 @@ class ServiceSettings(BaseSettings):
     iam_timeout: int = Field(default=30, description="IAM request timeout")
     
     # Audit Service
-    audit_url: str = Field(default="http://audit-service:8001", description="Audit service URL")
+    audit_url: str = Field(default="http://audit-service:8000", description="Audit service URL")
     audit_enabled: bool = Field(default=True, description="Enable audit logging")
     
     # NATS
@@ -88,8 +88,8 @@ class ObservabilitySettings(BaseSettings):
     log_format: str = Field(default="json", description="Log format")
     
     # SIEM
-    siem_enabled: bool = Field(default=False, description="Enable SIEM integration")
-    siem_endpoint: str = Field(default="http://localhost:8088/services/collector", description="SIEM endpoint")
+    siem_enabled: bool = Field(default=True, description="Enable SIEM integration")
+    siem_endpoint: str = Field(default="http://elasticsearch:9200", description="SIEM endpoint")
     kafka_bootstrap_servers: str = Field(default="localhost:9092", description="Kafka servers")
 
 

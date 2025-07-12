@@ -132,7 +132,7 @@ services:
       - TERMINUSDB_USER=admin
       - TERMINUSDB_PASS=changeme-admin-pass
       - JWT_SECRET=${JWT_SECRET:-your-very-secure-jwt-secret-key}
-      - USE_IAM_VALIDATION=${USE_IAM_VALIDATION:-false}
+      - USE_IAM_VALIDATION=${USE_IAM_VALIDATION:-true}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - DATA_KERNEL_PORT=8080
       - GRPC_PORT=50051
@@ -258,13 +258,13 @@ services:
       - JWT_SECRET=${JWT_SECRET:-your-very-secure-jwt-secret-key}
       
       # Microservices Mode (점진적 활성화)
-      - USE_DATA_KERNEL_GATEWAY=${USE_DATA_KERNEL_GATEWAY:-false}
+      - USE_DATA_KERNEL_GATEWAY=${USE_DATA_KERNEL_GATEWAY:-true}
       - DATA_KERNEL_GRPC_ENDPOINT=data-kernel-service:50051
-      - USE_EMBEDDING_MS=${USE_EMBEDDING_MS:-false}
+      - USE_EMBEDDING_MS=${USE_EMBEDDING_MS:-true}
       - EMBEDDING_SERVICE_ENDPOINT=embedding-service:50055
-      - USE_SCHEDULER_MS=${USE_SCHEDULER_MS:-false}
+      - USE_SCHEDULER_MS=${USE_SCHEDULER_MS:-true}
       - SCHEDULER_SERVICE_ENDPOINT=scheduler-service:50056
-      - USE_EVENT_GATEWAY=${USE_EVENT_GATEWAY:-false}
+      - USE_EVENT_GATEWAY=${USE_EVENT_GATEWAY:-true}
       - EVENT_GATEWAY_ENDPOINT=event-gateway:50057
       
       # Monitoring

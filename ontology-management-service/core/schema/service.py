@@ -447,10 +447,159 @@ class SchemaService(SchemaServiceProtocol):
         }
 
     async def get_schema_version(self, schema_id: str, version: int) -> Dict[str, Any]:
-        raise NotImplementedError
+        """Get a specific version of a schema"""
+        try:
+            # Query version history from TerminusDB using time travel queries
+            if self.data_kernel_client:
+                try:
+                    # Use TerminusDB's version/time travel capabilities
+                    query = {
+                        "type": "woql:Triple",
+                        "subject": {"@type": "woql:Variable", "variable": "Schema"},
+                        "predicate": {"@type": "woql:Node", "node": "rdf:type"},
+                        "object": {"@type": "woql:Node", "node": "oms:Schema"},
+                        "graph": {"@type": "woql:Variable", "variable": "Version"}
+                    }
+                    
+                    # Add version constraint
+                    version_constraint = {
+                        "type": "woql:And",
+                        "and": [
+                            query,
+                            {
+                                "type": "woql:Triple",
+                                "subject": {"@type": "woql:Variable", "variable": "Schema"},
+                                "predicate": {"@type": "woql:Node", "node": "oms:version"},
+                                "object": {"@type": "woql:DataValue", "data": {"@type": "xsd:integer", "@value": version}}
+                            },
+                            {
+                                "type": "woql:Triple", 
+                                "subject": {"@type": "woql:Variable", "variable": "Schema"},
+                                "predicate": {"@type": "woql:Node", "node": "oms:schemaId"},
+                                "object": {"@type": "woql:DataValue", "data": {"@type": "xsd:string", "@value": schema_id}}
+                            }
+                        ]
+                    }
+                    
+                    result = await self.data_kernel_client.query_document(
+                        branch="main",
+                        query=version_constraint
+                    )
+                    
+                    if result and result.get("bindings"):
+                        # Extract schema data from bindings
+                        binding = result["bindings"][0]
+                        schema_ref = binding.get("Schema", {}).get("@id")
+                        
+                        if schema_ref:
+                            # Get full schema document
+                            full_schema = await self.data_kernel_client.get_document(
+                                doc_id=schema_ref,
+                                branch="main"
+                            )
+                            return full_schema
+                            
+                except Exception as db_error:
+                    logger.warning(f"Failed to query version {version} from TerminusDB: {db_error}")
+            
+            # Fallback to current version if version matches
+            schema = await self.get_schema(schema_id)
+            if schema and schema.get("version", 1) == version:
+                return schema
+                
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error getting schema version {version} for {schema_id}: {e}")
+            return None
 
     async def get_schema_versions(self, schema_id: str) -> List[Dict[str, Any]]:
-        raise NotImplementedError
+        """Get all versions of a schema"""
+        try:
+            versions = []
+            
+            # Query version history from TerminusDB
+            if self.data_kernel_client:
+                try:
+                    # Query all versions of this schema
+                    query = {
+                        "type": "woql:And",
+                        "and": [
+                            {
+                                "type": "woql:Triple",
+                                "subject": {"@type": "woql:Variable", "variable": "Schema"},
+                                "predicate": {"@type": "woql:Node", "node": "rdf:type"},
+                                "object": {"@type": "woql:Node", "node": "oms:Schema"}
+                            },
+                            {
+                                "type": "woql:Triple",
+                                "subject": {"@type": "woql:Variable", "variable": "Schema"},
+                                "predicate": {"@type": "woql:Node", "node": "oms:schemaId"},
+                                "object": {"@type": "woql:DataValue", "data": {"@type": "xsd:string", "@value": schema_id}}
+                            },
+                            {
+                                "type": "woql:Triple",
+                                "subject": {"@type": "woql:Variable", "variable": "Schema"},
+                                "predicate": {"@type": "woql:Node", "node": "oms:version"},
+                                "object": {"@type": "woql:Variable", "variable": "Version"}
+                            },
+                            {
+                                "type": "woql:Triple",
+                                "subject": {"@type": "woql:Variable", "variable": "Schema"},
+                                "predicate": {"@type": "woql:Node", "node": "oms:created_at"},
+                                "object": {"@type": "woql:Variable", "variable": "CreatedAt"}
+                            },
+                            {
+                                "type": "woql:Triple",
+                                "subject": {"@type": "woql:Variable", "variable": "Schema"},
+                                "predicate": {"@type": "woql:Node", "node": "oms:created_by"},
+                                "object": {"@type": "woql:Variable", "variable": "CreatedBy"}
+                            }
+                        ]
+                    }
+                    
+                    result = await self.data_kernel_client.query_document(
+                        branch="main",
+                        query=query
+                    )
+                    
+                    if result and result.get("bindings"):
+                        for binding in result["bindings"]:
+                            version_info = {
+                                "version": int(binding.get("Version", {}).get("@value", 1)),
+                                "created_at": binding.get("CreatedAt", {}).get("@value"),
+                                "created_by": binding.get("CreatedBy", {}).get("@value"),
+                                "schema_id": schema_id,
+                                "schema_ref": binding.get("Schema", {}).get("@id")
+                            }
+                            versions.append(version_info)
+                        
+                        # Sort by version number descending
+                        versions.sort(key=lambda x: x["version"], reverse=True)
+                        return versions
+                        
+                except Exception as db_error:
+                    logger.warning(f"Failed to query version history from TerminusDB: {db_error}")
+            
+            # Fallback: return current version only
+            schema = await self.get_schema(schema_id)
+            if schema:
+                version_info = {
+                    "version": schema.get("version", 1),
+                    "created_at": schema.get("created_at"),
+                    "updated_at": schema.get("updated_at"),
+                    "created_by": schema.get("created_by"),
+                    "description": f"Version {schema.get('version', 1)} of {schema.get('name', schema_id)}",
+                    "changes": schema.get("change_summary", "Current version"),
+                    "schema_id": schema_id
+                }
+                return [version_info]
+            
+            return []
+            
+        except Exception as e:
+            logger.error(f"Error getting schema versions for {schema_id}: {e}")
+            return []
     
     # 브랜치 워크플로우를 위한 추가 메소드들
     async def get_pending_schema_changes(self, branch: str = "main") -> List[Dict[str, Any]]:

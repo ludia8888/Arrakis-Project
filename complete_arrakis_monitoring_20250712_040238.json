@@ -1,9 +1,0 @@
-{
-  "total_score": 95,
-  "services_discovered": 23,
-  "running_services": 8,
-  "monitored_services": 8,
-  "services_detail": [
-    {
-      "name": "user-service-main",
-      "path": 

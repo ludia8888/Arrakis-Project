@@ -45,7 +45,7 @@ class CommitHookPipeline:
             TamperValidator(),
             SchemaValidator(),
             PIIValidator(),
-            # RuleValidator() - Disabled until ValidationService is fixed
+            RuleValidator()  # Now enabled with fallback implementation
         ]
         
         # Default sinks
@@ -81,12 +81,28 @@ class CommitHookPipeline:
         # Build context
         context = cls._build_context(meta, diff)
         
-        # Check diff size
+        # Check diff size with security consideration
         if cls._should_skip_validation(context):
-            logger.warning(f"Skipping validation for large diff: {len(str(diff))} bytes")
+            # Check if user is authorized to bypass validation
+            bypass_authorized = await cls._is_authorized_for_size_bypass(context.meta.author)
+            
+            if not bypass_authorized:
+                logger.error(
+                    f"Unauthorized validation bypass attempt. User {context.meta.author} "
+                    f"tried to commit diff larger than {cls._max_diff_size} bytes"
+                )
+                raise ValidationError(
+                    "Diff size exceeds maximum allowed limit",
+                    errors=[{
+                        "type": "size_limit",
+                        "message": f"Diff size exceeds {cls._max_diff_size} bytes. Contact admin for large commits."
+                    }]
+                )
+            
+            logger.warning(f"Authorized user {context.meta.author} bypassing validation for large diff: {len(str(diff))} bytes")
             # Still run sinks for large diffs
             await cls._run_sinks_async(context)
-            return {"status": "skipped", "reason": "diff_too_large"}
+            return {"status": "skipped", "reason": "diff_too_large", "authorized": True}
         
         # Run pre-commit hooks
         try:
@@ -165,9 +181,29 @@ class CommitHookPipeline:
     
     @classmethod
     def _should_skip_validation(cls, context: DiffContext) -> bool:
-        """Check if validation should be skipped"""
+        """Check if validation should be skipped with audit logging"""
         diff_size = len(str(context.diff))
-        return diff_size > cls._max_diff_size
+        
+        if diff_size > cls._max_diff_size:
+            # Log critical security event for validation bypass
+            logger.critical(
+                f"VALIDATION_BYPASS_SIZE: Skipping validation due to large diff size. "
+                f"Size: {diff_size} bytes (limit: {cls._max_diff_size}), "
+                f"Author: {context.meta.author}, Branch: {context.meta.branch}, "
+                f"Trace ID: {context.meta.trace_id}"
+            )
+            
+            # Create audit event for size-based bypass
+            asyncio.create_task(cls._audit_validation_bypass(
+                bypass_type="diff_size_limit",
+                diff_size=diff_size,
+                limit=cls._max_diff_size,
+                context=context
+            ))
+            
+            return True
+        
+        return False
     
     @classmethod
     async def _run_validators(cls, context: DiffContext) -> List[Dict[str, Any]]:
@@ -237,6 +273,44 @@ class CommitHookPipeline:
                 logger.error(f"Hook {hook.name} failed: {e}")
                 if phase == "pre-commit":
                     raise
+    
+    @classmethod
+    async def _is_authorized_for_size_bypass(cls, author: str) -> bool:
+        """Check if user is authorized to bypass size-based validation"""
+        # System users and admins can bypass size limits
+        authorized_patterns = [
+            "system@",
+            "admin@",
+            "migration@",
+            "import@"
+        ]
+        
+        return any(author.startswith(pattern) for pattern in authorized_patterns)
+    
+    @classmethod
+    async def _audit_validation_bypass(cls, bypass_type: str, **kwargs):
+        """Audit validation bypass events"""
+        try:
+            audit_event = {
+                "event_type": "VALIDATION_BYPASS",
+                "event_category": "SECURITY",
+                "severity": "WARNING",
+                "bypass_type": bypass_type,
+                "timestamp": datetime.utcnow().isoformat(),
+                **kwargs
+            }
+            
+            # Log to audit sink if available
+            for sink in cls._sinks:
+                if isinstance(sink, AuditSink) and sink.enabled:
+                    await sink.publish_audit_event(audit_event)
+                    break
+            else:
+                # Fallback to local logging
+                logger.warning(f"AUDIT_VALIDATION_BYPASS: {audit_event}")
+                
+        except Exception as e:
+            logger.error(f"Failed to audit validation bypass: {e}")
     
     @classmethod
     def register_validator(cls, validator: BaseValidator):

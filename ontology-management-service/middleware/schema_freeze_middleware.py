@@ -157,8 +157,8 @@ class SchemaFreezeMiddleware(BaseHTTPMiddleware):
         more reliable than manual URL parsing.
         Priority: Path parameter > Header > Query parameter.
         """
-        # 1. Path parameters (most reliable source)
-        path_params = request.scope.get("path_params", {})
+        # 1. Path parameters (most reliable source - using official API)
+        path_params = request.path_params
         # Look for common variations of branch identifiers used in routes
         for key in ["branch_id", "branch_name", "branch"]:
             if key in path_params:
@@ -185,7 +185,7 @@ class SchemaFreezeMiddleware(BaseHTTPMiddleware):
         custom APIRoutes or route metadata to declare resource types directly.
         """
         path = request.url.path
-        path_params = request.scope.get("path_params", {})
+        path_params = request.path_params
 
         # Reliably extract the resource ID from common path parameter names.
         resource_id = next((

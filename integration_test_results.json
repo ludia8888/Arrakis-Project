@@ -1,9 +1,0 @@
-{
-  "timestamp": "2025-07-11T08:53:17.268167",
-  "success": false,
-  "services": {
-    "user_service": "http://localhost:8080",
-    "oms_service": "http://localhost:8091",
-    "audit_service": "http://localhost:8092"
-  }
-}

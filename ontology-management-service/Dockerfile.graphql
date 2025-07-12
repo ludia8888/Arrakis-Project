@@ -1,0 +1,42 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY requirements-graphql.txt .
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements-graphql.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Create startup script
+RUN echo '#!/bin/bash\n\
+echo "Starting GraphQL Service..."\n\
+python -m uvicorn api.graphql.main:app --host 0.0.0.0 --port 4000 --reload &\n\
+GRAPHQL_PID=$!\n\
+echo "Starting GraphQL WebSocket Service..."\n\
+python api/graphql/websocket_server.py &\n\
+WS_PID=$!\n\
+echo "GraphQL services started with PIDs: HTTP=$GRAPHQL_PID, WS=$WS_PID"\n\
+wait $GRAPHQL_PID $WS_PID' > /start.sh && chmod +x /start.sh
+
+# Expose ports
+EXPOSE 4000 4001
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:4000/health || exit 1
+
+# Start services
+CMD ["/start.sh"]

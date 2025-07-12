@@ -54,9 +54,9 @@ class GraphQLConfig:
             )
         else:  # development/test
             return cls(
-                enable_security=os.getenv("ENABLE_GQL_SECURITY", "false").lower() == "true",
-                enable_cache=os.getenv("ENABLE_GQL_CACHE", "false").lower() == "true",
-                enable_tracing=os.getenv("ENABLE_GQL_TRACING", "false").lower() == "true",
+                enable_security=os.getenv("ENABLE_GQL_SECURITY", "true").lower() == "true",  # Enabled by default
+                enable_cache=os.getenv("ENABLE_GQL_CACHE", "true").lower() == "true",  # Enabled by default
+                enable_tracing=os.getenv("ENABLE_GQL_TRACING", "true").lower() == "true",  # Enabled by default
                 enable_introspection=True
             )
 

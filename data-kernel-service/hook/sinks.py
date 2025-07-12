@@ -34,18 +34,41 @@ class NATSSink(BaseSink):
         return os.getenv("ENABLE_NATS_EVENTS", "true").lower() == "true"
     
     async def initialize(self):
-        """Initialize NATS connection"""
+        """Initialize NATS connection via UnifiedPublisher"""
         try:
-            # TODO: Fix UnifiedPublisher initialization
-            # For now, we'll create a basic NATS backend
-            self.publisher = NATSBackend(
-                url=os.getenv("NATS_URL", "nats://localhost:4222")
-            )
-            await self.publisher.connect()
-            logger.info("NATS sink initialized")
+            # Use UnifiedPublisher for proper event publishing
+            self.publisher = UnifiedPublisher()
+            
+            # Configure NATS backend
+            nats_config = {
+                "url": os.getenv("NATS_URL", "nats://nats:4222"),
+                "max_reconnect_attempts": int(os.getenv("NATS_MAX_RECONNECT", "10")),
+                "reconnect_time_wait": float(os.getenv("NATS_RECONNECT_WAIT", "2.0")),
+                "connect_timeout": float(os.getenv("NATS_CONNECT_TIMEOUT", "10.0"))
+            }
+            
+            # Initialize with fallback support
+            try:
+                await self.publisher.initialize(backend_type="nats", config=nats_config)
+                logger.info(f"UnifiedPublisher initialized with NATS backend: {nats_config['url']}")
+            except Exception as nats_error:
+                logger.warning(f"NATS initialization failed: {nats_error}, falling back to in-memory")
+                # Fallback to in-memory backend for development/testing
+                await self.publisher.initialize(backend_type="memory", config={})
+                logger.info("UnifiedPublisher initialized with in-memory backend")
+                
         except Exception as e:
-            logger.error(f"Failed to initialize NATS sink: {e}")
-            self.publisher = None
+            logger.error(f"Failed to initialize UnifiedPublisher: {e}")
+            # Final fallback: direct NATS backend
+            try:
+                self.publisher = NATSBackend(
+                    url=os.getenv("NATS_URL", "nats://nats:4222")
+                )
+                await self.publisher.connect()
+                logger.info("Fallback NATS backend initialized")
+            except Exception as fallback_error:
+                logger.error(f"All publisher initialization failed: {fallback_error}")
+                self.publisher = None
     
     async def publish(self, context: DiffContext) -> None:
         """Publish commit event to NATS"""

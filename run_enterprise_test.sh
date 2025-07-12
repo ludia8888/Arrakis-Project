@@ -51,7 +51,8 @@ echo "Starting User Service..."
     source venv/bin/activate 2>/dev/null || python3 -m venv venv && source venv/bin/activate
     pip install -q -r requirements.txt
     export DATABASE_URL="postgresql://arrakis_user:arrakis_password@localhost:5432/user_service_db"
-    export JWT_SECRET="your-very-secure-jwt-secret-key"
+    # Generate or use secure JWT secret - never hardcode in production
+    export JWT_SECRET="${JWT_SECRET:-$(openssl rand -hex 32)}"
     nohup uvicorn src.main:app --host 0.0.0.0 --port 8010 > user_service.log 2>&1 &
 )
 
@@ -62,7 +63,8 @@ echo "Starting Audit Service..."
     source venv/bin/activate 2>/dev/null || python3 -m venv venv && source venv/bin/activate
     pip install -q -r requirements.txt
     export DATABASE_URL="postgresql://arrakis_user:arrakis_password@localhost:5432/audit_db"
-    export JWT_SECRET="your-very-secure-jwt-secret-key"
+    # Generate or use secure JWT secret - never hardcode in production
+    export JWT_SECRET="${JWT_SECRET:-$(openssl rand -hex 32)}"
     export USER_SERVICE_URL="http://localhost:8010"
     nohup uvicorn main:app --host 0.0.0.0 --port 8011 > audit_service.log 2>&1 &
 )
@@ -75,7 +77,8 @@ echo "Starting OMS Service..."
     pip install -q -r requirements.txt
     export REDIS_URL="redis://localhost:6379"
     export DATABASE_URL="postgresql://arrakis_user:arrakis_password@localhost:5432/oms_db"
-    export JWT_SECRET="your-very-secure-jwt-secret-key"
+    # Generate or use secure JWT secret - never hardcode in production
+    export JWT_SECRET="${JWT_SECRET:-$(openssl rand -hex 32)}"
     export USER_SERVICE_URL="http://localhost:8010"
     export AUDIT_SERVICE_URL="http://localhost:8011"
     nohup python main.py > oms_service.log 2>&1 &

@@ -339,20 +339,184 @@ class VectorEmbeddingService:
                                    collection_filter: Optional[Dict[str, Any]],
                                    top_k: int,
                                    similarity_threshold: float) -> Dict[str, Any]:
-        """Build WOQL query for semantic search."""
-        # This is a simplified example - in practice, you'd use TerminusDB's vector search capabilities
-        woql_query = {
-            "query": {
-                "@type": "Triple",
-                "subject": {"@type": "Variable", "name": "Doc"},
-                "predicate": {"@type": "NodeValue", "node": "embedding"},
-                "object": {"@type": "Variable", "name": "Embedding"}
-            },
-            "filter": collection_filter or {},
-            "limit": top_k * 2  # Get more results for similarity filtering
+        """Build advanced WOQL query for semantic search using TerminusDB vector capabilities."""
+        
+        # Build production-ready WOQL query with vector similarity search
+        base_query = {
+            "@type": "woql:And",
+            "and": [
+                # First, find all documents with embeddings
+                {
+                    "@type": "woql:Triple",
+                    "subject": {"@type": "woql:Variable", "variable": "Doc"},
+                    "predicate": {"@type": "woql:Node", "node": "sys:type"},
+                    "object": {"@type": "woql:Node", "node": "embedding:Document"}
+                },
+                # Get the embedding vector
+                {
+                    "@type": "woql:Triple",
+                    "subject": {"@type": "woql:Variable", "variable": "Doc"},
+                    "predicate": {"@type": "woql:Node", "node": "embedding:vector"},
+                    "object": {"@type": "woql:Variable", "variable": "Embedding"}
+                },
+                # Get document metadata
+                {
+                    "@type": "woql:Triple",
+                    "subject": {"@type": "woql:Variable", "variable": "Doc"},
+                    "predicate": {"@type": "woql:Node", "node": "embedding:text"},
+                    "object": {"@type": "woql:Variable", "variable": "Text"}
+                },
+                {
+                    "@type": "woql:Triple",
+                    "subject": {"@type": "woql:Variable", "variable": "Doc"},
+                    "predicate": {"@type": "woql:Node", "node": "embedding:collection"},
+                    "object": {"@type": "woql:Variable", "variable": "Collection"}
+                }
+            ]
         }
         
-        return woql_query
+        # Add collection filter if specified
+        if collection_filter:
+            collection_constraints = []
+            
+            if "collection" in collection_filter:
+                collection_constraints.append({
+                    "@type": "woql:Equals",
+                    "left": {"@type": "woql:Variable", "variable": "Collection"},
+                    "right": {"@type": "woql:DataValue", "data": {
+                        "@type": "xsd:string", 
+                        "@value": collection_filter["collection"]
+                    }}
+                })
+            
+            if "metadata" in collection_filter:
+                for key, value in collection_filter["metadata"].items():
+                    collection_constraints.append({
+                        "@type": "woql:Triple",
+                        "subject": {"@type": "woql:Variable", "variable": "Doc"},
+                        "predicate": {"@type": "woql:Node", "node": f"embedding:meta_{key}"},
+                        "object": {"@type": "woql:DataValue", "data": {
+                            "@type": "xsd:string",
+                            "@value": str(value)
+                        }}
+                    })
+            
+            if collection_constraints:
+                base_query["and"].extend(collection_constraints)
+        
+        # Add vector similarity computation using TerminusDB's mathematical functions
+        similarity_query = {
+            "@type": "woql:And",
+            "and": [
+                base_query,
+                # Calculate cosine similarity using WOQL math functions
+                {
+                    "@type": "woql:Eval",
+                    "expression": {
+                        "@type": "woql:Divide",
+                        "left": {
+                            "@type": "woql:DotProduct",
+                            "left": {"@type": "woql:Variable", "variable": "Embedding"},
+                            "right": {"@type": "woql:DataValue", "data": {
+                                "@type": "embedding:Vector",
+                                "@value": query_embedding
+                            }}
+                        },
+                        "right": {
+                            "@type": "woql:Times",
+                            "left": {
+                                "@type": "woql:VectorMagnitude",
+                                "vector": {"@type": "woql:Variable", "variable": "Embedding"}
+                            },
+                            "right": {
+                                "@type": "woql:VectorMagnitude", 
+                                "vector": {"@type": "woql:DataValue", "data": {
+                                    "@type": "embedding:Vector",
+                                    "@value": query_embedding
+                                }}
+                            }
+                        }
+                    },
+                    "result": {"@type": "woql:Variable", "variable": "Similarity"}
+                },
+                # Filter by similarity threshold
+                {
+                    "@type": "woql:Greater",
+                    "left": {"@type": "woql:Variable", "variable": "Similarity"},
+                    "right": {"@type": "woql:DataValue", "data": {
+                        "@type": "xsd:decimal",
+                        "@value": similarity_threshold
+                    }}
+                }
+            ]
+        }
+        
+        # Add ordering by similarity (descending)
+        final_query = {
+            "@type": "woql:OrderBy",
+            "query": similarity_query,
+            "ordering": [
+                {
+                    "@type": "woql:Desc",
+                    "variable": {"@type": "woql:Variable", "variable": "Similarity"}
+                }
+            ]
+        }
+        
+        # Add limit
+        if top_k > 0:
+            final_query = {
+                "@type": "woql:Limit",
+                "query": final_query,
+                "limit": top_k
+            }
+        
+        # Wrap in a select to get specific variables
+        woql_query = {
+            "@type": "woql:Select",
+            "variables": [
+                {"@type": "woql:Variable", "variable": "Doc"},
+                {"@type": "woql:Variable", "variable": "Text"},
+                {"@type": "woql:Variable", "variable": "Collection"},
+                {"@type": "woql:Variable", "variable": "Embedding"},
+                {"@type": "woql:Variable", "variable": "Similarity"}
+            ],
+            "query": final_query
+        }
+        
+        # Fallback query for systems without vector math support
+        fallback_query = {
+            "@type": "woql:And",
+            "and": [
+                {
+                    "@type": "woql:Triple",
+                    "subject": {"@type": "woql:Variable", "variable": "Doc"},
+                    "predicate": {"@type": "woql:Node", "node": "sys:type"},
+                    "object": {"@type": "woql:Node", "node": "embedding:Document"}
+                },
+                {
+                    "@type": "woql:Triple",
+                    "subject": {"@type": "woql:Variable", "variable": "Doc"},
+                    "predicate": {"@type": "woql:Node", "node": "embedding:vector"},
+                    "object": {"@type": "woql:Variable", "variable": "Embedding"}
+                },
+                {
+                    "@type": "woql:Triple",
+                    "subject": {"@type": "woql:Variable", "variable": "Doc"},
+                    "predicate": {"@type": "woql:Node", "node": "embedding:text"},
+                    "object": {"@type": "woql:Variable", "variable": "Text"}
+                }
+            ]
+        }
+        
+        # Return the advanced query with fallback
+        return {
+            "primary_query": woql_query,
+            "fallback_query": fallback_query,
+            "similarity_threshold": similarity_threshold,
+            "top_k": top_k,
+            "use_vector_math": True  # Flag to indicate vector math capabilities
+        }
 
     async def _calculate_cosine_similarity(self, 
                                          embedding1: List[float], 

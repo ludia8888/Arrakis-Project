@@ -1,0 +1,121 @@
+# Arrakis Project - Ultimate Consolidated Requirements
+# All Services Complete Dependencies
+
+# ===== CORE FRAMEWORK =====
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.11.7
+pydantic-core==2.33.2
+pydantic-settings==2.10.1
+starlette<0.28.0,>=0.27.0
+
+# ===== DATABASE & STORAGE =====
+sqlalchemy==2.0.23
+alembic==1.12.1
+asyncpg==0.29.0
+aiosqlite==0.21.0
+redis==5.0.1
+
+# ===== HTTP & NETWORKING =====
+httpx==0.25.2
+aiofiles==23.2.1
+httpcore==1.*
+anyio<4.0.0,>=3.7.1
+
+# ===== AUTHENTICATION & SECURITY =====
+python-jose[cryptography]==3.3.0
+PyJWT==2.10.1
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.6
+cryptography>=3.4.0
+bcrypt>=3.1.0
+
+# ===== DEPENDENCY INJECTION & ARCHITECTURE =====
+dependency-injector==4.48.1
+punq==0.7.0
+
+# ===== CACHING & UTILITIES =====
+cachetools==6.1.0
+python-dotenv==1.0.0
+tenacity==8.2.3
+backoff==2.2.1
+
+# ===== LOGGING & MONITORING =====
+structlog==25.4.0
+pythonjsonlogger==2.0.9
+prometheus-client==0.19.0
+
+# ===== OPENTELEMETRY & TRACING =====
+opentelemetry-api==1.21.0
+opentelemetry-sdk==1.21.0
+opentelemetry-instrumentation-fastapi==0.42b0
+opentelemetry-instrumentation-asgi==0.42b0
+opentelemetry-instrumentation==0.42b0
+opentelemetry-semantic-conventions==0.42b0
+opentelemetry-util-http==0.42b0
+
+# ===== GRAPHQL & ADVANCED FEATURES =====
+strawberry-graphql[fastapi]==0.215.1
+graphql-core<3.3.0,>=3.2.0
+pyyaml==6.0.1
+
+# ===== MESSAGE QUEUE & EVENTS =====
+nats-py==2.6.0
+cloudevents==1.10.1
+
+# ===== CLOUD & EXTERNAL SERVICES =====
+boto3==1.29.7
+botocore<1.33.0,>=1.32.7
+s3transfer<0.9.0,>=0.8.0
+
+# ===== TESTING =====
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+
+# ===== CORE DEPENDENCIES =====
+typing-extensions>=4.8.0
+typing-inspection>=0.4.0
+annotated-types>=0.6.0
+async-timeout>=4.0.2
+certifi
+idna
+sniffio
+click>=7.0
+websockets>=10.4
+watchfiles>=0.13
+uvloop!=0.15.0,!=0.15.1,>=0.14.0
+httptools>=0.5.0
+h11>=0.8
+
+# ===== ADDITIONAL UTILITIES =====
+python-dateutil<3.0.0,>=2.7.0
+deprecated>=1.2.6
+deprecation<3.0,>=2.0
+jmespath<2.0.0,>=0.7.1
+importlib-metadata<7.0,>=6.0
+packaging
+wrapt<2.0.0,>=1.0.0
+asgiref~=3.0
+setuptools>=16.0
+
+# ===== TEMPLATE & MARKUP =====
+Mako
+MarkupSafe>=0.9.2
+
+# ===== CRYPTO & SECURITY =====
+pyasn1
+ecdsa!=0.15
+rsa
+cffi>=1.14
+pycparser
+six>=1.9.0
+
+# ===== SYSTEM & COMPATIBILITY =====
+urllib3<1.27,>=1.25.4
+zipp>=0.5
+exceptiongroup>=1.0.0rc8
+tomli>=1.0.0
+iniconfig
+pluggy<2.0,>=0.12
+coverage[toml]>=5.2.1

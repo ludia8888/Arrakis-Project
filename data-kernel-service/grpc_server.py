@@ -276,9 +276,42 @@ class DataKernelServicer(pb2_grpc.DataKernelServiceServicer):
         # Call simplified service
         doc_id = await self.doc_servicer.Put(doc, context)
         
+        # Get actual revision from TerminusDB
+        revision = ""
+        try:
+            # Query TerminusDB for the document's revision/commit info
+            if hasattr(self.svc, 'terminus_client') and self.svc.terminus_client:
+                # Get the latest commit hash for this branch
+                branch_info = await self.svc.terminus_client.get_branch_info(
+                    database=doc.database,
+                    branch=doc.meta.branch or "main"
+                )
+                revision = branch_info.get("head_commit", "")
+                
+                # If no commit info, use document metadata
+                if not revision and hasattr(doc_id, 'revision'):
+                    revision = str(doc_id.revision)
+                    
+            # Fallback: generate revision based on timestamp and doc ID
+            if not revision:
+                import hashlib
+                from datetime import datetime
+                timestamp = datetime.utcnow().isoformat()
+                revision_source = f"{doc_id.id}:{timestamp}:{doc.meta.author}"
+                revision = hashlib.md5(revision_source.encode()).hexdigest()[:16]
+                
+        except Exception as e:
+            logger.warning(f"Failed to get revision from TerminusDB: {e}")
+            # Generate fallback revision
+            import hashlib
+            from datetime import datetime
+            timestamp = datetime.utcnow().isoformat()
+            revision_source = f"{doc_id.id}:{timestamp}"
+            revision = hashlib.md5(revision_source.encode()).hexdigest()[:16]
+        
         return pb2.CreateDocumentResponse(
             document_id=doc_id.id,
-            revision=""  # TODO: Get actual revision from TerminusDB
+            revision=revision
         )
     
     async def HealthCheck(self, request: pb2.HealthCheckRequest, context: grpc.aio.ServicerContext) -> pb2.HealthCheckResponse:

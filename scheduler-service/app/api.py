@@ -77,7 +77,7 @@ def get_scheduler() -> SchedulerService:
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""
-    if not scheduler_service or not scheduler_service._is_initialized:
+    if not scheduler_service or not scheduler_service.is_initialized:
         raise HTTPException(status_code=503, detail="Service not healthy")
     
     return {

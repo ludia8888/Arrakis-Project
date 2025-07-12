@@ -87,7 +87,7 @@ class AuditServiceClient:
     """Audit Service HTTP 클라이언트"""
     
     def __init__(self):
-        self.base_url = os.getenv('AUDIT_SERVICE_URL', 'http://audit-service:8002')
+        self.base_url = os.getenv('AUDIT_SERVICE_URL', 'http://audit-service:8000')
         self.timeout = float(os.getenv('AUDIT_SERVICE_TIMEOUT', '30.0'))
         self.max_retries = int(os.getenv('AUDIT_SERVICE_MAX_RETRIES', '3'))
         self.circuit_breaker_threshold = int(os.getenv('AUDIT_SERVICE_CB_THRESHOLD', '5'))

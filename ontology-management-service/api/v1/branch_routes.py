@@ -290,46 +290,7 @@ async def cancel_job(
         "message": "Job cancelled successfully"
     }
 
-# Legacy merge endpoint (deprecated but kept for backward compatibility)
-@router.post("/{branch_id}/proposals/{proposal_id}/merge-sync", deprecated=True, dependencies=[Depends(require_scope([IAMScope.PROPOSALS_WRITE]))])
-async def merge_proposal_sync(
-    branch_id: str,
-    proposal_id: str,
-    merge_request: Dict[str, Any],
-    req: Request,
-    current_user: Annotated[UserContext, Depends(get_current_user)],
-    branch_service = Depends(get_branch_service)
-) -> Dict[str, Any]:
-    """
-    (DEPRECATED) Synchronously merge a proposal.
-    This is kept for backward compatibility and simple test cases.
-    """
-    import warnings
-    warnings.warn(
-        "Synchronous merge is deprecated. Use POST /merge for async processing.",
-        DeprecationWarning,
-        stacklevel=2
-    )
-    
-    # This is the old synchronous implementation
-    # We keep it but add warnings and recommend the async version
-    strategy = merge_request.get("strategy", "merge")
-    conflict_resolutions = merge_request.get("conflict_resolutions")
-    
-    try:
-        result = await branch_service.merge_branch(
-            proposal_id=proposal_id,
-            strategy=strategy,
-            user_id=current_user.user_id,
-            conflict_resolutions=conflict_resolutions
-        )
-        
-        return {
-            "success": result.success,
-            "merged_commit": result.merged_commit_hash,
-            "conflicts": result.conflicts,
-            "deprecation_warning": "This endpoint is deprecated. Use POST /merge for async processing."
-        }
+# Legacy endpoint removed - use async merge endpoint instead
         
     except Exception as e:
         raise HTTPException(

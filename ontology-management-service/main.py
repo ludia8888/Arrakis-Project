@@ -6,7 +6,7 @@ Based on User Service success pattern
 
 from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordBearer
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 import httpx
@@ -102,7 +102,8 @@ class SchemaCreateReal(BaseModel):
     description: Optional[str] = None
     properties: List[Dict[str, Any]] = []
     
-    @validator('name')
+    @field_validator('name')
+    @classmethod
     def validate_name(cls, v):
         if len(v.strip()) < 2:
             raise ValueError('Schema name must be at least 2 characters')
@@ -110,7 +111,8 @@ class SchemaCreateReal(BaseModel):
             raise ValueError('Schema name can only contain letters, numbers, underscores, and hyphens')
         return v.strip()
     
-    @validator('properties')
+    @field_validator('properties')
+    @classmethod
     def validate_properties(cls, v):
         if not isinstance(v, list):
             raise ValueError('Properties must be a list')
@@ -134,7 +136,8 @@ class OrganizationCreateReal(BaseModel):
     name: str
     description: Optional[str] = None
     
-    @validator('name')
+    @field_validator('name')
+    @classmethod
     def validate_name(cls, v):
         if len(v.strip()) < 2:
             raise ValueError('Organization name must be at least 2 characters')

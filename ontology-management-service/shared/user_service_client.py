@@ -104,17 +104,7 @@ class UserServiceClient:
             return step1_response
             
         except httpx.HTTPStatusError as e:
-            # If step 1 fails, it might be using legacy endpoint
-            if e.response.status_code == 404:
-                # Try legacy endpoint
-                legacy_data = {
-                    "username": username,
-                    "password": password
-                }
-                if mfa_code:
-                    legacy_data["mfa_code"] = mfa_code
-                    
-                return await self._request("POST", "/auth/login/legacy", json=legacy_data)
+            # No legacy fallback - two-step authentication is now required
             raise
     
     async def register(self, username: str, email: str, password: str, full_name: Optional[str] = None) -> Dict[str, Any]:

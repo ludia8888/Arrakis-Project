@@ -326,8 +326,9 @@ class BranchLockManager:
         """
         lock_ids = []
         
-        # Legacy mode: full branch lock (only for --force or emergency cases)
+        # Full branch lock removed - use granular locks instead
         if force_branch_lock:
+            raise ValueError("Full branch locks are no longer supported. Use granular resource locks instead.")
             logger.warning(
                 f"Full branch lock requested for {branch_name} by {locked_by}. "
                 f"This may significantly impact developer productivity."
