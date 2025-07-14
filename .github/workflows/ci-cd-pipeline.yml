@@ -1,0 +1,636 @@
+name: Comprehensive CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+
+env:
+  AWS_REGION: us-west-2
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-west-2.amazonaws.com
+  DOCKER_BUILDKIT: 1
+  COMPOSE_DOCKER_CLI_BUILD: 1
+  PYTHON_VERSION: '3.12'
+  NODE_VERSION: '20'
+  GO_VERSION: '1.21'
+  TERRAFORM_VERSION: '1.6.0'
+  KUBECTL_VERSION: '1.28.0'
+  HELM_VERSION: '3.13.0'
+
+jobs:
+  # Code Quality and Security Checks
+  code-quality:
+    name: Code Quality & Security
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - ontology-management-service
+          - user-service
+          - audit-service
+          - data-kernel-service
+          - embedding-service
+          - scheduler-service
+          - event-gateway
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache Python dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ matrix.service }}-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{ matrix.service }}-
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          cd ${{ matrix.service }}
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt || true
+          pip install bandit safety pylint mypy black isort flake8 pytest pytest-cov
+
+      - name: Run Black formatting check
+        run: |
+          cd ${{ matrix.service }}
+          black --check .
+
+      - name: Run isort import check
+        run: |
+          cd ${{ matrix.service }}
+          isort --check-only .
+
+      - name: Run Flake8 linting
+        run: |
+          cd ${{ matrix.service }}
+          flake8 . --config=.flake8 || flake8 .
+
+      - name: Run Pylint
+        run: |
+          cd ${{ matrix.service }}
+          pylint --rcfile=.pylintrc $(find . -name "*.py" -not -path "./venv/*" -not -path "./.venv/*") || true
+
+      - name: Run MyPy type checking
+        run: |
+          cd ${{ matrix.service }}
+          mypy . --config-file=mypy.ini || mypy .
+
+      - name: Run Bandit security scan
+        run: |
+          cd ${{ matrix.service }}
+          bandit -r . -f json -o bandit-report.json || true
+
+      - name: Run Safety vulnerability check
+        run: |
+          cd ${{ matrix.service }}
+          safety check --json -o safety-report.json || true
+
+      - name: Upload security reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports-${{ matrix.service }}
+          path: |
+            ${{ matrix.service }}/bandit-report.json
+            ${{ matrix.service }}/safety-report.json
+
+  # Unit Tests
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: code-quality
+    strategy:
+      matrix:
+        service:
+          - ontology-management-service
+          - user-service
+          - audit-service
+          - data-kernel-service
+          - embedding-service
+          - scheduler-service
+          - event-gateway
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: testdb
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+      nats:
+        image: nats:2.10-alpine
+        ports:
+          - 4222:4222
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache Python dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-test-${{ matrix.service }}-${{ hashFiles('**/requirements*.txt') }}
+
+      - name: Install dependencies
+        run: |
+          cd ${{ matrix.service }}
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-test.txt || pip install pytest pytest-cov pytest-asyncio pytest-mock
+
+      - name: Run unit tests with coverage
+        env:
+          DATABASE_URL: postgresql://postgres:testpass@localhost:5432/testdb
+          REDIS_URL: redis://localhost:6379
+          NATS_URL: nats://localhost:4222
+          ENVIRONMENT: test
+        run: |
+          cd ${{ matrix.service }}
+          pytest -v --cov=. --cov-report=xml --cov-report=html --cov-report=term
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./${{ matrix.service }}/coverage.xml
+          flags: ${{ matrix.service }}
+          name: ${{ matrix.service }}-coverage
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.service }}
+          path: |
+            ${{ matrix.service }}/htmlcov/
+            ${{ matrix.service }}/coverage.xml
+
+  # Build Docker Images
+  build:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    strategy:
+      matrix:
+        service:
+          - ontology-management-service
+          - user-service
+          - audit-service
+          - data-kernel-service
+          - embedding-service
+          - scheduler-service
+          - event-gateway
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and scan Docker image
+        run: |
+          cd ${{ matrix.service }}
+          
+          # Build image
+          docker build \
+            --cache-from ${{ env.ECR_REGISTRY }}/${{ matrix.service }}:cache \
+            --build-arg BUILDKIT_INLINE_CACHE=1 \
+            -t ${{ matrix.service }}:${{ github.sha }} \
+            -t ${{ matrix.service }}:latest \
+            .
+          
+          # Scan for vulnerabilities
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+            aquasec/trivy:latest image \
+            --exit-code 0 \
+            --severity HIGH,CRITICAL \
+            --format json \
+            --output trivy-report.json \
+            ${{ matrix.service }}:${{ github.sha }}
+
+      - name: Upload vulnerability scan results
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-scan-${{ matrix.service }}
+          path: ${{ matrix.service }}/trivy-report.json
+
+      - name: Push to ECR
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        run: |
+          # Tag and push
+          docker tag ${{ matrix.service }}:${{ github.sha }} ${{ env.ECR_REGISTRY }}/${{ matrix.service }}:${{ github.sha }}
+          docker tag ${{ matrix.service }}:latest ${{ env.ECR_REGISTRY }}/${{ matrix.service }}:latest
+          docker tag ${{ matrix.service }}:latest ${{ env.ECR_REGISTRY }}/${{ matrix.service }}:cache
+          
+          docker push ${{ env.ECR_REGISTRY }}/${{ matrix.service }}:${{ github.sha }}
+          docker push ${{ env.ECR_REGISTRY }}/${{ matrix.service }}:latest
+          docker push ${{ env.ECR_REGISTRY }}/${{ matrix.service }}:cache
+
+  # Integration Tests
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Start services with docker-compose
+        run: |
+          docker-compose -f docker-compose.yml up -d
+          
+          # Wait for services to be ready
+          for i in {1..30}; do
+            if docker-compose ps | grep -E "(Exit|unhealthy)" > /dev/null; then
+              echo "Some services failed to start"
+              docker-compose logs
+              exit 1
+            fi
+            
+            if docker-compose ps | grep -v "Up" | grep -v "NAME" > /dev/null; then
+              echo "Waiting for services to start..."
+              sleep 10
+            else
+              echo "All services are up"
+              break
+            fi
+          done
+
+      - name: Run integration tests
+        run: |
+          pip install pytest requests httpx asyncio aiohttp
+          pytest tests/integration -v --tb=short
+
+      - name: Collect logs on failure
+        if: failure()
+        run: |
+          docker-compose logs > docker-compose-logs.txt
+          docker ps -a > docker-ps.txt
+
+      - name: Upload logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-logs
+          path: |
+            docker-compose-logs.txt
+            docker-ps.txt
+
+      - name: Stop services
+        if: always()
+        run: docker-compose down -v
+
+  # Terraform Validation
+  terraform-validate:
+    name: Terraform Validation
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Cache Terraform plugins
+        uses: actions/cache@v4
+        with:
+          path: ~/.terraform.d/plugin-cache
+          key: ${{ runner.os }}-terraform-${{ hashFiles('**/.terraform.lock.hcl') }}
+
+      - name: Terraform Format Check
+        run: |
+          cd terraform
+          terraform fmt -check -recursive
+
+      - name: Terraform Init
+        run: |
+          cd terraform
+          terraform init -backend=false
+
+      - name: Terraform Validate
+        run: |
+          cd terraform
+          terraform validate
+
+      - name: TFLint
+        uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: latest
+
+      - name: Run TFLint
+        run: |
+          cd terraform
+          tflint --init
+          tflint
+
+      - name: Terraform Security Scan
+        uses: aquasecurity/tfsec-action@v1.0.3
+        with:
+          working_directory: terraform
+
+  # Kubernetes Manifest Validation
+  k8s-validate:
+    name: Kubernetes Manifest Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: ${{ env.KUBECTL_VERSION }}
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: ${{ env.HELM_VERSION }}
+
+      - name: Install validation tools
+        run: |
+          # Install kubeval
+          wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
+          tar xf kubeval-linux-amd64.tar.gz
+          sudo cp kubeval /usr/local/bin
+          
+          # Install kube-score
+          wget https://github.com/zegl/kube-score/releases/download/v1.17.0/kube-score_1.17.0_linux_amd64.tar.gz
+          tar xf kube-score_1.17.0_linux_amd64.tar.gz
+          sudo cp kube-score /usr/local/bin
+          
+          # Install polaris
+          wget https://github.com/FairwindsOps/polaris/releases/download/8.5.4/polaris_linux_amd64.tar.gz
+          tar xf polaris_linux_amd64.tar.gz
+          sudo cp polaris /usr/local/bin
+
+      - name: Validate Kubernetes manifests
+        run: |
+          # Find all YAML files
+          find . -name "*.yaml" -o -name "*.yml" | grep -E "(k8s|kubernetes)" | while read -r file; do
+            echo "Validating $file"
+            kubeval --strict "$file" || true
+            kube-score score "$file" || true
+          done
+
+      - name: Run Polaris audit
+        run: |
+          polaris audit --audit-path . --format json --output polaris-report.json || true
+
+      - name: Upload validation reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: k8s-validation-reports
+          path: polaris-report.json
+
+  # Deploy to Environment
+  deploy:
+    name: Deploy to ${{ github.event.inputs.environment || 'staging' }}
+    runs-on: ubuntu-latest
+    needs: [build, integration-tests, terraform-validate, k8s-validate]
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    environment: ${{ github.event.inputs.environment || 'staging' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: ${{ env.KUBECTL_VERSION }}
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: ${{ env.HELM_VERSION }}
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig \
+            --region ${{ env.AWS_REGION }} \
+            --name arrakis-eks-${{ github.event.inputs.environment || 'staging' }}
+
+      - name: Deploy services
+        run: |
+          ENVIRONMENT=${{ github.event.inputs.environment || 'staging' }}
+          IMAGE_TAG=${{ github.sha }}
+          
+          # Deploy each service
+          for service in ontology-management-service user-service audit-service data-kernel-service embedding-service scheduler-service event-gateway; do
+            echo "Deploying $service to $ENVIRONMENT"
+            
+            # Apply Kubernetes manifests
+            kubectl apply -f $service/k8s/ -n arrakis || true
+            
+            # Update image tag
+            kubectl set image deployment/$service $service=${{ env.ECR_REGISTRY }}/$service:$IMAGE_TAG -n arrakis || true
+            
+            # Wait for rollout
+            kubectl rollout status deployment/$service -n arrakis --timeout=300s || true
+          done
+
+      - name: Run comprehensive deployment validation
+        run: |
+          echo "🚀 Running comprehensive deployment validation..."
+          
+          # Make validation script executable
+          chmod +x scripts/deployment-validation.sh
+          
+          # Run comprehensive validation
+          ENVIRONMENT=${{ github.event.inputs.environment || 'staging' }} ./scripts/deployment-validation.sh
+          
+          echo "✅ Deployment validation completed"
+      
+      - name: Upload deployment validation report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: deployment-validation-report-${{ github.event.inputs.environment || 'staging' }}
+          path: |
+            deployment-validation.log
+            deployment-report.md
+          retention-days: 30
+
+  # Update Documentation
+  update-docs:
+    name: Update Documentation
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Generate OpenAPI specs
+        run: |
+          python scripts/extract_openapi_specs.py
+
+      - name: Generate architecture diagrams
+        run: |
+          python scripts/generate_architecture_diagrams.py
+
+      - name: Update EventCatalog
+        run: |
+          cd docs/eventcatalog
+          npm install
+          npm run build
+
+      - name: Commit documentation updates
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add -A
+          git diff --staged --quiet || git commit -m "chore: update documentation [skip ci]"
+          git push
+
+  # Security Audit Summary
+  security-summary:
+    name: Security Audit Summary
+    runs-on: ubuntu-latest
+    needs: [code-quality, build, k8s-validate]
+    if: always()
+    steps:
+      - name: Download all security reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: '*-report*'
+          merge-multiple: true
+
+      - name: Generate security summary
+        run: |
+          echo "# Security Audit Summary" > security-summary.md
+          echo "## Vulnerability Scan Results" >> security-summary.md
+          
+          # Process all security reports
+          for report in *-report.json; do
+            echo "### $report" >> security-summary.md
+            # Add summary of findings
+            jq -r '.[] | select(.severity == "HIGH" or .severity == "CRITICAL") | .message' $report >> security-summary.md || true
+          done
+
+      - name: Upload security summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-summary
+          path: security-summary.md
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = fs.readFileSync('security-summary.md', 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
+
+  # Notification
+  notify:
+    name: Send Notifications
+    runs-on: ubuntu-latest
+    needs: [deploy, security-summary]
+    if: always()
+    steps:
+      - name: Send Slack notification
+        if: env.SLACK_WEBHOOK_URL != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          STATUS="${{ job.status }}"
+          COLOR="good"
+          if [ "$STATUS" != "success" ]; then
+            COLOR="danger"
+          fi
+          
+          curl -X POST -H 'Content-type: application/json' \
+            --data "{
+              \"attachments\": [{
+                \"color\": \"$COLOR\",
+                \"title\": \"Arrakis Platform CI/CD Pipeline\",
+                \"text\": \"Pipeline $STATUS for ${{ github.ref }}\",
+                \"fields\": [
+                  {\"title\": \"Repository\", \"value\": \"${{ github.repository }}\", \"short\": true},
+                  {\"title\": \"Branch\", \"value\": \"${{ github.ref }}\", \"short\": true},
+                  {\"title\": \"Commit\", \"value\": \"${{ github.sha }}\", \"short\": true},
+                  {\"title\": \"Environment\", \"value\": \"${{ github.event.inputs.environment || 'staging' }}\", \"short\": true}
+                ]
+              }]
+            }" \
+            $SLACK_WEBHOOK_URL

@@ -1,0 +1,34 @@
+# GitHub Pages Configuration for Mermaid Diagrams
+title: "Arrakis Platform - Architecture Diagrams"
+description: "Interactive Mermaid diagrams for the Arrakis microservices platform"
+
+# Enable Mermaid support
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+# Mermaid configuration
+mermaid:
+  theme: default
+  startOnLoad: true
+
+# GitHub Pages settings
+remote_theme: pages-themes/minimal
+plugins:
+  - jekyll-remote-theme
+
+# Navigation
+nav:
+  - name: "Home"
+    url: "/"
+  - name: "Microservices"
+    url: "/microservices-architecture"
+  - name: "Infrastructure" 
+    url: "/infrastructure-architecture"
+  - name: "Security"
+    url: "/security-architecture"
+  - name: "Data Flow"
+    url: "/data-flow"
+  - name: "CI/CD"
+    url: "/cicd-flow"

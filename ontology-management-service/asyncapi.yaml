@@ -1,0 +1,964 @@
+asyncapi: 3.0.0
+
+info:
+  title: Ontology Management Service AsyncAPI
+  version: 2.0.0
+  description: |
+    AsyncAPI specification for the Ontology Management Service (OMS).
+    Defines event publishing and consumption patterns for schema lifecycle management.
+  contact:
+    name: Platform Engineering Team
+    email: platform-team@arrakis.dev
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  tags:
+    - name: schema-lifecycle
+      description: Schema creation, modification, and deletion events
+    - name: validation
+      description: Schema validation and compliance events
+    - name: branch-management
+      description: Schema branch and merge operations
+    - name: data-consistency
+      description: Data validation and integrity events
+
+defaultContentType: application/cloudevents+json
+
+servers:
+  nats-production:
+    host: nats-cluster.arrakis.internal:4222
+    protocol: nats
+    description: Production NATS cluster
+    bindings:
+      nats:
+        clientId: oms-prod
+        queue: oms-workers
+
+  nats-development:
+    host: localhost:4222
+    protocol: nats
+    description: Local development NATS server
+    bindings:
+      nats:
+        clientId: oms-dev
+
+channels:
+  # Schema Lifecycle Publishing
+  schema/created:
+    address: ontology.schema.created
+    title: Schema Created Events
+    description: Published when new ontology schemas are created
+    messages:
+      schemaCreated:
+        $ref: '#/components/messages/SchemaCreated'
+    bindings:
+      nats:
+        subject: ontology.schema.created
+
+  schema/updated:
+    address: ontology.schema.updated
+    title: Schema Updated Events
+    description: Published when schemas are modified
+    messages:
+      schemaUpdated:
+        $ref: '#/components/messages/SchemaUpdated'
+    bindings:
+      nats:
+        subject: ontology.schema.updated
+
+  schema/deleted:
+    address: ontology.schema.deleted
+    title: Schema Deleted Events
+    description: Published when schemas are removed
+    messages:
+      schemaDeleted:
+        $ref: '#/components/messages/SchemaDeleted'
+    bindings:
+      nats:
+        subject: ontology.schema.deleted
+
+  schema/validated:
+    address: ontology.schema.validated
+    title: Schema Validation Events
+    description: Published after schema validation processes
+    messages:
+      schemaValidated:
+        $ref: '#/components/messages/SchemaValidated'
+
+  # Branch Management Publishing
+  branch/created:
+    address: ontology.branch.created
+    title: Branch Created Events
+    description: Published when new schema branches are created
+    messages:
+      branchCreated:
+        $ref: '#/components/messages/BranchCreated'
+
+  branch/merged:
+    address: ontology.branch.merged
+    title: Branch Merged Events
+    description: Published when schema branches are merged
+    messages:
+      branchMerged:
+        $ref: '#/components/messages/BranchMerged'
+
+  # Data Consistency Publishing
+  violation/detected:
+    address: ontology.violation.detected
+    title: Data Violation Events
+    description: Published when data consistency violations are detected
+    messages:
+      violationDetected:
+        $ref: '#/components/messages/ViolationDetected'
+
+  # Event Consumption Channels
+  terminus/commits:
+    address: terminus.commit.created
+    title: TerminusDB Commit Events
+    description: Consumed from Data Kernel Service for data consistency checks
+    messages:
+      commitReceived:
+        $ref: '#/components/messages/TerminusCommitReceived'
+
+  user/authentication:
+    address: user.authenticated
+    title: User Authentication Events
+    description: Consumed from User Service for access tracking
+    messages:
+      userAuthenticated:
+        $ref: '#/components/messages/UserAuthenticated'
+
+  job/completion:
+    address: scheduler.job.completed
+    title: Job Completion Events
+    description: Consumed from Scheduler Service for validation results
+    messages:
+      jobCompleted:
+        $ref: '#/components/messages/JobCompleted'
+
+operations:
+  # Publishing Operations
+  publishSchemaCreated:
+    action: send
+    channel:
+      $ref: '#/channels/schema~1created'
+    title: Publish Schema Created
+    summary: Notify system of new schema creation
+    description: |
+      Published whenever a new ontology schema is successfully created.
+      Triggers downstream processing in Data Kernel, Embedding Service, and Audit Service.
+
+  publishSchemaUpdated:
+    action: send
+    channel:
+      $ref: '#/channels/schema~1updated'
+    title: Publish Schema Updated
+    summary: Notify system of schema modifications
+
+  publishSchemaDeleted:
+    action: send
+    channel:
+      $ref: '#/channels/schema~1deleted'
+    title: Publish Schema Deleted
+    summary: Notify system of schema removal
+
+  publishSchemaValidated:
+    action: send
+    channel:
+      $ref: '#/channels/schema~1validated'
+    title: Publish Schema Validation Results
+    summary: Share schema validation outcomes
+
+  publishBranchCreated:
+    action: send
+    channel:
+      $ref: '#/channels/branch~1created'
+    title: Publish Branch Created
+    summary: Notify of new schema branch
+
+  publishBranchMerged:
+    action: send
+    channel:
+      $ref: '#/channels/branch~1merged'
+    title: Publish Branch Merged
+    summary: Notify of branch merge completion
+
+  publishViolationDetected:
+    action: send
+    channel:
+      $ref: '#/channels/violation~1detected'
+    title: Publish Data Violation
+    summary: Alert system to data consistency issues
+
+  # Consumption Operations
+  receiveTerminusCommits:
+    action: receive
+    channel:
+      $ref: '#/channels/terminus~1commits'
+    title: Receive Terminus Commits
+    summary: Process TerminusDB commit notifications
+    description: |
+      Consumes commit events from Data Kernel Service to validate data consistency
+      against current schemas and update usage statistics.
+
+  receiveUserAuthentication:
+    action: receive
+    channel:
+      $ref: '#/channels/user~1authentication'
+    title: Receive User Authentication
+    summary: Track user access patterns
+
+  receiveJobCompletion:
+    action: receive
+    channel:
+      $ref: '#/channels/job~1completion'
+    title: Receive Job Completion
+    summary: Process background job results
+
+components:
+  messages:
+    # Publishing Messages
+    SchemaCreated:
+      name: SchemaCreated
+      title: Schema Created Event
+      summary: New ontology schema has been created
+      contentType: application/cloudevents+json
+      payload:
+        $ref: '#/components/schemas/SchemaCreatedPayload'
+      examples:
+        - name: UserProfileSchema
+          summary: User profile schema creation
+          payload:
+            specversion: "1.0"
+            type: ontology.schema.created
+            source: ontology-management-service
+            subject: schema/user-profile-v1
+            id: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+            time: "2024-01-15T10:30:00Z"
+            datacontenttype: application/json
+            data:
+              schema_id: user-profile-v1
+              name: "User Profile Schema"
+              version: "1.0.0"
+              namespace: identity
+              created_by: user123
+              metadata:
+                tags: ["user", "profile", "identity"]
+                category: core
+
+    SchemaUpdated:
+      name: SchemaUpdated
+      title: Schema Updated Event
+      summary: Existing ontology schema has been modified
+      contentType: application/cloudevents+json
+      payload:
+        $ref: '#/components/schemas/SchemaUpdatedPayload'
+
+    SchemaDeleted:
+      name: SchemaDeleted
+      title: Schema Deleted Event
+      summary: Ontology schema has been removed
+      contentType: application/cloudevents+json
+      payload:
+        $ref: '#/components/schemas/SchemaDeletedPayload'
+
+    SchemaValidated:
+      name: SchemaValidated
+      title: Schema Validated Event
+      summary: Schema validation process completed
+      contentType: application/cloudevents+json
+      payload:
+        $ref: '#/components/schemas/SchemaValidatedPayload'
+
+    BranchCreated:
+      name: BranchCreated
+      title: Branch Created Event
+      summary: New schema branch has been created
+      contentType: application/cloudevents+json
+      payload:
+        $ref: '#/components/schemas/BranchCreatedPayload'
+
+    BranchMerged:
+      name: BranchMerged
+      title: Branch Merged Event
+      summary: Schema branch has been merged
+      contentType: application/cloudevents+json
+      payload:
+        $ref: '#/components/schemas/BranchMergedPayload'
+
+    ViolationDetected:
+      name: ViolationDetected
+      title: Data Violation Detected Event
+      summary: Data consistency violation has been identified
+      contentType: application/cloudevents+json
+      payload:
+        $ref: '#/components/schemas/ViolationDetectedPayload'
+
+    # Consumption Messages
+    TerminusCommitReceived:
+      name: TerminusCommitReceived
+      title: Terminus Commit Received
+      summary: TerminusDB commit event for processing
+      contentType: application/cloudevents+json
+      payload:
+        $ref: '#/components/schemas/TerminusCommitPayload'
+
+    UserAuthenticated:
+      name: UserAuthenticated
+      title: User Authentication Received
+      summary: User authentication event for tracking
+      contentType: application/cloudevents+json
+      payload:
+        $ref: '#/components/schemas/UserAuthenticatedPayload'
+
+    JobCompleted:
+      name: JobCompleted
+      title: Job Completion Received
+      summary: Background job completion for processing
+      contentType: application/cloudevents+json
+      payload:
+        $ref: '#/components/schemas/JobCompletedPayload'
+
+  schemas:
+    # Base CloudEvents Schema
+    CloudEventsBase:
+      type: object
+      required:
+        - specversion
+        - type
+        - source
+        - id
+        - time
+        - data
+      properties:
+        specversion:
+          type: string
+          const: "1.0"
+        type:
+          type: string
+        source:
+          type: string
+        subject:
+          type: string
+        id:
+          type: string
+          format: uuid
+        time:
+          type: string
+          format: date-time
+        datacontenttype:
+          type: string
+          const: application/json
+        data:
+          type: object
+
+    # Publishing Event Payloads
+    SchemaCreatedPayload:
+      allOf:
+        - $ref: '#/components/schemas/CloudEventsBase'
+        - type: object
+          properties:
+            type:
+              const: ontology.schema.created
+            source:
+              const: ontology-management-service
+            data:
+              type: object
+              required:
+                - schema_id
+                - name
+                - version
+                - created_by
+              properties:
+                schema_id:
+                  type: string
+                  pattern: '^[a-z0-9][a-z0-9-]*[a-z0-9]$'
+                  description: Unique schema identifier
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 100
+                  description: Human-readable schema name
+                version:
+                  type: string
+                  pattern: '^\d+\.\d+\.\d+$'
+                  description: Semantic version
+                description:
+                  type: string
+                  maxLength: 1000
+                namespace:
+                  type: string
+                  enum: [core, domain, integration, experimental, customer]
+                created_by:
+                  type: string
+                  description: User ID of creator
+                created_at:
+                  type: string
+                  format: date-time
+                metadata:
+                  type: object
+                  properties:
+                    tags:
+                      type: array
+                      items:
+                        type: string
+                        pattern: '^[a-z0-9][a-z0-9-]*[a-z0-9]$'
+                      maxItems: 10
+                    category:
+                      type: string
+                      enum: [core, domain, integration, experimental]
+                    priority:
+                      type: string
+                      enum: [low, normal, high, critical]
+                    compliance_level:
+                      type: string
+                      enum: [public, internal, confidential, restricted]
+                schema_definition:
+                  type: object
+                  description: JSON Schema definition
+                validation_rules:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      rule_type:
+                        type: string
+                      rule_config:
+                        type: object
+
+    SchemaUpdatedPayload:
+      allOf:
+        - $ref: '#/components/schemas/CloudEventsBase'
+        - type: object
+          properties:
+            type:
+              const: ontology.schema.updated
+            source:
+              const: ontology-management-service
+            data:
+              type: object
+              required:
+                - schema_id
+                - version
+                - updated_by
+                - changes
+              properties:
+                schema_id:
+                  type: string
+                version:
+                  type: string
+                  pattern: '^\d+\.\d+\.\d+$'
+                previous_version:
+                  type: string
+                  pattern: '^\d+\.\d+\.\d+$'
+                updated_by:
+                  type: string
+                updated_at:
+                  type: string
+                  format: date-time
+                changes:
+                  type: object
+                  required:
+                    - change_type
+                    - summary
+                  properties:
+                    change_type:
+                      type: string
+                      enum: [minor, major, patch, breaking]
+                    summary:
+                      type: string
+                      maxLength: 500
+                    fields_added:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          field_name:
+                            type: string
+                          field_type:
+                            type: string
+                          required:
+                            type: boolean
+                    fields_removed:
+                      type: array
+                      items:
+                        type: string
+                    fields_modified:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          field_name:
+                            type: string
+                          old_type:
+                            type: string
+                          new_type:
+                            type: string
+                          breaking_change:
+                            type: boolean
+                    validation_changes:
+                      type: array
+                      items:
+                        type: object
+                migration_required:
+                  type: boolean
+                backward_compatible:
+                  type: boolean
+                deprecation_warnings:
+                  type: array
+                  items:
+                    type: string
+
+    SchemaDeletedPayload:
+      allOf:
+        - $ref: '#/components/schemas/CloudEventsBase'
+        - type: object
+          properties:
+            type:
+              const: ontology.schema.deleted
+            source:
+              const: ontology-management-service
+            data:
+              type: object
+              required:
+                - schema_id
+                - deleted_by
+                - reason
+                - deleted_at
+              properties:
+                schema_id:
+                  type: string
+                deleted_by:
+                  type: string
+                deleted_at:
+                  type: string
+                  format: date-time
+                reason:
+                  type: string
+                  enum: [deprecated, replaced, obsolete, error, compliance]
+                replacement_schema_id:
+                  type: string
+                  description: ID of replacement schema if applicable
+                final_version:
+                  type: string
+                  pattern: '^\d+\.\d+\.\d+$'
+                  description: Last version before deletion
+                data_migration_required:
+                  type: boolean
+                grace_period_days:
+                  type: integer
+                  minimum: 0
+                  maximum: 365
+                  description: Days before permanent deletion
+                dependent_schemas:
+                  type: array
+                  items:
+                    type: string
+                  description: Schemas that depend on this one
+                cleanup_jobs:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      job_type:
+                        type: string
+                      scheduled_for:
+                        type: string
+                        format: date-time
+
+    SchemaValidatedPayload:
+      allOf:
+        - $ref: '#/components/schemas/CloudEventsBase'
+        - type: object
+          properties:
+            type:
+              const: ontology.schema.validated
+            source:
+              const: ontology-management-service
+            data:
+              type: object
+              required:
+                - schema_id
+                - validation_result
+                - validated_at
+                - validator_version
+              properties:
+                schema_id:
+                  type: string
+                validation_result:
+                  type: string
+                  enum: [valid, invalid, warning, error]
+                validated_at:
+                  type: string
+                  format: date-time
+                validator_version:
+                  type: string
+                validation_duration_ms:
+                  type: integer
+                  minimum: 0
+                errors:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - field
+                      - message
+                      - severity
+                    properties:
+                      field:
+                        type: string
+                      message:
+                        type: string
+                      severity:
+                        type: string
+                        enum: [error, warning, info]
+                      error_code:
+                        type: string
+                      suggestion:
+                        type: string
+                warnings:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      field:
+                        type: string
+                      message:
+                        type: string
+                      recommendation:
+                        type: string
+                compliance_check:
+                  type: object
+                  properties:
+                    gdpr_compliant:
+                      type: boolean
+                    pii_fields_identified:
+                      type: array
+                      items:
+                        type: string
+                    retention_policy_valid:
+                      type: boolean
+                performance_metrics:
+                  type: object
+                  properties:
+                    estimated_query_performance:
+                      type: string
+                      enum: [excellent, good, fair, poor]
+                    index_recommendations:
+                      type: array
+                      items:
+                        type: string
+
+    BranchCreatedPayload:
+      allOf:
+        - $ref: '#/components/schemas/CloudEventsBase'
+        - type: object
+          properties:
+            type:
+              const: ontology.branch.created
+            source:
+              const: ontology-management-service
+            data:
+              type: object
+              required:
+                - branch_id
+                - branch_name
+                - base_schema_id
+                - created_by
+              properties:
+                branch_id:
+                  type: string
+                branch_name:
+                  type: string
+                  pattern: '^[a-zA-Z0-9][a-zA-Z0-9-_]*[a-zA-Z0-9]$'
+                base_schema_id:
+                  type: string
+                base_version:
+                  type: string
+                  pattern: '^\d+\.\d+\.\d+$'
+                created_by:
+                  type: string
+                created_at:
+                  type: string
+                  format: date-time
+                description:
+                  type: string
+                  maxLength: 500
+                purpose:
+                  type: string
+                  enum: [feature, hotfix, experiment, migration]
+                target_version:
+                  type: string
+                  pattern: '^\d+\.\d+\.\d+$'
+                expected_completion:
+                  type: string
+                  format: date-time
+                collaboration_settings:
+                  type: object
+                  properties:
+                    allow_concurrent_edits:
+                      type: boolean
+                    require_approval:
+                      type: boolean
+                    reviewers:
+                      type: array
+                      items:
+                        type: string
+
+    BranchMergedPayload:
+      allOf:
+        - $ref: '#/components/schemas/CloudEventsBase'
+        - type: object
+          properties:
+            type:
+              const: ontology.branch.merged
+            source:
+              const: ontology-management-service
+            data:
+              type: object
+              required:
+                - branch_id
+                - target_schema_id
+                - merged_by
+                - merge_strategy
+              properties:
+                branch_id:
+                  type: string
+                branch_name:
+                  type: string
+                target_schema_id:
+                  type: string
+                new_version:
+                  type: string
+                  pattern: '^\d+\.\d+\.\d+$'
+                merged_by:
+                  type: string
+                merged_at:
+                  type: string
+                  format: date-time
+                merge_strategy:
+                  type: string
+                  enum: [fast_forward, three_way, squash]
+                conflicts_resolved:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      field:
+                        type: string
+                      resolution:
+                        type: string
+                      resolver:
+                        type: string
+                changes_summary:
+                  type: object
+                  properties:
+                    files_changed:
+                      type: integer
+                    lines_added:
+                      type: integer
+                    lines_removed:
+                      type: integer
+                    breaking_changes:
+                      type: boolean
+                validation_passed:
+                  type: boolean
+                approval_history:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      approver:
+                        type: string
+                      approved_at:
+                        type: string
+                        format: date-time
+                      comments:
+                        type: string
+
+    ViolationDetectedPayload:
+      allOf:
+        - $ref: '#/components/schemas/CloudEventsBase'
+        - type: object
+          properties:
+            type:
+              const: ontology.violation.detected
+            source:
+              const: ontology-management-service
+            data:
+              type: object
+              required:
+                - violation_id
+                - violation_type
+                - schema_id
+                - detected_at
+                - severity
+              properties:
+                violation_id:
+                  type: string
+                violation_type:
+                  type: string
+                  enum: [schema_mismatch, constraint_violation, referential_integrity, data_type_mismatch, required_field_missing]
+                schema_id:
+                  type: string
+                schema_version:
+                  type: string
+                database_id:
+                  type: string
+                document_id:
+                  type: string
+                field_path:
+                  type: string
+                  description: JSON path to the violating field
+                detected_at:
+                  type: string
+                  format: date-time
+                severity:
+                  type: string
+                  enum: [low, medium, high, critical]
+                description:
+                  type: string
+                  maxLength: 1000
+                expected_value:
+                  description: What the schema expected
+                actual_value:
+                  description: What was actually found
+                violation_details:
+                  type: object
+                  properties:
+                    constraint_name:
+                      type: string
+                    constraint_definition:
+                      type: object
+                    validation_error:
+                      type: string
+                suggested_actions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      action_type:
+                        type: string
+                        enum: [data_correction, schema_update, ignore, escalate]
+                      description:
+                        type: string
+                      estimated_effort:
+                        type: string
+                        enum: [low, medium, high]
+                impact_assessment:
+                  type: object
+                  properties:
+                    affected_documents:
+                      type: integer
+                    business_impact:
+                      type: string
+                      enum: [none, low, medium, high, critical]
+                    compliance_risk:
+                      type: boolean
+                auto_remediation:
+                  type: object
+                  properties:
+                    available:
+                      type: boolean
+                    confidence_level:
+                      type: string
+                      enum: [low, medium, high]
+                    estimated_success_rate:
+                      type: number
+                      minimum: 0
+                      maximum: 1
+
+    # Consumption Event Payloads (simplified for processing)
+    TerminusCommitPayload:
+      allOf:
+        - $ref: '#/components/schemas/CloudEventsBase'
+        - type: object
+          properties:
+            type:
+              const: terminus.commit.created
+            source:
+              const: data-kernel-service
+            data:
+              type: object
+              required:
+                - commit_id
+                - database_id
+                - changes
+              properties:
+                commit_id:
+                  type: string
+                database_id:
+                  type: string
+                branch:
+                  type: string
+                author:
+                  type: string
+                changes:
+                  type: object
+                  properties:
+                    insertions:
+                      type: integer
+                    deletions:
+                      type: integer
+                    document_changes:
+                      type: array
+                      items:
+                        type: object
+
+    UserAuthenticatedPayload:
+      allOf:
+        - $ref: '#/components/schemas/CloudEventsBase'
+        - type: object
+          properties:
+            type:
+              const: user.authenticated
+            source:
+              const: user-service
+            data:
+              type: object
+              required:
+                - user_id
+                - session_id
+                - authenticated_at
+              properties:
+                user_id:
+                  type: string
+                session_id:
+                  type: string
+                authenticated_at:
+                  type: string
+                  format: date-time
+                user_role:
+                  type: string
+                access_scope:
+                  type: array
+                  items:
+                    type: string
+
+    JobCompletedPayload:
+      allOf:
+        - $ref: '#/components/schemas/CloudEventsBase'
+        - type: object
+          properties:
+            type:
+              const: scheduler.job.completed
+            source:
+              const: scheduler-service
+            data:
+              type: object
+              required:
+                - job_id
+                - job_type
+                - result
+              properties:
+                job_id:
+                  type: string
+                job_type:
+                  type: string
+                result:
+                  type: string
+                  enum: [success, partial_success, failed]
+                output_data:
+                  type: object
+                error_details:
+                  type: object

@@ -1,0 +1,124 @@
+extends:
+  - recommended
+
+apis:
+  ontology-management-service:
+    root: openapi/ontology-management-service.openapi.yaml
+    definition: openapi/ontology-management-service.openapi.yaml
+  
+  user-service:
+    root: openapi/user-service.openapi.yaml
+    definition: openapi/user-service.openapi.yaml
+  
+  audit-service:
+    root: openapi/audit-service.openapi.yaml
+    definition: openapi/audit-service.openapi.yaml
+  
+  data-kernel-service:
+    root: openapi/data-kernel-service.openapi.yaml
+    definition: openapi/data-kernel-service.openapi.yaml
+  
+  embedding-service:
+    root: openapi/embedding-service.openapi.yaml
+    definition: openapi/embedding-service.openapi.yaml
+  
+  scheduler-service:
+    root: openapi/scheduler-service.openapi.yaml
+    definition: openapi/scheduler-service.openapi.yaml
+  
+  event-gateway:
+    root: openapi/event-gateway.openapi.yaml
+    definition: openapi/event-gateway.openapi.yaml
+
+lint:
+  extends:
+    - recommended
+  rules:
+    # Custom rules for Arrakis platform
+    security-defined: warn
+    tags-alphabetical: warn
+    no-unused-components: error
+    operation-operationId: error
+    operation-summary: warn
+    operation-description: warn
+    parameter-description: warn
+    
+    # Arrakis-specific rules
+    info-contact: warn
+    info-license: off  # Not required for internal APIs
+    no-server-example.com: error
+    no-server-trailing-slash: error
+
+referenceDocs:
+  settings:
+    theme:
+      colors:
+        primary:
+          main: '#2196F3'
+        success:
+          main: '#4CAF50'
+        warning:
+          main: '#FF9800'
+        error:
+          main: '#F44336'
+      typography:
+        fontSize: '14px'
+        fontFamily: 'Roboto, sans-serif'
+      sidebar:
+        backgroundColor: '#1e293b'
+        textColor: '#e2e8f0'
+      navbar:
+        backgroundColor: '#0f172a'
+    
+    # Arrakis platform customization
+    logo:
+      url: 'https://example.com/arrakis-logo.png'
+      altText: 'Arrakis Platform'
+    
+    # Custom styling for microservices documentation
+    favicon: 'https://example.com/favicon.ico'
+    
+    # SEO and metadata
+    ogImage: 'https://example.com/arrakis-social-card.png'
+    
+    # Navigation and organization
+    hideDownloadButton: false
+    disableSearch: false
+    
+    # Custom footer
+    footer: |
+      <div style="text-align: center; padding: 20px;">
+        <p>Arrakis Platform API Documentation</p>
+        <p>© 2024 Arrakis Platform. All rights reserved.</p>
+      </div>
+
+# API versioning strategy
+features.openapi:
+  generateCodeSamples:
+    languages:
+      - lang: curl
+      - lang: python
+      - lang: javascript
+      - lang: go
+      - lang: java
+
+# Custom decorators for enhanced documentation
+decorators:
+  # Add platform-wide information to all APIs
+  arrakis-info:
+    subject:
+      type: Schema
+      property: info
+    severity: error
+    message: All APIs must include Arrakis platform information
+    
+  # Ensure consistent tagging
+  consistent-tagging:
+    subject:
+      type: Operation
+    severity: warn
+    message: Operations should be properly tagged for navigation
+
+# Plugin configuration for additional features
+plugins:
+  - '@redocly/plugin-arrakis-custom'  # Custom plugin for Arrakis-specific validation

@@ -1,0 +1,458 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ontology-management-service
+  namespace: arrakis
+  labels:
+    app: ontology-management-service
+    component: backend
+    tier: api
+    version: v1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ontology-management-service
+  template:
+    metadata:
+      labels:
+        app: ontology-management-service
+        component: backend
+        tier: api
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: ontology-management-service
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+      - name: ontology-management-service
+        image: ${ECR_REGISTRY}/ontology-management-service:${IMAGE_TAG}
+        imagePullPolicy: Always
+        ports:
+        - name: http
+          containerPort: 8000
+          protocol: TCP
+        - name: grpc
+          containerPort: 50051
+          protocol: TCP
+        - name: graphql-ws
+          containerPort: 8001
+          protocol: TCP
+        - name: metrics
+          containerPort: 9090
+          protocol: TCP
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        - name: SERVICE_NAME
+          value: "ontology-management-service"
+        - name: LOG_LEVEL
+          value: "INFO"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: oms-db-credentials
+              key: url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: redis-credentials
+              key: url
+        - name: NATS_URL
+          value: "nats://nats.nats-system.svc.cluster.local:4222"
+        - name: JAEGER_AGENT_HOST
+          value: "jaeger-agent.monitoring.svc.cluster.local"
+        - name: JAEGER_AGENT_PORT
+          value: "6831"
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: "http://otel-collector.monitoring.svc.cluster.local:4317"
+        - name: PROMETHEUS_MULTIPROC_DIR
+          value: "/tmp/prometheus"
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: jwt-secret
+              key: secret
+        - name: ENCRYPTION_KEY
+          valueFrom:
+            secretKeyRef:
+              name: encryption-key
+              key: key
+        - name: AWS_REGION
+          value: "us-west-2"
+        - name: S3_BUCKET
+          value: "arrakis-oms-data"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: http
+          initialDelaySeconds: 20
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        startupProbe:
+          httpGet:
+            path: /startup
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 30
+        volumeMounts:
+        - name: config
+          mountPath: /app/config
+          readOnly: true
+        - name: tmp
+          mountPath: /tmp
+        - name: cache
+          mountPath: /app/.cache
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "sleep 15"]
+      initContainers:
+      - name: db-migration
+        image: ${ECR_REGISTRY}/ontology-management-service:${IMAGE_TAG}
+        command: ["python", "-m", "alembic", "upgrade", "head"]
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: oms-db-credentials
+              key: url
+      volumes:
+      - name: config
+        configMap:
+          name: ontology-management-service-config
+      - name: tmp
+        emptyDir: {}
+      - name: cache
+        emptyDir: {}
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app: ontology-management-service
+      - maxSkew: 1
+        topologyKey: topology.kubernetes.io/zone
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app: ontology-management-service
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - ontology-management-service
+              topologyKey: kubernetes.io/hostname
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ontology-management-service
+  namespace: arrakis
+  labels:
+    app: ontology-management-service
+    component: backend
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 8000
+    targetPort: http
+    protocol: TCP
+  - name: grpc
+    port: 50051
+    targetPort: grpc
+    protocol: TCP
+  - name: graphql-ws
+    port: 8001
+    targetPort: graphql-ws
+    protocol: TCP
+  - name: metrics
+    port: 9090
+    targetPort: metrics
+    protocol: TCP
+  selector:
+    app: ontology-management-service
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ontology-management-service
+  namespace: arrakis
+  labels:
+    app: ontology-management-service
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::${AWS_ACCOUNT_ID}:role/ontology-management-service-irsa
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ontology-management-service-config
+  namespace: arrakis
+  labels:
+    app: ontology-management-service
+data:
+  config.yaml: |
+    service:
+      name: ontology-management-service
+      version: v1.0.0
+      environment: production
+    
+    server:
+      host: 0.0.0.0
+      port: 8000
+      workers: 4
+      graceful_shutdown_timeout: 30
+    
+    grpc:
+      host: 0.0.0.0
+      port: 50051
+      max_workers: 10
+      max_message_length: 104857600  # 100MB
+    
+    graphql:
+      playground: false
+      introspection: false
+      websocket_port: 8001
+      subscription_keepalive: 30
+    
+    database:
+      pool_size: 20
+      max_overflow: 10
+      pool_timeout: 30
+      pool_recycle: 3600
+      echo: false
+    
+    redis:
+      pool_size: 10
+      decode_responses: true
+      socket_timeout: 5
+      socket_connect_timeout: 5
+      retry_on_timeout: true
+      health_check_interval: 30
+    
+    nats:
+      max_reconnects: 10
+      reconnect_time_wait: 2
+      ping_interval: 120
+      max_outstanding_pings: 2
+      drain_timeout: 30
+    
+    monitoring:
+      enable_metrics: true
+      enable_tracing: true
+      enable_profiling: true
+      metrics_port: 9090
+      trace_sample_rate: 0.1
+    
+    security:
+      cors_origins:
+        - "https://app.arrakis.io"
+        - "https://api.arrakis.io"
+      jwt_algorithm: "RS256"
+      jwt_expiry: 3600
+      refresh_token_expiry: 86400
+      rate_limit: 1000
+      rate_limit_window: 60
+    
+    features:
+      enable_caching: true
+      enable_compression: true
+      enable_request_id: true
+      enable_audit_log: true
+      enable_schema_validation: true
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: oms-db-credentials
+  namespace: arrakis
+  labels:
+    app: ontology-management-service
+type: Opaque
+stringData:
+  url: "postgresql://oms_admin:${DB_PASSWORD}@oms-db.${AWS_REGION}.rds.amazonaws.com:5432/oms_db?sslmode=require"
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ontology-management-service-hpa
+  namespace: arrakis
+  labels:
+    app: ontology-management-service
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ontology-management-service
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  - type: Pods
+    pods:
+      metric:
+        name: http_requests_per_second
+      target:
+        type: AverageValue
+        averageValue: "1000"
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+      - type: Pods
+        value: 2
+        periodSeconds: 60
+      selectPolicy: Min
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 60
+      - type: Pods
+        value: 4
+        periodSeconds: 60
+      selectPolicy: Max
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ontology-management-service-pdb
+  namespace: arrakis
+  labels:
+    app: ontology-management-service
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: ontology-management-service
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ontology-management-service-netpol
+  namespace: arrakis
+  labels:
+    app: ontology-management-service
+spec:
+  podSelector:
+    matchLabels:
+      app: ontology-management-service
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: arrakis
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+    ports:
+    - protocol: TCP
+      port: 8000
+    - protocol: TCP
+      port: 50051
+    - protocol: TCP
+      port: 8001
+    - protocol: TCP
+      port: 9090
+  egress:
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 5432  # PostgreSQL
+    - protocol: TCP
+      port: 6379  # Redis
+    - protocol: TCP
+      port: 4222  # NATS
+    - protocol: TCP
+      port: 443   # HTTPS
+    - protocol: TCP
+      port: 53    # DNS
+    - protocol: UDP
+      port: 53    # DNS
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: ontology-management-service
+  namespace: arrakis
+  labels:
+    app: ontology-management-service
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: ontology-management-service
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics
+    scrapeTimeout: 10s
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ontology-management-service-cache
+  namespace: arrakis
+  labels:
+    app: ontology-management-service
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: gp3
+  resources:
+    requests:
+      storage: 10Gi

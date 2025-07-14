@@ -1,0 +1,467 @@
+name: Jaeger Flow Analysis
+
+on:
+  schedule:
+    # Run every 6 hours
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      time_range:
+        description: 'Time range to analyze'
+        required: true
+        default: '6h'
+        type: choice
+        options:
+          - 1h
+          - 6h
+          - 12h
+          - 24h
+          - 7d
+      jaeger_environment:
+        description: 'Jaeger environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      operation_filter:
+        description: 'Operation filter (optional)'
+        required: false
+        type: string
+      generate_reports:
+        description: 'Generate comprehensive reports'
+        required: false
+        default: true
+        type: boolean
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  analyze-jaeger-flows:
+    name: Analyze Service Flows
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.jaeger_environment || 'staging' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install aiohttp asyncio networkx matplotlib seaborn pandas
+          pip install plotly kaleido numpy scipy scikit-learn
+
+      - name: Setup Jaeger connection
+        run: |
+          # Determine Jaeger URL based on environment
+          if [ "${{ github.event.inputs.jaeger_environment || 'staging' }}" == "production" ]; then
+            JAEGER_URL="${{ secrets.JAEGER_PROD_URL }}"
+          else
+            JAEGER_URL="${{ secrets.JAEGER_STAGING_URL }}"
+          fi
+          
+          echo "JAEGER_URL=${JAEGER_URL}" >> $GITHUB_ENV
+          
+          # Test Jaeger connectivity
+          if [ -n "$JAEGER_URL" ]; then
+            echo "Testing Jaeger connectivity..."
+            curl -f "$JAEGER_URL/api/services" || echo "Warning: Jaeger not accessible"
+          else
+            echo "Warning: Jaeger URL not configured"
+            echo "JAEGER_URL=http://localhost:16686" >> $GITHUB_ENV
+          fi
+
+      - name: Run flow analysis
+        run: |
+          TIME_RANGE="${{ github.event.inputs.time_range || '6h' }}"
+          OPERATION_FILTER="${{ github.event.inputs.operation_filter }}"
+          
+          echo "Running Jaeger flow analysis..."
+          echo "  Environment: ${{ github.event.inputs.jaeger_environment || 'staging' }}"
+          echo "  Time range: $TIME_RANGE"
+          echo "  Jaeger URL: $JAEGER_URL"
+          
+          # Create output directory
+          mkdir -p docs/jaeger-analysis
+          
+          # Run analysis
+          python scripts/jaeger_flow_analyzer.py \
+            --jaeger-url "$JAEGER_URL" \
+            --time-range "$TIME_RANGE" \
+            ${OPERATION_FILTER:+--operation "$OPERATION_FILTER"} \
+            --output docs/jaeger-analysis
+
+      - name: Generate trend analysis
+        if: github.event.inputs.generate_reports == 'true' || github.event_name == 'schedule'
+        run: |
+          # Create trend analysis script
+          cat > analyze_trends.py <<'EOF'
+          import json
+          import os
+          from pathlib import Path
+          from datetime import datetime, timedelta
+          import matplotlib.pyplot as plt
+          import seaborn as sns
+          
+          def analyze_trends():
+              analysis_dir = Path("docs/jaeger-analysis")
+              results_files = list(analysis_dir.glob("analysis_results_*.json"))
+              
+              if len(results_files) < 2:
+                  print("Not enough historical data for trend analysis")
+                  return
+              
+              # Sort by timestamp
+              results_files.sort()
+              
+              # Extract time series data
+              timestamps = []
+              service_performance = {}
+              error_rates = {}
+              
+              for file in results_files[-10:]:  # Last 10 runs
+                  try:
+                      with open(file) as f:
+                          data = json.load(f)
+                      
+                      timestamp = data['metadata']['timestamp']
+                      timestamps.append(datetime.fromisoformat(timestamp.replace('Z', '+00:00')))
+                      
+                      # Extract performance metrics
+                      perf_data = data.get('performance_metrics', {}).get('service_performance', {})
+                      for service, metrics in perf_data.items():
+                          if service not in service_performance:
+                              service_performance[service] = []
+                          service_performance[service].append(metrics.get('mean_duration', 0))
+                          
+                          if service not in error_rates:
+                              error_rates[service] = []
+                          error_rates[service].append(metrics.get('error_rate', 0) * 100)
+                  
+                  except Exception as e:
+                      print(f"Error processing {file}: {e}")
+              
+              # Generate trend plots
+              if timestamps and service_performance:
+                  fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10))
+                  
+                  # Performance trends
+                  for service, values in service_performance.items():
+                      if len(values) == len(timestamps):
+                          ax1.plot(timestamps, values, marker='o', label=service)
+                  
+                  ax1.set_title('Service Performance Trends')
+                  ax1.set_ylabel('Average Response Time (ms)')
+                  ax1.legend()
+                  ax1.grid(True, alpha=0.3)
+                  
+                  # Error rate trends
+                  for service, values in error_rates.items():
+                      if len(values) == len(timestamps):
+                          ax2.plot(timestamps, values, marker='s', label=service)
+                  
+                  ax2.set_title('Error Rate Trends')
+                  ax2.set_ylabel('Error Rate (%)')
+                  ax2.set_xlabel('Time')
+                  ax2.legend()
+                  ax2.grid(True, alpha=0.3)
+                  
+                  plt.tight_layout()
+                  plt.savefig('docs/jaeger-analysis/trends.png', dpi=300, bbox_inches='tight')
+                  plt.close()
+                  
+                  print("Trend analysis completed")
+              
+              return len(results_files)
+          
+          if __name__ == "__main__":
+              analyze_trends()
+          EOF
+          
+          python analyze_trends.py
+
+      - name: Generate performance report
+        run: |
+          # Generate markdown report
+          cat > docs/jaeger-analysis/README.md <<'EOF'
+          # Jaeger Flow Analysis Report
+          
+          This directory contains automated analysis of service flows and dependencies based on Jaeger traces.
+          
+          ## Latest Analysis
+          EOF
+          
+          # Add latest analysis summary
+          python3 << 'EOF'
+          import json
+          import glob
+          from pathlib import Path
+          from datetime import datetime
+          
+          # Find latest results file
+          results_files = glob.glob("docs/jaeger-analysis/analysis_results_*.json")
+          if results_files:
+              latest_file = max(results_files)
+              
+              with open(latest_file) as f:
+                  data = json.load(f)
+              
+              with open("docs/jaeger-analysis/README.md", "a") as f:
+                  f.write(f"\n**Generated:** {data['metadata']['timestamp']}\n")
+                  f.write(f"**Time Range:** {data['metadata']['time_range']}\n")
+                  f.write(f"**Traces Analyzed:** {data['metadata']['trace_count']}\n\n")
+                  
+                  # Service dependencies
+                  deps = data.get('service_dependencies', {})
+                  if 'most_called_services' in deps:
+                      f.write("### Most Called Services\n\n")
+                      for service, calls in deps['most_called_services'][:5]:
+                          f.write(f"- **{service}**: {calls} calls\n")
+                      f.write("\n")
+                  
+                  # Performance metrics
+                  perf = data.get('performance_metrics', {}).get('service_performance', {})
+                  if perf:
+                      f.write("### Performance Summary\n\n")
+                      f.write("| Service | Avg Response Time | P95 | Error Rate |\n")
+                      f.write("|---------|------------------|-----|------------|\n")
+                      
+                      for service, metrics in sorted(perf.items()):
+                          avg_time = metrics.get('mean_duration', 0)
+                          p95_time = metrics.get('p95_duration', 0)
+                          error_rate = metrics.get('error_rate', 0) * 100
+                          f.write(f"| {service} | {avg_time:.2f}ms | {p95_time:.2f}ms | {error_rate:.2f}% |\n")
+                      f.write("\n")
+                  
+                  # Hot paths
+                  hotpaths = data.get('hotpaths', {}).get('hot_paths', [])
+                  if hotpaths:
+                      f.write("### Hot Paths\n\n")
+                      for i, path in enumerate(hotpaths[:5], 1):
+                          f.write(f"{i}. **{path['path']}**\n")
+                          f.write(f"   - Frequency: {path['frequency']}\n")
+                          f.write(f"   - Avg Duration: {path['avg_duration']:.2f}ms\n\n")
+                  
+                  # Error analysis
+                  errors = data.get('error_analysis', {})
+                  if errors.get('total_errors', 0) > 0:
+                      f.write("### Error Analysis\n\n")
+                      f.write(f"**Total Errors:** {errors['total_errors']}\n\n")
+                      
+                      if 'most_problematic_services' in errors:
+                          f.write("**Most Problematic Services:**\n")
+                          for service, error_count in errors['most_problematic_services'][:5]:
+                              f.write(f"- {service}: {error_count} errors\n")
+                          f.write("\n")
+                  
+                  f.write("## Visualizations\n\n")
+                  f.write("- [Interactive Dependency Graph](visualizations/dependency_graph_interactive.html)\n")
+                  f.write("- [Performance Dashboard](visualizations/performance_dashboard.html)\n")
+                  f.write("- [Flow Patterns](visualizations/flow_patterns.html)\n")
+                  f.write("- [Error Analysis](visualizations/error_analysis.html)\n")
+                  f.write("- [Interactive Dashboard](visualizations/dashboard.html)\n")
+                  
+                  if Path("docs/jaeger-analysis/trends.png").exists():
+                      f.write("- [Performance Trends](trends.png)\n")
+                  
+                  f.write("\n## Automation\n\n")
+                  f.write("This analysis runs automatically every 6 hours and can be triggered manually.\n")
+                  f.write("Historical data is maintained for trend analysis.\n")
+          EOF
+
+      - name: Create alerts for anomalies
+        run: |
+          # Check for performance anomalies and create alerts
+          python3 << 'EOF'
+          import json
+          import glob
+          
+          # Find latest results
+          results_files = glob.glob("docs/jaeger-analysis/analysis_results_*.json")
+          if not results_files:
+              exit(0)
+          
+          latest_file = max(results_files)
+          with open(latest_file) as f:
+              data = json.load(f)
+          
+          alerts = []
+          
+          # Check for high error rates
+          perf = data.get('performance_metrics', {}).get('service_performance', {})
+          for service, metrics in perf.items():
+              error_rate = metrics.get('error_rate', 0) * 100
+              if error_rate > 5:  # More than 5% error rate
+                  alerts.append(f"🚨 HIGH ERROR RATE: {service} has {error_rate:.2f}% error rate")
+              
+              # Check for slow response times
+              avg_duration = metrics.get('mean_duration', 0)
+              if avg_duration > 1000:  # More than 1 second
+                  alerts.append(f"⚠️ SLOW RESPONSE: {service} avg response time is {avg_duration:.2f}ms")
+          
+          # Check for anomalies
+          anomalies = data.get('anomalies', {}).get('duration_anomalies', {})
+          for service, anomaly in anomalies.items():
+              if anomaly.get('outlier_percentage', 0) > 10:  # More than 10% outliers
+                  alerts.append(f"📊 ANOMALY DETECTED: {service} has {anomaly['outlier_percentage']:.1f}% duration outliers")
+          
+          # Save alerts
+          if alerts:
+              with open("jaeger_alerts.txt", "w") as f:
+                  f.write("Jaeger Flow Analysis Alerts\n")
+                  f.write("=" * 30 + "\n\n")
+                  for alert in alerts:
+                      f.write(f"{alert}\n")
+              print(f"Generated {len(alerts)} alerts")
+          else:
+              print("No alerts generated - all metrics within normal ranges")
+          EOF
+
+      - name: Upload analysis results
+        uses: actions/upload-artifact@v4
+        with:
+          name: jaeger-analysis-${{ github.run_id }}
+          path: docs/jaeger-analysis/
+          retention-days: 30
+
+      - name: Upload alerts
+        if: hashFiles('jaeger_alerts.txt') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: jaeger-alerts-${{ github.run_id }}
+          path: jaeger_alerts.txt
+          retention-days: 7
+
+      - name: Commit analysis results
+        if: github.ref == 'refs/heads/main'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Only commit the latest analysis and trends
+          git add docs/jaeger-analysis/README.md
+          git add docs/jaeger-analysis/trends.png || true
+          git add docs/jaeger-analysis/visualizations/ || true
+          
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: update Jaeger flow analysis
+
+            Environment: ${{ github.event.inputs.jaeger_environment || 'staging' }}
+            Time range: ${{ github.event.inputs.time_range || '6h' }}
+            Generated: $(date -u)
+            
+            🤖 Generated with [Claude Code](https://claude.ai/code)
+            
+            Co-Authored-By: Claude <noreply@anthropic.com>"
+            git push
+          fi
+
+      - name: Send Slack notification
+        if: always()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          STATUS="${{ job.status }}"
+          COLOR="good"
+          if [ "$STATUS" != "success" ]; then
+            COLOR="danger"
+          fi
+          
+          ENVIRONMENT="${{ github.event.inputs.jaeger_environment || 'staging' }}"
+          TIME_RANGE="${{ github.event.inputs.time_range || '6h' }}"
+          
+          # Check for alerts
+          ALERT_COUNT=0
+          if [ -f "jaeger_alerts.txt" ]; then
+            ALERT_COUNT=$(grep -c "🚨\|⚠️\|📊" jaeger_alerts.txt || echo "0")
+          fi
+          
+          ALERT_TEXT=""
+          if [ "$ALERT_COUNT" -gt 0 ]; then
+            ALERT_TEXT=" ($ALERT_COUNT alerts generated)"
+            COLOR="warning"
+          fi
+          
+          curl -X POST -H 'Content-type: application/json' \
+            --data "{
+              \"attachments\": [{
+                \"color\": \"$COLOR\",
+                \"title\": \"Jaeger Flow Analysis $STATUS\",
+                \"text\": \"Environment: $ENVIRONMENT, Time range: $TIME_RANGE$ALERT_TEXT\",
+                \"fields\": [
+                  {\"title\": \"Environment\", \"value\": \"$ENVIRONMENT\", \"short\": true},
+                  {\"title\": \"Time Range\", \"value\": \"$TIME_RANGE\", \"short\": true},
+                  {\"title\": \"Status\", \"value\": \"$STATUS\", \"short\": true},
+                  {\"title\": \"Alerts\", \"value\": \"$ALERT_COUNT\", \"short\": true}
+                ]
+              }]
+            }" \
+            $SLACK_WEBHOOK_URL || true
+
+  generate-weekly-summary:
+    name: Generate Weekly Summary
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' && github.event.schedule == '0 */6 * * *'
+    needs: analyze-jaeger-flows
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 7  # Get last week of commits
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Generate weekly summary
+        run: |
+          # This would analyze the last week of Jaeger data
+          # and generate trends, patterns, and recommendations
+          python3 << 'EOF'
+          import json
+          from pathlib import Path
+          from datetime import datetime, timedelta
+          
+          print("Generating weekly Jaeger analysis summary...")
+          
+          # Create weekly summary template
+          summary = {
+              "week_ending": datetime.utcnow().isoformat(),
+              "summary": "Weekly analysis of service flows and performance",
+              "key_metrics": {
+                  "total_traces_analyzed": 0,
+                  "avg_service_response_time": 0,
+                  "total_errors": 0,
+                  "most_active_service": "unknown",
+                  "slowest_service": "unknown"
+              },
+              "recommendations": [
+                  "Review high-error rate services",
+                  "Optimize slow response times",
+                  "Monitor critical flow paths"
+              ]
+          }
+          
+          # Save weekly summary
+          with open("docs/jaeger-analysis/weekly_summary.json", "w") as f:
+              json.dump(summary, f, indent=2)
+          
+          print("Weekly summary generated")
+          EOF
+
+      - name: Upload weekly summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: jaeger-weekly-summary
+          path: docs/jaeger-analysis/weekly_summary.json
+          retention-days: 90

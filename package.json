@@ -1,0 +1,80 @@
+{
+  "name": "arrakis-platform",
+  "version": "2.0.0",
+  "description": "Enterprise-grade microservices platform for ontology management and data processing",
+  "main": "index.js",
+  "scripts": {
+    "docs:extract": "python scripts/extract_openapi_specs.py",
+    "docs:build": "./scripts/build_api_docs.sh",
+    "docs:validate": "redocly lint docs/openapi/*.openapi.yaml",
+    "docs:preview": "redocly preview-docs docs/openapi/ontology-management-service.openapi.yaml",
+    "docs:upload": "./docs/upload_to_swaggerhub.sh",
+    "docs:full": "npm run docs:extract && npm run docs:validate && npm run docs:build",
+    "diagrams:generate": "python scripts/generate_architecture_diagrams.py",
+    "diagrams:update": "./scripts/update_diagrams.sh",
+    "diagrams:validate": "./scripts/update_diagrams.sh --validate-only",
+    "diagrams:summary": "./scripts/update_diagrams.sh --summary-only",
+    "eventcatalog:dev": "cd docs/eventcatalog && npm run dev",
+    "eventcatalog:build": "cd docs/eventcatalog && npm run build",
+    "eventcatalog:generate": "cd docs/eventcatalog && npm run generate",
+    "eventcatalog:serve": "cd docs/eventcatalog && npm run serve",
+    "dev:docs": "npm run docs:extract && npm run diagrams:update && npm run docs:build",
+    "dev:events": "npm run eventcatalog:dev",
+    "lint:openapi": "redocly lint docs/openapi/*.openapi.yaml",
+    "lint:redocly": "redocly lint",
+    "install:docs": "npm install -g @redocly/cli @mermaid-js/mermaid-cli",
+    "install:pre-commit": "pip install pre-commit && pre-commit install",
+    "setup:docs": "mkdir -p docs/openapi docs/build docs/diagrams && npm run install:docs",
+    "setup:full": "npm run setup:docs && npm run install:pre-commit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-org/arrakis-project.git"
+  },
+  "keywords": [
+    "microservices",
+    "ontology",
+    "knowledge-graph",
+    "data-processing",
+    "api-documentation",
+    "openapi",
+    "swagger",
+    "redocly"
+  ],
+  "author": "Arrakis Platform Team",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/your-org/arrakis-project/issues"
+  },
+  "homepage": "https://github.com/your-org/arrakis-project#readme",
+  "devDependencies": {
+    "@redocly/cli": "^1.10.0"
+  },
+  "dependencies": {},
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "redocly": {
+    "apis": {
+      "ontology-management-service": "docs/openapi/ontology-management-service.openapi.yaml",
+      "user-service": "docs/openapi/user-service.openapi.yaml",
+      "audit-service": "docs/openapi/audit-service.openapi.yaml",
+      "data-kernel-service": "docs/openapi/data-kernel-service.openapi.yaml",
+      "embedding-service": "docs/openapi/embedding-service.openapi.yaml",
+      "scheduler-service": "docs/openapi/scheduler-service.openapi.yaml",
+      "event-gateway": "docs/openapi/event-gateway.openapi.yaml"
+    }
+  },
+  "config": {
+    "docs": {
+      "outputDir": "docs/build",
+      "theme": "custom",
+      "features": {
+        "codeSnippets": true,
+        "tryIt": true,
+        "searchIndex": true
+      }
+    }
+  }
+}

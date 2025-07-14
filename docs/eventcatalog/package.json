@@ -1,0 +1,20 @@
+{
+  "name": "arrakis-eventcatalog",
+  "version": "1.0.0",
+  "description": "Event Catalog documentation for Arrakis Platform",
+  "scripts": {
+    "dev": "eventcatalog dev",
+    "build": "eventcatalog build",
+    "generate": "eventcatalog generate",
+    "serve": "eventcatalog serve",
+    "validate": "eventcatalog validate",
+    "export": "eventcatalog export"
+  },
+  "dependencies": {
+    "@eventcatalog/core": "^2.8.0",
+    "@eventcatalog/generator-asyncapi": "^1.3.0"
+  },
+  "devDependencies": {
+    "@eventcatalog/cli": "^2.8.0"
+  }
+}

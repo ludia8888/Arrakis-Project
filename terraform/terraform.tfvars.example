@@ -1,0 +1,354 @@
+# Terraform Variables Example Configuration
+# Copy this file to terraform.tfvars and modify the values for your environment
+
+# Environment Configuration
+environment = "production"  # or "development" or "staging"
+aws_region  = "us-west-2"
+project_name = "arrakis"
+
+# Network Configuration
+vpc_cidr = "10.0.0.0/16"
+public_subnet_cidrs = [
+  "10.0.1.0/24",
+  "10.0.2.0/24",
+  "10.0.3.0/24"
+]
+private_subnet_cidrs = [
+  "10.0.11.0/24",
+  "10.0.12.0/24",
+  "10.0.13.0/24"
+]
+database_subnet_cidrs = [
+  "10.0.21.0/24",
+  "10.0.22.0/24",
+  "10.0.23.0/24"
+]
+
+# VPN Gateway (optional)
+enable_vpn_gateway = false
+
+# EKS Configuration
+kubernetes_version = "1.28"
+
+# Node Groups Configuration
+node_groups = {
+  general = {
+    instance_types             = ["t3.medium"]
+    min_capacity               = 2
+    max_capacity               = 10
+    desired_capacity           = 3
+    disk_size                  = 20
+    labels = {
+      role = "general"
+    }
+    taints = []
+  }
+  
+  compute_intensive = {
+    instance_types             = ["t3.large"]
+    min_capacity               = 1
+    max_capacity               = 5
+    desired_capacity           = 2
+    disk_size                  = 50
+    labels = {
+      role = "compute"
+      workload = "data-processing"
+    }
+    taints = [{
+      key    = "workload"
+      value  = "compute-intensive"
+      effect = "NO_SCHEDULE"
+    }]
+  }
+  
+  monitoring = {
+    instance_types             = ["t3.small"]
+    min_capacity               = 1
+    max_capacity               = 3
+    desired_capacity           = 2
+    disk_size                  = 20
+    labels = {
+      role = "monitoring"
+    }
+    taints = [{
+      key    = "workload"
+      value  = "monitoring"
+      effect = "NO_SCHEDULE"
+    }]
+  }
+}
+
+# Application Configuration
+image_registry = "123456789012.dkr.ecr.us-west-2.amazonaws.com"
+image_tag      = "v1.0.0"
+domain_name    = "arrakis.example.com"  # Set your domain name
+
+# Database Configuration
+database_instances = {
+  oms_db = {
+    engine_version      = "16.1"
+    instance_class      = "db.t3.medium"
+    allocated_storage   = 100
+    storage_encrypted   = true
+    backup_retention    = 30
+    multi_az           = true
+    deletion_protection = true
+  }
+  
+  user_db = {
+    engine_version      = "16.1"
+    instance_class      = "db.t3.small"
+    allocated_storage   = 50
+    storage_encrypted   = true
+    backup_retention    = 30
+    multi_az           = true
+    deletion_protection = true
+  }
+  
+  audit_db = {
+    engine_version      = "16.1"
+    instance_class      = "db.t3.small"
+    allocated_storage   = 100
+    storage_encrypted   = true
+    backup_retention    = 90
+    multi_az           = true
+    deletion_protection = true
+  }
+  
+  scheduler_db = {
+    engine_version      = "16.1"
+    instance_class      = "db.t3.small"
+    allocated_storage   = 50
+    storage_encrypted   = true
+    backup_retention    = 30
+    multi_az           = true
+    deletion_protection = true
+  }
+}
+
+# Set strong passwords for production
+database_master_username = "admin"
+database_master_password = "YourStrongPasswordHere123!"  # Change this!
+
+# Redis Configuration
+redis_node_type        = "cache.t3.micro"
+redis_num_cache_nodes  = 2
+redis_engine_version   = "7.0"
+
+# Monitoring Configuration
+grafana_admin_password = "YourStrongGrafanaPassword123!"  # Change this!
+
+# OAuth Configuration (optional)
+grafana_oauth_enabled       = false
+grafana_oauth_client_id     = ""
+grafana_oauth_client_secret = ""
+
+# Security Configuration
+jwt_secret     = "your-jwt-secret-key-here"  # Change this!
+encryption_key = "your-encryption-key-here"  # Change this!
+
+# Backup Configuration
+backup_retention_days = 30
+backup_schedule      = "cron(0 2 * * ? *)"  # 2 AM daily
+
+# Logging Configuration
+log_retention_days = 30
+log_level         = "INFO"
+
+# Performance Configuration
+enable_performance_insights                = true
+performance_insights_retention_period      = 7
+
+# Cost Optimization
+enable_cost_optimization = true
+auto_scaling_enabled    = true
+spot_instances_enabled  = false
+
+# Compliance Configuration
+compliance_standards = ["SOC2", "GDPR"]
+enable_encryption_at_rest    = true
+enable_encryption_in_transit = true
+
+# High Availability Configuration
+enable_multi_az = true
+backup_cross_region = false
+
+# Notification Configuration
+notification_email = "platform-team@example.com"
+slack_webhook_url  = ""  # Optional
+
+# Feature Flags
+enable_debug_mode            = false
+enable_experimental_features = false
+enable_canary_deployments   = false
+
+# Resource Limits
+max_pods_per_node = 110
+max_nodes_per_az  = 10
+
+# Service Configuration
+service_replicas = {
+  ontology_management_service = 3
+  user_service               = 2
+  audit_service              = 2
+  data_kernel_service        = 2
+  embedding_service          = 2
+  scheduler_service          = 2
+  event_gateway              = 2
+}
+
+service_resources = {
+  ontology_management_service = {
+    cpu_request    = "500m"
+    memory_request = "1Gi"
+    cpu_limit      = "1000m"
+    memory_limit   = "2Gi"
+  }
+  
+  user_service = {
+    cpu_request    = "250m"
+    memory_request = "512Mi"
+    cpu_limit      = "500m"
+    memory_limit   = "1Gi"
+  }
+  
+  audit_service = {
+    cpu_request    = "250m"
+    memory_request = "512Mi"
+    cpu_limit      = "500m"
+    memory_limit   = "1Gi"
+  }
+  
+  data_kernel_service = {
+    cpu_request    = "500m"
+    memory_request = "1Gi"
+    cpu_limit      = "1000m"
+    memory_limit   = "2Gi"
+  }
+  
+  embedding_service = {
+    cpu_request    = "1000m"
+    memory_request = "2Gi"
+    cpu_limit      = "2000m"
+    memory_limit   = "4Gi"
+  }
+  
+  scheduler_service = {
+    cpu_request    = "250m"
+    memory_request = "512Mi"
+    cpu_limit      = "500m"
+    memory_limit   = "1Gi"
+  }
+  
+  event_gateway = {
+    cpu_request    = "250m"
+    memory_request = "512Mi"
+    cpu_limit      = "500m"
+    memory_limit   = "1Gi"
+  }
+}
+
+# Custom Tags
+custom_tags = {
+  Team        = "Platform Engineering"
+  Project     = "Arrakis"
+  Environment = "Production"
+  Owner       = "platform-team@example.com"
+  CostCenter  = "Engineering"
+  Backup      = "Required"
+  Compliance  = "SOC2,GDPR"
+}
+
+# Custom Annotations for Kubernetes
+custom_annotations = {
+  "arrakis.io/team"    = "platform"
+  "arrakis.io/project" = "arrakis"
+  "arrakis.io/env"     = "production"
+}
+
+# Development Configuration (set to false for production)
+enable_development_features = false
+development_cidrs = ["10.0.0.0/8"]
+
+# Migration Configuration (set to false for new deployments)
+migration_mode       = false
+migration_percentage = 0
+
+# External Dependencies (configure as needed)
+external_dependencies = {
+  external_api = {
+    endpoint = "https://api.example.com"
+    port     = 443
+    protocol = "https"
+    enabled  = true
+  }
+}
+
+# Example values for different environments:
+
+# Development Environment Example:
+# environment = "development"
+# kubernetes_version = "1.28"
+# node_groups = {
+#   general = {
+#     instance_types = ["t3.small"]
+#     min_capacity = 1
+#     max_capacity = 3
+#     desired_capacity = 2
+#     disk_size = 20
+#     labels = { role = "general" }
+#     taints = []
+#   }
+# }
+# database_instances = {
+#   oms_db = {
+#     engine_version = "16.1"
+#     instance_class = "db.t3.micro"
+#     allocated_storage = 20
+#     storage_encrypted = true
+#     backup_retention = 7
+#     multi_az = false
+#     deletion_protection = false
+#   }
+# }
+# redis_node_type = "cache.t3.micro"
+# redis_num_cache_nodes = 1
+# enable_cost_optimization = true
+# enable_multi_az = false
+
+# Staging Environment Example:
+# environment = "staging"
+# kubernetes_version = "1.28"
+# node_groups = {
+#   general = {
+#     instance_types = ["t3.medium"]
+#     min_capacity = 2
+#     max_capacity = 6
+#     desired_capacity = 3
+#     disk_size = 30
+#     labels = { role = "general" }
+#     taints = []
+#   }
+# }
+# database_instances = {
+#   oms_db = {
+#     engine_version = "16.1"
+#     instance_class = "db.t3.small"
+#     allocated_storage = 50
+#     storage_encrypted = true
+#     backup_retention = 14
+#     multi_az = true
+#     deletion_protection = true
+#   }
+# }
+# redis_node_type = "cache.t3.small"
+# redis_num_cache_nodes = 2
+# enable_multi_az = true
+
+# Production Environment Example (use values above)
+# Ensure all security features are enabled
+# Use appropriate instance sizes
+# Enable deletion protection
+# Configure monitoring and alerting
+# Set up backup and disaster recovery
+# Enable compliance features

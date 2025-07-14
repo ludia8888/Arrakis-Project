@@ -1,0 +1,184 @@
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: arrakis-core
+  title: Arrakis Platform
+  description: |
+    Enterprise-grade microservices platform for ontology management, 
+    data processing, and knowledge graph operations.
+  annotations:
+    github.com/project-slug: Arrakis-Project
+    grafana/dashboard-selector: "system=arrakis"
+    prometheus.io/service-name: arrakis
+    backstage.io/techdocs-ref: dir:.
+  tags:
+    - platform
+    - microservices
+    - ontology
+    - knowledge-graph
+    - data-processing
+    - machine-learning
+spec:
+  owner: platform-team
+  domain: data-platform
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Domain
+metadata:
+  name: data-platform
+  title: Data Platform Domain
+  description: Domain encompassing all data processing, storage, and analytics capabilities
+spec:
+  owner: platform-team
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Group
+metadata:
+  name: platform-team
+  title: Platform Engineering Team
+  description: Team responsible for platform infrastructure and core services
+spec:
+  type: team
+  children: []
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Group
+metadata:
+  name: ml-team
+  title: Machine Learning Team
+  description: Team responsible for ML services and AI capabilities
+spec:
+  type: team
+  parent: platform-team
+  children: []
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: terminusdb
+  title: TerminusDB Graph Database
+  description: Primary graph database for ontology and schema storage
+  tags:
+    - database
+    - graph
+    - storage
+spec:
+  type: database
+  owner: platform-team
+  system: arrakis-core
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: postgres
+  title: PostgreSQL Database
+  description: Relational database for user data, audit logs, and job scheduling
+  tags:
+    - database
+    - relational
+    - postgresql
+spec:
+  type: database
+  owner: platform-team
+  system: arrakis-core
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: redis
+  title: Redis Cache
+  description: In-memory cache and session store
+  tags:
+    - cache
+    - session-store
+    - redis
+spec:
+  type: cache
+  owner: platform-team
+  system: arrakis-core
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: nats
+  title: NATS Message Broker
+  description: High-performance messaging system for event streaming
+  tags:
+    - messaging
+    - event-streaming
+    - nats
+spec:
+  type: messaging
+  owner: platform-team
+  system: arrakis-core
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: prometheus
+  title: Prometheus Monitoring
+  description: Metrics collection and monitoring system
+  tags:
+    - monitoring
+    - metrics
+    - prometheus
+spec:
+  type: monitoring
+  owner: platform-team
+  system: arrakis-core
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: grafana
+  title: Grafana Dashboards
+  description: Visualization and dashboarding for metrics and logs
+  tags:
+    - visualization
+    - dashboards
+    - grafana
+spec:
+  type: dashboard
+  owner: platform-team
+  system: arrakis-core
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: jaeger
+  title: Jaeger Tracing
+  description: Distributed tracing and observability platform
+  tags:
+    - tracing
+    - observability
+    - jaeger
+spec:
+  type: tracing
+  owner: platform-team
+  system: arrakis-core
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: nginx
+  title: Nginx API Gateway
+  description: Reverse proxy and API gateway for service routing
+  tags:
+    - gateway
+    - proxy
+    - nginx
+spec:
+  type: gateway
+  owner: platform-team
+  system: arrakis-core

@@ -1,0 +1,387 @@
+name: API Documentation Generation and Deployment
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - '**/*.py'
+      - '**/requirements.txt'
+      - 'docker-compose*.yml'
+      - '.github/workflows/api-documentation.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - '**/*.py'
+      - '**/requirements.txt'
+  
+  # Allow manual triggering
+  workflow_dispatch:
+    inputs:
+      deploy_to_swaggerhub:
+        description: 'Deploy to SwaggerHub'
+        required: false
+        default: 'false'
+        type: boolean
+      
+  # Schedule daily documentation updates
+  schedule:
+    - cron: '0 6 * * *'  # Daily at 6 AM UTC
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '18'
+
+jobs:
+  extract-and-validate:
+    name: Extract & Validate OpenAPI Specs
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: arrakis_password
+          POSTGRES_USER: arrakis_user
+          POSTGRES_DB: arrakis_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+          
+      nats:
+        image: nats:2.10-alpine
+        ports:
+          - 4222:4222
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install httpx pyyaml asyncio
+          
+      - name: Install Node.js dependencies
+        run: |
+          npm install -g @redocly/cli
+          
+      - name: Install Docker Compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          
+      - name: Start Arrakis services
+        run: |
+          # Create necessary environment files
+          echo "JWT_SECRET=test-jwt-secret-key-for-ci" > .env
+          echo "SECURITY_ENCRYPTION_KEY=test-32-byte-encryption-key-ci!!" >> .env
+          
+          # Start core infrastructure first
+          docker-compose up -d postgres redis nats
+          
+          # Wait for infrastructure to be ready
+          sleep 30
+          
+          # Start application services
+          docker-compose up -d --build
+          
+          # Wait for services to start
+          sleep 60
+          
+      - name: Check service health
+        run: |
+          echo "Checking service health..."
+          
+          # Function to check service health
+          check_service() {
+            local service_name=$1
+            local port=$2
+            local max_attempts=30
+            local attempt=1
+            
+            echo "Checking $service_name at localhost:$port..."
+            
+            while [ $attempt -le $max_attempts ]; do
+              if curl -f -s "http://localhost:$port/health" > /dev/null 2>&1; then
+                echo "✅ $service_name is healthy"
+                return 0
+              fi
+              
+              echo "Attempt $attempt/$max_attempts: $service_name not ready yet..."
+              sleep 10
+              ((attempt++))
+            done
+            
+            echo "❌ $service_name failed to become healthy"
+            return 1
+          }
+          
+          # Check all services
+          check_service "user-service" 8010 || true
+          check_service "audit-service" 8011 || true
+          check_service "data-kernel-service" 8080 || true
+          check_service "embedding-service" 8001 || true
+          check_service "scheduler-service" 8002 || true
+          check_service "event-gateway" 8003 || true
+          check_service "oms" 8000 || true
+          
+      - name: Extract OpenAPI specifications
+        run: |
+          mkdir -p docs/openapi
+          python scripts/extract_openapi_specs.py --output-dir docs/openapi
+          
+      - name: Validate OpenAPI specifications
+        run: |
+          echo "Validating OpenAPI specifications..."
+          
+          validation_failed=false
+          
+          for spec_file in docs/openapi/*.openapi.yaml; do
+            if [ -f "$spec_file" ]; then
+              echo "Validating $(basename "$spec_file")..."
+              if ! redocly lint "$spec_file"; then
+                echo "❌ Validation failed for $(basename "$spec_file")"
+                validation_failed=true
+              else
+                echo "✅ $(basename "$spec_file") is valid"
+              fi
+            fi
+          done
+          
+          if [ "$validation_failed" = true ]; then
+            echo "❌ Some OpenAPI specifications failed validation"
+            exit 1
+          fi
+          
+          echo "✅ All OpenAPI specifications are valid"
+          
+      - name: Generate API inventory
+        run: |
+          echo "Generating API inventory and documentation assets..."
+          
+          # Create comprehensive API inventory
+          python3 << 'EOF'
+          import json
+          import yaml
+          import os
+          from pathlib import Path
+          
+          docs_dir = Path("docs/openapi")
+          specs = {}
+          
+          for spec_file in docs_dir.glob("*.openapi.json"):
+              with open(spec_file, 'r') as f:
+                  spec = json.load(f)
+                  service_name = spec_file.stem.replace('.openapi', '')
+                  specs[service_name] = {
+                      'title': spec['info']['title'],
+                      'version': spec['info']['version'],
+                      'description': spec['info']['description'],
+                      'paths': len(spec.get('paths', {})),
+                      'servers': spec.get('servers', [])
+                  }
+          
+          # Generate GitHub-compatible inventory
+          inventory = {
+              'platform': 'Arrakis',
+              'generated_at': '2024-01-01T00:00:00Z',
+              'total_services': len(specs),
+              'services': specs,
+              'ci_build': os.environ.get('GITHUB_RUN_NUMBER', 'local'),
+              'commit_sha': os.environ.get('GITHUB_SHA', 'unknown')
+          }
+          
+          with open('docs/api_inventory.json', 'w') as f:
+              json.dump(inventory, f, indent=2)
+          
+          print(f"Generated inventory for {len(specs)} services")
+          EOF
+          
+      - name: Build documentation site
+        run: |
+          ./scripts/build_api_docs.sh --skip-validation
+          
+      - name: Upload documentation artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-documentation
+          path: |
+            docs/
+            !docs/**/*.pyc
+            !docs/**/__pycache__/
+          retention-days: 30
+          
+      - name: Upload OpenAPI specs artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-specifications
+          path: docs/openapi/
+          retention-days: 90
+
+  deploy-swaggerhub:
+    name: Deploy to SwaggerHub
+    runs-on: ubuntu-latest
+    needs: extract-and-validate
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_to_swaggerhub == 'true')
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Download OpenAPI specifications
+        uses: actions/download-artifact@v4
+        with:
+          name: openapi-specifications
+          path: docs/openapi/
+          
+      - name: Deploy to SwaggerHub
+        if: env.SWAGGERHUB_API_KEY != ''
+        env:
+          SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }}
+          SWAGGERHUB_OWNER: ${{ vars.SWAGGERHUB_OWNER || 'arrakis-platform' }}
+        run: |
+          echo "Deploying to SwaggerHub..."
+          
+          for spec_file in docs/openapi/*.openapi.json; do
+            if [ -f "$spec_file" ]; then
+              service_name=$(basename "$spec_file" .openapi.json)
+              echo "Uploading $service_name to SwaggerHub..."
+              
+              curl -X POST \
+                "https://api.swaggerhub.com/apis/${SWAGGERHUB_OWNER}/${service_name}" \
+                -H "Authorization: ${SWAGGERHUB_API_KEY}" \
+                -H "Content-Type: application/json" \
+                -d @"$spec_file" \
+                --fail-with-body || echo "Failed to upload $service_name"
+            fi
+          done
+
+  deploy-github-pages:
+    name: Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    needs: extract-and-validate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+      
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Download documentation
+        uses: actions/download-artifact@v4
+        with:
+          name: api-documentation
+          path: docs/
+          
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+        
+      - name: Upload to GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/build/
+          
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  notify-completion:
+    name: Notify Documentation Update
+    runs-on: ubuntu-latest
+    needs: [extract-and-validate, deploy-github-pages]
+    if: always()
+    
+    steps:
+      - name: Create summary
+        run: |
+          echo "# 📚 API Documentation Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Component | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| OpenAPI Extraction | ${{ needs.extract-and-validate.result == 'success' && '✅ Success' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| GitHub Pages Deploy | ${{ needs.deploy-github-pages.result == 'success' && '✅ Success' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 **Documentation URL**: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📋 **Generated at**: $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "🔄 **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('📚 API Documentation Preview')
+            );
+            
+            const commentBody = `## 📚 API Documentation Preview
+            
+            The API documentation has been updated for this PR.
+            
+            | Service | Status |
+            |---------|--------|
+            | Extract & Validate | ${{ needs.extract-and-validate.result == 'success' && '✅' || '❌' }} |
+            
+            📋 **Artifacts**: Check the workflow artifacts for generated documentation files.
+            
+            > This comment is automatically updated on each push.`;
+            
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: commentBody
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: commentBody
+              });
+            }

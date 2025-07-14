@@ -1,0 +1,555 @@
+name: Python Dependency Visualization
+
+on:
+  push:
+    paths:
+      - '*/requirements*.txt'
+      - '*/pyproject.toml'
+      - '*/setup.py'
+      - '**/*.py'
+      - '.github/workflows/dependency-visualization.yml'
+  pull_request:
+    paths:
+      - '*/requirements*.txt'
+      - '*/pyproject.toml'
+      - '*/setup.py'
+      - '**/*.py'
+  workflow_dispatch:
+    inputs:
+      service:
+        description: 'Specific service to analyze (leave empty for all)'
+        required: false
+        type: string
+      visualization_type:
+        description: 'Type of visualization'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - pydeps
+          - pyreverse
+          - import-graph
+
+env:
+  PYTHON_VERSION: '3.11'
+  GRAPHVIZ_VERSION: '2.50.0'
+
+jobs:
+  analyze-dependencies:
+    name: Analyze Python Dependencies
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - ontology-management-service
+          - user-service
+          - audit-service
+          - data-kernel-service
+          - embedding-service
+          - scheduler-service
+          - event-gateway
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y graphviz graphviz-dev
+          sudo apt-get install -y imagemagick
+          
+          # Install additional tools for visualization
+          sudo apt-get install -y xvfb
+
+      - name: Install Python visualization tools
+        run: |
+          pip install --upgrade pip
+          pip install pydeps[all] snakeviz pyreverse-ng importlib-metadata
+          pip install graphviz pygraphviz networkx matplotlib seaborn
+          pip install radon vulture bandit safety
+          pip install pipdeptree pip-audit
+
+      - name: Create visualization directories
+        run: |
+          mkdir -p docs/dependencies/${{ matrix.service }}/{pydeps,pyreverse,import-graph,metrics}
+          mkdir -p docs/dependencies/reports
+
+      - name: Install service dependencies
+        run: |
+          if [ -f "${{ matrix.service }}/requirements.txt" ]; then
+            echo "Installing dependencies for ${{ matrix.service }}"
+            pip install -r ${{ matrix.service }}/requirements.txt || true
+          fi
+          
+          if [ -f "${{ matrix.service }}/requirements-dev.txt" ]; then
+            pip install -r ${{ matrix.service }}/requirements-dev.txt || true
+          fi
+
+      - name: Generate pydeps visualizations
+        if: github.event.inputs.visualization_type == 'all' || github.event.inputs.visualization_type == 'pydeps'
+        run: |
+          cd ${{ matrix.service }}
+          
+          # Create pydeps configuration
+          cat > .pydeps <<EOF
+          [pydeps]
+          max-bacon = 3
+          cluster = true
+          show-cycles = true
+          noise-level = 3
+          max-cluster-size = 10
+          keep-target-cluster = true
+          rankdir = TB
+          EOF
+          
+          # Generate main dependency graph
+          echo "Generating main dependency graph for ${{ matrix.service }}"
+          pydeps . \
+            --max-bacon=3 \
+            --cluster \
+            --show-cycles \
+            --noise-level=3 \
+            -o ../docs/dependencies/${{ matrix.service }}/pydeps/main.svg \
+            -T svg || true
+          
+          # Generate focused graphs for key modules
+          for module in api core database shared middleware; do
+            if [ -d "$module" ]; then
+              echo "Generating dependency graph for $module"
+              pydeps $module \
+                --max-bacon=2 \
+                --cluster \
+                --show-cycles \
+                -o ../docs/dependencies/${{ matrix.service }}/pydeps/${module}.svg \
+                -T svg || true
+            fi
+          done
+          
+          # Generate external dependencies graph
+          echo "Generating external dependencies visualization"
+          pipdeptree --graph-output svg > ../docs/dependencies/${{ matrix.service }}/pydeps/external-deps.svg || true
+
+      - name: Generate pyreverse UML diagrams
+        if: github.event.inputs.visualization_type == 'all' || github.event.inputs.visualization_type == 'pyreverse'
+        run: |
+          cd ${{ matrix.service }}
+          
+          # Generate class diagrams
+          echo "Generating class diagrams for ${{ matrix.service }}"
+          pyreverse -o svg -p ${{ matrix.service }} \
+            --colorized \
+            --all-ancestors \
+            --all-associated \
+            --filter-mode=ALL \
+            -d ../docs/dependencies/${{ matrix.service }}/pyreverse/ \
+            . || true
+          
+          # Generate package diagrams
+          echo "Generating package diagrams"
+          pyreverse -o svg -p ${{ matrix.service }}_packages \
+            --colorized \
+            -k \
+            -d ../docs/dependencies/${{ matrix.service }}/pyreverse/ \
+            . || true
+
+      - name: Generate import graph visualization
+        if: github.event.inputs.visualization_type == 'all' || github.event.inputs.visualization_type == 'import-graph'
+        run: |
+          cd ${{ matrix.service }}
+          
+          # Create Python script for import analysis
+          cat > analyze_imports.py <<'EOF'
+          import ast
+          import os
+          import json
+          from pathlib import Path
+          import networkx as nx
+          import matplotlib.pyplot as plt
+          import seaborn as sns
+          from collections import defaultdict
+          
+          def analyze_imports(root_path):
+              import_graph = defaultdict(set)
+              module_imports = defaultdict(list)
+              
+              for path in Path(root_path).rglob("*.py"):
+                  if "test" in str(path) or "__pycache__" in str(path):
+                      continue
+                      
+                  try:
+                      with open(path, "r", encoding="utf-8") as f:
+                          tree = ast.parse(f.read())
+                          
+                      module_name = str(path.relative_to(root_path)).replace("/", ".").replace(".py", "")
+                      
+                      for node in ast.walk(tree):
+                          if isinstance(node, ast.Import):
+                              for alias in node.names:
+                                  import_graph[module_name].add(alias.name)
+                                  module_imports[module_name].append({
+                                      "type": "import",
+                                      "module": alias.name,
+                                      "line": node.lineno
+                                  })
+                          elif isinstance(node, ast.ImportFrom):
+                              if node.module:
+                                  import_graph[module_name].add(node.module)
+                                  module_imports[module_name].append({
+                                      "type": "from",
+                                      "module": node.module,
+                                      "items": [alias.name for alias in node.names],
+                                      "line": node.lineno
+                                  })
+                  except Exception as e:
+                      print(f"Error analyzing {path}: {e}")
+              
+              return dict(import_graph), dict(module_imports)
+          
+          def create_visualization(import_graph, output_path):
+              G = nx.DiGraph()
+              
+              for module, imports in import_graph.items():
+                  G.add_node(module)
+                  for imp in imports:
+                      if imp.startswith(module.split(".")[0]):
+                          G.add_edge(module, imp)
+              
+              plt.figure(figsize=(20, 16))
+              pos = nx.spring_layout(G, k=3, iterations=50)
+              
+              # Color nodes by module depth
+              node_colors = []
+              for node in G.nodes():
+                  depth = len(node.split("."))
+                  node_colors.append(depth)
+              
+              nx.draw(G, pos, 
+                      node_color=node_colors,
+                      cmap='viridis',
+                      with_labels=True,
+                      node_size=3000,
+                      font_size=8,
+                      font_weight='bold',
+                      arrows=True,
+                      edge_color='gray',
+                      alpha=0.7)
+              
+              plt.title("Import Dependency Graph", fontsize=16)
+              plt.tight_layout()
+              plt.savefig(output_path, dpi=300, bbox_inches='tight')
+              plt.close()
+              
+              # Generate metrics
+              metrics = {
+                  "total_modules": G.number_of_nodes(),
+                  "total_imports": G.number_of_edges(),
+                  "avg_imports_per_module": G.number_of_edges() / G.number_of_nodes() if G.number_of_nodes() > 0 else 0,
+                  "most_imported": sorted(G.in_degree(), key=lambda x: x[1], reverse=True)[:10],
+                  "most_importing": sorted(G.out_degree(), key=lambda x: x[1], reverse=True)[:10],
+                  "cycles": list(nx.simple_cycles(G))[:10]
+              }
+              
+              return metrics
+          
+          if __name__ == "__main__":
+              import_graph, module_imports = analyze_imports(".")
+              metrics = create_visualization(import_graph, "../docs/dependencies/${{ matrix.service }}/import-graph/imports.png")
+              
+              # Save import data
+              with open("../docs/dependencies/${{ matrix.service }}/import-graph/imports.json", "w") as f:
+                  json.dump({
+                      "import_graph": import_graph,
+                      "module_imports": module_imports,
+                      "metrics": metrics
+                  }, f, indent=2, default=str)
+          EOF
+          
+          python analyze_imports.py || true
+
+      - name: Generate code metrics
+        run: |
+          cd ${{ matrix.service }}
+          
+          # Cyclomatic complexity
+          echo "Analyzing cyclomatic complexity"
+          radon cc . -a -j > ../docs/dependencies/${{ matrix.service }}/metrics/complexity.json || true
+          
+          # Maintainability index
+          echo "Analyzing maintainability"
+          radon mi . -j > ../docs/dependencies/${{ matrix.service }}/metrics/maintainability.json || true
+          
+          # Code smells
+          echo "Detecting code smells"
+          vulture . --min-confidence 80 > ../docs/dependencies/${{ matrix.service }}/metrics/vulture.txt || true
+          
+          # Security issues
+          echo "Scanning for security issues"
+          bandit -r . -f json -o ../docs/dependencies/${{ matrix.service }}/metrics/security.json || true
+          
+          # Dependency vulnerabilities
+          echo "Checking dependency vulnerabilities"
+          safety check --json > ../docs/dependencies/${{ matrix.service }}/metrics/vulnerabilities.json || true
+          pip-audit --format json > ../docs/dependencies/${{ matrix.service }}/metrics/pip-audit.json || true
+
+      - name: Generate visualization report
+        run: |
+          cat > docs/dependencies/${{ matrix.service }}/README.md <<EOF
+          # Dependency Analysis: ${{ matrix.service }}
+          
+          Generated on: $(date -u '+%Y-%m-%d %H:%M:%S UTC')
+          
+          ## Dependency Graphs
+          
+          ### Main Dependencies (pydeps)
+          ![Main Dependencies](pydeps/main.svg)
+          
+          ### External Dependencies
+          ![External Dependencies](pydeps/external-deps.svg)
+          
+          ### Class Diagram (pyreverse)
+          ![Classes](pyreverse/classes_${{ matrix.service }}.svg)
+          
+          ### Package Diagram (pyreverse)
+          ![Packages](pyreverse/packages_${{ matrix.service }}_packages.svg)
+          
+          ### Import Graph
+          ![Import Graph](import-graph/imports.png)
+          
+          ## Metrics Summary
+          
+          ### Complexity Analysis
+          - See [complexity.json](metrics/complexity.json) for detailed cyclomatic complexity
+          - See [maintainability.json](metrics/maintainability.json) for maintainability index
+          
+          ### Code Quality
+          - [Code smells](metrics/vulture.txt) detected by Vulture
+          - [Security issues](metrics/security.json) found by Bandit
+          
+          ### Dependency Security
+          - [Vulnerability scan](metrics/vulnerabilities.json) by Safety
+          - [Pip audit results](metrics/pip-audit.json)
+          
+          ## Module Structure
+          
+          EOF
+          
+          # Add module structure analysis
+          cd ${{ matrix.service }}
+          find . -name "*.py" -not -path "./test*" -not -path "./__pycache__*" | \
+            sed 's|^\./||' | \
+            sort | \
+            awk -F/ '{
+              depth = NF-1;
+              for (i = 0; i < depth; i++) printf "  ";
+              print "- " $NF
+            }' >> ../docs/dependencies/${{ matrix.service }}/README.md
+
+      - name: Setup snakeviz for profiling
+        run: |
+          # Create profiling setup script
+          cat > ${{ matrix.service }}/profile_setup.py <<'EOF'
+          import cProfile
+          import pstats
+          import os
+          
+          def profile_service():
+              """Profile service startup and basic operations"""
+              profiler = cProfile.Profile()
+              
+              # Add service-specific profiling code here
+              # This is a template that should be customized per service
+              
+              profiler.disable()
+              
+              # Save profile data
+              profile_dir = "../docs/dependencies/${{ matrix.service }}/profile"
+              os.makedirs(profile_dir, exist_ok=True)
+              
+              profiler.dump_stats(f"{profile_dir}/startup.prof")
+              
+              # Generate text report
+              stats = pstats.Stats(profiler)
+              with open(f"{profile_dir}/profile_report.txt", "w") as f:
+                  stats.stream = f
+                  stats.strip_dirs()
+                  stats.sort_stats('cumulative')
+                  stats.print_stats(50)
+              
+              return f"{profile_dir}/startup.prof"
+          
+          if __name__ == "__main__":
+              prof_file = profile_service()
+              print(f"Profile saved to: {prof_file}")
+              print("Run 'snakeviz {prof_file}' to visualize")
+          EOF
+
+      - name: Upload dependency visualizations
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-viz-${{ matrix.service }}
+          path: docs/dependencies/${{ matrix.service }}/
+          retention-days: 30
+
+  generate-combined-report:
+    name: Generate Combined Report
+    runs-on: ubuntu-latest
+    needs: analyze-dependencies
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: docs/dependencies/
+
+      - name: Generate combined visualization report
+        run: |
+          cat > docs/dependencies/README.md <<'EOF'
+          # Arrakis Project - Dependency Analysis Report
+          
+          This report provides comprehensive dependency analysis for all microservices in the Arrakis project.
+          
+          ## Services
+          
+          - [Ontology Management Service](./dependency-viz-ontology-management-service/)
+          - [User Service](./dependency-viz-user-service/)
+          - [Audit Service](./dependency-viz-audit-service/)
+          - [Data Kernel Service](./dependency-viz-data-kernel-service/)
+          - [Embedding Service](./dependency-viz-embedding-service/)
+          - [Scheduler Service](./dependency-viz-scheduler-service/)
+          - [Event Gateway](./dependency-viz-event-gateway/)
+          
+          ## Visualization Types
+          
+          ### 1. PyDeps Graphs
+          - **Purpose**: Show Python module dependencies and import relationships
+          - **Features**: Clustering, cycle detection, bacon distance filtering
+          - **Files**: `pydeps/main.svg`, module-specific graphs
+          
+          ### 2. PyReverse UML Diagrams
+          - **Purpose**: Generate UML class and package diagrams
+          - **Features**: Inheritance, associations, package structure
+          - **Files**: `pyreverse/classes_*.svg`, `pyreverse/packages_*.svg`
+          
+          ### 3. Import Analysis
+          - **Purpose**: Custom import relationship analysis
+          - **Features**: Import metrics, circular dependencies, module coupling
+          - **Files**: `import-graph/imports.png`, `import-graph/imports.json`
+          
+          ### 4. Code Metrics
+          - **Complexity**: Cyclomatic complexity analysis
+          - **Maintainability**: Maintainability index scores
+          - **Security**: Bandit security scanning results
+          - **Vulnerabilities**: Dependency vulnerability scanning
+          
+          ## Using Snakeviz for Performance Profiling
+          
+          Each service includes a `profile_setup.py` script for performance profiling:
+          
+          ```bash
+          cd <service-directory>
+          python profile_setup.py
+          snakeviz ../docs/dependencies/<service>/profile/startup.prof
+          ```
+          
+          ## Interpreting the Visualizations
+          
+          ### Dependency Cycles
+          Red lines in pydeps graphs indicate circular dependencies that should be refactored.
+          
+          ### Module Clustering
+          Tightly coupled modules appear in the same cluster, indicating areas for potential refactoring.
+          
+          ### Complexity Metrics
+          - **A rating**: Low complexity (1-5)
+          - **B rating**: Medium complexity (6-10)
+          - **C rating**: High complexity (11-20)
+          - **D+ rating**: Very high complexity (20+)
+          
+          ### Security Grades
+          - **High**: Critical security issues requiring immediate attention
+          - **Medium**: Important issues that should be addressed
+          - **Low**: Minor issues or false positives
+          
+          ## Automation
+          
+          This analysis is automatically generated on:
+          - Push to main branch (Python file changes)
+          - Pull requests affecting Python code
+          - Manual workflow dispatch
+          
+          ## Next Steps
+          
+          1. Review circular dependencies and refactor where necessary
+          2. Address high-complexity modules
+          3. Fix security vulnerabilities
+          4. Update outdated dependencies
+          5. Improve test coverage for complex modules
+          EOF
+
+      - name: Commit visualization reports
+        if: github.ref == 'refs/heads/main'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add docs/dependencies/
+          git commit -m "chore: update dependency visualizations [skip ci]" || echo "No changes to commit"
+          git push
+
+      - name: Create PR comment with summary
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let comment = '## 📊 Dependency Analysis Summary\n\n';
+            
+            const services = [
+              'ontology-management-service',
+              'user-service',
+              'audit-service',
+              'data-kernel-service',
+              'embedding-service',
+              'scheduler-service',
+              'event-gateway'
+            ];
+            
+            for (const service of services) {
+              const metricsPath = `docs/dependencies/dependency-viz-${service}/metrics/`;
+              
+              try {
+                // Read complexity metrics
+                if (fs.existsSync(`${metricsPath}complexity.json`)) {
+                  const complexity = JSON.parse(fs.readFileSync(`${metricsPath}complexity.json`, 'utf8'));
+                  const highComplexity = complexity.filter(item => item.complexity > 10).length;
+                  if (highComplexity > 0) {
+                    comment += `⚠️ **${service}**: ${highComplexity} functions with high complexity\n`;
+                  }
+                }
+                
+                // Read security issues
+                if (fs.existsSync(`${metricsPath}security.json`)) {
+                  const security = JSON.parse(fs.readFileSync(`${metricsPath}security.json`, 'utf8'));
+                  const issues = security.results.filter(r => r.issue_severity === 'HIGH').length;
+                  if (issues > 0) {
+                    comment += `🔒 **${service}**: ${issues} high-severity security issues\n`;
+                  }
+                }
+              } catch (e) {
+                console.error(`Error processing ${service}: ${e}`);
+              }
+            }
+            
+            comment += '\n[View full dependency analysis](../tree/${{ github.head_ref }}/docs/dependencies/)';
+            
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });

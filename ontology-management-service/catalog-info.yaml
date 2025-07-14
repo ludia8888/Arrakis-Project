@@ -1,0 +1,165 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ontology-management-service
+  title: Ontology Management Service (OMS)
+  description: |
+    Core service for managing ontologies, schemas, and data models in the Arrakis platform.
+    Currently transitioning from monolith to microservices architecture.
+  annotations:
+    github.com/project-slug: Arrakis-Project/ontology-management-service
+    grafana/dashboard-selector: "service=oms"
+    prometheus.io/service-name: ontology-management-service
+    jaeger.io/service-name: oms
+    backstage.io/techdocs-ref: dir:.
+  tags:
+    - ontology
+    - schema-management
+    - graphql
+    - rest-api
+    - websocket
+    - python
+    - fastapi
+    - terminusdb
+    - graph-database
+    - microservices-migration
+  links:
+    - url: http://localhost:8000/docs
+      title: OpenAPI Documentation
+      icon: docs
+    - url: http://localhost:8006/graphql
+      title: GraphQL Playground
+      icon: graphql
+    - url: http://localhost:8090/metrics
+      title: Prometheus Metrics
+      icon: metrics
+    - url: http://localhost:16686/search?service=oms
+      title: Jaeger Traces
+      icon: traces
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-team
+  system: arrakis-core
+  dependsOn:
+    - component:user-service
+    - component:audit-service
+    - component:data-kernel-service
+    - component:embedding-service
+    - component:scheduler-service
+    - component:event-gateway
+    - resource:terminusdb
+    - resource:postgres
+    - resource:redis
+    - resource:nats
+  consumesApis:
+    - user-service-api
+    - audit-service-api
+    - data-kernel-grpc
+    - embedding-service-grpc
+    - scheduler-service-grpc
+    - event-gateway-grpc
+  providesApis:
+    - oms-rest-api
+    - oms-graphql-api
+    - oms-websocket-api
+    - oms-grpc-api
+  
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: oms-rest-api
+  title: OMS REST API
+  description: RESTful API for ontology and schema management operations
+  tags:
+    - rest
+    - openapi
+    - v1
+spec:
+  type: openapi
+  lifecycle: production
+  owner: platform-team
+  system: arrakis-core
+  definition: |
+    openapi: 3.0.3
+    info:
+      title: Ontology Management Service
+      version: 2.0.0
+      description: Core service for managing ontologies, schemas, and data models
+    servers:
+      - url: http://localhost:8000
+        description: Local development
+    paths:
+      /health:
+        get:
+          summary: Health check endpoint
+          responses:
+            '200':
+              description: Service is healthy
+      /api/v1/schemas:
+        get:
+          summary: List all schemas
+          responses:
+            '200':
+              description: List of schemas
+        post:
+          summary: Create a new schema
+          responses:
+            '201':
+              description: Schema created
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: oms-graphql-api
+  title: OMS GraphQL API
+  description: GraphQL interface for complex ontology queries and real-time subscriptions
+  tags:
+    - graphql
+    - subscriptions
+    - real-time
+spec:
+  type: graphql
+  lifecycle: production
+  owner: platform-team
+  system: arrakis-core
+  definition:
+    $text: http://localhost:8006/graphql
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: oms-websocket-api
+  title: OMS WebSocket API
+  description: WebSocket interface for real-time ontology updates and notifications
+  tags:
+    - websocket
+    - real-time
+    - notifications
+spec:
+  type: asyncapi
+  lifecycle: production
+  owner: platform-team
+  system: arrakis-core
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: oms-grpc-api
+  title: OMS gRPC API
+  description: High-performance gRPC interface for branch and schema operations
+  tags:
+    - grpc
+    - branch-service
+    - schema-service
+spec:
+  type: grpc
+  lifecycle: production
+  owner: platform-team
+  system: arrakis-core
+  definition: |
+    proto files: grpc_services/branch_service.proto, grpc_services/schema_service.proto

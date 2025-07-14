@@ -1,0 +1,69 @@
+# TechDocs configuration for Ontology Management Service
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ontology-management-service
+  description: Core service for managing ontology schemas, branches, and versioning
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-team
+
+techdocs:
+  builder: 'local'
+  generator:
+    runIn: 'local'
+  publisher:
+    type: 'local'
+    
+build:
+  dependencies:
+    - python: ">=3.9"
+    - postgresql: ">=13"
+    - redis: ">=6.2"
+    - terminusdb: "latest"
+    
+documentation:
+  structure:
+    - name: Overview
+      path: docs/README.md
+    - name: API Reference
+      items:
+        - name: Schema Management
+          path: docs/api/schema.md
+        - name: Branch Operations
+          path: docs/api/branches.md
+        - name: Time Travel
+          path: docs/api/time-travel.md
+        - name: Document Management
+          path: docs/api/documents.md
+        - name: GraphQL API
+          path: docs/api/graphql.md
+    - name: Architecture
+      items:
+        - name: System Design
+          path: docs/architecture/system-design.md
+        - name: Database Schema
+          path: docs/architecture/database.md
+        - name: Event Model
+          path: docs/architecture/events.md
+    - name: Operations
+      items:
+        - name: Deployment Guide
+          path: docs/ops/deployment.md
+        - name: Monitoring
+          path: docs/ops/monitoring.md
+        - name: Troubleshooting
+          path: docs/ops/troubleshooting.md
+        - name: Performance Tuning
+          path: docs/ops/performance.md
+    - name: Development
+      items:
+        - name: Setup Guide
+          path: docs/dev/setup.md
+        - name: Testing Strategy
+          path: docs/dev/testing.md
+        - name: Contributing
+          path: docs/dev/contributing.md

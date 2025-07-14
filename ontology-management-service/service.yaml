@@ -1,0 +1,200 @@
+# Service metadata for Ontology Management Service
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ontology-management-service
+  title: Ontology Management Service
+  description: Core service for managing ontology schemas, branches, and versioning
+  tags:
+    - python
+    - fastapi
+    - postgresql
+    - redis
+    - terminusdb
+    - core-service
+  links:
+    - url: https://oms.arrakis.internal/docs
+      title: API Documentation
+      icon: docs
+    - url: https://grafana.arrakis.internal/d/oms-dashboard
+      title: Grafana Dashboard
+      icon: dashboard
+    - url: https://prometheus.arrakis.internal/graph?g0.expr=up{job="oms"}
+      title: Prometheus Metrics
+      icon: dashboard
+  annotations:
+    github.com/project-slug: arrakis/ontology-management-service
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/metrics"
+    prometheus.io/port: "8000"
+    backstage.io/kubernetes-id: ontology-management-service
+    datadoghq.com/service-name: ontology-management-service
+    pagerduty.com/integration-key: "PD-OMS-KEY"
+
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-team
+  system: arrakis
+  
+  # Service dependencies
+  dependsOn:
+    - component:user-service
+    - component:audit-service
+    - component:data-kernel-service
+    - component:event-gateway
+    - resource:postgresql-primary
+    - resource:redis-cluster
+    - resource:terminusdb-cluster
+    
+  # Health checks
+  healthChecks:
+    - name: http
+      endpoint: /health
+      interval: 30s
+      timeout: 5s
+      successThreshold: 1
+      failureThreshold: 3
+    - name: deep
+      endpoint: /health/deep
+      interval: 60s
+      timeout: 10s
+      successThreshold: 1
+      failureThreshold: 2
+      
+  # Metrics and SLOs
+  metrics:
+    - name: request_rate
+      query: rate(http_requests_total{service="ontology-management-service"}[5m])
+      unit: req/s
+    - name: error_rate
+      query: rate(http_requests_total{service="ontology-management-service",status=~"5.."}[5m])
+      unit: errors/s
+    - name: p99_latency
+      query: histogram_quantile(0.99, rate(http_request_duration_seconds_bucket{service="ontology-management-service"}[5m]))
+      unit: seconds
+    - name: schema_operations
+      query: rate(oms_schema_operations_total[5m])
+      unit: ops/s
+    - name: branch_operations
+      query: rate(oms_branch_operations_total[5m])
+      unit: ops/s
+      
+  slos:
+    - name: availability
+      description: Service should be available 99.9% of the time
+      target: 99.9
+      window: 30d
+      indicator:
+        ratio:
+          good: http_requests_total{service="ontology-management-service",status!~"5.."}
+          total: http_requests_total{service="ontology-management-service"}
+    - name: latency
+      description: 95% of requests should complete within 200ms
+      target: 95
+      window: 7d
+      indicator:
+        percentile:
+          metric: http_request_duration_seconds{service="ontology-management-service"}
+          percentile: 95
+          threshold: 0.2
+    - name: error_budget
+      description: Error rate should be below 0.1%
+      target: 99.9
+      window: 7d
+      indicator:
+        ratio:
+          good: http_requests_total{service="ontology-management-service",status!~"5.."}
+          total: http_requests_total{service="ontology-management-service"}
+          
+  # Alerts
+  alerts:
+    - name: OMSHighErrorRate
+      condition: rate(http_requests_total{service="ontology-management-service",status=~"5.."}[5m]) > 0.05
+      severity: warning
+      annotations:
+        summary: High error rate in OMS
+        runbook: https://runbooks.arrakis.internal/oms/high-error-rate
+    - name: OMSHighLatency
+      condition: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{service="ontology-management-service"}[5m])) > 0.5
+      severity: warning
+      annotations:
+        summary: High latency in OMS
+        runbook: https://runbooks.arrakis.internal/oms/high-latency
+    - name: OMSDown
+      condition: up{job="ontology-management-service"} == 0
+      severity: critical
+      annotations:
+        summary: OMS is down
+        runbook: https://runbooks.arrakis.internal/oms/service-down
+    - name: OMSMemoryHigh
+      condition: container_memory_usage_bytes{pod=~"ontology-management-service.*"} / container_spec_memory_limit_bytes > 0.8
+      severity: warning
+      annotations:
+        summary: OMS memory usage is high
+        runbook: https://runbooks.arrakis.internal/oms/high-memory
+        
+  # Runbooks
+  runbooks:
+    - name: Service Down
+      url: https://runbooks.arrakis.internal/oms/service-down
+      description: Steps to diagnose and recover from service downtime
+      steps:
+        - Check pod status with kubectl get pods
+        - Check recent deployments
+        - Check database connectivity
+        - Check Redis connectivity
+        - Review error logs
+        - Restart service if necessary
+    - name: High Error Rate
+      url: https://runbooks.arrakis.internal/oms/high-error-rate
+      description: Troubleshooting high error rates
+      steps:
+        - Check error logs for patterns
+        - Verify database performance
+        - Check for recent code changes
+        - Review request patterns
+        - Scale up if load-related
+    - name: Performance Issues
+      url: https://runbooks.arrakis.internal/oms/performance
+      description: Diagnosing performance problems
+      steps:
+        - Check CPU and memory metrics
+        - Review slow query logs
+        - Check connection pool usage
+        - Analyze request patterns
+        - Review cache hit rates
+        
+  # Deployment configuration
+  deployment:
+    replicas:
+      min: 3
+      max: 10
+      targetCPU: 70
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "1Gi"
+      limits:
+        cpu: "2000m"
+        memory: "4Gi"
+    env:
+      - name: ENVIRONMENT
+        value: production
+      - name: LOG_LEVEL
+        value: INFO
+      - name: WORKERS
+        value: "4"
+    probes:
+      liveness:
+        httpGet:
+          path: /health
+          port: 8000
+        initialDelaySeconds: 30
+        periodSeconds: 30
+      readiness:
+        httpGet:
+          path: /health/ready
+          port: 8000
+        initialDelaySeconds: 10
+        periodSeconds: 10
