@@ -1,0 +1,238 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: scheduler-service
+  title: Job Scheduler Service
+  description: |
+    Distributed job scheduling and task management service.
+    Handles cron jobs, delayed tasks, and workflow orchestration.
+  annotations:
+    github.com/project-slug: Arrakis-Project/scheduler-service
+    grafana/dashboard-selector: "service=scheduler-service"
+    prometheus.io/service-name: scheduler-service
+    jaeger.io/service-name: scheduler-service
+    backstage.io/techdocs-ref: dir:.
+  tags:
+    - scheduling
+    - jobs
+    - cron
+    - workflow
+    - task-management
+    - python
+    - fastapi
+    - grpc
+    - redis
+    - postgresql
+    - microservice
+  links:
+    - url: http://localhost:8002/docs
+      title: OpenAPI Documentation
+      icon: docs
+    - url: http://localhost:8002/health
+      title: Health Check
+      icon: health
+    - url: http://localhost:8002/metrics
+      title: Prometheus Metrics
+      icon: metrics
+    - url: http://localhost:16686/search?service=scheduler-service
+      title: Jaeger Traces
+      icon: traces
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-team
+  system: arrakis-core
+  dependsOn:
+    - resource:redis
+    - resource:postgres
+    - component:data-kernel-service
+  consumesApis:
+    - data-kernel-grpc
+  providesApis:
+    - scheduler-service-rest-api
+    - scheduler-service-grpc
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: scheduler-service-rest-api
+  title: Scheduler Service REST API
+  description: RESTful API for job scheduling and task management
+  tags:
+    - rest
+    - openapi
+    - scheduling
+    - jobs
+spec:
+  type: openapi
+  lifecycle: production
+  owner: platform-team
+  system: arrakis-core
+  definition: |
+    openapi: 3.0.3
+    info:
+      title: Job Scheduler Service
+      version: 1.0.0
+      description: Distributed job scheduling and task management
+    servers:
+      - url: http://localhost:8002
+        description: Local development
+    paths:
+      /health:
+        get:
+          summary: Health check endpoint
+          responses:
+            '200':
+              description: Service is healthy
+      /metrics:
+        get:
+          summary: Prometheus metrics endpoint
+          responses:
+            '200':
+              description: Metrics in Prometheus format
+      /api/v1/jobs:
+        post:
+          summary: Create a new job
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    description:
+                      type: string
+                    schedule:
+                      type: string
+                    job_type:
+                      type: string
+                    payload:
+                      type: object
+          responses:
+            '201':
+              description: Job created
+        get:
+          summary: List all jobs
+          parameters:
+            - name: status
+              in: query
+              schema:
+                type: string
+            - name: job_type
+              in: query
+              schema:
+                type: string
+          responses:
+            '200':
+              description: List of jobs
+      /api/v1/jobs/{job_id}:
+        get:
+          summary: Get job details
+          parameters:
+            - name: job_id
+              in: path
+              required: true
+              schema:
+                type: string
+          responses:
+            '200':
+              description: Job details
+        put:
+          summary: Update job
+          parameters:
+            - name: job_id
+              in: path
+              required: true
+              schema:
+                type: string
+          responses:
+            '200':
+              description: Job updated
+        delete:
+          summary: Delete job
+          parameters:
+            - name: job_id
+              in: path
+              required: true
+              schema:
+                type: string
+          responses:
+            '204':
+              description: Job deleted
+      /api/v1/jobs/{job_id}/run:
+        post:
+          summary: Manually trigger job execution
+          parameters:
+            - name: job_id
+              in: path
+              required: true
+              schema:
+                type: string
+          responses:
+            '202':
+              description: Job execution triggered
+      /api/v1/jobs/{job_id}/status:
+        get:
+          summary: Get job execution status
+          parameters:
+            - name: job_id
+              in: path
+              required: true
+              schema:
+                type: string
+          responses:
+            '200':
+              description: Job status
+      /api/v1/jobs/{job_id}/history:
+        get:
+          summary: Get job execution history
+          parameters:
+            - name: job_id
+              in: path
+              required: true
+              schema:
+                type: string
+          responses:
+            '200':
+              description: Job execution history
+      /api/v1/scheduler/pause:
+        post:
+          summary: Pause the scheduler
+          responses:
+            '200':
+              description: Scheduler paused
+      /api/v1/scheduler/resume:
+        post:
+          summary: Resume the scheduler
+          responses:
+            '200':
+              description: Scheduler resumed
+      /api/v1/scheduler/status:
+        get:
+          summary: Get scheduler status
+          responses:
+            '200':
+              description: Scheduler status
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: scheduler-service-grpc
+  title: Scheduler Service gRPC API
+  description: High-performance gRPC interface for scheduling operations
+  tags:
+    - grpc
+    - high-performance
+    - scheduling
+spec:
+  type: grpc
+  lifecycle: production
+  owner: platform-team
+  system: arrakis-core
+  definition: |
+    proto file: proto/scheduler_service.proto
+    endpoint: localhost:50056

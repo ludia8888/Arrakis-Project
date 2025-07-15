@@ -2,16 +2,16 @@
 
 from .service import HistoryEventPublisher as HistoryService
 from .models import (
-    AuditEvent,
-    ResourceType,
-    ChangeOperation,
-    ChangeDetail
+ AuditEvent,
+ ResourceType,
+ ChangeOperation,
+ ChangeDetail
 )
 
 __all__ = [
-    "HistoryService",
-    "AuditEvent",
-    "ResourceType",
-    "ChangeOperation",
-    "ChangeDetail"
+ "HistoryService",
+ "AuditEvent",
+ "ResourceType",
+ "ChangeOperation",
+ "ChangeDetail"
 ]

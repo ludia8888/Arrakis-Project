@@ -1,0 +1,235 @@
+# Service metadata for Event Gateway
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: event-gateway
+  title: Event Gateway
+  description: NATS-based event distribution service with CloudEvents support
+  tags:
+    - python
+    - fastapi
+    - grpc
+    - nats
+    - cloudevents
+    - event-driven
+    - messaging
+    - websockets
+  links:
+    - url: https://events.arrakis.internal/docs
+      title: API Documentation
+      icon: docs
+    - url: https://grafana.arrakis.internal/d/event-gateway-dashboard
+      title: Grafana Dashboard
+      icon: dashboard
+    - url: https://prometheus.arrakis.internal/graph?g0.expr=up{job="event-gateway"}
+      title: Prometheus Metrics
+      icon: dashboard
+    - url: https://nats.arrakis.internal
+      title: NATS Console
+      icon: messaging
+  annotations:
+    github.com/project-slug: arrakis/event-gateway
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/metrics"
+    prometheus.io/port: "8003"
+    backstage.io/kubernetes-id: event-gateway
+    datadoghq.com/service-name: event-gateway
+    pagerduty.com/integration-key: "PD-EVENT-GATEWAY-KEY"
+
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-team
+  system: arrakis
+
+  # Service dependencies
+  dependsOn:
+    - component:user-service
+    - component:audit-service
+    - resource:nats-cluster
+    - resource:redis-cluster
+
+  # Health checks
+  healthChecks:
+    - name: http
+      endpoint: /health
+      interval: 30s
+      timeout: 5s
+      successThreshold: 1
+      failureThreshold: 3
+    - name: nats
+      endpoint: /health
+      interval: 60s
+      timeout: 10s
+      successThreshold: 1
+      failureThreshold: 2
+
+  # Metrics and SLOs
+  metrics:
+    - name: events_published
+      query: rate(event_gateway_events_published_total[5m])
+      unit: events/s
+    - name: events_delivered
+      query: rate(event_gateway_events_delivered_total[5m])
+      unit: events/s
+    - name: webhook_deliveries
+      query: rate(event_gateway_webhook_deliveries_total[5m])
+      unit: deliveries/s
+    - name: active_subscriptions
+      query: event_gateway_active_subscriptions
+      unit: subscriptions
+    - name: event_processing_latency
+      query: histogram_quantile(0.95, rate(event_gateway_processing_seconds_bucket[5m]))
+      unit: seconds
+    - name: websocket_connections
+      query: event_gateway_websocket_connections_active
+      unit: connections
+
+  slos:
+    - name: availability
+      description: Service should be available 99.9% of the time
+      target: 99.9
+      window: 30d
+      indicator:
+        ratio:
+          good: http_requests_total{service="event-gateway",status!~"5.."}
+          total: http_requests_total{service="event-gateway"}
+    - name: event_delivery_reliability
+      description: 99.9% of events should be delivered successfully
+      target: 99.9
+      window: 7d
+      indicator:
+        ratio:
+          good: event_gateway_events_delivered_total{status="success"}
+          total: event_gateway_events_delivered_total
+    - name: event_processing_latency
+      description: 95% of events should be processed within 100ms
+      target: 95
+      window: 7d
+      indicator:
+        percentile:
+          metric: event_gateway_processing_seconds
+          percentile: 95
+          threshold: 0.1
+
+  # Alerts
+  alerts:
+    - name: EventGatewayDown
+      condition: up{job="event-gateway"} == 0
+      severity: critical
+      annotations:
+        summary: Event Gateway is down
+        runbook: https://runbooks.arrakis.internal/event-gateway/service-down
+    - name: NATSConnectionFailure
+      condition: event_gateway_nats_connection_status == 0
+      severity: critical
+      annotations:
+        summary: NATS connection failure
+        runbook: https://runbooks.arrakis.internal/event-gateway/nats-connection
+    - name: HighEventProcessingLatency
+      condition: histogram_quantile(0.95, rate(event_gateway_processing_seconds_bucket[5m])) > 0.5
+      severity: warning
+      annotations:
+        summary: High event processing latency
+        runbook: https://runbooks.arrakis.internal/event-gateway/high-latency
+    - name: EventDeliveryFailures
+      condition: rate(event_gateway_events_delivered_total{status="failure"}[5m]) > 0.1
+      severity: warning
+      annotations:
+        summary: Event delivery failures detected
+        runbook: https://runbooks.arrakis.internal/event-gateway/delivery-failures
+    - name: WebhookDeliveryFailures
+      condition: rate(event_gateway_webhook_deliveries_total{status="failure"}[5m]) > 0.05
+      severity: warning
+      annotations:
+        summary: Webhook delivery failures
+        runbook: https://runbooks.arrakis.internal/event-gateway/webhook-failures
+
+  # Runbooks
+  runbooks:
+    - name: Service Down
+      url: https://runbooks.arrakis.internal/event-gateway/service-down
+      description: Steps to diagnose and recover from service downtime
+      steps:
+        - Check pod status with kubectl get pods
+        - Verify NATS cluster health
+        - Check network connectivity
+        - Review error logs
+        - Restart service if necessary
+    - name: NATS Connection Issues
+      url: https://runbooks.arrakis.internal/event-gateway/nats-connection
+      description: Troubleshooting NATS connectivity
+      steps:
+        - Check NATS cluster status
+        - Verify network policies
+        - Check authentication credentials
+        - Review connection configuration
+        - Restart NATS connection
+    - name: Event Processing Issues
+      url: https://runbooks.arrakis.internal/event-gateway/high-latency
+      description: Optimizing event processing performance
+      steps:
+        - Check event queue depth
+        - Review processing metrics
+        - Analyze event patterns
+        - Scale horizontally if needed
+        - Optimize event handlers
+
+  # Deployment configuration
+  deployment:
+    replicas:
+      min: 3
+      max: 10
+      targetCPU: 70
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "1Gi"
+      limits:
+        cpu: "2000m"
+        memory: "4Gi"
+    env:
+      - name: ENVIRONMENT
+        value: production
+      - name: LOG_LEVEL
+        value: INFO
+      - name: NATS_URL
+        value: "nats://nats-cluster:4222"
+      - name: MAX_RECONNECT_ATTEMPTS
+        value: "10"
+      - name: WEBHOOK_TIMEOUT
+        value: "30"
+      - name: MAX_PAYLOAD_SIZE
+        value: "1048576"
+    probes:
+      liveness:
+        httpGet:
+          path: /health
+          port: 8003
+        initialDelaySeconds: 30
+        periodSeconds: 30
+      readiness:
+        httpGet:
+          path: /health
+          port: 8003
+        initialDelaySeconds: 10
+        periodSeconds: 10
+      grpc:
+        port: 50054
+        service: health
+
+  # Event configuration
+  events:
+    default_stream_config:
+      subjects: ["events.>"]
+      retention: "limits"
+      max_age: "24h"
+      max_msgs: 1000000
+      max_bytes: "1GB"
+      storage: "file"
+      replicas: 3
+    webhook_retry_policy:
+      max_retries: 3
+      retry_delay: "5s"
+      timeout: "30s"
+      backoff_factor: 2

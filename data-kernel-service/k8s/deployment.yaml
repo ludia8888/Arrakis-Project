@@ -1,0 +1,484 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: data-kernel-service
+  labels:
+    app: data-kernel-service
+    istio-injection: enabled
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: data-kernel-service
+  namespace: data-kernel-service
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/data-kernel-service-irsa-role
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: data-kernel-service-config
+  namespace: data-kernel-service
+data:
+  APP_NAME: "data-kernel-service"
+  APP_ENV: "production"
+  LOG_LEVEL: "info"
+  PORT: "8001"
+  GRPC_PORT: "50051"
+  TERMINUS_DB_SERVER: "https://terminus-db.internal.example.com:6363"
+  TERMINUS_DB_ORG: "arrakis"
+  TERMINUS_DB_DB: "ontology"
+  QUERY_TIMEOUT_SECONDS: "300"
+  MAX_QUERY_SIZE_MB: "100"
+  CACHE_TTL_SECONDS: "3600"
+  BULK_INSERT_BATCH_SIZE: "1000"
+  CONNECTION_POOL_SIZE: "20"
+  CONNECTION_TIMEOUT_SECONDS: "30"
+  QUERY_RETRY_ATTEMPTS: "3"
+  QUERY_RETRY_DELAY_MS: "1000"
+  ENABLE_QUERY_CACHE: "true"
+  ENABLE_RESULT_STREAMING: "true"
+  MAX_CONCURRENT_QUERIES: "50"
+  MEMORY_LIMIT_PER_QUERY_MB: "512"
+  ENABLE_QUERY_PROFILING: "true"
+  PARTITION_SIZE_MB: "256"
+  ENABLE_DISTRIBUTED_QUERIES: "true"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: data-kernel-service-secrets
+  namespace: data-kernel-service
+type: Opaque
+stringData:
+  TERMINUS_DB_USER: "admin"
+  TERMINUS_DB_PASS: "your-terminus-password"
+  TERMINUS_DB_TOKEN: "your-terminus-api-token"
+  DATABASE_URL: "postgresql://data_kernel:password@postgres-rds.cluster-xxx.us-east-1.rds.amazonaws.com:5432/data_kernel_db"
+  REDIS_URL: "redis://redis-cluster.xxx.cache.amazonaws.com:6379/1"
+  NATS_URL: "nats://nats-cluster.data-kernel-service.svc.cluster.local:4222"
+  S3_BUCKET: "arrakis-data-kernel-cache"
+  S3_ACCESS_KEY: "your-s3-access-key"
+  S3_SECRET_KEY: "your-s3-secret-key"
+  ENCRYPTION_KEY: "your-encryption-key-base64"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-kernel-service
+  namespace: data-kernel-service
+  labels:
+    app: data-kernel-service
+    version: v1
+spec:
+  replicas: 3
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app: data-kernel-service
+  template:
+    metadata:
+      labels:
+        app: data-kernel-service
+        version: v1
+        workload-type: compute-intensive
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9091"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: data-kernel-service
+      nodeSelector:
+        node-type: compute-optimized
+        instance-family: c5
+      tolerations:
+        - key: compute-optimized
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: data-kernel-service
+          image: your-registry/data-kernel-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8001
+              name: http
+              protocol: TCP
+            - containerPort: 50051
+              name: grpc
+              protocol: TCP
+            - containerPort: 9091
+              name: metrics
+              protocol: TCP
+          env:
+            - name: APP_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: data-kernel-service-config
+                  key: APP_NAME
+            - name: APP_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: data-kernel-service-config
+                  key: APP_ENV
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: data-kernel-service-config
+                  key: LOG_LEVEL
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: data-kernel-service-config
+                  key: PORT
+            - name: GRPC_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: data-kernel-service-config
+                  key: GRPC_PORT
+            - name: TERMINUS_DB_SERVER
+              valueFrom:
+                configMapKeyRef:
+                  name: data-kernel-service-config
+                  key: TERMINUS_DB_SERVER
+            - name: TERMINUS_DB_ORG
+              valueFrom:
+                configMapKeyRef:
+                  name: data-kernel-service-config
+                  key: TERMINUS_DB_ORG
+            - name: TERMINUS_DB_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: data-kernel-service-config
+                  key: TERMINUS_DB_DB
+            - name: TERMINUS_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: data-kernel-service-secrets
+                  key: TERMINUS_DB_USER
+            - name: TERMINUS_DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: data-kernel-service-secrets
+                  key: TERMINUS_DB_PASS
+            - name: TERMINUS_DB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: data-kernel-service-secrets
+                  key: TERMINUS_DB_TOKEN
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: data-kernel-service-secrets
+                  key: DATABASE_URL
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: data-kernel-service-secrets
+                  key: REDIS_URL
+            - name: NATS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: data-kernel-service-secrets
+                  key: NATS_URL
+            - name: S3_BUCKET
+              valueFrom:
+                secretKeyRef:
+                  name: data-kernel-service-secrets
+                  key: S3_BUCKET
+            - name: S3_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: data-kernel-service-secrets
+                  key: S3_ACCESS_KEY
+            - name: S3_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: data-kernel-service-secrets
+                  key: S3_SECRET_KEY
+            - name: QUERY_TIMEOUT_SECONDS
+              valueFrom:
+                configMapKeyRef:
+                  name: data-kernel-service-config
+                  key: QUERY_TIMEOUT_SECONDS
+            - name: MAX_QUERY_SIZE_MB
+              valueFrom:
+                configMapKeyRef:
+                  name: data-kernel-service-config
+                  key: MAX_QUERY_SIZE_MB
+            - name: CONNECTION_POOL_SIZE
+              valueFrom:
+                configMapKeyRef:
+                  name: data-kernel-service-config
+                  key: CONNECTION_POOL_SIZE
+            - name: MAX_CONCURRENT_QUERIES
+              valueFrom:
+                configMapKeyRef:
+                  name: data-kernel-service-config
+                  key: MAX_CONCURRENT_QUERIES
+            - name: MEMORY_LIMIT_PER_QUERY_MB
+              valueFrom:
+                configMapKeyRef:
+                  name: data-kernel-service-config
+                  key: MEMORY_LIMIT_PER_QUERY_MB
+          resources:
+            requests:
+              memory: "2Gi"
+              cpu: "1000m"
+            limits:
+              memory: "4Gi"
+              cpu: "2000m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8001
+            initialDelaySeconds: 45
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8001
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8001
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: cache
+              mountPath: /app/.cache
+            - name: query-cache
+              mountPath: /var/cache/queries
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: cache
+          emptyDir: {}
+        - name: query-cache
+          emptyDir:
+            sizeLimit: 10Gi
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - data-kernel-service
+              topologyKey: kubernetes.io/hostname
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: instance-family
+                    operator: In
+                    values:
+                      - c5
+                      - c5n
+                      - c6i
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: data-kernel-service
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: data-kernel-service
+  namespace: data-kernel-service
+  labels:
+    app: data-kernel-service
+spec:
+  type: ClusterIP
+  selector:
+    app: data-kernel-service
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8001
+      protocol: TCP
+    - name: grpc
+      port: 50051
+      targetPort: 50051
+      protocol: TCP
+    - name: metrics
+      port: 9091
+      targetPort: 9091
+      protocol: TCP
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: data-kernel-service-hpa
+  namespace: data-kernel-service
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: data-kernel-service
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Pods
+      pods:
+        metric:
+          name: query_queue_depth
+        target:
+          type: AverageValue
+          averageValue: "100"
+    - type: Pods
+      pods:
+        metric:
+          name: avg_query_duration_seconds
+        target:
+          type: AverageValue
+          averageValue: "5"
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 30
+        - type: Pods
+          value: 5
+          periodSeconds: 30
+      selectPolicy: Max
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: data-kernel-service-pdb
+  namespace: data-kernel-service
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: data-kernel-service
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: data-kernel-service-network-policy
+  namespace: data-kernel-service
+spec:
+  podSelector:
+    matchLabels:
+      app: data-kernel-service
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: istio-system
+        - namespaceSelector:
+            matchLabels:
+              name: ontology-management-service
+        - namespaceSelector:
+            matchLabels:
+              name: api-gateway
+      ports:
+        - port: 8001
+          protocol: TCP
+        - port: 50051
+          protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: prometheus
+      ports:
+        - port: 9091
+          protocol: TCP
+  egress:
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - port: 5432 # PostgreSQL
+          protocol: TCP
+        - port: 6379 # Redis
+          protocol: TCP
+        - port: 4222 # NATS
+          protocol: TCP
+        - port: 6363 # TerminusDB
+          protocol: TCP
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - port: 53 # DNS
+          protocol: UDP
+        - port: 443 # HTTPS (for S3)
+          protocol: TCP
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: data-kernel-service-monitor
+  namespace: data-kernel-service
+  labels:
+    app: data-kernel-service
+    prometheus: kube-prometheus
+spec:
+  selector:
+    matchLabels:
+      app: data-kernel-service
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s

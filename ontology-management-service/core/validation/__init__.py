@@ -2,8 +2,8 @@
 
 # Lazy import to prevent circular dependencies
 def get_validation_service():
-    from .service import ValidationService
-    return ValidationService
+ from .service import ValidationService
+ return ValidationService
 
 # Direct imports
 from .models import ValidationResult, ValidationContext
@@ -16,14 +16,14 @@ from .version_manager import VersionManager
 from .service import ValidationService
 
 __all__ = [
-    "get_validation_service",
-    "ValidationService",
-    "ValidationResult",
-    "ValidationContext",
-    "NamingConfig",
-    "NamingConvention",
-    "NamingHistory",
-    "PolicySigner",
-    "SchemaValidator",
-    "VersionManager"
+ "get_validation_service",
+ "ValidationService",
+ "ValidationResult",
+ "ValidationContext",
+ "NamingConfig",
+ "NamingConvention",
+ "NamingHistory",
+ "PolicySigner",
+ "SchemaValidator",
+ "VersionManager"
 ]

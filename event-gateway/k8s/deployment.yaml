@@ -1,0 +1,536 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: event-gateway
+  labels:
+    app: event-gateway
+    istio-injection: enabled
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: event-gateway
+  namespace: event-gateway
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/event-gateway-irsa-role
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: event-gateway-config
+  namespace: event-gateway
+data:
+  APP_NAME: "event-gateway"
+  APP_ENV: "production"
+  LOG_LEVEL: "info"
+  PORT: "8004"
+  WEBSOCKET_PORT: "8005"
+  GRPC_PORT: "50054"
+  ENABLE_WEBSOCKET: "true"
+  WEBSOCKET_PING_INTERVAL: "30"
+  WEBSOCKET_PONG_TIMEOUT: "10"
+  MAX_WEBSOCKET_CONNECTIONS: "10000"
+  MAX_MESSAGE_SIZE_KB: "1024"
+  EVENT_BUFFER_SIZE: "10000"
+  EVENT_BATCH_SIZE: "100"
+  EVENT_BATCH_TIMEOUT_MS: "100"
+  ENABLE_EVENT_PERSISTENCE: "true"
+  EVENT_RETENTION_DAYS: "30"
+  ENABLE_EVENT_REPLAY: "true"
+  ENABLE_EVENT_FILTERING: "true"
+  ENABLE_EVENT_TRANSFORMATION: "true"
+  CONNECTION_POOL_SIZE: "1000"
+  CONNECTION_IDLE_TIMEOUT_SECONDS: "300"
+  MAX_CONCURRENT_STREAMS: "1000"
+  STREAM_BUFFER_SIZE: "1000"
+  ENABLE_COMPRESSION: "true"
+  COMPRESSION_ALGORITHM: "gzip"
+  RATE_LIMIT_PER_SECOND: "10000"
+  BURST_LIMIT: "20000"
+  ENABLE_CIRCUIT_BREAKER: "true"
+  CIRCUIT_BREAKER_THRESHOLD: "50"
+  CIRCUIT_BREAKER_TIMEOUT_SECONDS: "60"
+  ENABLE_DEAD_LETTER_QUEUE: "true"
+  DLQ_MAX_RETRIES: "3"
+  ENABLE_MESSAGE_DEDUPLICATION: "true"
+  DEDUPLICATION_WINDOW_MINUTES: "5"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: event-gateway-secrets
+  namespace: event-gateway
+type: Opaque
+stringData:
+  DATABASE_URL: "postgresql://event_gateway:password@postgres-rds.cluster-xxx.us-east-1.rds.amazonaws.com:5432/event_gateway_db"
+  REDIS_URL: "redis://redis-cluster.xxx.cache.amazonaws.com:6379/4"
+  NATS_URL: "nats://nats-cluster.event-gateway.svc.cluster.local:4222"
+  NATS_CLUSTER_ID: "arrakis-nats-streaming"
+  KAFKA_BROKERS: "kafka-broker-1.kafka.svc.cluster.local:9092,kafka-broker-2.kafka.svc.cluster.local:9092,kafka-broker-3.kafka.svc.cluster.local:9092"
+  KAFKA_SASL_USERNAME: "event-gateway"
+  KAFKA_SASL_PASSWORD: "your-kafka-password"
+  S3_BUCKET: "arrakis-event-archive"
+  S3_ACCESS_KEY: "your-s3-access-key"
+  S3_SECRET_KEY: "your-s3-secret-key"
+  ENCRYPTION_KEY: "your-encryption-key-base64"
+  JWT_PUBLIC_KEY: |
+    -----BEGIN PUBLIC KEY-----
+    your-rsa-public-key
+    -----END PUBLIC KEY-----
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: event-gateway
+  namespace: event-gateway
+  labels:
+    app: event-gateway
+    version: v1
+spec:
+  replicas: 4
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app: event-gateway
+  template:
+    metadata:
+      labels:
+        app: event-gateway
+        version: v1
+        workload-type: high-throughput
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9094"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: event-gateway
+      nodeSelector:
+        workload-type: network-optimized
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: event-gateway
+          image: your-registry/event-gateway:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8004
+              name: http
+              protocol: TCP
+            - containerPort: 8005
+              name: websocket
+              protocol: TCP
+            - containerPort: 50054
+              name: grpc
+              protocol: TCP
+            - containerPort: 9094
+              name: metrics
+              protocol: TCP
+          env:
+            - name: APP_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: event-gateway-config
+                  key: APP_NAME
+            - name: APP_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: event-gateway-config
+                  key: APP_ENV
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: event-gateway-config
+                  key: LOG_LEVEL
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: event-gateway-config
+                  key: PORT
+            - name: WEBSOCKET_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: event-gateway-config
+                  key: WEBSOCKET_PORT
+            - name: GRPC_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: event-gateway-config
+                  key: GRPC_PORT
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: event-gateway-secrets
+                  key: DATABASE_URL
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: event-gateway-secrets
+                  key: REDIS_URL
+            - name: NATS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: event-gateway-secrets
+                  key: NATS_URL
+            - name: NATS_CLUSTER_ID
+              valueFrom:
+                secretKeyRef:
+                  name: event-gateway-secrets
+                  key: NATS_CLUSTER_ID
+            - name: KAFKA_BROKERS
+              valueFrom:
+                secretKeyRef:
+                  name: event-gateway-secrets
+                  key: KAFKA_BROKERS
+            - name: KAFKA_SASL_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: event-gateway-secrets
+                  key: KAFKA_SASL_USERNAME
+            - name: KAFKA_SASL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: event-gateway-secrets
+                  key: KAFKA_SASL_PASSWORD
+            - name: S3_BUCKET
+              valueFrom:
+                secretKeyRef:
+                  name: event-gateway-secrets
+                  key: S3_BUCKET
+            - name: S3_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: event-gateway-secrets
+                  key: S3_ACCESS_KEY
+            - name: S3_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: event-gateway-secrets
+                  key: S3_SECRET_KEY
+            - name: JWT_PUBLIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: event-gateway-secrets
+                  key: JWT_PUBLIC_KEY
+            - name: ENABLE_WEBSOCKET
+              valueFrom:
+                configMapKeyRef:
+                  name: event-gateway-config
+                  key: ENABLE_WEBSOCKET
+            - name: MAX_WEBSOCKET_CONNECTIONS
+              valueFrom:
+                configMapKeyRef:
+                  name: event-gateway-config
+                  key: MAX_WEBSOCKET_CONNECTIONS
+            - name: CONNECTION_POOL_SIZE
+              valueFrom:
+                configMapKeyRef:
+                  name: event-gateway-config
+                  key: CONNECTION_POOL_SIZE
+            - name: RATE_LIMIT_PER_SECOND
+              valueFrom:
+                configMapKeyRef:
+                  name: event-gateway-config
+                  key: RATE_LIMIT_PER_SECOND
+            - name: ENABLE_CIRCUIT_BREAKER
+              valueFrom:
+                configMapKeyRef:
+                  name: event-gateway-config
+                  key: ENABLE_CIRCUIT_BREAKER
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+            limits:
+              memory: "2Gi"
+              cpu: "2000m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8004
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8004
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8004
+            initialDelaySeconds: 0
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 30
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - NET_BIND_SERVICE
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: cache
+              mountPath: /app/.cache
+            - name: event-buffer
+              mountPath: /var/event-buffer
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: cache
+          emptyDir: {}
+        - name: event-buffer
+          emptyDir:
+            sizeLimit: 5Gi
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - event-gateway
+              topologyKey: kubernetes.io/hostname
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: workload-type
+                    operator: In
+                    values:
+                      - network-optimized
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: event-gateway
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: event-gateway
+  namespace: event-gateway
+  labels:
+    app: event-gateway
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+spec:
+  type: ClusterIP
+  selector:
+    app: event-gateway
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8004
+      protocol: TCP
+    - name: websocket
+      port: 8005
+      targetPort: 8005
+      protocol: TCP
+    - name: grpc
+      port: 50054
+      targetPort: 50054
+      protocol: TCP
+    - name: metrics
+      port: 9094
+      targetPort: 9094
+      protocol: TCP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: event-gateway-websocket
+  namespace: event-gateway
+  labels:
+    app: event-gateway
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: "3600"
+spec:
+  type: LoadBalancer
+  selector:
+    app: event-gateway
+  ports:
+    - name: websocket
+      port: 80
+      targetPort: 8005
+      protocol: TCP
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: event-gateway-hpa
+  namespace: event-gateway
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: event-gateway
+  minReplicas: 4
+  maxReplicas: 20
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 60
+    - type: Pods
+      pods:
+        metric:
+          name: websocket_connections
+        target:
+          type: AverageValue
+          averageValue: "2000"
+    - type: Pods
+      pods:
+        metric:
+          name: events_per_second
+        target:
+          type: AverageValue
+          averageValue: "5000"
+    - type: Pods
+      pods:
+        metric:
+          name: network_receive_bytes_per_second
+        target:
+          type: AverageValue
+          averageValue: "10Mi"
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 25
+          periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+        - type: Pods
+          value: 4
+          periodSeconds: 15
+      selectPolicy: Max
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: event-gateway-pdb
+  namespace: event-gateway
+spec:
+  minAvailable: 3
+  selector:
+    matchLabels:
+      app: event-gateway
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: event-gateway-network-policy
+  namespace: event-gateway
+spec:
+  podSelector:
+    matchLabels:
+      app: event-gateway
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: istio-system
+        - namespaceSelector: {}
+      ports:
+        - port: 8004
+          protocol: TCP
+        - port: 8005
+          protocol: TCP
+        - port: 50054
+          protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: prometheus
+      ports:
+        - port: 9094
+          protocol: TCP
+  egress:
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - port: 5432 # PostgreSQL
+          protocol: TCP
+        - port: 6379 # Redis
+          protocol: TCP
+        - port: 4222 # NATS
+          protocol: TCP
+        - port: 9092 # Kafka
+          protocol: TCP
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - port: 53 # DNS
+          protocol: UDP
+        - port: 443 # HTTPS (for S3)
+          protocol: TCP
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: event-gateway-monitor
+  namespace: event-gateway
+  labels:
+    app: event-gateway
+    prometheus: kube-prometheus
+spec:
+  selector:
+    matchLabels:
+      app: event-gateway
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s

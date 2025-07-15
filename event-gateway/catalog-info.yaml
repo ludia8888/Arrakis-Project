@@ -1,0 +1,324 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: event-gateway
+  title: Event Gateway Service
+  description: |
+    Event streaming and webhook management service.
+    Handles pub/sub messaging, event routing, and webhook delivery.
+  annotations:
+    github.com/project-slug: Arrakis-Project/event-gateway
+    grafana/dashboard-selector: "service=event-gateway"
+    prometheus.io/service-name: event-gateway
+    jaeger.io/service-name: event-gateway
+    backstage.io/techdocs-ref: dir:.
+  tags:
+    - events
+    - messaging
+    - webhooks
+    - pub-sub
+    - streaming
+    - nats
+    - cloudevents
+    - python
+    - fastapi
+    - grpc
+    - redis
+    - microservice
+  links:
+    - url: http://localhost:8003/docs
+      title: OpenAPI Documentation
+      icon: docs
+    - url: http://localhost:8003/health
+      title: Health Check
+      icon: health
+    - url: http://localhost:8003/metrics
+      title: Prometheus Metrics
+      icon: metrics
+    - url: http://localhost:16686/search?service=event-gateway
+      title: Jaeger Traces
+      icon: traces
+    - url: ws://localhost:8003/ws
+      title: WebSocket Endpoint
+      icon: websocket
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-team
+  system: arrakis-core
+  dependsOn:
+    - resource:nats
+    - resource:redis
+  providesApis:
+    - event-gateway-rest-api
+    - event-gateway-websocket-api
+    - event-gateway-grpc
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: event-gateway-rest-api
+  title: Event Gateway REST API
+  description: RESTful API for event publishing and webhook management
+  tags:
+    - rest
+    - openapi
+    - events
+    - webhooks
+spec:
+  type: openapi
+  lifecycle: production
+  owner: platform-team
+  system: arrakis-core
+  definition: |
+    openapi: 3.0.3
+    info:
+      title: Event Gateway Service
+      version: 1.0.0
+      description: Event streaming and webhook management service
+    servers:
+      - url: http://localhost:8003
+        description: Local development
+    paths:
+      /health:
+        get:
+          summary: Health check endpoint
+          responses:
+            '200':
+              description: Service is healthy
+      /metrics:
+        get:
+          summary: Prometheus metrics endpoint
+          responses:
+            '200':
+              description: Metrics in Prometheus format
+      /api/v1/events:
+        post:
+          summary: Publish a single event
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    source:
+                      type: string
+                    subject:
+                      type: string
+                    data:
+                      type: object
+                    stream:
+                      type: string
+          responses:
+            '202':
+              description: Event published
+        get:
+          summary: List recent events
+          parameters:
+            - name: stream
+              in: query
+              schema:
+                type: string
+            - name: type
+              in: query
+              schema:
+                type: string
+            - name: limit
+              in: query
+              schema:
+                type: integer
+                default: 100
+          responses:
+            '200':
+              description: List of events
+      /api/v1/events/batch:
+        post:
+          summary: Publish multiple events
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    events:
+                      type: array
+                      items:
+                        type: object
+          responses:
+            '202':
+              description: Events published
+      /api/v1/streams:
+        post:
+          summary: Create a new event stream
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    description:
+                      type: string
+                    retention_policy:
+                      type: string
+          responses:
+            '201':
+              description: Stream created
+        get:
+          summary: List all streams
+          responses:
+            '200':
+              description: List of streams
+      /api/v1/streams/{stream_name}/subscribe:
+        post:
+          summary: Subscribe to event stream
+          parameters:
+            - name: stream_name
+              in: path
+              required: true
+              schema:
+                type: string
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    consumer_group:
+                      type: string
+                    filter:
+                      type: object
+          responses:
+            '201':
+              description: Subscription created
+      /api/v1/webhooks:
+        post:
+          summary: Register a webhook
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    url:
+                      type: string
+                    events:
+                      type: array
+                      items:
+                        type: string
+                    secret:
+                      type: string
+          responses:
+            '201':
+              description: Webhook registered
+        get:
+          summary: List all webhooks
+          responses:
+            '200':
+              description: List of webhooks
+      /api/v1/webhooks/{webhook_id}:
+        get:
+          summary: Get webhook details
+          parameters:
+            - name: webhook_id
+              in: path
+              required: true
+              schema:
+                type: string
+          responses:
+            '200':
+              description: Webhook details
+        put:
+          summary: Update webhook
+          parameters:
+            - name: webhook_id
+              in: path
+              required: true
+              schema:
+                type: string
+          responses:
+            '200':
+              description: Webhook updated
+        delete:
+          summary: Delete webhook
+          parameters:
+            - name: webhook_id
+              in: path
+              required: true
+              schema:
+                type: string
+          responses:
+            '204':
+              description: Webhook deleted
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: event-gateway-websocket-api
+  title: Event Gateway WebSocket API
+  description: Real-time WebSocket interface for event streaming
+  tags:
+    - websocket
+    - real-time
+    - streaming
+spec:
+  type: asyncapi
+  lifecycle: production
+  owner: platform-team
+  system: arrakis-core
+  definition: |
+    asyncapi: 3.0.0
+    info:
+      title: Event Gateway WebSocket API
+      version: 1.0.0
+      description: Real-time event streaming via WebSocket
+    servers:
+      websocket:
+        url: ws://localhost:8003/ws
+        protocol: ws
+    channels:
+      events:
+        address: /ws
+        messages:
+          eventMessage:
+            payload:
+              type: object
+              properties:
+                type:
+                  type: string
+                source:
+                  type: string
+                data:
+                  type: object
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: event-gateway-grpc
+  title: Event Gateway gRPC API
+  description: High-performance gRPC interface for event operations
+  tags:
+    - grpc
+    - high-performance
+    - events
+spec:
+  type: grpc
+  lifecycle: production
+  owner: platform-team
+  system: arrakis-core
+  definition: |
+    proto file: proto/event_gateway.proto
+    endpoint: localhost:50057

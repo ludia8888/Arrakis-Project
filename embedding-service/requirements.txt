@@ -34,3 +34,9 @@ opentelemetry-instrumentation-grpc==0.43b0
 # Utilities
 python-dotenv==1.0.0
 structlog==24.1.0
+
+# Critical production dependencies
+terminusdb_client==10.2.6
+psycopg2-binary==2.9.9
+nats-py==2.6.0
+cryptography==41.0.7

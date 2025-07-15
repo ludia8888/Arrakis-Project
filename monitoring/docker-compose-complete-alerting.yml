@@ -1,65 +1,65 @@
 services:
   alertmanager:
     command:
-    - --config.file=/etc/alertmanager/alertmanager.yml
-    - --storage.path=/alertmanager
-    - --web.external-url=http://localhost:9093
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+      - --web.external-url=http://localhost:9093
     container_name: oms-alertmanager-complete
     image: prom/alertmanager:latest
     ports:
-    - 9093:9093
+      - 9093:9093
     restart: unless-stopped
     volumes:
-    - ./alertmanager/alertmanager-complete.yml:/etc/alertmanager/alertmanager.yml:ro
-    - alertmanager-data:/alertmanager
+      - ./alertmanager/alertmanager-complete.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager-data:/alertmanager
   node-exporter:
     command:
-    - --path.procfs=/host/proc
-    - --path.sysfs=/host/sys
-    - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
+      - --path.procfs=/host/proc
+      - --path.sysfs=/host/sys
+      - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
     container_name: oms-node-exporter-complete
     image: prom/node-exporter:latest
     ports:
-    - 9100:9100
+      - 9100:9100
     restart: unless-stopped
     volumes:
-    - /proc:/host/proc:ro
-    - /sys:/host/sys:ro
-    - /:/rootfs:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
   postgres-exporter:
     container_name: oms-postgres-exporter
     environment:
-    - DATA_SOURCE_NAME=postgresql://oms_user:oms_password@host.docker.internal:5432/oms_db?sslmode=disable
+      - DATA_SOURCE_NAME=postgresql://arrakis_user:arrakis_password@host.docker.internal:5432/arrakis_db?sslmode=disable
     image: prometheuscommunity/postgres-exporter:latest
     ports:
-    - 9187:9187
+      - 9187:9187
     restart: unless-stopped
   prometheus:
     command:
-    - --config.file=/etc/prometheus/prometheus.yml
-    - --storage.tsdb.path=/prometheus
-    - --web.console.libraries=/usr/share/prometheus/console_libraries
-    - --web.console.templates=/usr/share/prometheus/consoles
-    - --web.enable-lifecycle
-    - --web.enable-admin-api
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.console.libraries=/usr/share/prometheus/console_libraries
+      - --web.console.templates=/usr/share/prometheus/consoles
+      - --web.enable-lifecycle
+      - --web.enable-admin-api
     container_name: oms-prometheus-complete
     image: prom/prometheus:latest
     ports:
-    - 9091:9090
+      - 9091:9090
     restart: unless-stopped
     volumes:
-    - ./prometheus/prometheus-fixed.yml:/etc/prometheus/prometheus.yml:ro
-    - ./prometheus/rules:/etc/prometheus/rules:ro
-    - prometheus-data:/prometheus
+      - ./prometheus/prometheus-fixed.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/rules:/etc/prometheus/rules:ro
+      - prometheus-data:/prometheus
   redis-exporter:
     container_name: oms-redis-exporter
     environment:
-    - REDIS_ADDR=host.docker.internal:6379
+      - REDIS_ADDR=host.docker.internal:6379
     image: oliver006/redis_exporter:latest
     ports:
-    - 9121:9121
+      - 9121:9121
     restart: unless-stopped
-version: '3.8'
+version: "3.8"
 volumes:
   alertmanager-data: null
   prometheus-data: null

@@ -1,0 +1,90 @@
+# TechDocs configuration for Event Gateway
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: event-gateway
+  description: NATS-based event distribution service with CloudEvents support
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-team
+
+techdocs:
+  builder: "local"
+  generator:
+    runIn: "local"
+  publisher:
+    type: "local"
+
+build:
+  dependencies:
+    - python: ">=3.9"
+    - nats-py: ">=2.0"
+    - cloudevents: ">=1.9"
+    - grpcio: ">=1.50"
+    - prometheus-client: ">=0.16"
+
+documentation:
+  structure:
+    - name: Overview
+      path: docs/README.md
+    - name: API Reference
+      items:
+        - name: REST API
+          path: docs/api/rest.md
+        - name: gRPC API
+          path: docs/api/grpc.md
+        - name: Event Publishing
+          path: docs/api/publishing.md
+        - name: Event Subscriptions
+          path: docs/api/subscriptions.md
+        - name: Stream Management
+          path: docs/api/streams.md
+        - name: Webhook Management
+          path: docs/api/webhooks.md
+    - name: Event Model
+      items:
+        - name: CloudEvents Specification
+          path: docs/events/cloudevents.md
+        - name: Event Types
+          path: docs/events/types.md
+        - name: Event Routing
+          path: docs/events/routing.md
+        - name: Event Filtering
+          path: docs/events/filtering.md
+    - name: Architecture
+      items:
+        - name: System Design
+          path: docs/architecture/system-design.md
+        - name: NATS Integration
+          path: docs/architecture/nats.md
+        - name: Stream Processing
+          path: docs/architecture/streaming.md
+        - name: Delivery Guarantees
+          path: docs/architecture/delivery.md
+    - name: Operations
+      items:
+        - name: Deployment Guide
+          path: docs/ops/deployment.md
+        - name: NATS Configuration
+          path: docs/ops/nats-config.md
+        - name: Monitoring
+          path: docs/ops/monitoring.md
+        - name: Scaling Guide
+          path: docs/ops/scaling.md
+        - name: Troubleshooting
+          path: docs/ops/troubleshooting.md
+    - name: Development
+      items:
+        - name: Setup Guide
+          path: docs/dev/setup.md
+        - name: Event Producers
+          path: docs/dev/producers.md
+        - name: Event Consumers
+          path: docs/dev/consumers.md
+        - name: Testing Events
+          path: docs/dev/testing.md
+        - name: Contributing
+          path: docs/dev/contributing.md

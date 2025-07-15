@@ -9,10 +9,10 @@ from .client import OMSEventClient, ClientConfig, EventPublisher, EventSubscribe
 from .models import *
 
 __all__ = [
-    "OMSEventClient",
-    "ClientConfig", 
-    "EventPublisher",
-    "EventSubscriber",
-    "PublishResult",
-    "Subscription"
+ "OMSEventClient",
+ "ClientConfig",
+ "EventPublisher",
+ "EventSubscriber",
+ "PublishResult",
+ "Subscription"
 ]

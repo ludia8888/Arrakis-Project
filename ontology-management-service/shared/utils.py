@@ -10,10 +10,10 @@ DB_READ_CONFIG = "read"
 DB_WRITE_CONFIG = "write"
 
 def with_retry(operation_name: str = "", config: str = DB_READ_CONFIG):
-    """재시도 데코레이터"""
-    def decorator(func: Callable) -> Callable:
-        @functools.wraps(func)
-        async def wrapper(*args, **kwargs) -> Any:
-            return await func(*args, **kwargs)
-        return wrapper
-    return decorator
+ """재시도 데코레이터"""
+ def decorator(func: Callable) -> Callable:
+ @functools.wraps(func)
+ async def wrapper(*args, **kwargs) -> Any:
+ return await func(*args, **kwargs)
+ return wrapper
+ return decorator

@@ -1,17 +1,19 @@
 """Provider modules for dependency injection"""
 
-from .database import PostgresClientProvider, SQLiteClientProvider, UnifiedDatabaseProvider
+from .database import PostgresClientProvider, UnifiedDatabaseProvider
+from .embedding import EmbeddingServiceProvider
+
+# SQLiteClientProvider removed - PostgreSQL-only architecture
 from .event import EventProvider
 from .schema import SchemaProvider
 from .validation import ValidationProvider
-from .embedding import EmbeddingServiceProvider
 
 __all__ = [
-    "PostgresClientProvider",
-    "SQLiteClientProvider",
-    "UnifiedDatabaseProvider",
-    "EventProvider", 
-    "SchemaProvider",
-    "ValidationProvider",
-    "EmbeddingServiceProvider"
+ "PostgresClientProvider",
+ # "SQLiteClientProvider", # Removed - PostgreSQL-only architecture
+ "UnifiedDatabaseProvider",
+ "EventProvider",
+ "SchemaProvider",
+ "ValidationProvider",
+ "EmbeddingServiceProvider",
 ]

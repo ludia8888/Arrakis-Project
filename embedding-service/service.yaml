@@ -1,0 +1,228 @@
+# Service metadata for Embedding Service
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: embedding-service
+  title: Embedding Service
+  description: Vector embedding and similarity service with semantic search capabilities
+  tags:
+    - python
+    - fastapi
+    - grpc
+    - machine-learning
+    - vector-database
+    - semantic-search
+    - ml-platform
+  links:
+    - url: https://embedding.arrakis.internal/docs
+      title: API Documentation
+      icon: docs
+    - url: https://grafana.arrakis.internal/d/embedding-dashboard
+      title: Grafana Dashboard
+      icon: dashboard
+    - url: https://prometheus.arrakis.internal/graph?g0.expr=up{job="embedding-service"}
+      title: Prometheus Metrics
+      icon: dashboard
+    - url: https://embedding.arrakis.internal/stats
+      title: Model Statistics
+      icon: analytics
+  annotations:
+    github.com/project-slug: arrakis/embedding-service
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/metrics"
+    prometheus.io/port: "8001"
+    backstage.io/kubernetes-id: embedding-service
+    datadoghq.com/service-name: embedding-service
+    pagerduty.com/integration-key: "PD-EMBEDDING-KEY"
+
+spec:
+  type: service
+  lifecycle: production
+  owner: ml-platform-team
+  system: arrakis
+
+  # Service dependencies
+  dependsOn:
+    - component:user-service
+    - component:audit-service
+    - resource:redis-cluster
+    - resource:vector-database
+    - resource:model-storage
+
+  # Health checks
+  healthChecks:
+    - name: http
+      endpoint: /health
+      interval: 30s
+      timeout: 5s
+      successThreshold: 1
+      failureThreshold: 3
+    - name: model
+      endpoint: /health
+      interval: 60s
+      timeout: 15s
+      successThreshold: 1
+      failureThreshold: 2
+
+  # Metrics and SLOs
+  metrics:
+    - name: embedding_requests
+      query: rate(embedding_requests_total[5m])
+      unit: req/s
+    - name: embedding_latency
+      query: histogram_quantile(0.95, rate(embedding_generation_seconds_bucket[5m]))
+      unit: seconds
+    - name: batch_processing_rate
+      query: rate(embedding_batch_processed_total[5m])
+      unit: batches/s
+    - name: similarity_requests
+      query: rate(embedding_similarity_requests_total[5m])
+      unit: req/s
+    - name: model_memory_usage
+      query: embedding_model_memory_bytes
+      unit: bytes
+    - name: cache_hit_rate
+      query: rate(embedding_cache_hits_total[5m]) / rate(embedding_cache_requests_total[5m])
+      unit: ratio
+
+  slos:
+    - name: availability
+      description: Service should be available 99.9% of the time
+      target: 99.9
+      window: 30d
+      indicator:
+        ratio:
+          good: http_requests_total{service="embedding-service",status!~"5.."}
+          total: http_requests_total{service="embedding-service"}
+    - name: embedding_latency
+      description: 95% of single embeddings should complete within 200ms
+      target: 95
+      window: 7d
+      indicator:
+        percentile:
+          metric: embedding_generation_seconds{type="single"}
+          percentile: 95
+          threshold: 0.2
+    - name: batch_efficiency
+      description: Batch processing should achieve 90% efficiency
+      target: 90
+      window: 7d
+      indicator:
+        ratio:
+          good: embedding_batch_processed_total{status="success"}
+          total: embedding_batch_processed_total
+
+  # Alerts
+  alerts:
+    - name: EmbeddingServiceDown
+      condition: up{job="embedding-service"} == 0
+      severity: critical
+      annotations:
+        summary: Embedding service is down
+        runbook: https://runbooks.arrakis.internal/embedding/service-down
+    - name: ModelLoadingFailure
+      condition: embedding_model_loading_failures_total > 0
+      severity: critical
+      annotations:
+        summary: Model loading failures detected
+        runbook: https://runbooks.arrakis.internal/embedding/model-loading
+    - name: HighEmbeddingLatency
+      condition: histogram_quantile(0.95, rate(embedding_generation_seconds_bucket[5m])) > 1
+      severity: warning
+      annotations:
+        summary: High embedding generation latency
+        runbook: https://runbooks.arrakis.internal/embedding/high-latency
+    - name: ModelMemoryUsage
+      condition: embedding_model_memory_bytes > 8e9
+      severity: warning
+      annotations:
+        summary: Model memory usage is high
+        runbook: https://runbooks.arrakis.internal/embedding/memory-usage
+    - name: LowCacheHitRate
+      condition: rate(embedding_cache_hits_total[5m]) / rate(embedding_cache_requests_total[5m]) < 0.3
+      severity: warning
+      annotations:
+        summary: Low cache hit rate
+        runbook: https://runbooks.arrakis.internal/embedding/cache-performance
+
+  # Runbooks
+  runbooks:
+    - name: Service Down
+      url: https://runbooks.arrakis.internal/embedding/service-down
+      description: Steps to diagnose and recover from service downtime
+      steps:
+        - Check pod status with kubectl get pods
+        - Verify model files are accessible
+        - Check GPU availability if applicable
+        - Review error logs
+        - Restart service if necessary
+    - name: Model Loading Issues
+      url: https://runbooks.arrakis.internal/embedding/model-loading
+      description: Troubleshooting model loading failures
+      steps:
+        - Check model file integrity
+        - Verify storage connectivity
+        - Check available memory
+        - Review model configuration
+        - Restart with model refresh
+    - name: Performance Optimization
+      url: https://runbooks.arrakis.internal/embedding/high-latency
+      description: Optimizing embedding generation performance
+      steps:
+        - Check CPU/GPU utilization
+        - Review batch sizes
+        - Analyze request patterns
+        - Consider model optimization
+        - Scale horizontally if needed
+
+  # Deployment configuration
+  deployment:
+    replicas:
+      min: 2
+      max: 8
+      targetCPU: 65
+    resources:
+      requests:
+        cpu: "2000m"
+        memory: "4Gi"
+        nvidia.com/gpu: "1"
+      limits:
+        cpu: "8000m"
+        memory: "16Gi"
+        nvidia.com/gpu: "1"
+    env:
+      - name: ENVIRONMENT
+        value: production
+      - name: LOG_LEVEL
+        value: INFO
+      - name: MODEL_NAME
+        value: "sentence-transformers/all-MiniLM-L6-v2"
+      - name: BATCH_SIZE
+        value: "32"
+      - name: CACHE_SIZE
+        value: "10000"
+      - name: MAX_WORKERS
+        value: "4"
+    volumes:
+      - name: model-cache
+        type: persistentVolumeClaim
+        size: 50Gi
+        mountPath: /models
+    probes:
+      liveness:
+        httpGet:
+          path: /health
+          port: 8001
+        initialDelaySeconds: 60
+        periodSeconds: 30
+        timeoutSeconds: 15
+      readiness:
+        httpGet:
+          path: /health
+          port: 8001
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        timeoutSeconds: 10
+      grpc:
+        port: 50052
+        service: health

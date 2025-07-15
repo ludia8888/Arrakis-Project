@@ -16,3 +16,5 @@ python-json-logger==3.2.1
 orjson==3.10.13
 aiokafka==0.12.0
 tenacity==9.0.0
+psycopg2-binary==2.9.9
+cryptography==41.0.7

@@ -1,0 +1,1681 @@
+asyncapi: 3.0.0
+
+info:
+  title: Arrakis Event Gateway AsyncAPI
+  version: 2.0.0
+  description: |
+    Comprehensive AsyncAPI specification for the Arrakis Platform Event Gateway.
+    Defines all NATS event streams, channels, and message schemas for the entire platform.
+  contact:
+    name: Platform Engineering Team
+    email: platform-team@arrakis.dev
+    url: https://github.com/your-org/arrakis-project
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  tags:
+    - name: ontology
+      description: Ontology and schema management events
+    - name: terminus
+      description: TerminusDB graph database events
+    - name: audit
+      description: Audit and compliance events
+    - name: scheduler
+      description: Job scheduling and task management events
+    - name: embedding
+      description: ML embedding and vector processing events
+    - name: webhook
+      description: Webhook management and delivery events
+    - name: system
+      description: System and infrastructure events
+
+defaultContentType: application/cloudevents+json
+
+servers:
+  nats-production:
+    host: nats-cluster.arrakis.internal:4222
+    protocol: nats
+    description: Production NATS cluster
+    tags:
+      - name: production
+      - name: high-availability
+    bindings:
+      nats:
+        clientId: event-gateway-prod
+        queue: event-gateway-workers
+
+  nats-development:
+    host: localhost:4222
+    protocol: nats
+    description: Local development NATS server
+    tags:
+      - name: development
+    bindings:
+      nats:
+        clientId: event-gateway-dev
+
+channels:
+  # Ontology Management Events
+  ontology/schema/created:
+    address: ontology.schema.created
+    title: Schema Creation Events
+    description: Events published when new ontology schemas are created
+    messages:
+      schemaCreated:
+        $ref: "#/components/messages/OntologySchemaCreated"
+    tags:
+      - name: ontology
+      - name: creation
+    bindings:
+      nats:
+        subject: ontology.schema.created
+        queue: schema-processors
+
+  ontology/schema/updated:
+    address: ontology.schema.updated
+    title: Schema Update Events
+    description: Events published when ontology schemas are modified
+    messages:
+      schemaUpdated:
+        $ref: "#/components/messages/OntologySchemaUpdated"
+    tags:
+      - name: ontology
+      - name: modification
+
+  ontology/schema/deleted:
+    address: ontology.schema.deleted
+    title: Schema Deletion Events
+    description: Events published when ontology schemas are removed
+    messages:
+      schemaDeleted:
+        $ref: "#/components/messages/OntologySchemaDeleted"
+    tags:
+      - name: ontology
+      - name: deletion
+
+  ontology/schema/validated:
+    address: ontology.schema.validated
+    title: Schema Validation Events
+    description: Events published after schema validation processes
+    messages:
+      schemaValidated:
+        $ref: "#/components/messages/OntologySchemaValidated"
+    tags:
+      - name: ontology
+      - name: validation
+
+  # TerminusDB Events
+  terminus/commit/created:
+    address: terminus.commit.created
+    title: Database Commit Events
+    description: Events published when new commits are created in TerminusDB
+    messages:
+      commitCreated:
+        $ref: "#/components/messages/TerminusCommitCreated"
+    tags:
+      - name: terminus
+      - name: data-change
+    bindings:
+      nats:
+        subject: terminus.commit.created
+        queue: commit-processors
+
+  terminus/commit/failed:
+    address: terminus.commit.failed
+    title: Failed Commit Events
+    description: Events published when TerminusDB commits fail
+    messages:
+      commitFailed:
+        $ref: "#/components/messages/TerminusCommitFailed"
+    tags:
+      - name: terminus
+      - name: error
+
+  terminus/query/executed:
+    address: terminus.query.executed
+    title: Query Execution Events
+    description: Events published when WOQL queries are executed
+    messages:
+      queryExecuted:
+        $ref: "#/components/messages/TerminusQueryExecuted"
+    tags:
+      - name: terminus
+      - name: query
+
+  # Audit Events
+  audit/events/user-action:
+    address: audit.events.user-action
+    title: User Action Audit Events
+    description: Audit events for all user actions across the platform
+    messages:
+      userAction:
+        $ref: "#/components/messages/AuditUserAction"
+    tags:
+      - name: audit
+      - name: user-action
+    bindings:
+      nats:
+        subject: audit.events.user-action
+        queue: audit-processors
+
+  audit/events/data-access:
+    address: audit.events.data-access
+    title: Data Access Audit Events
+    description: Audit events for data access and manipulation
+    messages:
+      dataAccess:
+        $ref: "#/components/messages/AuditDataAccess"
+    tags:
+      - name: audit
+      - name: data-access
+
+  audit/events/security:
+    address: audit.events.security
+    title: Security Audit Events
+    description: Security-related audit events
+    messages:
+      securityEvent:
+        $ref: "#/components/messages/AuditSecurityEvent"
+    tags:
+      - name: audit
+      - name: security
+
+  # Scheduler Events
+  scheduler/job/created:
+    address: scheduler.job.created
+    title: Job Creation Events
+    description: Events published when new jobs are created
+    messages:
+      jobCreated:
+        $ref: "#/components/messages/SchedulerJobCreated"
+    tags:
+      - name: scheduler
+      - name: creation
+
+  scheduler/job/started:
+    address: scheduler.job.started
+    title: Job Start Events
+    description: Events published when jobs begin execution
+    messages:
+      jobStarted:
+        $ref: "#/components/messages/SchedulerJobStarted"
+    tags:
+      - name: scheduler
+      - name: execution
+
+  scheduler/job/completed:
+    address: scheduler.job.completed
+    title: Job Completion Events
+    description: Events published when jobs complete successfully
+    messages:
+      jobCompleted:
+        $ref: "#/components/messages/SchedulerJobCompleted"
+    tags:
+      - name: scheduler
+      - name: completion
+
+  scheduler/job/failed:
+    address: scheduler.job.failed
+    title: Job Failure Events
+    description: Events published when jobs fail
+    messages:
+      jobFailed:
+        $ref: "#/components/messages/SchedulerJobFailed"
+    tags:
+      - name: scheduler
+      - name: error
+
+  # Embedding Events
+  embedding/vector/generated:
+    address: embedding.vector.generated
+    title: Vector Generation Events
+    description: Events published when new embeddings are generated
+    messages:
+      vectorGenerated:
+        $ref: "#/components/messages/EmbeddingVectorGenerated"
+    tags:
+      - name: embedding
+      - name: generation
+
+  embedding/similarity/computed:
+    address: embedding.similarity.computed
+    title: Similarity Computation Events
+    description: Events published when similarity calculations are completed
+    messages:
+      similarityComputed:
+        $ref: "#/components/messages/EmbeddingSimilarityComputed"
+    tags:
+      - name: embedding
+      - name: similarity
+
+  # Webhook Events
+  webhook/registered:
+    address: webhook.registered
+    title: Webhook Registration Events
+    description: Events published when new webhooks are registered
+    messages:
+      webhookRegistered:
+        $ref: "#/components/messages/WebhookRegistered"
+    tags:
+      - name: webhook
+      - name: registration
+
+  webhook/triggered:
+    address: webhook.triggered
+    title: Webhook Trigger Events
+    description: Events published when webhooks are triggered
+    messages:
+      webhookTriggered:
+        $ref: "#/components/messages/WebhookTriggered"
+    tags:
+      - name: webhook
+      - name: execution
+
+  webhook/failed:
+    address: webhook.failed
+    title: Webhook Failure Events
+    description: Events published when webhook delivery fails
+    messages:
+      webhookFailed:
+        $ref: "#/components/messages/WebhookFailed"
+    tags:
+      - name: webhook
+      - name: error
+
+  # System Events
+  system/health/degraded:
+    address: system.health.degraded
+    title: System Health Degradation Events
+    description: Events published when system health degrades
+    messages:
+      healthDegraded:
+        $ref: "#/components/messages/SystemHealthDegraded"
+    tags:
+      - name: system
+      - name: health
+
+  system/health/recovered:
+    address: system.health.recovered
+    title: System Health Recovery Events
+    description: Events published when system health recovers
+    messages:
+      healthRecovered:
+        $ref: "#/components/messages/SystemHealthRecovered"
+    tags:
+      - name: system
+      - name: health
+
+operations:
+  # Publishing Operations
+  publishSchemaCreated:
+    action: send
+    channel:
+      $ref: "#/channels/ontology~1schema~1created"
+    title: Publish Schema Created Event
+    summary: Publish when a new schema is created
+    tags:
+      - name: publish
+      - name: ontology
+
+  publishCommitCreated:
+    action: send
+    channel:
+      $ref: "#/channels/terminus~1commit~1created"
+    title: Publish Commit Created Event
+    summary: Publish when a new TerminusDB commit is created
+    tags:
+      - name: publish
+      - name: terminus
+
+  publishAuditEvent:
+    action: send
+    channel:
+      $ref: "#/channels/audit~1events~1user-action"
+    title: Publish Audit Event
+    summary: Publish user action audit events
+    tags:
+      - name: publish
+      - name: audit
+
+  publishJobCompleted:
+    action: send
+    channel:
+      $ref: "#/channels/scheduler~1job~1completed"
+    title: Publish Job Completed Event
+    summary: Publish when a scheduled job completes
+    tags:
+      - name: publish
+      - name: scheduler
+
+  # Subscription Operations
+  subscribeToSchemaEvents:
+    action: receive
+    channel:
+      $ref: "#/channels/ontology~1schema~1created"
+    title: Subscribe to Schema Events
+    summary: Listen for schema lifecycle events
+    tags:
+      - name: subscribe
+      - name: ontology
+
+  subscribeToCommitEvents:
+    action: receive
+    channel:
+      $ref: "#/channels/terminus~1commit~1created"
+    title: Subscribe to Commit Events
+    summary: Listen for database commit events
+    tags:
+      - name: subscribe
+      - name: terminus
+
+  subscribeToAuditEvents:
+    action: receive
+    channel:
+      $ref: "#/channels/audit~1events~1user-action"
+    title: Subscribe to Audit Events
+    summary: Listen for audit events
+    tags:
+      - name: subscribe
+      - name: audit
+
+  subscribeToJobEvents:
+    action: receive
+    channel:
+      $ref: "#/channels/scheduler~1job~1completed"
+    title: Subscribe to Job Events
+    summary: Listen for job lifecycle events
+    tags:
+      - name: subscribe
+      - name: scheduler
+
+components:
+  messages:
+    # Ontology Messages
+    OntologySchemaCreated:
+      name: OntologySchemaCreated
+      title: Ontology Schema Created Event
+      summary: Event published when a new ontology schema is created
+      contentType: application/cloudevents+json
+      traits:
+        - $ref: "#/components/messageTraits/CloudEventsTrait"
+      payload:
+        $ref: "#/components/schemas/OntologySchemaCreatedPayload"
+      examples:
+        - name: UserProfileSchemaCreated
+          summary: Example of user profile schema creation
+          payload:
+            specversion: "1.0"
+            type: ontology.schema.created
+            source: ontology-management-service
+            subject: schema/user-profile-v1
+            id: 550e8400-e29b-41d4-a716-446655440000
+            time: "2024-01-15T10:30:00Z"
+            datacontenttype: application/json
+            data:
+              schema_id: user-profile-v1
+              name: "User Profile Schema"
+              version: "1.0.0"
+              namespace: identity
+              created_by: user123
+
+    OntologySchemaUpdated:
+      name: OntologySchemaUpdated
+      title: Ontology Schema Updated Event
+      summary: Event published when an ontology schema is modified
+      contentType: application/cloudevents+json
+      traits:
+        - $ref: "#/components/messageTraits/CloudEventsTrait"
+      payload:
+        $ref: "#/components/schemas/OntologySchemaUpdatedPayload"
+
+    OntologySchemaDeleted:
+      name: OntologySchemaDeleted
+      title: Ontology Schema Deleted Event
+      summary: Event published when an ontology schema is removed
+      contentType: application/cloudevents+json
+      traits:
+        - $ref: "#/components/messageTraits/CloudEventsTrait"
+      payload:
+        $ref: "#/components/schemas/OntologySchemaDeletedPayload"
+
+    OntologySchemaValidated:
+      name: OntologySchemaValidated
+      title: Ontology Schema Validated Event
+      summary: Event published after schema validation
+      contentType: application/cloudevents+json
+      traits:
+        - $ref: "#/components/messageTraits/CloudEventsTrait"
+      payload:
+        $ref: "#/components/schemas/OntologySchemaValidatedPayload"
+
+    # TerminusDB Messages
+    TerminusCommitCreated:
+      name: TerminusCommitCreated
+      title: Terminus Commit Created Event
+      summary: Event published when a new TerminusDB commit is created
+      contentType: application/cloudevents+json
+      traits:
+        - $ref: "#/components/messageTraits/CloudEventsTrait"
+      payload:
+        $ref: "#/components/schemas/TerminusCommitCreatedPayload"
+      examples:
+        - name: ProductDataCommit
+          summary: Example of product data commit
+          payload:
+            specversion: "1.0"
+            type: terminus.commit.created
+            source: data-kernel-service
+            subject: commit/knowledge-base/abc123def456
+            id: 7f9c8e7d-4b2a-4d8f-9e1c-3a5b7c9d1e2f
+            time: "2024-01-15T14:23:45Z"
+            datacontenttype: application/json
+            data:
+              commit_id: abc123def456
+              database_id: knowledge-base
+              branch: main
+              author: user456
+              message: "Add new product documents"
+              changes:
+                insertions: 127
+                deletions: 23
+
+    TerminusCommitFailed:
+      name: TerminusCommitFailed
+      title: Terminus Commit Failed Event
+      summary: Event published when a TerminusDB commit fails
+      contentType: application/cloudevents+json
+      traits:
+        - $ref: "#/components/messageTraits/CloudEventsTrait"
+      payload:
+        $ref: "#/components/schemas/TerminusCommitFailedPayload"
+
+    TerminusQueryExecuted:
+      name: TerminusQueryExecuted
+      title: Terminus Query Executed Event
+      summary: Event published when a WOQL query is executed
+      contentType: application/cloudevents+json
+      traits:
+        - $ref: "#/components/messageTraits/CloudEventsTrait"
+      payload:
+        $ref: "#/components/schemas/TerminusQueryExecutedPayload"
+
+    # Audit Messages
+    AuditUserAction:
+      name: AuditUserAction
+      title: Audit User Action Event
+      summary: Audit event for user actions
+      contentType: application/cloudevents+json
+      traits:
+        - $ref: "#/components/messageTraits/CloudEventsTrait"
+      payload:
+        $ref: "#/components/schemas/AuditUserActionPayload"
+
+    AuditDataAccess:
+      name: AuditDataAccess
+      title: Audit Data Access Event
+      summary: Audit event for data access
+      contentType: application/cloudevents+json
+      traits:
+        - $ref: "#/components/messageTraits/CloudEventsTrait"
+      payload:
+        $ref: "#/components/schemas/AuditDataAccessPayload"
+
+    AuditSecurityEvent:
+      name: AuditSecurityEvent
+      title: Audit Security Event
+      summary: Security-related audit event
+      contentType: application/cloudevents+json
+      traits:
+        - $ref: "#/components/messageTraits/CloudEventsTrait"
+      payload:
+        $ref: "#/components/schemas/AuditSecurityEventPayload"
+
+    # Scheduler Messages
+    SchedulerJobCreated:
+      name: SchedulerJobCreated
+      title: Scheduler Job Created Event
+      summary: Event published when a new job is created
+      contentType: application/cloudevents+json
+      traits:
+        - $ref: "#/components/messageTraits/CloudEventsTrait"
+      payload:
+        $ref: "#/components/schemas/SchedulerJobCreatedPayload"
+
+    SchedulerJobStarted:
+      name: SchedulerJobStarted
+      title: Scheduler Job Started Event
+      summary: Event published when a job starts execution
+      contentType: application/cloudevents+json
+      traits:
+        - $ref: "#/components/messageTraits/CloudEventsTrait"
+      payload:
+        $ref: "#/components/schemas/SchedulerJobStartedPayload"
+
+    SchedulerJobCompleted:
+      name: SchedulerJobCompleted
+      title: Scheduler Job Completed Event
+      summary: Event published when a job completes successfully
+      contentType: application/cloudevents+json
+      traits:
+        - $ref: "#/components/messageTraits/CloudEventsTrait"
+      payload:
+        $ref: "#/components/schemas/SchedulerJobCompletedPayload"
+
+    SchedulerJobFailed:
+      name: SchedulerJobFailed
+      title: Scheduler Job Failed Event
+      summary: Event published when a job fails
+      contentType: application/cloudevents+json
+      traits:
+        - $ref: "#/components/messageTraits/CloudEventsTrait"
+      payload:
+        $ref: "#/components/schemas/SchedulerJobFailedPayload"
+
+    # Embedding Messages
+    EmbeddingVectorGenerated:
+      name: EmbeddingVectorGenerated
+      title: Embedding Vector Generated Event
+      summary: Event published when new embeddings are generated
+      contentType: application/cloudevents+json
+      traits:
+        - $ref: "#/components/messageTraits/CloudEventsTrait"
+      payload:
+        $ref: "#/components/schemas/EmbeddingVectorGeneratedPayload"
+
+    EmbeddingSimilarityComputed:
+      name: EmbeddingSimilarityComputed
+      title: Embedding Similarity Computed Event
+      summary: Event published when similarity calculations complete
+      contentType: application/cloudevents+json
+      traits:
+        - $ref: "#/components/messageTraits/CloudEventsTrait"
+      payload:
+        $ref: "#/components/schemas/EmbeddingSimilarityComputedPayload"
+
+    # Webhook Messages
+    WebhookRegistered:
+      name: WebhookRegistered
+      title: Webhook Registered Event
+      summary: Event published when a new webhook is registered
+      contentType: application/cloudevents+json
+      traits:
+        - $ref: "#/components/messageTraits/CloudEventsTrait"
+      payload:
+        $ref: "#/components/schemas/WebhookRegisteredPayload"
+
+    WebhookTriggered:
+      name: WebhookTriggered
+      title: Webhook Triggered Event
+      summary: Event published when a webhook is triggered
+      contentType: application/cloudevents+json
+      traits:
+        - $ref: "#/components/messageTraits/CloudEventsTrait"
+      payload:
+        $ref: "#/components/schemas/WebhookTriggeredPayload"
+
+    WebhookFailed:
+      name: WebhookFailed
+      title: Webhook Failed Event
+      summary: Event published when webhook delivery fails
+      contentType: application/cloudevents+json
+      traits:
+        - $ref: "#/components/messageTraits/CloudEventsTrait"
+      payload:
+        $ref: "#/components/schemas/WebhookFailedPayload"
+
+    # System Messages
+    SystemHealthDegraded:
+      name: SystemHealthDegraded
+      title: System Health Degraded Event
+      summary: Event published when system health degrades
+      contentType: application/cloudevents+json
+      traits:
+        - $ref: "#/components/messageTraits/CloudEventsTrait"
+      payload:
+        $ref: "#/components/schemas/SystemHealthDegradedPayload"
+
+    SystemHealthRecovered:
+      name: SystemHealthRecovered
+      title: System Health Recovered Event
+      summary: Event published when system health recovers
+      contentType: application/cloudevents+json
+      traits:
+        - $ref: "#/components/messageTraits/CloudEventsTrait"
+      payload:
+        $ref: "#/components/schemas/SystemHealthRecoveredPayload"
+
+  schemas:
+    # Base CloudEvents Schema
+    CloudEventsBase:
+      type: object
+      required:
+        - specversion
+        - type
+        - source
+        - id
+        - time
+        - data
+      properties:
+        specversion:
+          type: string
+          const: "1.0"
+          description: CloudEvents specification version
+        type:
+          type: string
+          description: Event type identifier
+        source:
+          type: string
+          description: Event source identifier
+        subject:
+          type: string
+          description: Event subject
+        id:
+          type: string
+          format: uuid
+          description: Event unique identifier
+        time:
+          type: string
+          format: date-time
+          description: Event timestamp
+        datacontenttype:
+          type: string
+          const: application/json
+          description: Data content type
+        data:
+          type: object
+          description: Event payload
+
+    # Ontology Event Payloads
+    OntologySchemaCreatedPayload:
+      allOf:
+        - $ref: "#/components/schemas/CloudEventsBase"
+        - type: object
+          properties:
+            type:
+              const: ontology.schema.created
+            source:
+              const: ontology-management-service
+            data:
+              type: object
+              required:
+                - schema_id
+                - name
+                - version
+                - created_by
+              properties:
+                schema_id:
+                  type: string
+                  description: Unique schema identifier
+                name:
+                  type: string
+                  description: Human-readable schema name
+                version:
+                  type: string
+                  pattern: '^\d+\.\d+\.\d+$'
+                  description: Schema version (semantic versioning)
+                description:
+                  type: string
+                  description: Schema description
+                namespace:
+                  type: string
+                  description: Schema namespace
+                created_by:
+                  type: string
+                  description: User ID who created the schema
+                metadata:
+                  type: object
+                  properties:
+                    tags:
+                      type: array
+                      items:
+                        type: string
+                    category:
+                      type: string
+                      enum: [core, domain, integration, experimental]
+
+    OntologySchemaUpdatedPayload:
+      allOf:
+        - $ref: "#/components/schemas/CloudEventsBase"
+        - type: object
+          properties:
+            type:
+              const: ontology.schema.updated
+            source:
+              const: ontology-management-service
+            data:
+              type: object
+              required:
+                - schema_id
+                - version
+                - updated_by
+                - changes
+              properties:
+                schema_id:
+                  type: string
+                version:
+                  type: string
+                  pattern: '^\d+\.\d+\.\d+$'
+                updated_by:
+                  type: string
+                changes:
+                  type: object
+                  properties:
+                    fields_added:
+                      type: array
+                      items:
+                        type: string
+                    fields_removed:
+                      type: array
+                      items:
+                        type: string
+                    fields_modified:
+                      type: array
+                      items:
+                        type: string
+                change_summary:
+                  type: string
+
+    OntologySchemaDeletedPayload:
+      allOf:
+        - $ref: "#/components/schemas/CloudEventsBase"
+        - type: object
+          properties:
+            type:
+              const: ontology.schema.deleted
+            source:
+              const: ontology-management-service
+            data:
+              type: object
+              required:
+                - schema_id
+                - deleted_by
+                - reason
+              properties:
+                schema_id:
+                  type: string
+                deleted_by:
+                  type: string
+                reason:
+                  type: string
+                  enum: [deprecated, replaced, obsolete, error]
+                replacement_schema_id:
+                  type: string
+
+    OntologySchemaValidatedPayload:
+      allOf:
+        - $ref: "#/components/schemas/CloudEventsBase"
+        - type: object
+          properties:
+            type:
+              const: ontology.schema.validated
+            source:
+              const: ontology-management-service
+            data:
+              type: object
+              required:
+                - schema_id
+                - validation_result
+                - validated_at
+              properties:
+                schema_id:
+                  type: string
+                validation_result:
+                  type: string
+                  enum: [valid, invalid, warning]
+                errors:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      field:
+                        type: string
+                      message:
+                        type: string
+                      severity:
+                        type: string
+                        enum: [error, warning, info]
+                validated_at:
+                  type: string
+                  format: date-time
+                validator_version:
+                  type: string
+
+    # TerminusDB Event Payloads
+    TerminusCommitCreatedPayload:
+      allOf:
+        - $ref: "#/components/schemas/CloudEventsBase"
+        - type: object
+          properties:
+            type:
+              const: terminus.commit.created
+            source:
+              const: data-kernel-service
+            data:
+              type: object
+              required:
+                - commit_id
+                - database_id
+                - author
+                - message
+                - changes
+              properties:
+                commit_id:
+                  type: string
+                database_id:
+                  type: string
+                branch:
+                  type: string
+                  default: main
+                author:
+                  type: string
+                message:
+                  type: string
+                parent_commit:
+                  type: string
+                changes:
+                  type: object
+                  required:
+                    - insertions
+                    - deletions
+                  properties:
+                    insertions:
+                      type: integer
+                      minimum: 0
+                    deletions:
+                      type: integer
+                      minimum: 0
+                    document_changes:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          document_id:
+                            type: string
+                          operation:
+                            type: string
+                            enum: [create, update, delete]
+                          document_type:
+                            type: string
+                metadata:
+                  type: object
+                  properties:
+                    triggered_by:
+                      type: string
+                      enum: [user, api, system]
+                    source_system:
+                      type: string
+                    transaction_id:
+                      type: string
+
+    TerminusCommitFailedPayload:
+      allOf:
+        - $ref: "#/components/schemas/CloudEventsBase"
+        - type: object
+          properties:
+            type:
+              const: terminus.commit.failed
+            source:
+              const: data-kernel-service
+            data:
+              type: object
+              required:
+                - database_id
+                - error_type
+                - error_message
+                - attempted_by
+              properties:
+                database_id:
+                  type: string
+                branch:
+                  type: string
+                attempted_by:
+                  type: string
+                error_type:
+                  type: string
+                  enum:
+                    [
+                      validation_error,
+                      constraint_violation,
+                      timeout,
+                      permission_denied,
+                      database_error,
+                    ]
+                error_message:
+                  type: string
+                error_details:
+                  type: object
+                attempted_changes:
+                  type: object
+
+    TerminusQueryExecutedPayload:
+      allOf:
+        - $ref: "#/components/schemas/CloudEventsBase"
+        - type: object
+          properties:
+            type:
+              const: terminus.query.executed
+            source:
+              const: data-kernel-service
+            data:
+              type: object
+              required:
+                - query_id
+                - database_id
+                - executed_by
+                - execution_time_ms
+                - result_count
+              properties:
+                query_id:
+                  type: string
+                database_id:
+                  type: string
+                query_type:
+                  type: string
+                  enum: [select, insert, update, delete, schema]
+                executed_by:
+                  type: string
+                execution_time_ms:
+                  type: integer
+                  minimum: 0
+                result_count:
+                  type: integer
+                  minimum: 0
+                query_complexity:
+                  type: string
+                  enum: [simple, medium, complex]
+                cache_hit:
+                  type: boolean
+
+    # Audit Event Payloads
+    AuditUserActionPayload:
+      allOf:
+        - $ref: "#/components/schemas/CloudEventsBase"
+        - type: object
+          properties:
+            type:
+              const: audit.events.user-action
+            source:
+              enum:
+                [
+                  ontology-management-service,
+                  user-service,
+                  audit-service,
+                  data-kernel-service,
+                ]
+            data:
+              type: object
+              required:
+                - user_id
+                - action
+                - resource
+                - timestamp
+                - ip_address
+              properties:
+                user_id:
+                  type: string
+                action:
+                  type: string
+                  enum:
+                    [
+                      create,
+                      read,
+                      update,
+                      delete,
+                      login,
+                      logout,
+                      export,
+                      import,
+                    ]
+                resource:
+                  type: string
+                resource_id:
+                  type: string
+                timestamp:
+                  type: string
+                  format: date-time
+                ip_address:
+                  type: string
+                  format: ipv4
+                user_agent:
+                  type: string
+                session_id:
+                  type: string
+                result:
+                  type: string
+                  enum: [success, failure, partial]
+                details:
+                  type: object
+
+    AuditDataAccessPayload:
+      allOf:
+        - $ref: "#/components/schemas/CloudEventsBase"
+        - type: object
+          properties:
+            type:
+              const: audit.events.data-access
+            data:
+              type: object
+              required:
+                - user_id
+                - data_type
+                - access_type
+                - database_id
+                - record_count
+              properties:
+                user_id:
+                  type: string
+                data_type:
+                  type: string
+                access_type:
+                  type: string
+                  enum: [query, export, import, bulk-operation]
+                database_id:
+                  type: string
+                table_name:
+                  type: string
+                record_count:
+                  type: integer
+                  minimum: 0
+                data_classification:
+                  type: string
+                  enum: [public, internal, confidential, restricted]
+                compliance_tags:
+                  type: array
+                  items:
+                    type: string
+
+    AuditSecurityEventPayload:
+      allOf:
+        - $ref: "#/components/schemas/CloudEventsBase"
+        - type: object
+          properties:
+            type:
+              const: audit.events.security
+            data:
+              type: object
+              required:
+                - event_type
+                - severity
+                - description
+                - source_ip
+              properties:
+                event_type:
+                  type: string
+                  enum:
+                    [
+                      authentication_failure,
+                      authorization_failure,
+                      suspicious_activity,
+                      data_breach,
+                      policy_violation,
+                    ]
+                severity:
+                  type: string
+                  enum: [low, medium, high, critical]
+                description:
+                  type: string
+                user_id:
+                  type: string
+                source_ip:
+                  type: string
+                  format: ipv4
+                affected_resources:
+                  type: array
+                  items:
+                    type: string
+                mitigation_actions:
+                  type: array
+                  items:
+                    type: string
+                requires_investigation:
+                  type: boolean
+
+    # Scheduler Event Payloads
+    SchedulerJobCreatedPayload:
+      allOf:
+        - $ref: "#/components/schemas/CloudEventsBase"
+        - type: object
+          properties:
+            type:
+              const: scheduler.job.created
+            source:
+              const: scheduler-service
+            data:
+              type: object
+              required:
+                - job_id
+                - job_name
+                - job_type
+                - schedule
+                - created_by
+              properties:
+                job_id:
+                  type: string
+                job_name:
+                  type: string
+                job_type:
+                  type: string
+                  enum:
+                    [
+                      data-processing,
+                      schema-validation,
+                      backup,
+                      cleanup,
+                      report-generation,
+                    ]
+                schedule:
+                  type: string
+                  description: Cron expression
+                description:
+                  type: string
+                created_by:
+                  type: string
+                priority:
+                  type: string
+                  enum: [low, normal, high, critical]
+                timeout_minutes:
+                  type: integer
+                  minimum: 1
+                  maximum: 1440
+                retry_policy:
+                  type: object
+                  properties:
+                    max_attempts:
+                      type: integer
+                      minimum: 1
+                      maximum: 10
+                    backoff_strategy:
+                      type: string
+                      enum: [fixed, exponential, linear]
+
+    SchedulerJobStartedPayload:
+      allOf:
+        - $ref: "#/components/schemas/CloudEventsBase"
+        - type: object
+          properties:
+            type:
+              const: scheduler.job.started
+            source:
+              const: scheduler-service
+            data:
+              type: object
+              required:
+                - job_id
+                - execution_id
+                - started_at
+                - estimated_duration_minutes
+              properties:
+                job_id:
+                  type: string
+                execution_id:
+                  type: string
+                started_at:
+                  type: string
+                  format: date-time
+                started_by:
+                  type: string
+                  enum: [scheduler, manual, api]
+                estimated_duration_minutes:
+                  type: integer
+                  minimum: 1
+                execution_context:
+                  type: object
+
+    SchedulerJobCompletedPayload:
+      allOf:
+        - $ref: "#/components/schemas/CloudEventsBase"
+        - type: object
+          properties:
+            type:
+              const: scheduler.job.completed
+            source:
+              const: scheduler-service
+            data:
+              type: object
+              required:
+                - job_id
+                - execution_id
+                - completed_at
+                - duration_minutes
+                - result
+              properties:
+                job_id:
+                  type: string
+                execution_id:
+                  type: string
+                completed_at:
+                  type: string
+                  format: date-time
+                duration_minutes:
+                  type: number
+                  minimum: 0
+                result:
+                  type: string
+                  enum: [success, partial_success]
+                output_summary:
+                  type: object
+                  properties:
+                    records_processed:
+                      type: integer
+                    records_failed:
+                      type: integer
+                    output_size_bytes:
+                      type: integer
+                next_scheduled_run:
+                  type: string
+                  format: date-time
+
+    SchedulerJobFailedPayload:
+      allOf:
+        - $ref: "#/components/schemas/CloudEventsBase"
+        - type: object
+          properties:
+            type:
+              const: scheduler.job.failed
+            source:
+              const: scheduler-service
+            data:
+              type: object
+              required:
+                - job_id
+                - execution_id
+                - failed_at
+                - error_type
+                - error_message
+              properties:
+                job_id:
+                  type: string
+                execution_id:
+                  type: string
+                failed_at:
+                  type: string
+                  format: date-time
+                error_type:
+                  type: string
+                  enum:
+                    [
+                      timeout,
+                      resource_unavailable,
+                      dependency_failure,
+                      configuration_error,
+                      runtime_error,
+                    ]
+                error_message:
+                  type: string
+                error_details:
+                  type: object
+                retry_attempt:
+                  type: integer
+                  minimum: 1
+                will_retry:
+                  type: boolean
+                next_retry_at:
+                  type: string
+                  format: date-time
+
+    # Embedding Event Payloads
+    EmbeddingVectorGeneratedPayload:
+      allOf:
+        - $ref: "#/components/schemas/CloudEventsBase"
+        - type: object
+          properties:
+            type:
+              const: embedding.vector.generated
+            source:
+              const: embedding-service
+            data:
+              type: object
+              required:
+                - embedding_id
+                - source_text
+                - model_name
+                - vector_dimensions
+                - generation_time_ms
+              properties:
+                embedding_id:
+                  type: string
+                source_text:
+                  type: string
+                  maxLength: 10000
+                source_type:
+                  type: string
+                  enum: [document, schema, query, metadata]
+                model_name:
+                  type: string
+                model_version:
+                  type: string
+                vector_dimensions:
+                  type: integer
+                  minimum: 1
+                generation_time_ms:
+                  type: integer
+                  minimum: 0
+                quality_score:
+                  type: number
+                  minimum: 0
+                  maximum: 1
+                metadata:
+                  type: object
+                  properties:
+                    language:
+                      type: string
+                    confidence:
+                      type: number
+                    preprocessing_applied:
+                      type: array
+                      items:
+                        type: string
+
+    EmbeddingSimilarityComputedPayload:
+      allOf:
+        - $ref: "#/components/schemas/CloudEventsBase"
+        - type: object
+          properties:
+            type:
+              const: embedding.similarity.computed
+            source:
+              const: embedding-service
+            data:
+              type: object
+              required:
+                - query_embedding_id
+                - result_count
+                - computation_time_ms
+                - similarity_threshold
+              properties:
+                query_embedding_id:
+                  type: string
+                query_text:
+                  type: string
+                result_count:
+                  type: integer
+                  minimum: 0
+                computation_time_ms:
+                  type: integer
+                  minimum: 0
+                similarity_threshold:
+                  type: number
+                  minimum: 0
+                  maximum: 1
+                top_results:
+                  type: array
+                  maxItems: 10
+                  items:
+                    type: object
+                    properties:
+                      embedding_id:
+                        type: string
+                      similarity_score:
+                        type: number
+                      source_text_preview:
+                        type: string
+                        maxLength: 200
+                algorithm:
+                  type: string
+                  enum: [cosine, euclidean, dot_product]
+
+    # Webhook Event Payloads
+    WebhookRegisteredPayload:
+      allOf:
+        - $ref: "#/components/schemas/CloudEventsBase"
+        - type: object
+          properties:
+            type:
+              const: webhook.registered
+            source:
+              const: event-gateway
+            data:
+              type: object
+              required:
+                - webhook_id
+                - webhook_url
+                - event_filters
+                - registered_by
+              properties:
+                webhook_id:
+                  type: string
+                webhook_name:
+                  type: string
+                webhook_url:
+                  type: string
+                  format: uri
+                event_filters:
+                  type: array
+                  items:
+                    type: string
+                registered_by:
+                  type: string
+                auth_type:
+                  type: string
+                  enum: [none, api_key, bearer_token, hmac, mtls]
+                retry_policy:
+                  type: object
+                  properties:
+                    max_attempts:
+                      type: integer
+                    backoff_strategy:
+                      type: string
+                timeout_seconds:
+                  type: integer
+                  minimum: 1
+                  maximum: 300
+
+    WebhookTriggeredPayload:
+      allOf:
+        - $ref: "#/components/schemas/CloudEventsBase"
+        - type: object
+          properties:
+            type:
+              const: webhook.triggered
+            source:
+              const: event-gateway
+            data:
+              type: object
+              required:
+                - webhook_id
+                - trigger_event_id
+                - trigger_event_type
+                - delivery_id
+              properties:
+                webhook_id:
+                  type: string
+                trigger_event_id:
+                  type: string
+                trigger_event_type:
+                  type: string
+                delivery_id:
+                  type: string
+                webhook_url:
+                  type: string
+                  format: uri
+                payload_size_bytes:
+                  type: integer
+                  minimum: 0
+                delivery_attempt:
+                  type: integer
+                  minimum: 1
+                scheduled_for:
+                  type: string
+                  format: date-time
+
+    WebhookFailedPayload:
+      allOf:
+        - $ref: "#/components/schemas/CloudEventsBase"
+        - type: object
+          properties:
+            type:
+              const: webhook.failed
+            source:
+              const: event-gateway
+            data:
+              type: object
+              required:
+                - webhook_id
+                - delivery_id
+                - error_type
+                - http_status_code
+                - attempt_count
+              properties:
+                webhook_id:
+                  type: string
+                delivery_id:
+                  type: string
+                trigger_event_id:
+                  type: string
+                error_type:
+                  type: string
+                  enum:
+                    [
+                      connection_timeout,
+                      connection_refused,
+                      http_error,
+                      authentication_failed,
+                      rate_limited,
+                    ]
+                error_message:
+                  type: string
+                http_status_code:
+                  type: integer
+                  minimum: 100
+                  maximum: 599
+                response_body:
+                  type: string
+                  maxLength: 1000
+                attempt_count:
+                  type: integer
+                  minimum: 1
+                will_retry:
+                  type: boolean
+                next_retry_at:
+                  type: string
+                  format: date-time
+                final_failure:
+                  type: boolean
+
+    # System Event Payloads
+    SystemHealthDegradedPayload:
+      allOf:
+        - $ref: "#/components/schemas/CloudEventsBase"
+        - type: object
+          properties:
+            type:
+              const: system.health.degraded
+            data:
+              type: object
+              required:
+                - service_name
+                - health_status
+                - degradation_type
+                - detected_at
+              properties:
+                service_name:
+                  type: string
+                health_status:
+                  type: string
+                  enum: [degraded, unhealthy, critical]
+                degradation_type:
+                  type: string
+                  enum:
+                    [
+                      high_latency,
+                      high_error_rate,
+                      resource_exhaustion,
+                      dependency_failure,
+                    ]
+                description:
+                  type: string
+                metrics:
+                  type: object
+                  properties:
+                    error_rate_percent:
+                      type: number
+                    average_latency_ms:
+                      type: number
+                    cpu_usage_percent:
+                      type: number
+                    memory_usage_percent:
+                      type: number
+                detected_at:
+                  type: string
+                  format: date-time
+                affected_endpoints:
+                  type: array
+                  items:
+                    type: string
+                mitigation_suggested:
+                  type: string
+
+    SystemHealthRecoveredPayload:
+      allOf:
+        - $ref: "#/components/schemas/CloudEventsBase"
+        - type: object
+          properties:
+            type:
+              const: system.health.recovered
+            data:
+              type: object
+              required:
+                - service_name
+                - health_status
+                - recovered_at
+                - downtime_duration_minutes
+              properties:
+                service_name:
+                  type: string
+                health_status:
+                  type: string
+                  enum: [healthy, operational]
+                recovered_at:
+                  type: string
+                  format: date-time
+                downtime_duration_minutes:
+                  type: number
+                  minimum: 0
+                recovery_action:
+                  type: string
+                  enum: [automatic, manual, scheduled_restart]
+                metrics:
+                  type: object
+                  properties:
+                    error_rate_percent:
+                      type: number
+                    average_latency_ms:
+                      type: number
+                    cpu_usage_percent:
+                      type: number
+                    memory_usage_percent:
+                      type: number
+                root_cause:
+                  type: string
+
+  messageTraits:
+    CloudEventsTrait:
+      headers:
+        type: object
+        properties:
+          ce-specversion:
+            type: string
+            const: "1.0"
+          ce-type:
+            type: string
+          ce-source:
+            type: string
+          ce-id:
+            type: string
+          ce-time:
+            type: string
+            format: date-time
+          ce-subject:
+            type: string
+        required:
+          - ce-specversion
+          - ce-type
+          - ce-source
+          - ce-id
+          - ce-time
+
+  operationTraits:
+    NATSOperation:
+      bindings:
+        nats:
+          queue: default-queue

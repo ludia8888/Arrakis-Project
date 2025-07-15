@@ -25,4 +25,4 @@ echo "   OTEL_SERVICE_NAME=$OTEL_SERVICE_NAME"
 # Start the application
 echo ""
 echo "▶️  Starting OMS application..."
-python main.py
+python -m api.main

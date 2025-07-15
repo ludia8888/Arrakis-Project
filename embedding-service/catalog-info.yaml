@@ -1,0 +1,185 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: embedding-service
+  title: Vector Embedding Service
+  description: |
+    Machine learning service for generating vector embeddings from text.
+    Supports multiple embedding models and provides similarity search capabilities.
+  annotations:
+    github.com/project-slug: Arrakis-Project/embedding-service
+    grafana/dashboard-selector: "service=embedding-service"
+    prometheus.io/service-name: embedding-service
+    jaeger.io/service-name: embedding-service
+    backstage.io/techdocs-ref: dir:.
+  tags:
+    - machine-learning
+    - embeddings
+    - vector-search
+    - similarity
+    - nlp
+    - python
+    - fastapi
+    - grpc
+    - redis
+    - microservice
+  links:
+    - url: http://localhost:8001/docs
+      title: OpenAPI Documentation
+      icon: docs
+    - url: http://localhost:8001/health
+      title: Health Check
+      icon: health
+    - url: http://localhost:8001/metrics
+      title: Prometheus Metrics
+      icon: metrics
+    - url: http://localhost:16686/search?service=embedding-service
+      title: Jaeger Traces
+      icon: traces
+spec:
+  type: service
+  lifecycle: production
+  owner: ml-team
+  system: arrakis-core
+  dependsOn:
+    - resource:redis
+    - component:data-kernel-service
+  consumesApis:
+    - data-kernel-grpc
+  providesApis:
+    - embedding-service-rest-api
+    - embedding-service-grpc
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: embedding-service-rest-api
+  title: Embedding Service REST API
+  description: RESTful API for text embedding and similarity operations
+  tags:
+    - rest
+    - openapi
+    - embeddings
+    - ml
+spec:
+  type: openapi
+  lifecycle: production
+  owner: ml-team
+  system: arrakis-core
+  definition: |
+    openapi: 3.0.3
+    info:
+      title: Vector Embedding Service
+      version: 1.0.0
+      description: Machine learning service for generating vector embeddings
+    servers:
+      - url: http://localhost:8001
+        description: Local development
+    paths:
+      /health:
+        get:
+          summary: Health check endpoint
+          responses:
+            '200':
+              description: Service is healthy
+      /api/v1/embeddings:
+        post:
+          summary: Generate embedding for single text
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    text:
+                      type: string
+                    model_name:
+                      type: string
+                      default: "sentence-transformers/all-MiniLM-L6-v2"
+                    metadata:
+                      type: object
+          responses:
+            '200':
+              description: Embedding vector generated
+      /api/v1/embeddings/batch:
+        post:
+          summary: Generate embeddings for multiple texts
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    texts:
+                      type: array
+                      items:
+                        type: string
+                    model_name:
+                      type: string
+                    metadata:
+                      type: object
+          responses:
+            '200':
+              description: Batch embeddings generated
+      /api/v1/similarity:
+        post:
+          summary: Calculate similarity between two texts
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    text1:
+                      type: string
+                    text2:
+                      type: string
+                    metric:
+                      type: string
+                      default: "cosine"
+          responses:
+            '200':
+              description: Similarity score calculated
+      /api/v1/search:
+        post:
+          summary: Semantic search using embeddings
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    query:
+                      type: string
+                    top_k:
+                      type: integer
+                      default: 10
+          responses:
+            '200':
+              description: Search results returned
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: embedding-service-grpc
+  title: Embedding Service gRPC API
+  description: High-performance gRPC interface for embedding operations
+  tags:
+    - grpc
+    - high-performance
+    - embeddings
+    - ml
+spec:
+  type: grpc
+  lifecycle: production
+  owner: ml-team
+  system: arrakis-core
+  definition: |
+    proto file: proto/embedding_service.proto
+    endpoint: localhost:50055

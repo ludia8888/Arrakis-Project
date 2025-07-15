@@ -1,0 +1,146 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: data-kernel-service
+  title: Data Kernel Service
+  description: |
+    High-performance data processing core that interfaces with TerminusDB.
+    Provides optimized data operations and graph database management.
+  annotations:
+    github.com/project-slug: Arrakis-Project/data-kernel-service
+    grafana/dashboard-selector: "service=data-kernel"
+    prometheus.io/service-name: data-kernel-service
+    jaeger.io/service-name: data-kernel-service
+    backstage.io/techdocs-ref: dir:.
+  tags:
+    - data-processing
+    - graph-database
+    - terminusdb
+    - high-performance
+    - python
+    - fastapi
+    - grpc
+    - microservice
+  links:
+    - url: http://localhost:8080/docs
+      title: OpenAPI Documentation
+      icon: docs
+    - url: http://localhost:8080/health
+      title: Health Check
+      icon: health
+    - url: http://localhost:8080/metrics
+      title: Prometheus Metrics
+      icon: metrics
+    - url: http://localhost:16686/search?service=data-kernel-service
+      title: Jaeger Traces
+      icon: traces
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-team
+  system: arrakis-core
+  dependsOn:
+    - resource:terminusdb
+  providesApis:
+    - data-kernel-rest-api
+    - data-kernel-grpc
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: data-kernel-rest-api
+  title: Data Kernel REST API
+  description: RESTful API for data operations and graph database management
+  tags:
+    - rest
+    - openapi
+    - data-processing
+    - graph-database
+spec:
+  type: openapi
+  lifecycle: production
+  owner: platform-team
+  system: arrakis-core
+  definition: |
+    openapi: 3.0.3
+    info:
+      title: Data Kernel Service
+      version: 1.0.0
+      description: High-performance data processing service for TerminusDB operations
+    servers:
+      - url: http://localhost:8080
+        description: Local development
+    paths:
+      /health:
+        get:
+          summary: Health check endpoint
+          responses:
+            '200':
+              description: Service is healthy
+      /api/v1/databases:
+        get:
+          summary: List available databases
+          responses:
+            '200':
+              description: List of databases
+        post:
+          summary: Create a new database
+          responses:
+            '201':
+              description: Database created
+      /api/v1/databases/{db_id}/query:
+        post:
+          summary: Execute WOQL query
+          parameters:
+            - name: db_id
+              in: path
+              required: true
+              schema:
+                type: string
+          responses:
+            '200':
+              description: Query results
+      /api/v1/databases/{db_id}/documents:
+        get:
+          summary: Retrieve documents
+          parameters:
+            - name: db_id
+              in: path
+              required: true
+              schema:
+                type: string
+          responses:
+            '200':
+              description: Document list
+        post:
+          summary: Insert documents
+          parameters:
+            - name: db_id
+              in: path
+              required: true
+              schema:
+                type: string
+          responses:
+            '201':
+              description: Documents inserted
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: data-kernel-grpc
+  title: Data Kernel gRPC API
+  description: High-performance gRPC interface for data operations
+  tags:
+    - grpc
+    - high-performance
+    - data-processing
+spec:
+  type: grpc
+  lifecycle: production
+  owner: platform-team
+  system: arrakis-core
+  definition: |
+    proto file: proto/data_kernel.proto
+    endpoint: localhost:50051

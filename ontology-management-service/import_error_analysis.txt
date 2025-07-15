@@ -1,0 +1,114 @@
+================================================================================
+IMPORT ERROR ANALYSIS SUMMARY
+================================================================================
+
+📊 OVERALL STATISTICS
+Total files analyzed: 410
+Total imports: 5186
+Valid imports: 4680
+Total errors: 507
+Success rate: 90.2%
+
+📈 ERROR CATEGORIES
+----------------------------------------
+Missing modules: 373
+Missing attributes: 53
+Syntax errors: 1
+Configuration errors: 58
+Third-party missing: 22
+
+🔥 MOST CRITICAL ISSUES
+----------------------------------------
+1. SYNTAX ERRORS (CRITICAL - PREVENTS EXECUTION)
+   📄 advanced_gc_monitoring.py:314
+   ❌ unexpected indent (advanced_gc_monitoring.py, line 314)
+
+2. MISSING THIRD-PARTY MODULES
+   📦 celery: 14 import failures
+   📦 boto3: 3 import failures
+   📦 botocore: 3 import failures
+   📦 pybreaker: 1 import failures
+   📦 orjson: 1 import failures
+
+3. MISSING INTERNAL MODULES
+   📁 core.validation.naming_convention: 33 files affected
+   📁 common_security: 18 files affected
+   📁 core.validation.ports: 16 files affected
+   📁 core.validation.adapters: 15 files affected
+   📁 bootstrap.dependencies: 14 files affected
+   📁 models: 14 files affected
+   📁 shared.cache.smart_cache: 11 files affected
+   📁 metrics: 10 files affected
+   📁 core.validation.rules.base: 10 files affected
+   📁 bootstrap.providers: 9 files affected
+
+4. MISSING ATTRIBUTES
+   🔗 database.clients.terminus_db.get_terminus_client: 5 failures
+   🔗 api.v1.health_routes: 2 failures
+   🔗 api.v1.document_routes: 2 failures
+   🔗 api.v1.time_travel_routes: 2 failures
+   🔗 shared.events.EventPublisher: 2 failures
+   🔗 opentelemetry.trace: 1 failures
+   🔗 dependency_injector.containers: 1 failures
+   🔗 dependency_injector.providers: 1 failures
+   🔗 api.v1.system_routes: 1 failures
+   🔗 api.v1.schema_routes: 1 failures
+
+📋 DETAILED BREAKDOWN
+----------------------------------------
+MISSING THIRD-PARTY MODULES (Add to requirements.txt):
+  - boto3 (3 import failures)
+  - botocore (3 import failures)
+  - celery (14 import failures)
+  - orjson (1 import failures)
+  - pybreaker (1 import failures)
+
+MOST PROBLEMATIC FILES:
+  📄 app.py: 31 errors
+  📄 __init__.py: 16 errors
+  📄 naming_config.py: 14 errors
+  📄 embedding_stub.py: 13 errors
+  📄 dependencies.py: 13 errors
+  📄 event_bridge.py: 12 errors
+  📄 service.py: 12 errors
+  📄 container.py: 11 errors
+  📄 __init__.py: 10 errors
+  📄 service.py: 9 errors
+  📄 routes.py: 9 errors
+  📄 main.py: 9 errors
+  📄 schema_validator.py: 9 errors
+  📄 graph_analysis.py: 9 errors
+  📄 merge.py: 9 errors
+
+🎯 RECOMMENDATIONS
+----------------------------------------
+1. Fix syntax errors first (prevents execution)
+   - Fix advanced_gc_monitoring.py:314
+2. Add missing third-party dependencies to requirements.txt:
+   - boto3
+   - botocore
+   - celery
+   - orjson
+   - pybreaker
+3. Create or fix missing internal modules:
+   - core.validation.naming_convention
+   - common_security
+   - core.validation.ports
+   - core.validation.adapters
+   - bootstrap.dependencies
+4. Fix missing attributes in modules:
+   - Add trace to opentelemetry
+   - Add containers to dependency_injector
+   - Add providers to dependency_injector
+   - Add system_routes to api.v1
+   - Add health_routes to api.v1
+
+🏁 CONCLUSION
+----------------------------------------
+❌ CRITICAL: The codebase has import errors that prevent execution.
+   - 1 syntax errors
+   - 22 third-party module issues
+   - 373 missing internal modules
+   - 53 missing attributes
+
+The code CANNOT run in its current state.

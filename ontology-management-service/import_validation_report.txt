@@ -1,0 +1,2554 @@
+================================================================================
+ULTRA-THOROUGH PYTHON IMPORT VALIDATION REPORT
+================================================================================
+
+📊 SUMMARY
+----------------------------------------
+Total files analyzed: 410
+Total imports found: 5186
+Valid imports: 4680
+Import errors: 507
+Warnings: 0
+Circular imports: 0
+
+❌ IMPORT ERRORS
+----------------------------------------
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/advanced_gc_monitoring.py
+Line: 314
+Type: syntax_error
+Error: unexpected indent (advanced_gc_monitoring.py, line 314)
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/terminus_context_middleware.py
+Line: 10
+Type: missing_attribute
+Error: Module 'opentelemetry' has no attribute 'trace'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/service_config.py
+Line: 16
+Type: import_error
+Error: No module named 'shared.observability'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/service_config.py
+Line: 687
+Type: import_error
+Error: No module named 'main'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/etag_middleware.py
+Line: 22
+Type: import_error
+Error: No module named 'shared.database.sqlite_connector'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/etag_middleware.py
+Line: 28
+Type: import_error
+Error: No module named 'pybreaker'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/auth_middleware.py
+Line: 21
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/database/dependencies.py
+Line: 11
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/service_factory.py
+Line: 8
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/service_factory.py
+Line: 9
+Type: import_error
+Error: No module named 'shared.database.sqlite_connector'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/service_factory.py
+Line: 10
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/service_factory.py
+Line: 11
+Type: import_error
+Error: No module named 'shared.database.sqlite_connector'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/service_factory.py
+Line: 11
+Type: import_error
+Error: No module named 'shared.database.sqlite_connector'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/service_factory.py
+Line: 12
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/containers.py
+Line: 2
+Type: missing_attribute
+Error: Module 'dependency_injector' has no attribute 'containers'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/containers.py
+Line: 2
+Type: missing_attribute
+Error: Module 'dependency_injector' has no attribute 'providers'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/containers.py
+Line: 5
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/containers.py
+Line: 6
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/containers.py
+Line: 7
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py
+Line: 9
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py
+Line: 15
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py
+Line: 19
+Type: import_error
+Error: No module named 'shared.database.sqlite_connector'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py
+Line: 37
+Type: missing_attribute
+Error: Module 'api.v1' has no attribute 'system_routes'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py
+Line: 37
+Type: missing_attribute
+Error: Module 'api.v1' has no attribute 'health_routes'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py
+Line: 37
+Type: missing_attribute
+Error: Module 'api.v1' has no attribute 'schema_routes'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py
+Line: 37
+Type: missing_attribute
+Error: Module 'api.v1' has no attribute 'organization_routes'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py
+Line: 37
+Type: missing_attribute
+Error: Module 'api.v1' has no attribute 'property_routes'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py
+Line: 37
+Type: missing_attribute
+Error: Module 'api.v1' has no attribute 'batch_routes'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py
+Line: 37
+Type: missing_attribute
+Error: Module 'api.v1' has no attribute 'branch_lock_routes'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py
+Line: 37
+Type: missing_attribute
+Error: Module 'api.v1' has no attribute 'branch_routes'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py
+Line: 37
+Type: missing_attribute
+Error: Module 'api.v1' has no attribute 'document_routes'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py
+Line: 37
+Type: missing_attribute
+Error: Module 'api.v1' has no attribute 'document_crud_routes'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py
+Line: 37
+Type: missing_attribute
+Error: Module 'api.v1' has no attribute 'graph_health_routes'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py
+Line: 37
+Type: missing_attribute
+Error: Module 'api.v1' has no attribute 'idempotent_routes'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py
+Line: 37
+Type: missing_attribute
+Error: Module 'api.v1' has no attribute 'issue_tracking_routes'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py
+Line: 37
+Type: missing_attribute
+Error: Module 'api.v1' has no attribute 'job_progress_routes'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py
+Line: 37
+Type: missing_attribute
+Error: Module 'api.v1' has no attribute 'shadow_index_routes'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py
+Line: 37
+Type: missing_attribute
+Error: Module 'api.v1' has no attribute 'time_travel_routes'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py
+Line: 37
+Type: missing_attribute
+Error: Module 'api.v1' has no attribute 'version_routes'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py
+Line: 37
+Type: missing_attribute
+Error: Module 'api.v1' has no attribute 'circuit_breaker_routes'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py
+Line: 37
+Type: missing_attribute
+Error: Module 'api.v1' has no attribute 'config_routes'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py
+Line: 46
+Type: missing_attribute
+Error: Module 'api.v1' has no attribute 'auth_proxy_routes'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py
+Line: 47
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py
+Line: 48
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py
+Line: 286
+Type: import_error
+Error: No module named 'api.test_endpoints'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py
+Line: 388
+Type: import_error
+Error: No module named 'middleware.rate_limiting.config'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py
+Line: 73
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py
+Line: 119
+Type: validation_error
+Error: unexpected indent (advanced_gc_monitoring.py, line 314)
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py
+Line: 155
+Type: import_error
+Error: No module named 'pyroscope'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py
+Line: 155
+Type: import_error
+Error: No module named 'pyroscope'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app_minimal.py
+Line: 7
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app_minimal.py
+Line: 10
+Type: missing_attribute
+Error: Module 'api.v1' has no attribute 'health_routes'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/dependencies.py
+Line: 7
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/dependencies.py
+Line: 12
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/dependencies.py
+Line: 60
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_client.py
+Line: 12
+Type: import_error
+Error: No module named 'openai'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_client.py
+Line: 13
+Type: import_error
+Error: No module named 'cohere'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/scheduler_client.py
+Line: 6
+Type: missing_attribute
+Error: Module 'google.protobuf' has no attribute 'struct_pb2'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/scheduler_client.py
+Line: 6
+Type: missing_attribute
+Error: Module 'google.protobuf' has no attribute 'timestamp_pb2'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/scheduler_client.py
+Line: 12
+Type: missing_attribute
+Error: Module 'shared.proto_stubs' has no attribute 'scheduler_service_pb2'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/scheduler_client.py
+Line: 13
+Type: missing_attribute
+Error: Module 'shared.proto_stubs' has no attribute 'scheduler_service_pb2_grpc'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/event_gateway_stub.py
+Line: 29
+Type: import_error
+Error: cannot import name 'to_dict' from 'cloudevents.http' (/opt/homebrew/lib/python3.12/site-packages/cloudevents/http/__init__.py)
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/event_gateway_client.py
+Line: 8
+Type: missing_attribute
+Error: Module 'cloudevents.http' has no attribute 'to_dict'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/event_gateway_client.py
+Line: 13
+Type: missing_attribute
+Error: Module 'shared.proto_stubs' has no attribute 'event_gateway_pb2'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/event_gateway_client.py
+Line: 14
+Type: missing_attribute
+Error: Module 'shared.proto_stubs' has no attribute 'event_gateway_pb2_grpc'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/scheduler_stub.py
+Line: 39
+Type: import_error
+Error: No module named 'apscheduler'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/scheduler_stub.py
+Line: 26
+Type: import_error
+Error: cannot import name 'scheduler_service_pb2' from 'shared.proto_stubs' (/Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/proto_stubs/__init__.py)
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/data_kernel_client.py
+Line: 18
+Type: missing_attribute
+Error: Module 'shared.proto_stubs' has no attribute 'data_kernel_pb2'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/data_kernel_client.py
+Line: 19
+Type: missing_attribute
+Error: Module 'shared.proto_stubs' has no attribute 'data_kernel_pb2_grpc'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py
+Line: 26
+Type: import_error
+Error: No module named 'embeddings'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py
+Line: 26
+Type: import_error
+Error: No module named 'embeddings'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py
+Line: 26
+Type: import_error
+Error: No module named 'embeddings'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py
+Line: 26
+Type: import_error
+Error: No module named 'embeddings'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py
+Line: 26
+Type: import_error
+Error: No module named 'embeddings'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py
+Line: 26
+Type: import_error
+Error: No module named 'embeddings'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py
+Line: 26
+Type: import_error
+Error: No module named 'embeddings'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py
+Line: 26
+Type: import_error
+Error: No module named 'embeddings'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py
+Line: 30
+Type: import_error
+Error: No module named 'embeddings'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py
+Line: 33
+Type: import_error
+Error: No module named 'services.embedding_service'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py
+Line: 34
+Type: import_error
+Error: No module named 'services.embedding_service'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py
+Line: 38
+Type: import_error
+Error: No module named 'openai'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py
+Line: 39
+Type: import_error
+Error: No module named 'cohere'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/pyroscope_integration.py
+Line: 18
+Type: import_error
+Error: No module named 'pyroscope'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/pyroscope_integration.py
+Line: 19
+Type: import_error
+Error: No module named 'py_spy'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/grpc_services/server.py
+Line: 13
+Type: import_error
+Error: No module named 'grpc_reflection'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/grpc_services/server.py
+Line: 19
+Type: missing_attribute
+Error: Module 'grpc_services' has no attribute 'schema_service_pb2'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/grpc_services/server.py
+Line: 19
+Type: missing_attribute
+Error: Module 'grpc_services' has no attribute 'schema_service_pb2_grpc'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/grpc_services/server.py
+Line: 20
+Type: missing_attribute
+Error: Module 'grpc_services' has no attribute 'branch_service_pb2'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/grpc_services/server.py
+Line: 20
+Type: missing_attribute
+Error: Module 'grpc_services' has no attribute 'branch_service_pb2_grpc'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/grpc_services/server.py
+Line: 25
+Type: missing_attribute
+Error: Module 'models' has no attribute 'UserContext'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/main.py
+Line: 24
+Type: import_error
+Error: No module named 'api.simple_schema_routes'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/main.py
+Line: 25
+Type: missing_attribute
+Error: Module 'api.v1' has no attribute 'time_travel_routes'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/main.py
+Line: 26
+Type: missing_attribute
+Error: Module 'api.v1' has no attribute 'document_routes'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/main.py
+Line: 27
+Type: missing_attribute
+Error: Module 'api.v1' has no attribute 'override_approval_routes'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/celery_app.py
+Line: 6
+Type: import_error
+Error: No module named 'celery'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/celery_app.py
+Line: 7
+Type: import_error
+Error: No module named 'celery'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/celery_app.py
+Line: 7
+Type: import_error
+Error: No module named 'celery'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/celery_app.py
+Line: 7
+Type: import_error
+Error: No module named 'celery'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/celery_app.py
+Line: 7
+Type: import_error
+Error: No module named 'celery'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/celery_app.py
+Line: 8
+Type: import_error
+Error: No module named 'kombu'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/celery_app.py
+Line: 8
+Type: import_error
+Error: No module named 'kombu'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/__init__.py
+Line: 5
+Type: import_error
+Error: No module named 'celery'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/monitoring/async_merge_metrics.py
+Line: 239
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/monitoring/async_merge_metrics.py
+Line: 264
+Type: import_error
+Error: No module named 'celery'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/services/job_service.py
+Line: 430
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/services/graph_analysis.py
+Line: 18
+Type: import_error
+Error: No module named 'core.database.clients'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/services/graph_analysis.py
+Line: 18
+Type: import_error
+Error: No module named 'core.database.clients'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/services/graph_analysis.py
+Line: 18
+Type: import_error
+Error: No module named 'core.database.clients'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/services/graph_analysis.py
+Line: 18
+Type: import_error
+Error: No module named 'core.database.clients'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/services/graph_analysis.py
+Line: 19
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/services/graph_analysis.py
+Line: 21
+Type: import_error
+Error: No module named 'core.events.unified_publisher'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/services/graph_analysis.py
+Line: 933
+Type: import_error
+Error: No module named 'community'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/coordinator.py
+Line: 276
+Type: import_error
+Error: No module named 'core.notification'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/checks/database.py
+Line: 106
+Type: import_error
+Error: No module named 'aiomysql'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/checks/database.py
+Line: 38
+Type: import_error
+Error: No module named 'aiomysql'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/tracing/otel_init.py
+Line: 13
+Type: import_error
+Error: No module named 'opentelemetry.exporter.otlp'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/tracing/otel_init.py
+Line: 29
+Type: import_error
+Error: No module named 'opentelemetry.instrumentation.httpx'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/tracing/otel_init.py
+Line: 33
+Type: import_error
+Error: No module named 'opentelemetry.instrumentation.aiohttp'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/tracing/otel_init.py
+Line: 36
+Type: import_error
+Error: No module named 'opentelemetry.instrumentation.asyncpg'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/tracing/otel_init.py
+Line: 39
+Type: import_error
+Error: No module named 'opentelemetry.instrumentation.sqlalchemy'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/tracing/otel_init.py
+Line: 42
+Type: import_error
+Error: No module named 'opentelemetry.instrumentation.celery'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/tracing/otel_init.py
+Line: 46
+Type: import_error
+Error: No module named 'opentelemetry.propagators.b3'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/siem/serializer.py
+Line: 9
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/siem/serializer.py
+Line: 9
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/siem/serializer.py
+Line: 9
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/siem/serializer.py
+Line: 9
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/foundry_branch_service.py
+Line: 20
+Type: import_error
+Error: No module named 'shared.database.sqlite_connector'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/foundry_branch_service.py
+Line: 19
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/lock_monitor.py
+Line: 16
+Type: validation_error
+Error: type object 'LockType' has no attribute 'EXCLUSIVE'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/lock_monitor.py
+Line: 16
+Type: validation_error
+Error: type object 'LockType' has no attribute 'EXCLUSIVE'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/__init__.py
+Line: 6
+Type: import_error
+Error: No module named 'common_security'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/__init__.py
+Line: 6
+Type: import_error
+Error: No module named 'common_security'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/__init__.py
+Line: 6
+Type: import_error
+Error: No module named 'common_security'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/__init__.py
+Line: 6
+Type: import_error
+Error: No module named 'common_security'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/__init__.py
+Line: 6
+Type: import_error
+Error: No module named 'common_security'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/__init__.py
+Line: 15
+Type: import_error
+Error: No module named 'common_security'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/__init__.py
+Line: 15
+Type: import_error
+Error: No module named 'common_security'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/__init__.py
+Line: 15
+Type: import_error
+Error: No module named 'common_security'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/__init__.py
+Line: 15
+Type: import_error
+Error: No module named 'common_security'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/__init__.py
+Line: 15
+Type: import_error
+Error: No module named 'common_security'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/__init__.py
+Line: 15
+Type: import_error
+Error: No module named 'common_security'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/__init__.py
+Line: 15
+Type: import_error
+Error: No module named 'common_security'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/__init__.py
+Line: 15
+Type: import_error
+Error: No module named 'common_security'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/__init__.py
+Line: 15
+Type: import_error
+Error: No module named 'common_security'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/__init__.py
+Line: 15
+Type: import_error
+Error: No module named 'common_security'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/__init__.py
+Line: 15
+Type: import_error
+Error: No module named 'common_security'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/pii_handler.py
+Line: 14
+Type: import_error
+Error: No module named 'common_security'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/pii_handler.py
+Line: 14
+Type: import_error
+Error: No module named 'common_security'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/pii_handler.py
+Line: 14
+Type: import_error
+Error: No module named 'common_security'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py
+Line: 15
+Type: validation_error
+Error: Attribute name 'metadata' is reserved when using the Declarative API.
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py
+Line: 16
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py
+Line: 17
+Type: import_error
+Error: No module named 'shared.database.sqlite_connector'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py
+Line: 18
+Type: import_error
+Error: cannot import name 'EventPublisher' from 'shared.events' (/Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/events/__init__.py)
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py
+Line: 19
+Type: import_error
+Error: No module named 'shared.messaging'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py
+Line: 266
+Type: validation_error
+Error: Attribute name 'metadata' is reserved when using the Declarative API.
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py
+Line: 266
+Type: validation_error
+Error: Attribute name 'metadata' is reserved when using the Declarative API.
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py
+Line: 266
+Type: validation_error
+Error: Attribute name 'metadata' is reserved when using the Declarative API.
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py
+Line: 267
+Type: import_error
+Error: No module named 'shared.messaging'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py
+Line: 269
+Type: import_error
+Error: No module named 'shared.database.sqlite_connector'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py
+Line: 270
+Type: import_error
+Error: cannot import name 'EventPublisher' from 'shared.events' (/Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/events/__init__.py)
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py
+Line: 271
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_consumer/iam_event_handler.py
+Line: 10
+Type: import_error
+Error: No module named 'shared.events.cloudevents_enhanced'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_consumer/funnel_indexing_handler.py
+Line: 17
+Type: import_error
+Error: No module named 'utils.audit_id_generator'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/service.py
+Line: 17
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/service.py
+Line: 18
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/service.py
+Line: 18
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/service.py
+Line: 18
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/service.py
+Line: 18
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/service.py
+Line: 22
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/service.py
+Line: 22
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/service.py
+Line: 23
+Type: import_error
+Error: No module named 'shared.database.sqlite_connector'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/service.py
+Line: 23
+Type: import_error
+Error: No module named 'shared.database.sqlite_connector'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/service.py
+Line: 31
+Type: import_error
+Error: No module named 'shared.database.sqlite_connector'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/service.py
+Line: 32
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/service.py
+Line: 29
+Type: import_error
+Error: No module named 'shared.database.sqlite_connector'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/db_optimizations.py
+Line: 6
+Type: import_error
+Error: No module named 'shared.database.sqlite_connector'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/cache.py
+Line: 11
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/__init__.py
+Line: 22
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/__init__.py
+Line: 24
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/__init__.py
+Line: 25
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/__init__.py
+Line: 25
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/__init__.py
+Line: 25
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/__init__.py
+Line: 25
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/__init__.py
+Line: 25
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/__init__.py
+Line: 25
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/__init__.py
+Line: 33
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/__init__.py
+Line: 33
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/idempotent/schema_event_consumer.py
+Line: 9
+Type: import_error
+Error: No module named 'shared.database.sqlite_connector'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/idempotent/consumer_service.py
+Line: 17
+Type: import_error
+Error: No module named 'shared.database.sqlite_connector'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/idempotent/consumer_service.py
+Line: 17
+Type: import_error
+Error: No module named 'shared.database.sqlite_connector'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/graph/repositories.py
+Line: 13
+Type: import_error
+Error: No module named 'core.database.clients'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/action/service.py
+Line: 14
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/action/service.py
+Line: 16
+Type: import_error
+Error: No module named 'database.clients.terminus_db_simple'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/action/metadata_service.py
+Line: 15
+Type: import_error
+Error: No module named 'database.clients.terminus_db_simple'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/action/metadata_service.py
+Line: 47
+Type: import_error
+Error: No module named 'database.unified_terminus_client'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/action/routes.py
+Line: 10
+Type: import_error
+Error: No module named 'database.clients.terminus_db_simple'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/resilience/version_service_wrapper.py
+Line: 15
+Type: import_error
+Error: No module named 'pybreaker'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/resilience/version_service_wrapper.py
+Line: 21
+Type: import_error
+Error: No module named 'shared.database.sqlite_connector'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/resilience/version_service_wrapper.py
+Line: 21
+Type: import_error
+Error: No module named 'shared.database.sqlite_connector'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/history/service.py
+Line: 23
+Type: missing_attribute
+Error: Module 'shared.events' has no attribute 'EventPublisher'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/history/service.py
+Line: 24
+Type: missing_attribute
+Error: Module 'common_logging.setup' has no attribute 'log_operation_start'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/history/service.py
+Line: 24
+Type: missing_attribute
+Error: Module 'common_logging.setup' has no attribute 'log_operation_end'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/history/service.py
+Line: 25
+Type: import_error
+Error: cannot import name 'EventPublisher' from 'shared.events' (/Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/events/__init__.py)
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/history/service.py
+Line: 25
+Type: import_error
+Error: cannot import name 'EventPublisher' from 'shared.events' (/Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/events/__init__.py)
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/history/service.py
+Line: 25
+Type: import_error
+Error: cannot import name 'EventPublisher' from 'shared.events' (/Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/events/__init__.py)
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/history/service.py
+Line: 25
+Type: import_error
+Error: cannot import name 'EventPublisher' from 'shared.events' (/Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/events/__init__.py)
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/history/service.py
+Line: 25
+Type: import_error
+Error: cannot import name 'EventPublisher' from 'shared.events' (/Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/events/__init__.py)
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/history/service.py
+Line: 25
+Type: import_error
+Error: cannot import name 'EventPublisher' from 'shared.events' (/Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/events/__init__.py)
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/history/__init__.py
+Line: 3
+Type: import_error
+Error: cannot import name 'EventPublisher' from 'shared.events' (/Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/events/__init__.py)
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/history/__init__.py
+Line: 4
+Type: import_error
+Error: cannot import name 'EventPublisher' from 'shared.events' (/Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/events/__init__.py)
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/history/__init__.py
+Line: 4
+Type: import_error
+Error: cannot import name 'EventPublisher' from 'shared.events' (/Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/events/__init__.py)
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/history/__init__.py
+Line: 4
+Type: import_error
+Error: cannot import name 'EventPublisher' from 'shared.events' (/Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/events/__init__.py)
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/history/__init__.py
+Line: 4
+Type: import_error
+Error: cannot import name 'EventPublisher' from 'shared.events' (/Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/events/__init__.py)
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/history/routes.py
+Line: 11
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/history/routes.py
+Line: 13
+Type: import_error
+Error: cannot import name 'EventPublisher' from 'shared.events' (/Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/events/__init__.py)
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/history/routes.py
+Line: 13
+Type: import_error
+Error: cannot import name 'EventPublisher' from 'shared.events' (/Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/events/__init__.py)
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/history/routes.py
+Line: 13
+Type: import_error
+Error: cannot import name 'EventPublisher' from 'shared.events' (/Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/events/__init__.py)
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/history/routes.py
+Line: 13
+Type: import_error
+Error: cannot import name 'EventPublisher' from 'shared.events' (/Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/events/__init__.py)
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/history/routes.py
+Line: 17
+Type: import_error
+Error: No module named 'core.events.publisher'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/history/routes.py
+Line: 26
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/history/routes.py
+Line: 27
+Type: missing_attribute
+Error: Module 'database.clients.terminus_db' has no attribute 'get_terminus_client'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/history/routes.py
+Line: 28
+Type: import_error
+Error: No module named 'core.event_publisher'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_subscriber/main.py
+Line: 17
+Type: missing_attribute
+Error: Module 'shared.events' has no attribute 'cleanup_nats'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_subscriber/main.py
+Line: 17
+Type: missing_attribute
+Error: Module 'shared.events' has no attribute 'get_nats_client'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_subscriber/main.py
+Line: 18
+Type: import_error
+Error: No module named 'utils.audit_id_generator'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_subscriber/main.py
+Line: 307
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_subscriber/main.py
+Line: 422
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_subscriber/main.py
+Line: 489
+Type: import_error
+Error: No module named 'celery'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_subscriber/main.py
+Line: 563
+Type: import_error
+Error: No module named 'celery'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_subscriber/main.py
+Line: 732
+Type: import_error
+Error: No module named 'celery'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_subscriber/main.py
+Line: 772
+Type: import_error
+Error: No module named 'celery'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/versioning/merge_engine.py
+Line: 546
+Type: missing_attribute
+Error: Module 'database.clients.terminus_db' has no attribute 'get_terminus_client'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/versioning/merge_engine.py
+Line: 547
+Type: import_error
+Error: No module named 'core.branch.three_way_merge'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/versioning/merge_engine.py
+Line: 817
+Type: missing_attribute
+Error: Module 'database.clients.terminus_db' has no attribute 'get_terminus_client'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/versioning/merge_engine.py
+Line: 778
+Type: import_error
+Error: No module named 'core.events.publisher'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/versioning/merge_engine.py
+Line: 789
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/versioning/version_service.py
+Line: 16
+Type: import_error
+Error: No module named 'shared.database.sqlite_connector'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/versioning/version_service.py
+Line: 16
+Type: import_error
+Error: No module named 'shared.database.sqlite_connector'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/events/branch_event_publisher.py
+Line: 6
+Type: import_error
+Error: No module named 'core.events.unified_publisher'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/events/branch_event_publisher.py
+Line: 7
+Type: import_error
+Error: No module named 'core.events.backends'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/events/branch_event_publisher.py
+Line: 7
+Type: import_error
+Error: No module named 'core.events.backends'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/backup/production_backup.py
+Line: 23
+Type: import_error
+Error: No module named 'common_security'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/backup/production_backup.py
+Line: 23
+Type: import_error
+Error: No module named 'common_security'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/backup/production_backup.py
+Line: 23
+Type: import_error
+Error: No module named 'common_security'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/backup/production_backup.py
+Line: 24
+Type: import_error
+Error: No module named 'common_security'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/backup/production_backup.py
+Line: 24
+Type: import_error
+Error: No module named 'common_security'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/backup/production_backup.py
+Line: 25
+Type: import_error
+Error: No module named 'minio'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/backup/main.py
+Line: 15
+Type: import_error
+Error: No module named 'apscheduler'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/backup/main.py
+Line: 16
+Type: import_error
+Error: No module named 'apscheduler'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/backup/main.py
+Line: 19
+Type: import_error
+Error: No module named 'minio'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/service.py
+Line: 25
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/service.py
+Line: 25
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/service.py
+Line: 25
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/service.py
+Line: 25
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/service.py
+Line: 26
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/service.py
+Line: 26
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/service.py
+Line: 27
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/schema_validator.py
+Line: 12
+Type: import_error
+Error: No module named 'jsonschema'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/schema_validator.py
+Line: 13
+Type: import_error
+Error: No module named 'jsonschema'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/schema_validator.py
+Line: 13
+Type: import_error
+Error: No module named 'jsonschema'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/schema_validator.py
+Line: 20
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/schema_validator.py
+Line: 20
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/schema_validator.py
+Line: 20
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/schema_validator.py
+Line: 20
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/schema_validator.py
+Line: 20
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/schema_validator.py
+Line: 20
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rule_registry.py
+Line: 13
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rule_registry.py
+Line: 13
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rule_registry.py
+Line: 13
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rule_registry.py
+Line: 14
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/ci_integration.py
+Line: 18
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/ci_integration.py
+Line: 18
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/ci_integration.py
+Line: 18
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/ci_integration.py
+Line: 21
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_convention_v2.py
+Line: 12
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_convention_v2.py
+Line: 12
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_convention_v2.py
+Line: 12
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_convention_v2.py
+Line: 12
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_convention_v2.py
+Line: 12
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_convention_v2.py
+Line: 12
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/__init__.py
+Line: 10
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/__init__.py
+Line: 11
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/__init__.py
+Line: 12
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/__init__.py
+Line: 13
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/__init__.py
+Line: 14
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/__init__.py
+Line: 15
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/__init__.py
+Line: 16
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/__init__.py
+Line: 5
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_config.py
+Line: 12
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_config.py
+Line: 16
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_config.py
+Line: 16
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_config.py
+Line: 16
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_config.py
+Line: 16
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_config.py
+Line: 19
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_config.py
+Line: 20
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_config.py
+Line: 20
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_config.py
+Line: 20
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_config.py
+Line: 23
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_config.py
+Line: 23
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_config.py
+Line: 23
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_config.py
+Line: 23
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_config.py
+Line: 23
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/container.py
+Line: 8
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/container.py
+Line: 9
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/container.py
+Line: 9
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/container.py
+Line: 9
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/container.py
+Line: 9
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/container.py
+Line: 9
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/container.py
+Line: 9
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/container.py
+Line: 17
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/container.py
+Line: 153
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/container.py
+Line: 153
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/container.py
+Line: 153
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_history.py
+Line: 13
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_history.py
+Line: 13
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_history.py
+Line: 13
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/tampering_detection.py
+Line: 16
+Type: import_error
+Error: No module named 'common_security'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/tampering_detection.py
+Line: 18
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/tampering_detection.py
+Line: 19
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/tampering_detection.py
+Line: 19
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/tampering_detection.py
+Line: 20
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/tampering_detection.py
+Line: 20
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/tampering_detection.py
+Line: 20
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/policy_signing.py
+Line: 24
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/policy_signing.py
+Line: 411
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/policy_signing.py
+Line: 411
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/policy_signing.py
+Line: 411
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/validation_logging.py
+Line: 16
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/validation_logging.py
+Line: 16
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/validation_logging.py
+Line: 16
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/validation_logging.py
+Line: 17
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/validation_logging.py
+Line: 32
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/dependencies.py
+Line: 9
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/dependencies.py
+Line: 9
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/dependencies.py
+Line: 9
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/dependencies.py
+Line: 10
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/dependencies.py
+Line: 10
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/dependencies.py
+Line: 11
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/dependencies.py
+Line: 12
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/dependencies.py
+Line: 12
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/dependencies.py
+Line: 12
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/dependencies.py
+Line: 12
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/dependencies.py
+Line: 12
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/dependencies.py
+Line: 12
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/dependencies.py
+Line: 68
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/adapters.py
+Line: 8
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/adapters.py
+Line: 8
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/adapters.py
+Line: 8
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/adapters.py
+Line: 22
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/adapters.py
+Line: 159
+Type: missing_attribute
+Error: Module 'shared.events' has no attribute 'EventPublisher'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/decorators.py
+Line: 9
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rules/type_incompatibility.py
+Line: 15
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rules/primary_key.py
+Line: 9
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rules/type_change.py
+Line: 13
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rules/type_change.py
+Line: 13
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rules/data_type.py
+Line: 14
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rules/naming_convention_rule.py
+Line: 8
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rules/naming_convention_rule.py
+Line: 13
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rules/naming_convention_rule.py
+Line: 13
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rules/naming_convention_rule.py
+Line: 13
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rules/data_impact_analyzer.py
+Line: 18
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rules/example_decorated_rule.py
+Line: 7
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rules/example_decorated_rule.py
+Line: 8
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rules/example_decorated_rule.py
+Line: 10
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rules/primary_key_change.py
+Line: 16
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rules/required_field.py
+Line: 16
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rules/shared_property.py
+Line: 9
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/lock_manager.py
+Line: 7
+Type: validation_error
+Error: type object 'LockType' has no attribute 'EXCLUSIVE'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/embedding.py
+Line: 9
+Type: import_error
+Error: cannot import name 'TerminusDBClient' from 'terminusdb_client' (/Users/isihyeon/Library/Python/3.12/lib/python/site-packages/terminusdb_client/__init__.py)
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/embedding.py
+Line: 9
+Type: import_error
+Error: cannot import name 'TerminusDBClient' from 'terminusdb_client' (/Users/isihyeon/Library/Python/3.12/lib/python/site-packages/terminusdb_client/__init__.py)
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/terminus_port_adapter.py
+Line: 5
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/terminus_gateway.py
+Line: 10
+Type: import_error
+Error: cannot import name 'data_kernel_pb2' from 'shared.proto_stubs' (/Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/proto_stubs/__init__.py)
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/database.py
+Line: 109
+Type: import_error
+Error: No module named 'bootstrap.main'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/database.py
+Line: 120
+Type: import_error
+Error: No module named 'bootstrap.main'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/database.py
+Line: 131
+Type: import_error
+Error: No module named 'bootstrap.main'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/__init__.py
+Line: 7
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/__init__.py
+Line: 8
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/circuit_breaker.py
+Line: 5
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/graph_analysis.py
+Line: 8
+Type: import_error
+Error: No module named 'core.database.clients'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/graph_analysis.py
+Line: 9
+Type: import_error
+Error: No module named 'core.database.clients'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/graph_analysis.py
+Line: 9
+Type: import_error
+Error: No module named 'core.database.clients'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/graph_analysis.py
+Line: 9
+Type: import_error
+Error: No module named 'core.database.clients'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/graph_analysis.py
+Line: 11
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/graph_analysis.py
+Line: 11
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/graph_analysis.py
+Line: 11
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/graph_analysis.py
+Line: 12
+Type: import_error
+Error: No module named 'core.events.unified_publisher'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/graph_analysis.py
+Line: 13
+Type: import_error
+Error: No module named 'config.redis_config'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/validation.py
+Line: 5
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/validation.py
+Line: 6
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/validation.py
+Line: 11
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk/client.py
+Line: 9
+Type: validation_error
+Error: name 'Schemacreated' is not defined
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk/__init__.py
+Line: 8
+Type: validation_error
+Error: name 'Schemacreated' is not defined
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk/__init__.py
+Line: 8
+Type: validation_error
+Error: name 'Schemacreated' is not defined
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk/__init__.py
+Line: 8
+Type: validation_error
+Error: name 'Schemacreated' is not defined
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk/__init__.py
+Line: 8
+Type: validation_error
+Error: name 'Schemacreated' is not defined
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk_py/client.py
+Line: 9
+Type: validation_error
+Error: name 'Schemacreated' is not defined
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk_py/client.py
+Line: 67
+Type: validation_error
+Error: name 'Schemacreated' is not defined
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk_py/client.py
+Line: 67
+Type: validation_error
+Error: name 'Schemacreated' is not defined
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk_py/client.py
+Line: 81
+Type: validation_error
+Error: name 'Schemacreated' is not defined
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk_py/client.py
+Line: 81
+Type: validation_error
+Error: name 'Schemacreated' is not defined
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk_py/__init__.py
+Line: 8
+Type: validation_error
+Error: name 'Schemacreated' is not defined
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk_py/__init__.py
+Line: 8
+Type: validation_error
+Error: name 'Schemacreated' is not defined
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk_py/__init__.py
+Line: 8
+Type: validation_error
+Error: name 'Schemacreated' is not defined
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk_py/__init__.py
+Line: 8
+Type: validation_error
+Error: name 'Schemacreated' is not defined
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/cache/smart_cache.py
+Line: 18
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/branch_routes.py
+Line: 12
+Type: import_error
+Error: No module named 'shared.database.sqlite_connector'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/branch_routes.py
+Line: 13
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/branch_routes.py
+Line: 13
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/branch_routes.py
+Line: 15
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/branch_routes.py
+Line: 21
+Type: import_error
+Error: No module named 'models.branch'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/branch_routes.py
+Line: 141
+Type: import_error
+Error: No module named 'celery'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/branch_routes.py
+Line: 253
+Type: import_error
+Error: No module named 'celery'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/resilience_dashboard_routes.py
+Line: 9
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/resilience_dashboard_routes.py
+Line: 11
+Type: import_error
+Error: No module named 'shared.database.sqlite_connector'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/config_routes.py
+Line: 4
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/branch_lock_routes.py
+Line: 11
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/circuit_breaker_routes.py
+Line: 9
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/embedding_routes.py
+Line: 10
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/embedding_routes.py
+Line: 10
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/embedding_routes.py
+Line: 10
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/shadow_index_routes.py
+Line: 11
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/idempotent_routes.py
+Line: 11
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/idempotent_routes.py
+Line: 12
+Type: import_error
+Error: No module named 'shared.database.sqlite_connector'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/document_routes.py
+Line: 11
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/document_crud_routes.py
+Line: 10
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/document_crud_routes.py
+Line: 15
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/document_crud_routes.py
+Line: 15
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/document_crud_routes.py
+Line: 17
+Type: import_error
+Error: No module named 'shared.database.sqlite_connector'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/schema_routes.py
+Line: 8
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/schema_routes.py
+Line: 10
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/schema_routes.py
+Line: 11
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/schema_routes.py
+Line: 14
+Type: import_error
+Error: No module named 'shared.database.sqlite_connector'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/property_routes.py
+Line: 8
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/property_routes.py
+Line: 9
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/property_routes.py
+Line: 11
+Type: import_error
+Error: No module named 'shared.database.sqlite_connector'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/time_travel_routes.py
+Line: 11
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/time_travel_routes.py
+Line: 12
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/time_travel_routes.py
+Line: 12
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/time_travel_routes.py
+Line: 12
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/time_travel_routes.py
+Line: 12
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/time_travel_routes.py
+Line: 12
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/time_travel_routes.py
+Line: 16
+Type: import_error
+Error: No module named 'shared.database.sqlite_connector'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/organization_routes.py
+Line: 8
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/organization_routes.py
+Line: 9
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/organization_routes.py
+Line: 11
+Type: import_error
+Error: No module named 'shared.database.sqlite_connector'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/organization_routes.py
+Line: 32
+Type: import_error
+Error: No module named 'core.repositories'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/organization_routes.py
+Line: 77
+Type: import_error
+Error: No module named 'core.repositories'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/organization_routes.py
+Line: 133
+Type: import_error
+Error: No module named 'core.repositories'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/organization_routes.py
+Line: 201
+Type: import_error
+Error: No module named 'core.repositories'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/organization_routes.py
+Line: 279
+Type: import_error
+Error: No module named 'core.repositories'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/issue_tracking_routes.py
+Line: 10
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/override_approval_routes.py
+Line: 9
+Type: missing_attribute
+Error: Module 'core.auth' has no attribute 'get_current_user'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/version_routes.py
+Line: 10
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/version_routes.py
+Line: 11
+Type: import_error
+Error: No module named 'shared.database.sqlite_connector'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/batch_routes.py
+Line: 12
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/batch_routes.py
+Line: 15
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/batch_routes.py
+Line: 18
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/batch_routes.py
+Line: 60
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/health_routes.py
+Line: 9
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/job_progress_routes.py
+Line: 16
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/job_progress_routes.py
+Line: 18
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/job_progress_routes.py
+Line: 258
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/job_progress_routes.py
+Line: 284
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/job_progress_routes.py
+Line: 192
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/job_progress_routes.py
+Line: 36
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/auth.py
+Line: 47
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/main.py
+Line: 23
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/main.py
+Line: 23
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/main.py
+Line: 23
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/modular_main.py
+Line: 19
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/modular_main.py
+Line: 19
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/modular_main.py
+Line: 19
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/modular_main.py
+Line: 92
+Type: import_error
+Error: No module named 'opentelemetry.exporter.otlp'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/semantic_types/__init__.py
+Line: 2
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/semantic_types/endpoints.py
+Line: 20
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/semantic_types/endpoints.py
+Line: 21
+Type: import_error
+Error: No module named 'core.events.publisher'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/semantic_types/endpoints.py
+Line: 255
+Type: import_error
+Error: No module named 'core.repositories'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/semantic_types/endpoints.py
+Line: 256
+Type: missing_attribute
+Error: Module 'database.clients.terminus_db' has no attribute 'get_terminus_client'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/schema_generation/__init__.py
+Line: 7
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/schema_generation/endpoints.py
+Line: 12
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/schema_generation/endpoints.py
+Line: 19
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/struct_types/endpoints.py
+Line: 19
+Type: validation_error
+Error: Missing required environment variables: ['USER_SERVICE_URL', 'OMS_SERVICE_URL']
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/struct_types/endpoints.py
+Line: 20
+Type: import_error
+Error: No module named 'core.events.publisher'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/struct_types/endpoints.py
+Line: 303
+Type: import_error
+Error: No module named 'core.repositories'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/struct_types/endpoints.py
+Line: 304
+Type: missing_attribute
+Error: Module 'database.clients.terminus_db' has no attribute 'get_terminus_client'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/tasks/merge.py
+Line: 8
+Type: import_error
+Error: No module named 'celery'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/tasks/merge.py
+Line: 9
+Type: import_error
+Error: No module named 'celery'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/tasks/merge.py
+Line: 15
+Type: import_error
+Error: No module named 'celery'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/tasks/merge.py
+Line: 17
+Type: import_error
+Error: No module named 'shared.database.sqlite_connector'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/tasks/merge.py
+Line: 18
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/tasks/merge.py
+Line: 20
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/tasks/merge.py
+Line: 22
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/tasks/merge.py
+Line: 23
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/tasks/merge.py
+Line: 24
+Type: import_error
+Error: No module named 'shared.database.sqlite_connector'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/tasks/maintenance.py
+Line: 10
+Type: import_error
+Error: No module named 'celery'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/tasks/maintenance.py
+Line: 13
+Type: import_error
+Error: No module named 'celery'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/tasks/maintenance.py
+Line: 390
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/tasks/maintenance.py
+Line: 445
+Type: import_error
+Error: No module named 'orjson'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/tasks/__init__.py
+Line: 5
+Type: import_error
+Error: No module named 'celery'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infrastructure/aws/eventbridge_rules.py
+Line: 9
+Type: import_error
+Error: No module named 'boto3'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infrastructure/aws/eventbridge_rules.py
+Line: 10
+Type: import_error
+Error: No module named 'botocore'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infrastructure/aws/eventbridge_rules.py
+Line: 136
+Type: import_error
+Error: No module named 'core.event_publisher'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infrastructure/aws/eventbridge_setup.py
+Line: 9
+Type: import_error
+Error: No module named 'boto3'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infrastructure/aws/eventbridge_setup.py
+Line: 10
+Type: import_error
+Error: No module named 'botocore'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infrastructure/aws/eventbridge_setup.py
+Line: 118
+Type: import_error
+Error: No module named 'core.event_publisher'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infrastructure/aws/cloudwatch_alarms.py
+Line: 9
+Type: import_error
+Error: No module named 'boto3'
+
+File: /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infrastructure/aws/cloudwatch_alarms.py
+Line: 10
+Type: import_error
+Error: No module named 'botocore'
+
+🎯 CONCLUSION
+----------------------------------------
+❌ IMPORT ERRORS DETECTED! Code will fail to run.
+Fix the errors above to ensure the code can execute properly.

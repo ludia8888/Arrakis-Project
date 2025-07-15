@@ -12,37 +12,37 @@ import uuid
 
 
 class PublishResult(BaseModel):
-    """Result of publishing an event"""
-    success: bool
-    message_id: Optional[str] = None
-    error: Optional[str] = None
+ """Result of publishing an event"""
+ success: bool
+ message_id: Optional[str] = None
+ error: Optional[str] = None
 
 
 class Subscription:
-    """Event subscription handle"""
-    
-    async def unsubscribe(self) -> None:
-        """Unsubscribe from events"""
-        pass
+ """Event subscription handle"""
+
+ async def unsubscribe(self) -> None:
+ """Unsubscribe from events"""
+ pass
 
 
 # Generated Models
 class CloudEvent(BaseModel):
-    """Generated model for CloudEvent"""
-    specversion: str
-    type: str
-    source: str
-    id: str
-    time: Optional[datetime] = None
-    datacontenttype: Optional[str] = None
-    subject: Optional[str] = None
-    data: Optional[Dict[str, Any]] = None
+ """Generated model for CloudEvent"""
+ specversion: str
+ type: str
+ source: str
+ id: str
+ time: Optional[datetime] = None
+ datacontenttype: Optional[str] = None
+ subject: Optional[str] = None
+ data: Optional[Dict[str, Any]] = None
 class OMSContext(BaseModel):
-    """Generated model for OMSContext"""
-    branch: Optional[str] = None
-    commit: Optional[str] = None
-    author: Optional[str] = None
-    tenant: Optional[str] = None
-    correlationId: Optional[str] = None
-    causationId: Optional[str] = None
+ """Generated model for OMSContext"""
+ branch: Optional[str] = None
+ commit: Optional[str] = None
+ author: Optional[str] = None
+ tenant: Optional[str] = None
+ correlationId: Optional[str] = None
+ causationId: Optional[str] = None
 EntityType = str

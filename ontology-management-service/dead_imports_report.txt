@@ -1,0 +1,1408 @@
+================================================================================
+COMPREHENSIVE DEAD IMPORT ANALYSIS REPORT
+================================================================================
+Files analyzed: 418
+Total issues found: 1387
+
+UNUSED IMPORTS:
+----------------------------------------
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/auth_examples.py:5 - from typing import List
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/auth_examples.py:5 - from typing import Optional
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/auth_examples.py:10 - from middleware.auth_middleware import require_permission
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/gateway/graphql_proxy.py:10 - import httpx
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/gateway/graphql_proxy.py:13 - from database.clients.unified_http_client import UnifiedHTTPClient
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/gateway/graphql_proxy.py:13 - from database.clients.unified_http_client import HTTPClientConfig
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/gateway/router.py:14 - from database.clients.unified_http_client import UnifiedHTTPClient
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/gateway/router.py:14 - from database.clients.unified_http_client import HTTPClientConfig
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/auth.py:43 - from fastapi import HTTPException
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/auth.py:43 - from fastapi import status
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/auth.py:47 - from middleware.auth_middleware import get_current_user
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/config.py:6 - from typing import Optional
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/document_schema.py:6 - from typing import Dict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/document_schema.py:6 - from typing import Any
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/document_schema.py:6 - from typing import Union
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/document_schema.py:7 - from dataclasses import asdict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/main.py:13 - from typing import Dict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/main.py:13 - from typing import Any
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/main.py:15 - from fastapi import Depends
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/main.py:15 - from fastapi import Request
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/main.py:23 - from api.graphql.auth import get_current_user_optional
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/main.py:24 - from core.auth_utils import UserContext
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/middleware/cache.py:10 - from strawberry.types import Info
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/middleware/security.py:6 - from typing import Any
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/middleware/security.py:6 - from typing import Optional
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/middleware/security.py:8 - from datetime import datetime
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/middleware/security.py:8 - from datetime import timedelta
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/middleware/security.py:11 - from strawberry.types import Info
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/modular_main.py:11 - from fastapi import Depends
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/modular_main.py:13 - from fastapi.responses import JSONResponse
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/modular_main.py:18 - from core.config.environment import get_environment
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/modular_main.py:20 - from core.auth_utils import UserContext
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/realtime_publisher.py:10 - import json
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/websocket_manager.py:13 - from realtime_publisher import RealtimeEvent
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/main.py:3 - import os
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/auth_proxy_routes.py:5 - from typing import Dict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/auth_proxy_routes.py:5 - from typing import Any
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/batch_routes.py:15 - from database.dependencies import get_secure_database
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/batch_routes.py:16 - from database.clients.secure_database_adapter import SecureDatabaseAdapter
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/batch_routes.py:18 - from shared.cache.smart_cache import SmartCacheManager
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/branch_lock_routes.py:12 - from core.branch.lock_manager import InvalidStateTransitionError
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/branch_routes.py:18 - from core.branch.service_refactored import BranchService
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/branch_routes.py:21 - from models.branch import Branch as BranchModel
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/config_routes.py:3 - from fastapi import Depends
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/document_crud_routes.py:7 - from pydantic import BaseModel
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/document_routes.py:1171 - import json
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/embedding_routes.py:5 - from fastapi import Depends
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/graph_health_routes.py:7 - from fastapi import Depends
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/graph_health_routes.py:7 - from fastapi import HTTPException
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/graph_health_routes.py:9 - import asyncio
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/graph_health_routes.py:14 - from infra.tracing.jaeger_adapter import JaegerTracingManager
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/health_routes.py:4 - from fastapi import Request
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/health_routes.py:4 - from fastapi import HTTPException
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/job_progress_routes.py:9 - from fastapi.responses import StreamingResponse
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/job_progress_routes.py:18 - from bootstrap.dependencies import get_redis_client
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/organization_routes.py:5 - from fastapi import Path
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/organization_routes.py:5 - from fastapi import Body
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/organization_routes.py:6 - from dependency_injector.wiring import Provide
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/organization_routes.py:8 - from bootstrap.dependencies import Container
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/organization_routes.py:11 - from middleware.etag_middleware import enable_etag
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/property_routes.py:4 - from datetime import datetime
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/property_routes.py:5 - from fastapi import Path
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/property_routes.py:5 - from fastapi import Body
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/property_routes.py:11 - from middleware.etag_middleware import enable_etag
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/property_routes.py:16 - from models.exceptions import ResourceNotFoundError
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/resilience_dashboard_routes.py:13 - import json
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/resilience_dashboard_routes.py:15 - from dataclasses import asdict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/schema_generation/endpoints.py:9 - from fastapi import Path
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/schema_routes.py:3 - from typing import Annotated
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/schema_routes.py:5 - from fastapi import Path
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/schema_routes.py:5 - from fastapi import Body
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/schema_routes.py:11 - from database.dependencies import get_secure_database
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/schema_routes.py:12 - from database.clients.secure_database_adapter import SecureDatabaseAdapter
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/semantic_types/__init__.py:2 - from endpoints import router
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py:14 - from observability.enterprise_integration import enterprise_observability_lifespan
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/config.py:9 - import json
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/dependencies.py:5 - from dependency_injector.wiring import inject
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/dependencies.py:5 - from dependency_injector.wiring import Provide
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/dependencies.py:9 - from core.branch.service_refactored import BranchService
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/base.py:4 - from typing import Any
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/embedding.py:5 - from typing import Optional
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/embedding.py:6 - import os
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/embedding.py:7 - import asyncio
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/graph_analysis.py:6 - import asyncio
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/graph_analysis.py:11 - from shared.cache.smart_cache import create_path_cache
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/unified_provider.py:5 - import os
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/common_logging/__init__.py:8 - import os
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/common_logging/__init__.py:9 - from typing import Optional
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/common_logging/__init__.py:9 - from typing import Dict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/common_logging/__init__.py:9 - from typing import Any
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/common_logging/__init__.py:9 - from typing import Union
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/config/secure_config.py:7 - from typing import Optional
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/action/metadata_service.py:14 - from models import ActionDefinition
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/action/models.py:8 - from pydantic import ConfigDict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/action/routes.py:5 - from fastapi import Depends
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/action/service.py:7 - import httpx
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/action/service.py:9 - from datetime import datetime
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/action/service.py:10 - from typing import Union
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/action/service.py:13 - from database.clients.unified_http_client import create_basic_client
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/api/schema_generator.py:11 - from typing import Union
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/api/schema_generator.py:15 - from textwrap import dedent
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/api/schema_generator.py:23 - from core.graph.metadata_generator import graph_metadata_generator
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/auth_utils/database_context.py:9 - from typing import TypeVar
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/auth_utils/secure_author_provider.py:18 - import json
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/backup/main.py:12 - import httpx
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/backup/production_backup.py:13 - import hashlib
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/backup/production_backup.py:21 - import httpx
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/backup/production_backup.py:24 - from common_security.secrets import get_key
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/distributed_lock_adapter.py:9 - from typing import Any
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/distributed_lock_adapter.py:21 - from core.branch.redis_lock_manager import LockInfo
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/distributed_lock_manager.py:18 - from typing import Set
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/foundry_branch_service.py:10 - from models.exceptions import ConcurrencyError
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/foundry_branch_service.py:13 - from middleware.three_way_merge import MergeStrategy as JsonMergeStrategy
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/foundry_branch_service.py:19 - from core.time_travel.service import TimeTravelQueryService
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/list_merge_algorithm.py:7 - from typing import Tuple
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/list_merge_algorithm.py:7 - from typing import Callable
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/lock_manager.py:16 - from core.auth_utils import UserContext
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/lock_monitor.py:8 - from typing import Set
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/redis_lock_manager.py:9 - import hashlib
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/redis_lock_manager.py:13 - from dataclasses import field
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/redis_lock_manager.py:14 - from datetime import timedelta
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/redis_lock_manager.py:16 - from typing import Set
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/redis_lock_manager.py:16 - from typing import AsyncContextManager
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/redis_lock_manager.py:19 - from redis.exceptions import LockError as RedisLockError
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/service.py:26 - from middleware.three_way_merge import MergeStrategy as MiddlewareMergeStrategy
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/service_refactored.py:27 - from middleware.three_way_merge import MergeStrategy as MiddlewareMergeStrategy
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/service_refactored.py:28 - from database.clients.terminus_db import TerminusDBClient
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/concurrency/optimistic_lock.py:8 - import asyncpg
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/config/environment.py:7 - from typing import Optional
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/document/service.py:9 - from typing import Union
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/documents/storage.py:5 - from typing import Tuple
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/documents/storage.py:6 - from dataclasses import asdict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/documents/storage.py:12 - from unfoldable import UnfoldLevel
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/documents/storage.py:13 - from metadata_frames import MetadataFrameParser
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/documents/unfoldable.py:5 - from typing import Union
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/etag/decorators.py:9 - import time
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/etag/decorators.py:10 - from datetime import datetime
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/etag/decorators.py:12 - from fastapi import status
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/etag/decorators.py:13 - from fastapi.responses import JSONResponse
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/etag/decorators.py:16 - from models.etag import ResourceVersion
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/etag/decorators.py:17 - from core.auth_utils import UserContext
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_consumer/funnel_indexing_handler.py:6 - import asyncio
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_consumer/funnel_indexing_handler.py:13 - from core.branch.lock_manager import LockConflictError
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_consumer/funnel_indexing_handler.py:16 - from models.shadow_index import IndexType
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_consumer/funnel_indexing_handler.py:17 - from utils.audit_id_generator import AuditIDGenerator
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_consumer/iam_event_handler.py:7 - from typing import Any
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_consumer/iam_event_handler.py:7 - from typing import Optional
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_subscriber/main.py:421 - from core.branch.service import BranchService
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/events/cqrs_projections.py:11 - from dataclasses import dataclass
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/events/cqrs_projections.py:11 - from dataclasses import asdict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/events/cqrs_projections.py:13 - from typing import Union
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/events/cqrs_projections.py:14 - from enum import Enum
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/events/cqrs_projections.py:17 - from sqlalchemy import Text
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/events/cqrs_projections.py:20 - import asyncpg
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/events/event_sourcing.py:8 - import asyncio
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/events/event_sourcing.py:9 - import uuid
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/events/immutable_event_store.py:13 - from dataclasses import asdict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/events/immutable_event_store.py:13 - from dataclasses import field
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/events/immutable_event_store.py:15 - from typing import Union
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/events/immutable_event_store.py:15 - from typing import Tuple
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/events/immutable_event_store.py:17 - import hmac
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/graph/index_generator.py:9 - import json
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/graph/index_generator.py:10 - from typing import Set
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/graph/index_generator.py:10 - from typing import Tuple
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/graph/metadata_generator.py:11 - import hashlib
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/graph/metadata_generator.py:13 - from typing import Tuple
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/graph/repositories.py:5 - from typing import Set
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/graph/repositories.py:5 - from typing import Tuple
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/health/health_checker.py:19 - from contextlib import asynccontextmanager
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/history/models.py:9 - from pydantic import ConfigDict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/history/routes.py:6 - from datetime import datetime
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/history/routes.py:9 - from fastapi.responses import JSONResponse
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/history/service.py:17 - import json
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/iam/dependencies.py:5 - from fastapi import Depends
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/iam/iam_integration.py:11 - from datetime import datetime
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/iam/iam_integration.py:11 - from datetime import timezone
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/iam/scope_mapper.py:5 - from typing import Set
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/iam/scope_mapper.py:6 - from enum import Enum
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/iam/scope_mapper.py:11 - from models.permissions import Role
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/iam/scope_rbac_middleware.py:5 - from typing import List
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/iam/scope_rbac_middleware.py:5 - from typing import Tuple
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/iam/scope_rbac_middleware.py:6 - from fastapi import HTTPException
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/iam/scope_rbac_middleware.py:12 - from core.iam.iam_integration import IAMScope
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/iam/scope_rbac_middleware.py:13 - from models.permissions import ResourceType
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/iam/scope_rbac_middleware.py:13 - from models.permissions import Action
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/idempotent/consumer_service.py:10 - from datetime import timedelta
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/idempotent/schema_event_consumer.py:11 - from models.domain import ObjectType
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/idempotent/schema_event_consumer.py:11 - from models.domain import LinkType
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py:8 - from typing import Callable
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py:8 - from typing import Awaitable
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py:9 - from datetime import timezone
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integrations/iam_service_client.py:12 - from functools import lru_cache
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integrations/iam_service_client_with_fallback.py:12 - from functools import lru_cache
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integrations/iam_service_client_with_fallback.py:13 - import backoff
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integrations/user_service_client.py:6 - import httpx
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integrations/user_service_client.py:10 - from fastapi import HTTPException
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integrations/user_service_client.py:14 - from database.clients.unified_http_client import create_basic_client
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/interfaces/branch_interface.py:5 - from datetime import datetime
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/interfaces/database.py:4 - from datetime import datetime
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/interfaces/event.py:4 - from datetime import datetime
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/interfaces/schema.py:4 - from datetime import datetime
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/interfaces/time_travel_interface.py:4 - from typing import List
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/issue_tracking/issue_database.py:6 - import os
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/issue_tracking/issue_database.py:7 - from typing import Tuple
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/issue_tracking/issue_service.py:7 - from datetime import timedelta
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/monitoring/audit_metrics.py:7 - import asyncio
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/monitoring/audit_metrics.py:8 - from datetime import datetime
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/monitoring/audit_metrics.py:8 - from datetime import timezone
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/property/service.py:12 - from models.exceptions import ResourceNotFoundError
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/property/service.py:12 - from models.exceptions import ValidationError
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/property/service.py:12 - from models.exceptions import ConflictError
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/resilience/unified_circuit_breaker.py:10 - from typing import Union
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/resilience/unified_circuit_breaker.py:13 - from datetime import datetime
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/resilience/unified_circuit_breaker.py:13 - from datetime import timedelta
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/resilience/version_service_wrapper.py:8 - from datetime import datetime
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/resilience/version_service_wrapper.py:8 - from datetime import timedelta
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/resilience/version_service_wrapper.py:9 - from functools import wraps
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/resilience/version_service_wrapper.py:18 - from prometheus_client import Summary
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/resilience/version_service_wrapper.py:407 - from models.etag import VersionInfo
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/rust_integration/__init__.py:6 - from typing import Optional
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/schema/conflict_resolver.py:8 - from typing import Tuple
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/schema/repository.py:13 - from shared.terminus_context import get_author
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/schema/repository_fixed.py:12 - from shared.terminus_context import get_author
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/schema/repository_original.py:14 - from shared.terminus_context import get_author
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/schema/service.py:9 - from typing import Union
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/schema/service.py:12 - from shared.terminus_context import get_branch
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/pii_handler.py:7 - from typing import Tuple
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/pii_handler.py:7 - from typing import Union
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/shadow_index/manager.py:6 - import os
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/cache.py:6 - from datetime import timedelta
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/metrics.py:5 - from typing import Optional
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/metrics.py:5 - from typing import Any
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/models.py:5 - from typing import Union
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/service.py:5 - from typing import Tuple
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/service.py:6 - from datetime import timezone
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/service.py:6 - from datetime import timedelta
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/service.py:22 - from db_optimizations import TemporalCursorPagination
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/service.py:30 - from models.etag import VersionInfo
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/service.py:29 - from branch.foundry_branch_service import FoundryBranchService
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/ci_integration.py:9 - import os
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/ci_integration.py:13 - from typing import Set
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/ci_integration.py:13 - from typing import Tuple
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/decorators.py:6 - from functools import wraps
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/dependencies.py:10 - from core.validation.container import get_container
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/input_sanitization.py:8 - from typing import Any
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/input_sanitization.py:8 - from typing import Dict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/input_sanitization.py:8 - from typing import Union
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/migration_executor.py:9 - from typing import Optional
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/migration_executor.py:17 - from pydantic import BaseModel
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/migration_executor.py:17 - from pydantic import Field
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/migration_executor.py:19 - from middleware.circuit_breaker_http import http_circuit_breaker
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/models.py:9 - from pydantic import ConfigDict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_convention.py:7 - from typing import Any
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_convention.py:7 - from typing import Set
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_convention.py:9 - from pydantic import ConfigDict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_convention_v2.py:7 - from enum import Enum
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_convention_v2.py:10 - from pydantic import BaseModel
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_convention_v2.py:10 - from pydantic import Field
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_convention_v2.py:10 - from pydantic import field_validator
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_history.py:10 - import difflib
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/policy_signing.py:11 - from pydantic import Field
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/policy_signing.py:11 - from pydantic import ConfigDict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rule_registry.py:8 - import functools
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/schema_validator.py:6 - from typing import Any
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/schema_validator.py:18 - from pydantic.json_schema import GenerateJsonSchema
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/schema_validator.py:18 - from pydantic.json_schema import JsonSchemaValue
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/tampering_detection.py:12 - from pydantic import Field
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/tampering_detection.py:12 - from pydantic import ConfigDict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/validation_logging.py:8 - from typing import Union
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/validation_logging.py:10 - from pydantic import ConfigDict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/validation_logging.py:16 - from core.validation.naming_convention import ValidationIssue
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/version_manager.py:5 - import json
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/version_manager.py:6 - from typing import Any
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/version_manager.py:7 - from pathlib import Path
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/versioning/dag_compaction.py:15 - from typing import Tuple
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/versioning/merge_engine.py:8 - from typing import Set
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/versioning/merge_engine.py:12 - import asyncio
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/versioning/merge_engine.py:14 - import hashlib
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/versioning/merge_engine.py:547 - from core.branch.three_way_merge import ThreeWayMerge
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/versioning/merge_engine_fix.py:8 - import asyncio
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/versioning/merge_engine_fix.py:9 - from typing import Tuple
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/versioning/merge_engine_fix.py:12 - import hashlib
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/versioning/merge_engine_fix.py:13 - import json
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/versioning/merge_engine_fix.py:15 - from models.domain import ObjectType
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/versioning/merge_engine_fix.py:15 - from models.domain import LinkType
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/versioning/version_service.py:18 - from delta_compression import DeltaType
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/database/clients/terminus_db.py:9 - import os
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/database/clients/terminus_db.py:11 - from typing import List
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/database/clients/terminus_db.py:12 - from urllib.parse import urljoin
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/database/clients/terminus_db.py:21 - from common_logging.setup import get_logger
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/database/clients/unified_http_client.py:42 - import asyncio
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/database/clients/unified_http_client.py:46 - from contextlib import asynccontextmanager
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/database/clients/unified_http_client.py:47 - from datetime import datetime
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/database/clients/unified_http_client.py:47 - from datetime import timedelta
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/database/clients/unified_http_client.py:49 - from typing import Union
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/database/clients/unified_http_client.py:49 - from typing import AsyncIterator
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/database/clients/unified_http_client.py:516 - from opentelemetry import trace
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/examples/unfoldable_documents_demo.py:8 - from datetime import datetime
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/siem/port.py:5 - from typing import Optional
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/siem/serializer.py:5 - from typing import Type
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/siem/serializer.py:7 - import json
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/tracing/jaeger_adapter.py:25 - from opentelemetry.propagate import inject
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/tracing/jaeger_adapter.py:25 - from opentelemetry.propagate import extract
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/_deprecated/circuit_breaker.py:17 - from abc import ABC
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/_deprecated/circuit_breaker.py:17 - from abc import abstractmethod
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/_deprecated/circuit_breaker.py:21 - from typing import List
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/_deprecated/circuit_breaker.py:21 - from typing import Generic
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/_deprecated/circuit_breaker.py:26 - import random
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/auth_middleware.py:5 - import os
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/auth_middleware.py:7 - from fastapi import status
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/auth_middleware.py:12 - import httpx
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/auth_middleware.py:13 - import inspect
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/auth_middleware.py:18 - from bootstrap.config import get_config
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/auth_middleware.py:19 - from middleware.circuit_breaker import CircuitBreakerGroup
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/auth_middleware.py:19 - from middleware.circuit_breaker import CircuitBreakerError
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/circuit_breaker.py:17 - from abc import ABC
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/circuit_breaker.py:17 - from abc import abstractmethod
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/circuit_breaker.py:21 - from typing import List
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/circuit_breaker.py:21 - from typing import Generic
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/circuit_breaker.py:26 - import random
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/common/__init__.py:42 - import random
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/common/__init__.py:43 - import functools
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/common/__init__.py:44 - import asyncio
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/common/metrics.py:5 - import asyncio
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/common/metrics.py:9 - from datetime import timedelta
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/component_middleware.py:21 - from typing import Type
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/component_middleware.py:21 - from typing import Union
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/component_middleware.py:23 - import inspect
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/component_middleware.py:26 - from collections import OrderedDict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/component_middleware.py:27 - import functools
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/coordinator.py:4 - import asyncio
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/discovery/coordinator.py:6 - from datetime import datetime
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/discovery/health.py:5 - import httpx
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/discovery/health.py:6 - from typing import List
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/discovery/health.py:6 - from typing import Optional
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/discovery/health.py:7 - from datetime import timedelta
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/discovery/health.py:11 - from database.clients.unified_http_client import UnifiedHTTPClient
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/discovery/models.py:7 - from typing import List
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/discovery/providers/redis.py:7 - from datetime import datetime
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/dlq/coordinator.py:5 - from typing import List
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/dlq/coordinator.py:18 - from common.redis_utils import RedisKeyPatterns
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/dlq/detector.py:7 - from datetime import timedelta
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/dlq/handler.py:6 - from typing import List
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/dlq/handler.py:15 - from utils.retry_strategy import calculate_delay
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/dlq/storage/base.py:5 - from typing import Any
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/dlq/storage/redis.py:5 - from typing import Any
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/etag_analytics.py:5 - from typing import Tuple
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/etag_middleware.py:10 - from starlette.responses import JSONResponse
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/etag_middleware.py:12 - import hashlib
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/etag_middleware.py:13 - from datetime import timezone
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/etag_middleware.py:13 - from datetime import timedelta
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/etag_middleware.py:22 - from core.versioning.version_service import get_version_service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/etag_middleware.py:23 - from models.etag import DeltaRequest
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/event_state_store.py:16 - import json
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/event_state_store.py:20 - from datetime import timedelta
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/event_state_store.py:22 - from typing import Set
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/event_state_store.py:22 - from typing import Tuple
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/event_state_store.py:27 - import hashlib
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/checks/database.py:7 - from typing import Optional
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/checks/database.py:7 - from typing import Any
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/checks/http.py:4 - import asyncio
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/checks/system.py:6 - from typing import Optional
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/coordinator.py:5 - from typing import Set
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/coordinator.py:6 - from datetime import datetime
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/monitor.py:6 - from typing import Dict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/monitor.py:6 - from typing import Any
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/monitor.py:9 - from models import HealthCheckResult
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/monitor.py:9 - from models import HealthStatus
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/issue_tracking_middleware.py:11 - from typing import Any
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/issue_tracking_middleware.py:12 - from fastapi import HTTPException
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/adaptive.py:4 - import asyncio
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/adaptive.py:5 - from typing import Optional
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/adaptive.py:5 - from typing import Tuple
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/adaptive.py:6 - from datetime import datetime
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/adaptive.py:9 - from models import RateLimitAlgorithm
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/coordinator.py:4 - import asyncio
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/coordinator.py:5 - from typing import List
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/coordinator.py:6 - from datetime import datetime
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/limiter.py:4 - from typing import Dict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/limiter.py:4 - from typing import Any
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/limiter.py:10 - from strategies.base import RateLimitStrategy
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/middleware.py:5 - from fastapi import HTTPException
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/strategies/leaky_bucket.py:5 - from typing import List
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/strategies/sliding_window.py:5 - from typing import Tuple
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/schema_freeze_middleware.py:13 - from core.branch.lock_manager import LockConflictError
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/service_config.py:12 - from pydantic import validator
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/three_way_merge.py:18 - from abc import ABC
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/three_way_merge.py:18 - from abc import abstractmethod
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/three_way_merge.py:22 - from typing import Tuple
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/three_way_merge.py:22 - from typing import Union
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/three_way_merge.py:22 - from typing import Generic
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/three_way_merge.py:23 - import difflib
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/three_way_merge.py:25 - import hashlib
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/three_way_merge.py:27 - from collections import defaultdict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/three_way_merge.py:692 - import uuid
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/migrations/migrate_to_distributed_locks.py:8 - from typing import List
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/models/branch_state.py:9 - from uuid import UUID
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/models/domain.py:23 - from action_types import ActionType
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/models/etag.py:6 - from datetime import timezone
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/models/etag.py:7 - from pydantic import ConfigDict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/models/issue_tracking.py:11 - from models.domain import BaseModel as DomainBaseModel
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/models/merge_hints.py:8 - from pydantic import ConfigDict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/models/scope_role_mapping.py:5 - from enum import Enum
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/models/scope_role_mapping.py:6 - from typing import Set
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/models/scope_role_mapping.py:6 - from typing import Optional
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/models/semantic_types.py:8 - from typing import Pattern
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/models/semantic_types.py:8 - from typing import Union
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/models/semantic_types.py:9 - from pydantic import validator
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/models/semantic_types.py:9 - from pydantic import ConfigDict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/models/struct_types.py:10 - from typing import Union
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/models/struct_types.py:11 - from pydantic import ConfigDict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/models/struct_types.py:12 - from enum import Enum
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/models/struct_types.py:15 - from models.data_types import DataType
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/monitoring/async_merge_metrics.py:7 - from typing import Dict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/monitoring/async_merge_metrics.py:7 - from typing import Any
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/enterprise_integration.py:5 - import asyncio
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/enterprise_integration.py:7 - from typing import Dict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/enterprise_integration.py:7 - from typing import Any
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/enterprise_metrics.py:6 - import os
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/enterprise_metrics.py:10 - from typing import Dict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/enterprise_metrics.py:10 - from typing import Any
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/enterprise_metrics.py:10 - from typing import Optional
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/enterprise_metrics.py:10 - from typing import List
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/enterprise_metrics.py:12 - from contextlib import asynccontextmanager
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/enterprise_metrics.py:13 - from dataclasses import dataclass
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/enterprise_metrics.py:14 - from datetime import datetime
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/enterprise_metrics.py:14 - from datetime import timedelta
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/enterprise_metrics.py:21 - from fastapi import Request
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/enterprise_metrics.py:763 - import sys
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/enterprise_tracing.py:8 - from typing import List
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/pyroscope_integration.py:7 - import sys
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/pyroscope_integration.py:19 - import py_spy
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/bootstrap_schema.py:9 - from typing import Dict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/bootstrap_schema.py:9 - from typing import Any
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/bootstrap_schema.py:16 - from utils.retry_strategy import with_retry
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/bootstrap_schema.py:16 - from utils.retry_strategy import DB_CRITICAL_CONFIG
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/clean_todo_comments.py:9 - from typing import Tuple
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/compare_schemas.py:11 - from typing import List
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/compare_schemas.py:11 - from typing import Tuple
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/deploy_production.py:19 - from typing import List
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/deploy_production.py:19 - from typing import Optional
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/deploy_production.py:164 - import fastapi
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/deploy_production.py:165 - import pydantic
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/deploy_production.py:167 - import prometheus_client
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/enhanced_import_check.py:9 - import importlib.util
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/enhanced_import_check.py:11 - from typing import Set
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/generate_schemas.py:9 - import os
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/generate_schemas.py:13 - from typing import Optional
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/migrate_to_secure_db_clients.py:6 - import os
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/migrate_to_secure_db_clients.py:10 - from typing import Tuple
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/production_readiness_check.py:10 - import subprocess
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/run_all_tests.py:15 - from typing import Tuple
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/run_all_tests.py:185 - from models.semantic_types import semantic_type_registry
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/run_all_tests.py:186 - from models.struct_types import struct_type_registry
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/run_all_tests.py:188 - from models.domain import LinkType
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/run_all_tests.py:188 - from models.domain import Cardinality
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/run_phase6_tests.py:11 - import os
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/validate_complete_system.py:12 - import json
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/validate_complete_system.py:13 - from typing import Dict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/validate_complete_system.py:13 - from typing import List
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/validate_complete_system.py:13 - from typing import Tuple
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk/models.py:7 - from typing import List
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk/models.py:7 - from typing import Union
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk/models.py:7 - from typing import Callable
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk/models.py:7 - from typing import Awaitable
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk/models.py:9 - from enum import Enum
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk/models.py:10 - from pydantic import Field
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk/models.py:11 - import uuid
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk_py/memory_adapter.py:5 - import asyncio
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk_py/memory_adapter.py:6 - import json
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk_py/models.py:7 - from typing import List
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk_py/models.py:7 - from typing import Union
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk_py/models.py:7 - from typing import Callable
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk_py/models.py:7 - from typing import Awaitable
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk_py/models.py:9 - from enum import Enum
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk_py/models.py:10 - from pydantic import Field
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk_py/models.py:11 - import uuid
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/services/graph_analysis.py:5 - from typing import Tuple
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/services/graph_analysis.py:5 - from typing import AsyncGenerator
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/services/graph_analysis.py:18 - from core.graph.repositories import GraphNode
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/services/graph_analysis.py:18 - from core.graph.repositories import GraphEdge
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/services/job_service.py:8 - import structlog
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/services/job_service.py:14 - from database.clients.unified_database_client import DatabaseBackend
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/cache/smart_cache.py:9 - from typing import List
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/cache/smart_cache.py:9 - from typing import Union
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/cache/smart_cache.py:10 - from datetime import timedelta
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/database/postgres_connector.py:9 - from datetime import datetime
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_client.py:7 - from typing import Dict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_client.py:7 - from typing import Any
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_client.py:7 - from typing import Union
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_client.py:8 - import numpy as np
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py:8 - import numpy as np
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py:10 - import asyncio
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py:11 - import json
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py:12 - import hashlib
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py:13 - from typing import Union
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py:14 - from dataclasses import asdict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py:16 - from datetime import datetime
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py:30 - from embeddings.service import VectorEmbeddingService
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/event_gateway_client.py:8 - from cloudevents.http import from_dict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/event_gateway_stub.py:10 - from cloudevents.http import from_dict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/grpc_interceptors.py:8 - from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/iam_contracts.py:6 - from typing import Set
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/infrastructure/real_nats_client.py:8 - from datetime import datetime
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/models/domain.py:23 - from action_types import ActionType
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/scheduler_stub.py:5 - from typing import List
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/scheduler_stub.py:5 - from typing import Union
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/terminus_context/context.py:9 - from constants import format_author
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/user_service_client.py:8 - from typing import List
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/user_service_client.py:9 - from datetime import datetime
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/user_service_client.py:9 - from datetime import timezone
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/vector_store.py:5 - import asyncio
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/vector_store.py:9 - from typing import Tuple
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/vector_store.py:9 - from typing import Union
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/vector_store.py:11 - from dataclasses import asdict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/test_embedding_providers.py:11 - from typing import List
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/test_embedding_providers.py:11 - from typing import Optional
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/test_embedding_providers.py:12 - from dataclasses import asdict
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/tests/conftest.py:19 - from sqlalchemy.ext.asyncio import create_async_engine
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/tests/conftest.py:19 - from sqlalchemy.ext.asyncio import AsyncSession
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/tests/conftest.py:20 - from sqlalchemy.orm import sessionmaker
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/tests/real_integration_test.py:7 - from fastapi import Depends
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/tests/real_integration_test.py:11 - from datetime import datetime
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/utils/logger.py:8 - from typing import Union
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/celery_app.py:10 - import structlog
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/tasks/maintenance.py:9 - from typing import List
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/tasks/merge.py:7 - from datetime import datetime
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/tasks/merge.py:9 - from celery.exceptions import SoftTimeLimitExceeded
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/tasks/merge.py:10 - import structlog
+Total unused imports: 529
+
+COMMENTED IMPORTS (should be removed):
+----------------------------------------
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py:7 - # import punq  # Replaced with dependency-injector
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py:15 - # from infra.tracing.otel_init import get_otel_manager # Temporarily disabled
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py:51 - # from .container import Container, init_container  # Already imported above
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py:52 - # from .di_scopes import create_request_scope_middleware  # File doesn't exist
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py:407 -     #         from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/schema.py:7 - # from .database import DatabaseProvider # No longer needed
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/validation.py:8 - # from .database import DatabaseProvider
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/foundry_branch_service.py:7 - # from sqlalchemy.sql import text # No longer using SQLAlchemy text
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/rust_integration/__init__.py:15 -     # from .rust_ext import delta, json_parser, vector_ops
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/schema/service_adapter.py:10 - # from ..branch.service import BranchService
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/database/clients/__init__.py:11 - # from .terminus_db import TerminusDBClient
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/database/clients/terminus_db.py:15 - # from httpx_pool import AsyncConnectionPool, ConnectionConfig # 제거됨
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/database/clients/terminus_db.py:17 - # from database.clients.unified_http_client import ( # 제거됨
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/database/clients/terminus_db.py:22 - # from .base import BaseDatabaseClient, DatabaseError, NotFoundError # 삭제됨
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/tracing/jaeger_adapter.py:18 - # from opentelemetry.instrumentation.asyncio import AsyncIOInstrumentor
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/models/domain.py:22 - # from .merge_hints import SchemaMergeMetadata # 존재하지 않는 모듈 import 주석 처리
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/models/domain.py:22 - # from .merge_hints import SchemaMergeMetadata # 존재하지 않는 모듈 import 주석 처리
+Total commented imports: 17
+
+DUPLICATE IMPORTS:
+----------------------------------------
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/auth.py:142 - {'type': 'import', 'module': 'json', 'alias': None, 'line': 142}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/document_routes.py:679 - {'type': 'import', 'module': 'json', 'alias': None, 'line': 679}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/document_routes.py:1171 - {'type': 'import', 'module': 'json', 'alias': None, 'line': 1171}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/document_routes.py:1240 - {'type': 'from', 'module': 'datetime', 'name': 'datetime', 'alias': None, 'line': 1240, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/issue_tracking_routes.py:507 - {'type': 'from', 'module': 'core.issue_tracking.issue_database', 'name': 'get_issue_database', 'alias': None, 'line': 507, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/issue_tracking_routes.py:543 - {'type': 'from', 'module': 'core.issue_tracking.issue_database', 'name': 'get_issue_database', 'alias': None, 'line': 543, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/issue_tracking_routes.py:544 - {'type': 'from', 'module': 'datetime', 'name': 'datetime', 'alias': None, 'line': 544, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/issue_tracking_routes.py:563 - {'type': 'from', 'module': 'core.issue_tracking.issue_database', 'name': 'get_issue_database', 'alias': None, 'line': 563, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/issue_tracking_routes.py:314 - {'type': 'from', 'module': 'core.issue_tracking.issue_database', 'name': 'get_issue_database', 'alias': None, 'line': 314, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/issue_tracking_routes.py:372 - {'type': 'from', 'module': 'core.issue_tracking.issue_service', 'name': 'get_issue_service', 'alias': None, 'line': 372, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/job_progress_routes.py:284 - {'type': 'from', 'module': 'bootstrap.providers', 'name': 'RedisProvider', 'alias': None, 'line': 284, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/job_progress_routes.py:192 - {'type': 'from', 'module': 'bootstrap.providers', 'name': 'RedisProvider', 'alias': None, 'line': 192, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/job_progress_routes.py:36 - {'type': 'from', 'module': 'bootstrap.providers', 'name': 'RedisProvider', 'alias': None, 'line': 36, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/organization_routes.py:77 - {'type': 'from', 'module': 'core.repositories.organization_repository', 'name': 'OrganizationRepository', 'alias': None, 'line': 77, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/organization_routes.py:133 - {'type': 'from', 'module': 'core.repositories.organization_repository', 'name': 'OrganizationRepository', 'alias': None, 'line': 133, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/organization_routes.py:201 - {'type': 'from', 'module': 'core.repositories.organization_repository', 'name': 'OrganizationRepository', 'alias': None, 'line': 201, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/organization_routes.py:279 - {'type': 'from', 'module': 'core.repositories.organization_repository', 'name': 'OrganizationRepository', 'alias': None, 'line': 279, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/schema_generation/endpoints.py:207 - {'type': 'from', 'module': 'datetime', 'name': 'datetime', 'alias': None, 'line': 207, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/schema_generation/endpoints.py:297 - {'type': 'from', 'module': 'datetime', 'name': 'datetime', 'alias': None, 'line': 297, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/schema_generation/endpoints.py:317 - {'type': 'import', 'module': 'json', 'alias': None, 'line': 317}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/shadow_index_routes.py:331 - {'type': 'from', 'module': 'models.shadow_index', 'name': 'estimate_switch_duration', 'alias': None, 'line': 331, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py:84 - {'type': 'from', 'module': 'middleware.circuit_breaker_global', 'name': 'GlobalCircuitConfig', 'alias': None, 'line': 84, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/database.py:120 - {'type': 'from', 'module': 'bootstrap.main', 'name': 'container', 'alias': None, 'line': 120, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/database.py:131 - {'type': 'from', 'module': 'bootstrap.main', 'name': 'container', 'alias': None, 'line': 131, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/action/metadata_service.py:269 - {'type': 'from', 'module': 'datetime', 'name': 'datetime', 'alias': None, 'line': 269, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/auth_utils/secure_author_provider.py:255 - {'type': 'import', 'module': 're', 'alias': None, 'line': 255}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/lock_manager.py:864 - {'type': 'import', 'module': 'aiohttp', 'alias': None, 'line': 864}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/lock_manager.py:865 - {'type': 'import', 'module': 'os', 'alias': None, 'line': 865}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/lock_manager.py:905 - {'type': 'import', 'module': 'aiohttp', 'alias': None, 'line': 905}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/lock_manager.py:906 - {'type': 'import', 'module': 'os', 'alias': None, 'line': 906}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/lock_manager.py:976 - {'type': 'import', 'module': 'aiohttp', 'alias': None, 'line': 976}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/lock_manager.py:977 - {'type': 'import', 'module': 'os', 'alias': None, 'line': 977}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/lock_manager.py:1065 - {'type': 'import', 'module': 'aiohttp', 'alias': None, 'line': 1065}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/lock_manager.py:1066 - {'type': 'import', 'module': 'os', 'alias': None, 'line': 1066}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/lock_manager.py:1332 - {'type': 'import', 'module': 'aiohttp', 'alias': None, 'line': 1332}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/lock_manager.py:1333 - {'type': 'import', 'module': 'os', 'alias': None, 'line': 1333}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/lock_manager.py:1014 - {'type': 'from', 'module': 'bootstrap.providers.database', 'name': 'get_postgres_client', 'alias': None, 'line': 1014, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/lock_manager.py:1091 - {'type': 'import', 'module': 'asyncio', 'alias': None, 'line': 1091}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/lock_manager.py:1423 - {'type': 'from', 'module': 'bootstrap.providers.database', 'name': 'get_postgres_client', 'alias': None, 'line': 1423, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/service_refactored.py:59 - {'type': 'import', 'module': 'os', 'alias': None, 'line': 59}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/service_refactored.py:69 - {'type': 'import', 'module': 'httpx', 'alias': None, 'line': 69}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_consumer/funnel_indexing_handler.py:33 - {'type': 'import', 'module': 'os', 'alias': None, 'line': 33}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_consumer/funnel_indexing_handler.py:340 - {'type': 'from', 'module': 'bootstrap.providers.database', 'name': 'get_terminusdb_client', 'alias': None, 'line': 340, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_consumer/funnel_indexing_handler.py:587 - {'type': 'import', 'module': 'httpx', 'alias': None, 'line': 587}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_consumer/funnel_indexing_handler.py:712 - {'type': 'import', 'module': 'httpx', 'alias': None, 'line': 712}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_consumer/funnel_indexing_handler.py:855 - {'type': 'import', 'module': 'httpx', 'alias': None, 'line': 855}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_consumer/funnel_indexing_handler.py:972 - {'type': 'import', 'module': 'httpx', 'alias': None, 'line': 972}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_consumer/funnel_indexing_handler.py:1032 - {'type': 'import', 'module': 'smtplib', 'alias': None, 'line': 1032}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_consumer/funnel_indexing_handler.py:1033 - {'type': 'from', 'module': 'email.mime.text', 'name': 'MIMEText', 'alias': None, 'line': 1033, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_consumer/funnel_indexing_handler.py:1034 - {'type': 'from', 'module': 'email.mime.multipart', 'name': 'MIMEMultipart', 'alias': None, 'line': 1034, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_consumer/funnel_indexing_handler.py:1096 - {'type': 'import', 'module': 'httpx', 'alias': None, 'line': 1096}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_consumer/funnel_indexing_handler.py:1144 - {'type': 'import', 'module': 'httpx', 'alias': None, 'line': 1144}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_consumer/funnel_indexing_handler.py:1217 - {'type': 'import', 'module': 'httpx', 'alias': None, 'line': 1217}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_consumer/funnel_indexing_handler.py:1275 - {'type': 'import', 'module': 'smtplib', 'alias': None, 'line': 1275}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_consumer/funnel_indexing_handler.py:1276 - {'type': 'from', 'module': 'email.mime.text', 'name': 'MIMEText', 'alias': None, 'line': 1276, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_consumer/funnel_indexing_handler.py:1277 - {'type': 'from', 'module': 'email.mime.multipart', 'name': 'MIMEMultipart', 'alias': None, 'line': 1277, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_subscriber/main.py:259 - {'type': 'import', 'module': 'os', 'alias': None, 'line': 259}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_subscriber/main.py:366 - {'type': 'import', 'module': 'os', 'alias': None, 'line': 366}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_subscriber/main.py:457 - {'type': 'import', 'module': 'httpx', 'alias': None, 'line': 457}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_subscriber/main.py:458 - {'type': 'import', 'module': 'os', 'alias': None, 'line': 458}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_subscriber/main.py:601 - {'type': 'import', 'module': 'json', 'alias': None, 'line': 601}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_subscriber/main.py:602 - {'type': 'import', 'module': 'httpx', 'alias': None, 'line': 602}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_subscriber/main.py:603 - {'type': 'import', 'module': 'os', 'alias': None, 'line': 603}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_subscriber/main.py:637 - {'type': 'import', 'module': 'httpx', 'alias': None, 'line': 637}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_subscriber/main.py:638 - {'type': 'import', 'module': 'os', 'alias': None, 'line': 638}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_subscriber/main.py:732 - {'type': 'from', 'module': 'workers.tasks.maintenance', 'name': 'send_alert', 'alias': None, 'line': 732, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_subscriber/main.py:772 - {'type': 'from', 'module': 'workers.tasks.maintenance', 'name': 'send_metrics', 'alias': None, 'line': 772, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/health/health_checker.py:65 - {'type': 'import', 'module': 'os', 'alias': None, 'line': 65}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/history/routes.py:44 - {'type': 'from', 'module': 'common_logging.setup', 'name': 'get_logger', 'alias': None, 'line': 44, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py:266 - {'type': 'from', 'module': 'events.cqrs_projections', 'name': 'CQRSCoordinator', 'alias': None, 'line': 266, 'level': 2}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py:267 - {'type': 'from', 'module': 'shared.messaging.real_nats_client', 'name': 'RealNATSClient', 'alias': None, 'line': 267, 'level': 3}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py:268 - {'type': 'from', 'module': 'middleware.event_state_store', 'name': 'EventStateStore', 'alias': None, 'line': 268, 'level': 3}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py:269 - {'type': 'from', 'module': 'versioning.version_service', 'name': 'VersionTrackingService', 'alias': None, 'line': 269, 'level': 2}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py:270 - {'type': 'from', 'module': 'history.service', 'name': 'HistoryService', 'alias': None, 'line': 270, 'level': 2}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py:271 - {'type': 'from', 'module': 'time_travel.service', 'name': 'TimeTravelQueryService', 'alias': None, 'line': 271, 'level': 2}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/issue_tracking/issue_service.py:668 - {'type': 'from', 'module': 'core.issue_tracking.issue_database', 'name': 'get_issue_database', 'alias': None, 'line': 668, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/override_approval_service.py:126 - {'type': 'import', 'module': 'asyncio', 'alias': None, 'line': 126}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/resilience/version_service_wrapper.py:481 - {'type': 'from', 'module': 'models.etag', 'name': 'DeltaResponse', 'alias': None, 'line': 481, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/resilience/version_service_wrapper.py:407 - {'type': 'from', 'module': 'models.etag', 'name': 'ResourceVersion', 'alias': None, 'line': 407, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/rust_integration/__init__.py:60 - {'type': 'from', 'module': 'versioning.delta_compression', 'name': 'EnhancedDeltaEncoder', 'alias': None, 'line': 60, 'level': 2}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/schema/service.py:50 - {'type': 'import', 'module': 'os', 'alias': None, 'line': 50}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/db_optimizations.py:290 - {'type': 'import', 'module': 'base64', 'alias': None, 'line': 290}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/db_optimizations.py:291 - {'type': 'import', 'module': 'json', 'alias': None, 'line': 291}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/models.py:50 - {'type': 'import', 'module': 're', 'alias': None, 'line': 50}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/__init__.py:5 - {'type': 'from', 'module': 'service', 'name': 'ValidationService', 'alias': None, 'line': 5, 'level': 1}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/adapters.py:68 - {'type': 'from', 'module': 'database.clients.terminus_db', 'name': 'TerminusDBClient', 'alias': None, 'line': 68, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/migration_executor.py:333 - {'type': 'from', 'module': 'datetime', 'name': 'datetime', 'alias': None, 'line': 333, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/tampering_detection.py:567 - {'type': 'import', 'module': 'os', 'alias': None, 'line': 567}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/versioning/merge_engine.py:817 - {'type': 'from', 'module': 'database.clients.terminus_db', 'name': 'get_terminus_client', 'alias': None, 'line': 817, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/database/clients/secure_database_adapter.py:308 - {'type': 'from', 'module': 'datetime', 'name': 'datetime', 'alias': None, 'line': 308, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/database/clients/secure_database_adapter.py:308 - {'type': 'from', 'module': 'datetime', 'name': 'timezone', 'alias': None, 'line': 308, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/component_middleware.py:363 - {'type': 'import', 'module': 'uuid', 'alias': None, 'line': 363}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/etag_middleware.py:539 - {'type': 'import', 'module': 'json', 'alias': None, 'line': 539}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/event_state_store.py:719 - {'type': 'import', 'module': 'logging', 'alias': None, 'line': 719}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/checks/database.py:32 - {'type': 'import', 'module': 'asyncpg', 'alias': None, 'line': 32}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/checks/database.py:38 - {'type': 'import', 'module': 'aiomysql', 'alias': None, 'line': 38}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/coordinator.py:195 - {'type': 'from', 'module': 'models', 'name': 'RateLimitState', 'alias': None, 'line': 195, 'level': 1}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/limiter.py:81 - {'type': 'from', 'module': 'coordinator', 'name': 'RateLimitCoordinator', 'alias': None, 'line': 81, 'level': 1}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/schema_freeze_middleware.py:221 - {'type': 'from', 'module': 'datetime', 'name': 'datetime', 'alias': None, 'line': 221, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/schema_freeze_middleware.py:221 - {'type': 'from', 'module': 'datetime', 'name': 'timezone', 'alias': None, 'line': 221, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/migrations/migrate_to_distributed_locks.py:292 - {'type': 'from', 'module': 'models.branch_state', 'name': 'BranchStateInfo', 'alias': None, 'line': 292, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/models/data_types.py:650 - {'type': 'import', 'module': 'logging', 'alias': None, 'line': 650}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/models/data_types.py:685 - {'type': 'import', 'module': 'logging', 'alias': None, 'line': 685}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/models/data_types.py:691 - {'type': 'import', 'module': 'logging', 'alias': None, 'line': 691}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/models/data_types.py:697 - {'type': 'import', 'module': 'logging', 'alias': None, 'line': 697}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/models/data_types.py:618 - {'type': 'from', 'module': 'datetime', 'name': 'datetime', 'alias': None, 'line': 618, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/models/domain.py:149 - {'type': 'from', 'module': 'datetime', 'name': 'datetime', 'alias': None, 'line': 149, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/models/domain.py:238 - {'type': 'from', 'module': 'datetime', 'name': 'datetime', 'alias': None, 'line': 238, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/models/idempotency.py:102 - {'type': 'import', 'module': 'json', 'alias': None, 'line': 102}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/models/semantic_types.py:155 - {'type': 'import', 'module': 'logging', 'alias': None, 'line': 155}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/models/struct_types.py:237 - {'type': 'import', 'module': 'logging', 'alias': None, 'line': 237}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/enterprise_metrics.py:730 - {'type': 'import', 'module': 'gc', 'alias': None, 'line': 730}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/enterprise_metrics.py:806 - {'type': 'import', 'module': 'logging', 'alias': None, 'line': 806}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/enterprise_metrics.py:811 - {'type': 'import', 'module': 'logging', 'alias': None, 'line': 811}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/enterprise_metrics.py:690 - {'type': 'import', 'module': 'logging', 'alias': None, 'line': 690}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/enterprise_metrics.py:696 - {'type': 'import', 'module': 'logging', 'alias': None, 'line': 696}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/enterprise_metrics.py:702 - {'type': 'import', 'module': 'logging', 'alias': None, 'line': 702}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/deploy_production.py:150 - {'type': 'import', 'module': 'sys', 'alias': None, 'line': 150}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/deploy_production.py:543 - {'type': 'import', 'module': 'aiohttp', 'alias': None, 'line': 543}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/run_all_tests.py:268 - {'type': 'from', 'module': 'core.versioning.merge_engine', 'name': 'merge_engine', 'alias': None, 'line': 268, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk/client.py:80 - {'type': 'import', 'module': 'json', 'alias': None, 'line': 80}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk/client.py:81 - {'type': 'import', 'module': 'uuid', 'alias': None, 'line': 81}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk/client.py:82 - {'type': 'import', 'module': 'time', 'alias': None, 'line': 82}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk/client.py:118 - {'type': 'import', 'module': 'asyncio', 'alias': None, 'line': 118}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk/client.py:120 - {'type': 'import', 'module': 'os', 'alias': None, 'line': 120}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk/client.py:211 - {'type': 'import', 'module': 'time', 'alias': None, 'line': 211}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk/client.py:32 - {'type': 'import', 'module': 'httpx', 'alias': None, 'line': 32}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk/client.py:33 - {'type': 'import', 'module': 'os', 'alias': None, 'line': 33}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/database/postgres_connector.py:423 - {'type': 'import', 'module': 're', 'alias': None, 'line': 423}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py:20 - {'type': 'import', 'module': 'os', 'alias': None, 'line': 20}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/event_gateway_stub.py:168 - {'type': 'from', 'module': 'uuid', 'name': 'uuid4', 'alias': None, 'line': 168, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/models/data_types.py:650 - {'type': 'import', 'module': 'logging', 'alias': None, 'line': 650}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/models/data_types.py:685 - {'type': 'import', 'module': 'logging', 'alias': None, 'line': 685}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/models/data_types.py:691 - {'type': 'import', 'module': 'logging', 'alias': None, 'line': 691}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/models/data_types.py:697 - {'type': 'import', 'module': 'logging', 'alias': None, 'line': 697}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/models/data_types.py:618 - {'type': 'from', 'module': 'datetime', 'name': 'datetime', 'alias': None, 'line': 618, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/models/domain.py:149 - {'type': 'from', 'module': 'datetime', 'name': 'datetime', 'alias': None, 'line': 149, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/models/domain.py:238 - {'type': 'from', 'module': 'datetime', 'name': 'datetime', 'alias': None, 'line': 238, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/scheduler_stub.py:126 - {'type': 'from', 'module': 'uuid', 'name': 'uuid4', 'alias': None, 'line': 126, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/tests/conftest.py:161 - {'type': 'from', 'module': 'bootstrap.app', 'name': 'create_app', 'alias': None, 'line': 161, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/tests/conftest.py:162 - {'type': 'from', 'module': 'bootstrap.config', 'name': 'AppConfig', 'alias': None, 'line': 162, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/tests/conftest.py:162 - {'type': 'from', 'module': 'bootstrap.config', 'name': 'PostgresConfig', 'alias': None, 'line': 162, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/tests/conftest.py:162 - {'type': 'from', 'module': 'bootstrap.config', 'name': 'RedisConfig', 'alias': None, 'line': 162, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/tests/conftest.py:162 - {'type': 'from', 'module': 'bootstrap.config', 'name': 'TerminusDBConfig', 'alias': None, 'line': 162, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/tests/conftest.py:331 - {'type': 'from', 'module': 'datetime', 'name': 'datetime', 'alias': None, 'line': 331, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/tests/conftest.py:372 - {'type': 'from', 'module': 'datetime', 'name': 'datetime', 'alias': None, 'line': 372, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/tests/conftest.py:372 - {'type': 'from', 'module': 'datetime', 'name': 'timezone', 'alias': None, 'line': 372, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/tests/conftest.py:259 - {'type': 'from', 'module': 'core.services.branch_service', 'name': 'BranchService', 'alias': None, 'line': 259, 'level': 0}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/tests/real_integration_test.py:376 - {'type': 'import', 'module': 'httpx', 'alias': None, 'line': 376}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/tests/real_integration_test.py:377 - {'type': 'import', 'module': 'os', 'alias': None, 'line': 377}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/tests/real_integration_test.py:602 - {'type': 'import', 'module': 'os', 'alias': None, 'line': 602}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/tests/real_integration_test.py:576 - {'type': 'import', 'module': 'requests', 'alias': None, 'line': 576}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/utils/git_utils.py:69 - {'type': 'import', 'module': 'logging', 'alias': None, 'line': 69}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/utils/git_utils.py:75 - {'type': 'import', 'module': 'logging', 'alias': None, 'line': 75}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/utils/logger.py:105 - {'type': 'import', 'module': 'os', 'alias': None, 'line': 105}
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/tasks/maintenance.py:445 - {'type': 'from', 'module': 'bootstrap.providers', 'name': 'RedisProvider', 'alias': None, 'line': 445, 'level': 0}
+Total duplicate imports: 156
+
+NONEXISTENT/PROBLEMATIC IMPORTS:
+----------------------------------------
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/auth_examples.py:10 - middleware.auth_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/auth_examples.py:10 - middleware.auth_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/__init__.py:5 - subscriptions
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/__init__.py:6 - realtime_publisher
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/__init__.py:7 - websocket_manager
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/__init__.py:8 - working_schema
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/auth.py:47 - middleware.auth_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/main.py:23 - api.graphql.auth
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/main.py:23 - api.graphql.auth
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/main.py:23 - api.graphql.auth
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/main.py:26 - realtime_publisher
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/main.py:27 - websocket_manager
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/modular_main.py:19 - api.graphql.auth
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/modular_main.py:19 - api.graphql.auth
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/modular_main.py:19 - api.graphql.auth
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/modular_main.py:32 - realtime_publisher
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/modular_main.py:33 - working_schema
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/modular_main.py:34 - websocket_manager
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/modular_main.py:38 - middleware.security
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/modular_main.py:39 - middleware.cache
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/modular_main.py:92 - infra.tracing.otel_init
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/subscriptions.py:15 - realtime_publisher
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/websocket_manager.py:13 - realtime_publisher
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/websocket_manager.py:13 - realtime_publisher
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/graphql/websocket_manager.py:13 - realtime_publisher
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/main.py:25 - api.simple_schema_routes
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/batch_routes.py:12 - middleware.auth_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/batch_routes.py:13 - core.schema.service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/batch_routes.py:15 - database.dependencies
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/batch_routes.py:18 - shared.cache.smart_cache
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/batch_routes.py:60 - bootstrap.dependencies
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/branch_lock_routes.py:11 - middleware.auth_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/branch_routes.py:12 - middleware.etag_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/branch_routes.py:13 - bootstrap.dependencies
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/branch_routes.py:13 - bootstrap.dependencies
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/branch_routes.py:15 - middleware.auth_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/branch_routes.py:21 - models.branch
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/branch_routes.py:141 - workers.tasks.merge
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/branch_routes.py:253 - workers.celery_app
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/circuit_breaker_routes.py:9 - middleware.auth_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/config_routes.py:4 - bootstrap.providers.terminus_gateway
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/document_crud_routes.py:10 - middleware.auth_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/document_crud_routes.py:15 - bootstrap.dependencies
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/document_crud_routes.py:15 - bootstrap.dependencies
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/document_crud_routes.py:17 - middleware.etag_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/document_routes.py:11 - middleware.auth_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/embedding_routes.py:10 - bootstrap.providers.embedding
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/embedding_routes.py:10 - bootstrap.providers.embedding
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/embedding_routes.py:10 - bootstrap.providers.embedding
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/health_routes.py:9 - middleware.auth_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/idempotent_routes.py:11 - middleware.auth_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/idempotent_routes.py:12 - core.idempotent.schema_event_consumer
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/issue_tracking_routes.py:10 - middleware.auth_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/job_progress_routes.py:16 - middleware.auth_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/job_progress_routes.py:18 - bootstrap.dependencies
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/job_progress_routes.py:258 - bootstrap.providers
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/job_progress_routes.py:284 - bootstrap.providers
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/job_progress_routes.py:192 - bootstrap.providers
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/job_progress_routes.py:36 - bootstrap.providers
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/organization_routes.py:8 - bootstrap.dependencies
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/organization_routes.py:9 - middleware.auth_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/organization_routes.py:11 - middleware.etag_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/organization_routes.py:32 - core.repositories.organization_repository
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/organization_routes.py:77 - core.repositories.organization_repository
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/organization_routes.py:133 - core.repositories.organization_repository
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/organization_routes.py:201 - core.repositories.organization_repository
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/organization_routes.py:279 - core.repositories.organization_repository
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/property_routes.py:8 - bootstrap.dependencies
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/property_routes.py:9 - middleware.auth_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/property_routes.py:11 - middleware.etag_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/resilience_dashboard_routes.py:9 - middleware.auth_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/resilience_dashboard_routes.py:11 - middleware.etag_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/schema_generation/__init__.py:7 - endpoints
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/schema_generation/endpoints.py:12 - bootstrap.dependencies
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/schema_generation/endpoints.py:19 - middleware.auth_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/schema_routes.py:8 - bootstrap.dependencies
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/schema_routes.py:10 - middleware.auth_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/schema_routes.py:11 - database.dependencies
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/schema_routes.py:14 - middleware.etag_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/semantic_types/__init__.py:2 - endpoints
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/semantic_types/endpoints.py:20 - middleware.auth_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/semantic_types/endpoints.py:21 - core.events.publisher
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/semantic_types/endpoints.py:255 - core.repositories.property_repository
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/shadow_index_routes.py:11 - middleware.auth_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/struct_types/endpoints.py:19 - middleware.auth_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/struct_types/endpoints.py:20 - core.events.publisher
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/struct_types/endpoints.py:303 - core.repositories.property_repository
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/time_travel_routes.py:11 - middleware.auth_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/time_travel_routes.py:12 - core.time_travel
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/time_travel_routes.py:12 - core.time_travel
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/time_travel_routes.py:12 - core.time_travel
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/time_travel_routes.py:12 - core.time_travel
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/time_travel_routes.py:12 - core.time_travel
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/time_travel_routes.py:16 - core.service_factory
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/version_routes.py:10 - middleware.auth_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/api/v1/version_routes.py:11 - core.versioning.version_service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py:10 - bootstrap.dependencies
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py:17 - middleware.auth_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py:21 - middleware.etag_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py:49 - api.graphql.modular_main
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py:50 - api.graphql.main
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py:290 - api.test_endpoints
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py:392 - middleware.rate_limiting.config
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py:77 - bootstrap.providers.redis_provider
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py:123 - observability.advanced_gc_monitoring
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py:159 - observability.pyroscope_integration
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app.py:159 - observability.pyroscope_integration
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/app_minimal.py:7 - bootstrap.dependencies
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/containers.py:5 - bootstrap.providers.redis_provider
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/containers.py:6 - bootstrap.providers.circuit_breaker
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/containers.py:7 - bootstrap.providers.unified_provider
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/dependencies.py:7 - containers
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/dependencies.py:12 - bootstrap.providers.redis_provider
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/dependencies.py:60 - bootstrap.providers.unified_provider
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/__init__.py:5 - event
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/__init__.py:6 - schema
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/__init__.py:7 - validation
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/__init__.py:8 - embedding
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/branch.py:6 - base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/branch.py:7 - event
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/circuit_breaker.py:5 - bootstrap.providers.redis_provider
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/database.py:12 - base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/database.py:109 - bootstrap.main
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/database.py:120 - bootstrap.main
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/database.py:131 - bootstrap.main
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/embedding.py:8 - base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/embedding.py:9 - shared.embedding_stub
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/embedding.py:9 - shared.embedding_stub
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/event.py:8 - base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/graph_analysis.py:7 - base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/graph_analysis.py:8 - services.graph_analysis
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/graph_analysis.py:9 - core.graph.repositories
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/graph_analysis.py:9 - core.graph.repositories
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/graph_analysis.py:9 - core.graph.repositories
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/graph_analysis.py:11 - shared.cache.smart_cache
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/graph_analysis.py:11 - shared.cache.smart_cache
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/graph_analysis.py:11 - shared.cache.smart_cache
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/graph_analysis.py:12 - core.events.unified_publisher
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/graph_analysis.py:13 - config.redis_config
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/lock_manager.py:7 - core.branch.redis_lock_manager
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/lock_manager.py:8 - base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/redis_provider.py:6 - base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/scheduler.py:8 - base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/schema.py:6 - base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/schema.py:9 - event
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/schema.py:10 - branch
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/terminus_gateway.py:10 - shared.data_kernel_client
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/terminus_port_adapter.py:5 - core.validation.ports
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/validation.py:5 - core.validation.service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/validation.py:6 - shared.cache.smart_cache
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/validation.py:7 - base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/validation.py:10 - event
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/bootstrap/providers/validation.py:11 - terminus_port_adapter
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/action/metadata_service.py:15 - database.clients.terminus_db_simple
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/action/metadata_service.py:47 - database.unified_terminus_client
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/action/routes.py:10 - core.action.metadata_service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/action/service.py:14 - shared.cache.smart_cache
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/action/service.py:16 - core.action.metadata_service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/backup/main.py:15 - apscheduler.schedulers.asyncio
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/backup/main.py:16 - apscheduler.triggers.cron
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/backup/main.py:19 - minio
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/backup/production_backup.py:23 - common_security
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/backup/production_backup.py:23 - common_security
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/backup/production_backup.py:23 - common_security
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/backup/production_backup.py:24 - common_security.secrets
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/backup/production_backup.py:24 - common_security.secrets
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/backup/production_backup.py:25 - minio
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/__init__.py:2 - service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/__init__.py:3 - diff_engine
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/__init__.py:4 - conflict_resolver
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/__init__.py:5 - merge_strategies
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/distributed_lock_adapter.py:21 - core.branch.redis_lock_manager
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/distributed_lock_adapter.py:21 - core.branch.redis_lock_manager
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/foundry_branch_service.py:20 - core.versioning.version_service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/foundry_branch_service.py:19 - core.time_travel.service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/lock_monitor.py:16 - core.branch.redis_lock_manager
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/branch/lock_monitor.py:16 - core.branch.redis_lock_manager
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/documents/__init__.py:6 - unfoldable
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/documents/__init__.py:6 - unfoldable
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/documents/__init__.py:6 - unfoldable
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/documents/__init__.py:6 - unfoldable
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/documents/__init__.py:6 - unfoldable
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/documents/__init__.py:14 - metadata_frames
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/documents/__init__.py:14 - metadata_frames
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/documents/__init__.py:14 - metadata_frames
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/documents/__init__.py:14 - metadata_frames
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/documents/__init__.py:21 - storage
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/documents/__init__.py:21 - storage
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/documents/__init__.py:21 - storage
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/documents/storage.py:12 - unfoldable
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/documents/storage.py:12 - unfoldable
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/documents/storage.py:12 - unfoldable
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/documents/storage.py:12 - unfoldable
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/documents/storage.py:13 - metadata_frames
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_consumer/funnel_indexing_handler.py:17 - utils.audit_id_generator
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_consumer/iam_event_handler.py:10 - shared.events.cloudevents_enhanced
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_subscriber/main.py:18 - core.event_consumer.funnel_indexing_handler
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_subscriber/main.py:307 - bootstrap.providers
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_subscriber/main.py:422 - bootstrap.dependencies
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_subscriber/main.py:489 - workers.tasks.maintenance
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_subscriber/main.py:563 - workers.tasks.maintenance
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_subscriber/main.py:732 - workers.tasks.maintenance
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/event_subscriber/main.py:772 - workers.tasks.maintenance
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/events/branch_event_publisher.py:6 - core.events.unified_publisher
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/events/branch_event_publisher.py:7 - core.events.backends.cloudevents_enhanced
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/events/branch_event_publisher.py:7 - core.events.backends.cloudevents_enhanced
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/events/cqrs_projections.py:22 - immutable_event_store
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/events/cqrs_projections.py:22 - immutable_event_store
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/events/cqrs_projections.py:23 - event_sourcing
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/events/event_sourcing.py:17 - immutable_event_store
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/events/event_sourcing.py:17 - immutable_event_store
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/events/event_sourcing.py:17 - immutable_event_store
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/graph/repositories.py:14 - resilience.unified_circuit_breaker
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/health/__init__.py:3 - health_checker
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/health/__init__.py:3 - health_checker
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/health/__init__.py:3 - health_checker
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/health/__init__.py:3 - health_checker
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/history/__init__.py:3 - service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/history/routes.py:11 - middleware.auth_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/history/routes.py:17 - core.events.publisher
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/history/routes.py:26 - bootstrap.dependencies
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/history/routes.py:28 - core.event_publisher
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/iam/dependencies.py:7 - auth_utils
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/iam/dependencies.py:8 - iam_integration
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/iam/dependencies.py:8 - iam_integration
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/iam/dependencies.py:9 - scope_mapper
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/idempotent/consumer_service.py:17 - shared.database.sqlite_connector
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/idempotent/consumer_service.py:17 - shared.database.sqlite_connector
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/idempotent/schema_event_consumer.py:9 - core.idempotent.consumer_service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py:14 - events.immutable_event_store
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py:14 - events.immutable_event_store
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py:14 - events.immutable_event_store
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py:15 - events.cqrs_projections
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py:16 - time_travel.service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py:17 - versioning.version_service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py:18 - history.service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py:19 - shared.messaging.real_nats_client
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py:265 - events.immutable_event_store
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py:266 - events.cqrs_projections
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py:266 - events.cqrs_projections
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py:266 - events.cqrs_projections
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py:267 - shared.messaging.real_nats_client
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py:269 - versioning.version_service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py:270 - history.service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/integration/event_bridge.py:271 - time_travel.service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/interfaces/__init__.py:3 - schema
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/interfaces/__init__.py:4 - validation
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/interfaces/__init__.py:5 - event
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/interfaces/__init__.py:7 - branch_interface
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/interfaces/__init__.py:8 - time_travel_interface
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/property/__init__.py:3 - service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/resilience/version_service_wrapper.py:15 - pybreaker
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/resilience/version_service_wrapper.py:21 - core.versioning.version_service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/resilience/version_service_wrapper.py:21 - core.versioning.version_service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/rust_integration/__init__.py:47 - versioning.delta_compression
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/rust_integration/__init__.py:60 - versioning.delta_compression
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/rust_integration/__init__.py:60 - versioning.delta_compression
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/schema/__init__.py:2 - service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/schema/service.py:14 - repository
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/schema/service_adapter.py:6 - service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/schema/service_adapter.py:7 - interfaces.schema
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/schema/service_adapter.py:8 - repository
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/__init__.py:6 - pii_handler
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/__init__.py:6 - pii_handler
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/__init__.py:6 - pii_handler
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/__init__.py:6 - pii_handler
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/__init__.py:6 - pii_handler
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/__init__.py:15 - common_security
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/__init__.py:15 - common_security
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/__init__.py:15 - common_security
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/__init__.py:15 - common_security
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/__init__.py:15 - common_security
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/__init__.py:15 - common_security
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/__init__.py:15 - common_security
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/__init__.py:15 - common_security
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/__init__.py:15 - common_security
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/__init__.py:15 - common_security
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/__init__.py:15 - common_security
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/pii_handler.py:14 - common_security
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/pii_handler.py:14 - common_security
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/security/pii_handler.py:14 - common_security
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/service_factory.py:9 - core.branch.foundry_branch_service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/service_factory.py:10 - core.time_travel.service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/service_factory.py:11 - core.versioning.version_service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/service_factory.py:11 - core.versioning.version_service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/service_factory.py:12 - shared.cache.smart_cache
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/__init__.py:22 - service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/__init__.py:24 - cache
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/__init__.py:25 - metrics
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/__init__.py:25 - metrics
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/__init__.py:25 - metrics
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/__init__.py:25 - metrics
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/__init__.py:25 - metrics
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/__init__.py:25 - metrics
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/__init__.py:33 - db_optimizations
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/__init__.py:33 - db_optimizations
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/cache.py:11 - shared.cache.smart_cache
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/db_optimizations.py:6 - shared.database.sqlite_connector
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/service.py:17 - cache
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/service.py:18 - metrics
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/service.py:18 - metrics
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/service.py:18 - metrics
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/service.py:18 - metrics
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/service.py:22 - db_optimizations
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/service.py:22 - db_optimizations
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/service.py:23 - versioning.version_service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/service.py:23 - versioning.version_service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/service.py:24 - interfaces
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/service.py:31 - shared.database.sqlite_connector
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/service.py:32 - shared.cache.smart_cache
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/time_travel/service.py:29 - branch.foundry_branch_service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/__init__.py:10 - naming_config
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/__init__.py:11 - naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/__init__.py:12 - naming_history
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/__init__.py:13 - policy_signing
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/__init__.py:14 - schema_validator
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/__init__.py:15 - version_manager
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/__init__.py:16 - service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/__init__.py:5 - service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/adapters.py:8 - core.validation.ports
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/adapters.py:8 - core.validation.ports
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/adapters.py:8 - core.validation.ports
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/adapters.py:22 - shared.cache.smart_cache
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/ci_integration.py:18 - core.validation.naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/ci_integration.py:18 - core.validation.naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/ci_integration.py:18 - core.validation.naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/ci_integration.py:21 - core.validation.naming_config
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/container.py:8 - core.validation.service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/container.py:9 - core.validation.adapters
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/container.py:9 - core.validation.adapters
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/container.py:9 - core.validation.adapters
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/container.py:9 - core.validation.adapters
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/container.py:9 - core.validation.adapters
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/container.py:9 - core.validation.adapters
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/container.py:17 - core.validation.rule_registry
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/container.py:153 - core.validation.adapters
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/container.py:153 - core.validation.adapters
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/container.py:153 - core.validation.adapters
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/decorators.py:9 - core.validation.interfaces
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/dependencies.py:9 - core.validation.ports
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/dependencies.py:9 - core.validation.ports
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/dependencies.py:9 - core.validation.ports
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/dependencies.py:10 - core.validation.container
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/dependencies.py:10 - core.validation.container
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/dependencies.py:11 - core.validation.service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/dependencies.py:12 - core.validation.adapters
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/dependencies.py:12 - core.validation.adapters
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/dependencies.py:12 - core.validation.adapters
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/dependencies.py:12 - core.validation.adapters
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/dependencies.py:12 - core.validation.adapters
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/dependencies.py:12 - core.validation.adapters
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/dependencies.py:68 - core.validation.rule_registry
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_config.py:12 - orjson
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_config.py:16 - core.validation.naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_config.py:16 - core.validation.naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_config.py:16 - core.validation.naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_config.py:16 - core.validation.naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_config.py:19 - core.validation.naming_history
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_config.py:20 - core.validation.schema_validator
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_config.py:20 - core.validation.schema_validator
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_config.py:20 - core.validation.schema_validator
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_config.py:23 - core.validation.version_manager
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_config.py:23 - core.validation.version_manager
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_config.py:23 - core.validation.version_manager
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_config.py:23 - core.validation.version_manager
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_config.py:23 - core.validation.version_manager
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_convention_v2.py:12 - core.validation.naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_convention_v2.py:12 - core.validation.naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_convention_v2.py:12 - core.validation.naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_convention_v2.py:12 - core.validation.naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_convention_v2.py:12 - core.validation.naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_convention_v2.py:12 - core.validation.naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_history.py:13 - core.validation.naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_history.py:13 - core.validation.naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/naming_history.py:13 - core.validation.naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/policy_signing.py:24 - core.validation.naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/policy_signing.py:411 - core.validation.naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/policy_signing.py:411 - core.validation.naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/policy_signing.py:411 - core.validation.naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rule_registry.py:13 - core.validation.ports
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rule_registry.py:13 - core.validation.ports
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rule_registry.py:13 - core.validation.ports
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rule_registry.py:14 - core.validation.interfaces
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rules/data_impact_analyzer.py:18 - core.validation.rules.base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rules/data_type.py:14 - core.validation.rules.base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rules/example_decorated_rule.py:7 - core.validation.interfaces
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rules/example_decorated_rule.py:8 - core.validation.decorators
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rules/example_decorated_rule.py:10 - core.validation.ports
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rules/naming_convention_rule.py:8 - core.validation.rules.base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rules/naming_convention_rule.py:13 - core.validation.naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rules/naming_convention_rule.py:13 - core.validation.naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rules/naming_convention_rule.py:13 - core.validation.naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rules/primary_key.py:9 - core.validation.rules.base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rules/primary_key_change.py:16 - core.validation.rules.base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rules/required_field.py:16 - core.validation.rules.base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rules/shared_property.py:9 - core.validation.rules.base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rules/type_change.py:13 - core.validation.rules.base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rules/type_change.py:13 - core.validation.rules.base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/rules/type_incompatibility.py:15 - core.validation.rules.base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/schema_validator.py:12 - jsonschema
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/schema_validator.py:13 - jsonschema
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/schema_validator.py:13 - jsonschema
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/schema_validator.py:20 - core.validation.naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/schema_validator.py:20 - core.validation.naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/schema_validator.py:20 - core.validation.naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/schema_validator.py:20 - core.validation.naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/schema_validator.py:20 - core.validation.naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/schema_validator.py:20 - core.validation.naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/service.py:25 - core.validation.ports
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/service.py:25 - core.validation.ports
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/service.py:25 - core.validation.ports
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/service.py:25 - core.validation.ports
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/service.py:26 - core.validation.rule_registry
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/service.py:26 - core.validation.rule_registry
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/service.py:27 - core.validation.interfaces
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/tampering_detection.py:16 - common_security
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/tampering_detection.py:18 - core.validation.naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/tampering_detection.py:19 - core.validation.policy_signing
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/tampering_detection.py:19 - core.validation.policy_signing
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/tampering_detection.py:20 - core.validation.events
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/tampering_detection.py:20 - core.validation.events
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/tampering_detection.py:20 - core.validation.events
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/validation_logging.py:16 - core.validation.naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/validation_logging.py:16 - core.validation.naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/validation_logging.py:16 - core.validation.naming_convention
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/validation_logging.py:17 - core.validation.events
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/validation/validation_logging.py:32 - core.validation.siem_integration
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/versioning/merge_engine.py:547 - core.branch.three_way_merge
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/versioning/merge_engine.py:778 - core.events.publisher
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/versioning/merge_engine.py:789 - core.validation.schema_validator
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/versioning/version_service.py:16 - shared.database.sqlite_connector
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/versioning/version_service.py:16 - shared.database.sqlite_connector
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/versioning/version_service.py:18 - delta_compression
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/versioning/version_service.py:18 - delta_compression
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/core/versioning/version_service.py:18 - delta_compression
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/database/clients/__init__.py:2 - unified_http_client
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/database/clients/__init__.py:2 - unified_http_client
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/database/clients/__init__.py:2 - unified_http_client
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/database/clients/__init__.py:2 - unified_http_client
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/database/clients/__init__.py:2 - unified_http_client
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/database/clients/__init__.py:2 - unified_http_client
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/database/clients/__init__.py:12 - redis_ha_client
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/database/clients/unified_database_client.py:6 - base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/database/clients/unified_database_client.py:7 - terminus_db
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/database/clients/unified_database_client.py:8 - postgres_client_secure
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/database/dependencies.py:11 - middleware.auth_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/grpc_services/server.py:13 - grpc_reflection.v1alpha
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/siem/__init__.py:3 - adapter
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/siem/__init__.py:3 - adapter
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/siem/__init__.py:3 - adapter
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/siem/__init__.py:3 - adapter
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/siem/__init__.py:4 - port
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/siem/adapter.py:13 - port
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/siem/serializer.py:9 - core.validation.events
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/siem/serializer.py:9 - core.validation.events
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/siem/serializer.py:9 - core.validation.events
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/siem/serializer.py:9 - core.validation.events
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/tracing/otel_init.py:13 - opentelemetry.exporter.otlp.proto.grpc.trace_exporter
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/tracing/otel_init.py:29 - opentelemetry.instrumentation.httpx
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/tracing/otel_init.py:33 - opentelemetry.instrumentation.aiohttp
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/tracing/otel_init.py:36 - opentelemetry.instrumentation.asyncpg
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/tracing/otel_init.py:39 - opentelemetry.instrumentation.sqlalchemy
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/tracing/otel_init.py:42 - opentelemetry.instrumentation.celery
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/infra/tracing/otel_init.py:46 - opentelemetry.propagators.b3
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/auth_middleware.py:21 - config.secure_config
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/common/__init__.py:5 - metrics
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/common/__init__.py:5 - metrics
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/coordinator.py:50 - health.coordinator
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/coordinator.py:58 - discovery.coordinator
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/coordinator.py:66 - rate_limiting.coordinator
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/coordinator.py:74 - dlq.coordinator
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/coordinator.py:82 - circuit_breaker
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/discovery/__init__.py:9 - providers.base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/discovery/__init__.py:10 - providers.redis
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/discovery/__init__.py:11 - providers.dns
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/discovery/__init__.py:12 - balancer
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/discovery/__init__.py:13 - health
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/discovery/__init__.py:14 - coordinator
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/discovery/coordinator.py:13 - providers.base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/discovery/coordinator.py:14 - providers.redis
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/discovery/coordinator.py:15 - providers.dns
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/discovery/coordinator.py:16 - balancer
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/discovery/coordinator.py:17 - health
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/discovery/coordinator.py:18 - common.metrics
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/discovery/providers/dns.py:9 - base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/discovery/providers/redis.py:10 - base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/discovery/providers/redis.py:12 - common.redis_utils
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/discovery/providers/redis.py:12 - common.redis_utils
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/dlq/__init__.py:9 - storage.base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/dlq/__init__.py:10 - storage.redis
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/dlq/__init__.py:11 - handler
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/dlq/__init__.py:12 - detector
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/dlq/__init__.py:13 - deduplicator
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/dlq/__init__.py:14 - coordinator
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/dlq/coordinator.py:13 - storage.redis
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/dlq/coordinator.py:14 - handler
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/dlq/coordinator.py:15 - detector
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/dlq/coordinator.py:16 - deduplicator
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/dlq/coordinator.py:17 - common.metrics
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/dlq/coordinator.py:18 - common.redis_utils
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/dlq/handler.py:14 - storage.base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/dlq/storage/redis.py:9 - base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/dlq/storage/redis.py:11 - common.redis_utils
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/dlq/storage/redis.py:11 - common.redis_utils
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/etag_middleware.py:22 - core.versioning.version_service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/etag_middleware.py:28 - core.resilience.version_service_wrapper
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/__init__.py:6 - checks.base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/__init__.py:7 - checks.database
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/__init__.py:8 - checks.redis
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/__init__.py:9 - checks.http
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/__init__.py:10 - checks.system
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/__init__.py:11 - monitor
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/__init__.py:12 - dependency
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/__init__.py:13 - coordinator
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/checks/database.py:8 - base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/checks/database.py:106 - aiomysql
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/checks/database.py:38 - aiomysql
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/checks/http.py:7 - base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/checks/redis.py:6 - base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/checks/redis.py:8 - common.redis_utils
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/checks/redis.py:8 - common.redis_utils
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/checks/system.py:7 - base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/coordinator.py:13 - checks.base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/coordinator.py:14 - monitor
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/coordinator.py:15 - dependency
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/coordinator.py:16 - common.redis_utils
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/coordinator.py:16 - common.redis_utils
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/coordinator.py:17 - common.metrics
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/health/coordinator.py:276 - core.notification.alert_dispatcher
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/__init__.py:9 - strategies.base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/__init__.py:10 - strategies.sliding_window
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/__init__.py:11 - strategies.token_bucket
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/__init__.py:12 - strategies.leaky_bucket
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/__init__.py:13 - adaptive
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/__init__.py:14 - limiter
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/__init__.py:15 - coordinator
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/__init__.py:16 - fastapi_middleware
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/adaptive.py:10 - common.metrics
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/coordinator.py:13 - strategies.sliding_window
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/coordinator.py:14 - strategies.token_bucket
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/coordinator.py:15 - strategies.leaky_bucket
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/coordinator.py:16 - adaptive
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/coordinator.py:17 - limiter
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/coordinator.py:18 - common.redis_utils
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/coordinator.py:18 - common.redis_utils
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/coordinator.py:19 - common.metrics
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/fastapi_middleware.py:10 - coordinator
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/limiter.py:10 - strategies.base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/limiter.py:57 - coordinator
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/limiter.py:81 - coordinator
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/middleware.py:9 - coordinator
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/strategies/leaky_bucket.py:7 - base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/strategies/sliding_window.py:6 - base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/rate_limiting/strategies/token_bucket.py:6 - base
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/service_config.py:16 - shared.observability
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/middleware/service_config.py:687 - main
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/models/domain.py:23 - action_types
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/monitoring/async_merge_metrics.py:239 - bootstrap.providers
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/monitoring/async_merge_metrics.py:264 - workers.celery_app
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/enterprise_integration.py:11 - enterprise_metrics
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/enterprise_integration.py:11 - enterprise_metrics
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/enterprise_integration.py:11 - enterprise_metrics
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/enterprise_integration.py:11 - enterprise_metrics
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/enterprise_integration.py:11 - enterprise_metrics
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/enterprise_integration.py:11 - enterprise_metrics
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/enterprise_integration.py:19 - enterprise_tracing
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/enterprise_integration.py:19 - enterprise_tracing
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/enterprise_integration.py:19 - enterprise_tracing
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/enterprise_integration.py:19 - enterprise_tracing
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/enterprise_integration.py:19 - enterprise_tracing
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/pyroscope_integration.py:18 - pyroscope
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/observability/pyroscope_integration.py:19 - py_spy
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/compare_schemas.py:12 - deepdiff
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/production_readiness_check.py:9 - boto3
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/scripts/run_phase6_tests.py:19 - tests.performance.test_dag_merge_performance
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk/__init__.py:8 - client
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk/__init__.py:8 - client
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk/__init__.py:8 - client
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk/__init__.py:8 - client
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk_py/__init__.py:8 - client
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk_py/__init__.py:8 - client
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk_py/__init__.py:8 - client
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk_py/__init__.py:8 - client
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk_py/client.py:67 - nats_adapter
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk_py/client.py:67 - nats_adapter
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk_py/client.py:81 - memory_adapter
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/sdks/python/oms_event_sdk_py/client.py:81 - memory_adapter
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/services/graph_analysis.py:18 - core.graph.repositories
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/services/graph_analysis.py:18 - core.graph.repositories
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/services/graph_analysis.py:18 - core.graph.repositories
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/services/graph_analysis.py:18 - core.graph.repositories
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/services/graph_analysis.py:19 - shared.cache.smart_cache
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/services/graph_analysis.py:21 - core.events.unified_publisher
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/services/graph_analysis.py:933 - community
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/services/job_service.py:430 - bootstrap.providers
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/cache/smart_cache.py:18 - core.validation.ports
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_client.py:12 - openai
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_client.py:13 - cohere
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py:26 - embeddings.providers
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py:26 - embeddings.providers
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py:26 - embeddings.providers
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py:26 - embeddings.providers
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py:26 - embeddings.providers
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py:26 - embeddings.providers
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py:26 - embeddings.providers
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py:26 - embeddings.providers
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py:30 - embeddings.service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py:33 - services.embedding_service.proto
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py:34 - services.embedding_service.proto
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py:38 - openai
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/embedding_stub.py:39 - cohere
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/event_gateway_stub.py:29 - shared.event_gateway_client
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/infrastructure/nats_client.py:7 - real_nats_client
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/infrastructure/nats_client.py:7 - real_nats_client
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/infrastructure/nats_client.py:7 - real_nats_client
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/models/domain.py:23 - action_types
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/scheduler_stub.py:39 - apscheduler.schedulers.asyncio
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/scheduler_stub.py:26 - shared.scheduler_client
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/terminus_context/__init__.py:4 - constants
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/terminus_context/__init__.py:4 - constants
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/terminus_context/__init__.py:4 - constants
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/terminus_context/__init__.py:4 - constants
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/terminus_context/__init__.py:4 - constants
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/terminus_context/__init__.py:4 - constants
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/terminus_context/__init__.py:4 - constants
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/terminus_context/__init__.py:13 - context
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/terminus_context/__init__.py:13 - context
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/terminus_context/__init__.py:13 - context
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/terminus_context/__init__.py:13 - context
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/terminus_context/__init__.py:13 - context
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/terminus_context/__init__.py:13 - context
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/terminus_context/__init__.py:13 - context
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/terminus_context/__init__.py:13 - context
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/terminus_context/__init__.py:13 - context
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/terminus_context/__init__.py:13 - context
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/terminus_context/__init__.py:13 - context
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/terminus_context/__init__.py:13 - context
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/terminus_context/context.py:9 - constants
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/terminus_context/context.py:9 - constants
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/shared/terminus_context/context.py:9 - constants
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/test_embedding_providers.py:32 - shared.embedding_stub
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/test_embedding_providers.py:33 - shared.embedding_client
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/test_embedding_providers.py:34 - bootstrap.providers.embedding
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/test_embedding_providers.py:34 - bootstrap.providers.embedding
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/tests/conftest.py:15 - aioredis
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/tests/conftest.py:22 - bootstrap.app
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/tests/conftest.py:24 - bootstrap.dependencies
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/tests/conftest.py:24 - bootstrap.dependencies
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/tests/conftest.py:24 - bootstrap.dependencies
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/tests/conftest.py:161 - bootstrap.app
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/tests/conftest.py:111 - core.services.branch_service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/tests/conftest.py:259 - core.services.branch_service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/utils/__init__.py:1 - retry_strategy
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/utils/__init__.py:1 - retry_strategy
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/utils/__init__.py:1 - retry_strategy
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/utils/__init__.py:1 - retry_strategy
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/utils/__init__.py:1 - retry_strategy
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/utils/__init__.py:1 - retry_strategy
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/utils/__init__.py:1 - retry_strategy
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/utils/__init__.py:1 - retry_strategy
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/utils/__init__.py:1 - retry_strategy
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/utils/__init__.py:1 - retry_strategy
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/utils/__init__.py:13 - logger
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/__init__.py:5 - celery_app
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/celery_app.py:6 - celery
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/celery_app.py:7 - celery.signals
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/celery_app.py:7 - celery.signals
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/celery_app.py:7 - celery.signals
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/celery_app.py:7 - celery.signals
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/celery_app.py:8 - kombu
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/celery_app.py:8 - kombu
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/tasks/__init__.py:5 - merge
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/tasks/maintenance.py:10 - celery
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/tasks/maintenance.py:13 - workers.celery_app
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/tasks/maintenance.py:390 - bootstrap.providers
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/tasks/maintenance.py:445 - bootstrap.providers
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/tasks/merge.py:8 - celery
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/tasks/merge.py:9 - celery.exceptions
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/tasks/merge.py:15 - workers.celery_app
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/tasks/merge.py:17 - core.branch.foundry_branch_service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/tasks/merge.py:18 - core.validation.service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/tasks/merge.py:20 - core.validation.dependencies
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/tasks/merge.py:22 - bootstrap.providers.redis_provider
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/tasks/merge.py:23 - core.time_travel.service
+  /Users/isihyeon/Desktop/Arrakis-Project/ontology-management-service/workers/tasks/merge.py:24 - core.versioning.version_service
+Total nonexistent imports: 685

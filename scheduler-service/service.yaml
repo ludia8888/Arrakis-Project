@@ -1,0 +1,234 @@
+# Service metadata for Scheduler Service
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: scheduler-service
+  title: Scheduler Service
+  description: APScheduler-based job scheduling microservice with distributed execution
+  tags:
+    - python
+    - fastapi
+    - grpc
+    - apscheduler
+    - redis
+    - job-scheduling
+    - distributed-execution
+  links:
+    - url: https://scheduler.arrakis.internal/docs
+      title: API Documentation
+      icon: docs
+    - url: https://grafana.arrakis.internal/d/scheduler-dashboard
+      title: Grafana Dashboard
+      icon: dashboard
+    - url: https://prometheus.arrakis.internal/graph?g0.expr=up{job="scheduler-service"}
+      title: Prometheus Metrics
+      icon: dashboard
+    - url: https://scheduler.arrakis.internal/api/v1/scheduler/status
+      title: Scheduler Status
+      icon: status
+  annotations:
+    github.com/project-slug: arrakis/scheduler-service
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/metrics"
+    prometheus.io/port: "8002"
+    backstage.io/kubernetes-id: scheduler-service
+    datadoghq.com/service-name: scheduler-service
+    pagerduty.com/integration-key: "PD-SCHEDULER-KEY"
+
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-team
+  system: arrakis
+
+  # Service dependencies
+  dependsOn:
+    - component:user-service
+    - component:audit-service
+    - component:event-gateway
+    - resource:redis-cluster
+    - resource:postgresql-primary
+
+  # Health checks
+  healthChecks:
+    - name: http
+      endpoint: /health
+      interval: 30s
+      timeout: 5s
+      successThreshold: 1
+      failureThreshold: 3
+    - name: scheduler
+      endpoint: /health
+      interval: 60s
+      timeout: 10s
+      successThreshold: 1
+      failureThreshold: 2
+
+  # Metrics and SLOs
+  metrics:
+    - name: jobs_scheduled
+      query: scheduler_jobs_created_total
+      unit: jobs
+    - name: jobs_executed
+      query: rate(scheduler_jobs_executed_total[5m])
+      unit: executions/s
+    - name: job_success_rate
+      query: rate(scheduler_jobs_executed_total{status="success"}[5m]) / rate(scheduler_jobs_executed_total[5m])
+      unit: ratio
+    - name: job_duration
+      query: histogram_quantile(0.95, rate(scheduler_job_duration_seconds_bucket[5m]))
+      unit: seconds
+    - name: active_jobs
+      query: scheduler_active_jobs_count
+      unit: jobs
+    - name: scheduler_uptime
+      query: scheduler_uptime_seconds
+      unit: seconds
+
+  slos:
+    - name: availability
+      description: Service should be available 99.9% of the time
+      target: 99.9
+      window: 30d
+      indicator:
+        ratio:
+          good: http_requests_total{service="scheduler-service",status!~"5.."}
+          total: http_requests_total{service="scheduler-service"}
+    - name: job_execution_reliability
+      description: 99% of jobs should execute successfully
+      target: 99
+      window: 7d
+      indicator:
+        ratio:
+          good: scheduler_jobs_executed_total{status="success"}
+          total: scheduler_jobs_executed_total
+    - name: scheduling_accuracy
+      description: 95% of jobs should start within 5 seconds of scheduled time
+      target: 95
+      window: 7d
+      indicator:
+        percentile:
+          metric: scheduler_job_start_delay_seconds
+          percentile: 95
+          threshold: 5.0
+
+  # Alerts
+  alerts:
+    - name: SchedulerServiceDown
+      condition: up{job="scheduler-service"} == 0
+      severity: critical
+      annotations:
+        summary: Scheduler service is down
+        runbook: https://runbooks.arrakis.internal/scheduler/service-down
+    - name: SchedulerNotRunning
+      condition: scheduler_running_status == 0
+      severity: critical
+      annotations:
+        summary: APScheduler is not running
+        runbook: https://runbooks.arrakis.internal/scheduler/scheduler-stopped
+    - name: HighJobFailureRate
+      condition: rate(scheduler_jobs_executed_total{status="failure"}[5m]) / rate(scheduler_jobs_executed_total[5m]) > 0.1
+      severity: warning
+      annotations:
+        summary: High job failure rate
+        runbook: https://runbooks.arrakis.internal/scheduler/job-failures
+    - name: JobExecutionDelay
+      condition: histogram_quantile(0.95, rate(scheduler_job_start_delay_seconds_bucket[5m])) > 30
+      severity: warning
+      annotations:
+        summary: Job execution delays detected
+        runbook: https://runbooks.arrakis.internal/scheduler/execution-delays
+    - name: TooManyActiveJobs
+      condition: scheduler_active_jobs_count > 1000
+      severity: warning
+      annotations:
+        summary: Too many active jobs
+        runbook: https://runbooks.arrakis.internal/scheduler/too-many-jobs
+
+  # Runbooks
+  runbooks:
+    - name: Service Down
+      url: https://runbooks.arrakis.internal/scheduler/service-down
+      description: Steps to diagnose and recover from service downtime
+      steps:
+        - Check pod status with kubectl get pods
+        - Verify Redis connectivity
+        - Check database connectivity
+        - Review error logs
+        - Restart service if necessary
+    - name: Scheduler Stopped
+      url: https://runbooks.arrakis.internal/scheduler/scheduler-stopped
+      description: Recovering from APScheduler shutdown
+      steps:
+        - Check scheduler status endpoint
+        - Review scheduler logs
+        - Verify Redis backend health
+        - Restart scheduler if needed
+        - Check for job state corruption
+    - name: Job Failures
+      url: https://runbooks.arrakis.internal/scheduler/job-failures
+      description: Investigating job execution failures
+      steps:
+        - Check job execution logs
+        - Review job configuration
+        - Verify job dependencies
+        - Check resource constraints
+        - Retry failed jobs if appropriate
+
+  # Deployment configuration
+  deployment:
+    replicas:
+      min: 2
+      max: 5
+      targetCPU: 70
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "1Gi"
+      limits:
+        cpu: "2000m"
+        memory: "4Gi"
+    env:
+      - name: ENVIRONMENT
+        value: production
+      - name: LOG_LEVEL
+        value: INFO
+      - name: MAX_WORKERS
+        value: "10"
+      - name: JOB_DEFAULTS_MISFIRE_GRACE_TIME
+        value: "300"
+      - name: JOB_DEFAULTS_COALESCE
+        value: "true"
+      - name: JOB_DEFAULTS_MAX_INSTANCES
+        value: "3"
+    probes:
+      liveness:
+        httpGet:
+          path: /health
+          port: 8002
+        initialDelaySeconds: 30
+        periodSeconds: 30
+      readiness:
+        httpGet:
+          path: /health
+          port: 8002
+        initialDelaySeconds: 10
+        periodSeconds: 10
+      grpc:
+        port: 50053
+        service: health
+
+  # Job configuration
+  jobs:
+    default_settings:
+      misfire_grace_time: 300
+      coalesce: true
+      max_instances: 3
+      replace_existing: false
+    executor_types:
+      - name: threadpool
+        max_workers: 10
+      - name: processpool
+        max_workers: 5
+      - name: asyncio
+        max_workers: 100

@@ -8,7 +8,7 @@ mkdir -p trace_results
 
 # Trace main API server
 echo "Tracing main API server..."
-PYTHONPROFILEIMPORTTIME=1 python -m uvicorn main:app --host 0.0.0.0 --port 8000 --workers 1 2>&1 | tee trace_results/main_api_imports.log &
+PYTHONPROFILEIMPORTTIME=1 python -m uvicorn api.main:app --host 0.0.0.0 --port 8000 --workers 1 2>&1 | tee trace_results/main_api_imports.log &
 MAIN_PID=$!
 
 # Let it start up

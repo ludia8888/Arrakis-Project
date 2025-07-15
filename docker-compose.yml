@@ -1,5 +1,3 @@
-version: '3.8'
-
 networks:
   arrakis-net:
     driver: bridge
@@ -28,7 +26,13 @@ services:
       - arrakis-net
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:6363/api/status"]
+      test:
+        [
+          "CMD",
+          "sh",
+          "-c",
+          "test -f /proc/1/cmdline && grep -q terminusdb /proc/1/cmdline",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -94,6 +98,7 @@ services:
       - JWT_ALGORITHM=HS256
       - ACCESS_TOKEN_EXPIRE_MINUTES=30
       - REFRESH_TOKEN_EXPIRE_DAYS=7
+      - REDIS_URL=redis://redis:6379/1
     ports:
       - "8010:8000"
     depends_on:
@@ -112,6 +117,7 @@ services:
       - DATABASE_URL=postgresql+asyncpg://arrakis_user:arrakis_password@postgres:5432/audit_db
       - JWT_SECRET=${JWT_SECRET:-your-very-secure-jwt-secret-key}
       - USER_SERVICE_URL=http://user-service:8000
+      - REDIS_URL=redis://redis:6379/2
     ports:
       - "8011:8000"
     depends_on:
@@ -130,6 +136,7 @@ services:
     environment:
       - TERMINUSDB_ENDPOINT=http://terminusdb:6363
       - TERMINUSDB_USER=admin
+      - TERMINUSDB_ADMIN_PASS=changeme-admin-pass
       - TERMINUSDB_PASS=changeme-admin-pass
       - JWT_SECRET=${JWT_SECRET:-your-very-secure-jwt-secret-key}
       - USE_IAM_VALIDATION=${USE_IAM_VALIDATION:-true}
@@ -137,8 +144,8 @@ services:
       - DATA_KERNEL_PORT=8080
       - GRPC_PORT=50051
     ports:
-      - "8080:8080"     # REST API
-      - "50051:50051"   # gRPC
+      - "8080:8080" # REST API
+      - "50051:50051" # gRPC
     depends_on:
       - terminusdb
     networks:
@@ -165,7 +172,7 @@ services:
       - GRPC_PORT=50055
       - EMBEDDING_SERVICE_PORT=8001
     ports:
-      - "8001:8001"   # REST API
+      - "8001:8001" # REST API
       - "50055:50055" # gRPC
     depends_on:
       - redis
@@ -190,12 +197,13 @@ services:
       - SERVICE_NAME=scheduler-service
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - REDIS_URL=redis://redis:6379/6
+      - DATABASE_URL=postgresql+asyncpg://arrakis_user:arrakis_password@postgres:5432/scheduler_db
       - DATA_KERNEL_GRPC_ENDPOINT=data-kernel-service:50051
       - USE_DATA_KERNEL_GATEWAY=${USE_DATA_KERNEL_GATEWAY:-true}
       - SCHEDULER_PORT=8002
       - GRPC_PORT=50056
     ports:
-      - "8002:8002"   # REST API
+      - "8002:8002" # REST API
       - "50056:50056" # gRPC
     depends_on:
       - redis
@@ -223,7 +231,7 @@ services:
       - GRPC_PORT=50057
       - ENABLE_WEBHOOKS=${ENABLE_WEBHOOKS:-true}
     ports:
-      - "8003:8003"   # REST API
+      - "8003:8003" # REST API
       - "50057:50057" # gRPC
     depends_on:
       - nats
@@ -246,17 +254,19 @@ services:
     environment:
       # Database Configuration
       - TERMINUSDB_ENDPOINT=http://terminusdb:6363
-      - REDIS_URL=redis://redis:6379
+      - REDIS_URL=redis://redis:6379/0
       - NATS_URL=nats://nats:4222
-      - DATABASE_URL=postgresql://arrakis_user:arrakis_password@postgres:5432/oms_db
-      
+      - DATABASE_URL=postgresql+asyncpg://arrakis_user:arrakis_password@postgres:5432/oms_db
+
       # Service URLs
       - USER_SERVICE_URL=http://user-service:8000
       - AUDIT_SERVICE_URL=http://audit-service:8000
-      
+
       # JWT Configuration
       - JWT_SECRET=${JWT_SECRET:-your-very-secure-jwt-secret-key}
-      
+      - SECURITY_JWT_SECRET=${JWT_SECRET:-your-very-secure-jwt-secret-key}
+      - SECURITY_ENCRYPTION_KEY=${SECURITY_ENCRYPTION_KEY:-your-32-byte-encryption-key-here!!}
+
       # Microservices Mode (점진적 활성화)
       - USE_DATA_KERNEL_GATEWAY=${USE_DATA_KERNEL_GATEWAY:-true}
       - DATA_KERNEL_GRPC_ENDPOINT=data-kernel-service:50051
@@ -266,16 +276,16 @@ services:
       - SCHEDULER_SERVICE_ENDPOINT=scheduler-service:50056
       - USE_EVENT_GATEWAY=${USE_EVENT_GATEWAY:-true}
       - EVENT_GATEWAY_ENDPOINT=event-gateway:50057
-      
+
       # Monitoring
       - ENABLE_TELEMETRY=${ENABLE_TELEMETRY:-true}
       - ENABLE_METRICS=${ENABLE_METRICS:-true}
       - PROMETHEUS_PORT=8090
     ports:
-      - "8000:8000"      # Main API
-      - "8004:8004"      # WebSocket
-      - "8006:8006"      # GraphQL
-      - "8090:8090"      # Prometheus metrics
+      - "8000:8000" # Main API
+      - "8004:8004" # WebSocket
+      - "8006:8006" # GraphQL
+      - "8090:8090" # Prometheus metrics
     depends_on:
       - terminusdb
       - redis
@@ -298,9 +308,9 @@ services:
       - ./monitoring/prometheus/rules:/etc/prometheus/rules:ro
       - prometheus-data:/prometheus
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.enable-lifecycle'
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-lifecycle"
     networks:
       - arrakis-net
     restart: unless-stopped
@@ -331,8 +341,8 @@ services:
       - "6831:6831/udp"
       - "16686:16686"
       - "14268:14268"
-      - "4317:4317"     # OTLP gRPC
-      - "4318:4318"     # OTLP HTTP
+      - "4317:4317" # OTLP gRPC
+      - "4318:4318" # OTLP HTTP
     networks:
       - arrakis-net
     restart: unless-stopped
@@ -345,7 +355,7 @@ services:
     volumes:
       - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
     command:
-      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
     networks:
       - arrakis-net
     restart: unless-stopped

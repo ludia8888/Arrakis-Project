@@ -28,7 +28,7 @@ pip install -e .
 
 # --- Start Main API Server ---
 echo "2. Starting main FastAPI server..."
-python -m uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4 &
+python -m uvicorn api.main:app --host 0.0.0.0 --port 8000 --workers 4 &
 
 # --- Start GraphQL API Server ---
 # Re-enabled after fixing the import system.

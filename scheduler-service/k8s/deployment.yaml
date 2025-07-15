@@ -1,0 +1,525 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: scheduler-service
+  labels:
+    app: scheduler-service
+    istio-injection: enabled
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: scheduler-service
+  namespace: scheduler-service
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/scheduler-service-irsa-role
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: scheduler-service-config
+  namespace: scheduler-service
+data:
+  APP_NAME: "scheduler-service"
+  APP_ENV: "production"
+  LOG_LEVEL: "info"
+  PORT: "8003"
+  GRPC_PORT: "50053"
+  SCHEDULER_TYPE: "distributed"
+  TASK_QUEUE: "arrakis-tasks"
+  MAX_WORKERS: "10"
+  TASK_TIMEOUT_SECONDS: "3600"
+  TASK_RETRY_ATTEMPTS: "3"
+  TASK_RETRY_DELAY_SECONDS: "60"
+  ENABLE_TASK_PERSISTENCE: "true"
+  ENABLE_TASK_DEDUPLICATION: "true"
+  DEDUPLICATION_WINDOW_MINUTES: "60"
+  CRON_TIMEZONE: "UTC"
+  MAX_CONCURRENT_JOBS: "100"
+  JOB_HISTORY_RETENTION_DAYS: "30"
+  ENABLE_JOB_CHAINING: "true"
+  ENABLE_RATE_LIMITING: "true"
+  RATE_LIMIT_PER_MINUTE: "1000"
+  HEARTBEAT_INTERVAL_SECONDS: "30"
+  LEADER_ELECTION_ENABLED: "true"
+  LEADER_ELECTION_NAMESPACE: "scheduler-service"
+  LEADER_ELECTION_ID: "scheduler-leader"
+  TASK_CLEANUP_INTERVAL_HOURS: "24"
+  ENABLE_TASK_PRIORITIZATION: "true"
+  DEFAULT_TASK_PRIORITY: "5"
+  ENABLE_DEAD_LETTER_QUEUE: "true"
+  DLQ_MAX_RETRIES: "5"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: scheduler-service-secrets
+  namespace: scheduler-service
+type: Opaque
+stringData:
+  DATABASE_URL: "postgresql://scheduler_service:password@postgres-rds.cluster-xxx.us-east-1.rds.amazonaws.com:5432/scheduler_service_db"
+  REDIS_URL: "redis://redis-cluster.xxx.cache.amazonaws.com:6379/3"
+  NATS_URL: "nats://nats-cluster.scheduler-service.svc.cluster.local:4222"
+  TEMPORAL_HOST: "temporal-frontend.temporal.svc.cluster.local:7233"
+  TEMPORAL_NAMESPACE: "arrakis"
+  S3_BUCKET: "arrakis-scheduler-artifacts"
+  S3_ACCESS_KEY: "your-s3-access-key"
+  S3_SECRET_KEY: "your-s3-secret-key"
+  ENCRYPTION_KEY: "your-encryption-key-base64"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scheduler-service
+  namespace: scheduler-service
+  labels:
+    app: scheduler-service
+    version: v1
+spec:
+  replicas: 3
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app: scheduler-service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: scheduler-service
+        version: v1
+        workload-type: time-sensitive
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9093"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: scheduler-service
+      nodeSelector:
+        workload-type: general-purpose
+      priorityClassName: high-priority
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: scheduler-service
+          image: your-registry/scheduler-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8003
+              name: http
+              protocol: TCP
+            - containerPort: 50053
+              name: grpc
+              protocol: TCP
+            - containerPort: 9093
+              name: metrics
+              protocol: TCP
+          env:
+            - name: APP_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: scheduler-service-config
+                  key: APP_NAME
+            - name: APP_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: scheduler-service-config
+                  key: APP_ENV
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: scheduler-service-config
+                  key: LOG_LEVEL
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: scheduler-service-config
+                  key: PORT
+            - name: GRPC_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: scheduler-service-config
+                  key: GRPC_PORT
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: scheduler-service-secrets
+                  key: DATABASE_URL
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: scheduler-service-secrets
+                  key: REDIS_URL
+            - name: NATS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: scheduler-service-secrets
+                  key: NATS_URL
+            - name: TEMPORAL_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: scheduler-service-secrets
+                  key: TEMPORAL_HOST
+            - name: TEMPORAL_NAMESPACE
+              valueFrom:
+                secretKeyRef:
+                  name: scheduler-service-secrets
+                  key: TEMPORAL_NAMESPACE
+            - name: S3_BUCKET
+              valueFrom:
+                secretKeyRef:
+                  name: scheduler-service-secrets
+                  key: S3_BUCKET
+            - name: S3_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: scheduler-service-secrets
+                  key: S3_ACCESS_KEY
+            - name: S3_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: scheduler-service-secrets
+                  key: S3_SECRET_KEY
+            - name: SCHEDULER_TYPE
+              valueFrom:
+                configMapKeyRef:
+                  name: scheduler-service-config
+                  key: SCHEDULER_TYPE
+            - name: MAX_WORKERS
+              valueFrom:
+                configMapKeyRef:
+                  name: scheduler-service-config
+                  key: MAX_WORKERS
+            - name: TASK_TIMEOUT_SECONDS
+              valueFrom:
+                configMapKeyRef:
+                  name: scheduler-service-config
+                  key: TASK_TIMEOUT_SECONDS
+            - name: MAX_CONCURRENT_JOBS
+              valueFrom:
+                configMapKeyRef:
+                  name: scheduler-service-config
+                  key: MAX_CONCURRENT_JOBS
+            - name: LEADER_ELECTION_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: scheduler-service-config
+                  key: LEADER_ELECTION_ENABLED
+            - name: LEADER_ELECTION_NAMESPACE
+              valueFrom:
+                configMapKeyRef:
+                  name: scheduler-service-config
+                  key: LEADER_ELECTION_NAMESPACE
+            - name: LEADER_ELECTION_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: scheduler-service-config
+                  key: LEADER_ELECTION_ID
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8003
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8003
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8003
+            initialDelaySeconds: 0
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 30
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: cache
+              mountPath: /app/.cache
+            - name: task-artifacts
+              mountPath: /var/task-artifacts
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: cache
+          emptyDir: {}
+        - name: task-artifacts
+          emptyDir:
+            sizeLimit: 5Gi
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - scheduler-service
+                topologyKey: kubernetes.io/hostname
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: scheduler-service
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: scheduler-service
+  namespace: scheduler-service
+  labels:
+    app: scheduler-service
+spec:
+  type: ClusterIP
+  selector:
+    app: scheduler-service
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8003
+      protocol: TCP
+    - name: grpc
+      port: 50053
+      targetPort: 50053
+      protocol: TCP
+    - name: metrics
+      port: 9093
+      targetPort: 9093
+      protocol: TCP
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: scheduler-leader-election
+  namespace: scheduler-service
+rules:
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "list", "create", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "create", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: scheduler-leader-election
+  namespace: scheduler-service
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: scheduler-leader-election
+subjects:
+  - kind: ServiceAccount
+    name: scheduler-service
+    namespace: scheduler-service
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: scheduler-service-hpa
+  namespace: scheduler-service
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: scheduler-service
+  minReplicas: 3
+  maxReplicas: 15
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Pods
+      pods:
+        metric:
+          name: task_queue_depth
+        target:
+          type: AverageValue
+          averageValue: "50"
+    - type: Pods
+      pods:
+        metric:
+          name: active_jobs_count
+        target:
+          type: AverageValue
+          averageValue: "20"
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 30
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 30
+        - type: Pods
+          value: 3
+          periodSeconds: 30
+      selectPolicy: Max
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: scheduler-service-pdb
+  namespace: scheduler-service
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: scheduler-service
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: scheduler-service-network-policy
+  namespace: scheduler-service
+spec:
+  podSelector:
+    matchLabels:
+      app: scheduler-service
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: istio-system
+        - namespaceSelector:
+            matchLabels:
+              name: ontology-management-service
+        - namespaceSelector:
+            matchLabels:
+              name: api-gateway
+        - namespaceSelector:
+            matchLabels:
+              name: data-kernel-service
+        - namespaceSelector:
+            matchLabels:
+              name: event-gateway
+      ports:
+        - port: 8003
+          protocol: TCP
+        - port: 50053
+          protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: prometheus
+      ports:
+        - port: 9093
+          protocol: TCP
+  egress:
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - port: 5432 # PostgreSQL
+          protocol: TCP
+        - port: 6379 # Redis
+          protocol: TCP
+        - port: 4222 # NATS
+          protocol: TCP
+        - port: 7233 # Temporal
+          protocol: TCP
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - port: 53 # DNS
+          protocol: UDP
+        - port: 443 # HTTPS (for S3)
+          protocol: TCP
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: scheduler-service-monitor
+  namespace: scheduler-service
+  labels:
+    app: scheduler-service
+    prometheus: kube-prometheus
+spec:
+  selector:
+    matchLabels:
+      app: scheduler-service
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s
+
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: high-priority
+value: 1000
+globalDefault: false
+description: "This priority class should be used for time-sensitive scheduler service pods."

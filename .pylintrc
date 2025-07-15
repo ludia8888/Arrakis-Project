@@ -1,0 +1,198 @@
+# Pylint and Pyreverse configuration for Arrakis Project
+# This configuration ensures consistent code analysis and UML generation
+
+[MASTER]
+# Python code to execute before running pylint
+init-hook='import sys; sys.path.append(".")'
+
+# Add files or directories to the blacklist
+ignore=CVS,tests,test,migrations,alembic,__pycache__,.venv,venv,node_modules
+
+# Pickle collected data for later comparisons
+persistent=yes
+
+# Use multiple processes to speed up Pylint
+jobs=4
+
+# Allow loading of arbitrary C extensions
+unsafe-load-any-extension=no
+
+[MESSAGES CONTROL]
+# Disable specific messages for cleaner output
+disable=
+    C0111,  # missing-docstring
+    C0103,  # invalid-name
+    C0301,  # line-too-long
+    R0903,  # too-few-public-methods
+    R0913,  # too-many-arguments
+    R0914,  # too-many-locals
+    W0212,  # protected-access
+    W0621,  # redefined-outer-name
+    E1101,  # no-member (often false positive with SQLAlchemy)
+
+[REPORTS]
+# Set the output format
+output-format=text
+
+# Include message's id in output
+include-ids=yes
+
+# Include symbolic ids of messages in output
+symbols=yes
+
+# Put messages in a separate file for each module
+files-output=no
+
+# Tells whether to display a full report or only the messages
+reports=yes
+
+# Template for output
+msg-template={path}:{line}: [{msg_id}({symbol}), {obj}] {msg}
+
+[PYREVERSE]
+# Options specific to pyreverse (UML diagram generation)
+
+# Output format for graphs
+output-format=svg
+
+# Colorize the graph
+colorized=yes
+
+# Include all ancestors
+all-ancestors=yes
+
+# Include all associated classes
+all-associated=yes
+
+# Filter mode
+filter-mode=ALL
+
+# Maximum color depth for inheritance
+max-color-depth=5
+
+# Show builtin objects
+show-builtin=no
+
+# Module names in boxes
+module-names=yes
+
+[FORMAT]
+# Maximum number of characters on a single line
+max-line-length=120
+
+# String used as indentation unit
+indent-string='    '
+
+# Number of spaces of indent required inside a hanging or continued line
+indent-after-paren=4
+
+[BASIC]
+# Good variable names which should always be accepted
+good-names=i,j,k,ex,Run,_,id,pk,db,app
+
+# Regular expression matching correct variable names
+variable-rgx=[a-z_][a-z0-9_]{0,30}$
+
+# Regular expression matching correct function names
+function-rgx=[a-z_][a-z0-9_]{2,30}$
+
+# Regular expression matching correct method names
+method-rgx=[a-z_][a-z0-9_]{2,30}$
+
+# Regular expression matching correct class names
+class-rgx=[A-Z_][a-zA-Z0-9]+$
+
+[DESIGN]
+# Maximum number of arguments for function / method
+max-args=10
+
+# Maximum number of locals for function / method body
+max-locals=20
+
+# Maximum number of return / yield for function / method body
+max-returns=6
+
+# Maximum number of branch for function / method body
+max-branches=15
+
+# Maximum number of statements in function / method body
+max-statements=50
+
+# Maximum number of parents for a class
+max-parents=7
+
+# Maximum number of attributes for a class
+max-attributes=15
+
+# Minimum number of public methods for a class
+min-public-methods=0
+
+# Maximum number of public methods for a class
+max-public-methods=20
+
+[CLASSES]
+# List of method names used to declare instance attributes
+defining-attr-methods=__init__,__new__,setUp,__post_init__
+
+# List of valid names for the first argument in a class method
+valid-classmethod-first-arg=cls
+
+# List of valid names for the first argument in a metaclass class method
+valid-metaclass-classmethod-first-arg=mcs
+
+[IMPORTS]
+# Deprecated modules which should not be used
+deprecated-modules=optparse,tkinter.tix
+
+# Force import order to recognize a module as part of a third party library
+known-third-party=enchant
+
+# Analyse import fallback blocks
+analyse-fallback-blocks=no
+
+[EXCEPTIONS]
+# Exceptions that will emit a warning when being caught
+overgeneral-exceptions=Exception
+
+[SIMILARITIES]
+# Minimum lines number of a similarity
+min-similarity-lines=4
+
+# Ignore comments when computing similarities
+ignore-comments=yes
+
+# Ignore docstrings when computing similarities
+ignore-docstrings=yes
+
+# Ignore imports when computing similarities
+ignore-imports=yes
+
+[TYPECHECK]
+# List of decorators that produce context managers
+contextmanager-decorators=contextlib.contextmanager
+
+# List of members which are set dynamically
+generated-members=
+
+# Tells whether missing members accessed in mixin class should be ignored
+ignore-mixin-members=yes
+
+# List of class names for which member attributes should not be checked
+ignored-classes=optparse.Values,thread._local,_thread._local,SQLAlchemy,scoped_session
+
+[LOGGING]
+# Logging modules to check that the string format arguments are in logging function parameter format
+logging-modules=logging
+
+[VARIABLES]
+# Tells whether we should check for unused import in __init__ files
+init-import=no
+
+# List of additional names supposed to be defined in builtins
+additional-builtins=
+
+# List of strings which can identify a callback function by name
+callbacks=cb_,_cb
+
+# List of qualified module names which can have objects that can redefine builtins
+redefining-builtins-modules=six.moves,past.builtins,future.builtins,io

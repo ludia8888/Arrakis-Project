@@ -1,0 +1,84 @@
+# TechDocs configuration for Scheduler Service
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: scheduler-service
+  description: APScheduler-based job scheduling microservice with distributed execution
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-team
+
+techdocs:
+  builder: "local"
+  generator:
+    runIn: "local"
+  publisher:
+    type: "local"
+
+build:
+  dependencies:
+    - python: ">=3.9"
+    - apscheduler: ">=3.10"
+    - redis: ">=6.2"
+    - grpcio: ">=1.50"
+    - prometheus-client: ">=0.16"
+
+documentation:
+  structure:
+    - name: Overview
+      path: docs/README.md
+    - name: API Reference
+      items:
+        - name: REST API
+          path: docs/api/rest.md
+        - name: gRPC API
+          path: docs/api/grpc.md
+        - name: Job Management
+          path: docs/api/jobs.md
+        - name: Scheduling
+          path: docs/api/scheduling.md
+        - name: Execution Control
+          path: docs/api/execution.md
+    - name: Job Types
+      items:
+        - name: Cron Jobs
+          path: docs/jobs/cron.md
+        - name: Interval Jobs
+          path: docs/jobs/interval.md
+        - name: One-time Jobs
+          path: docs/jobs/onetime.md
+        - name: Custom Executors
+          path: docs/jobs/executors.md
+    - name: Architecture
+      items:
+        - name: System Design
+          path: docs/architecture/system-design.md
+        - name: Scheduler Backend
+          path: docs/architecture/backend.md
+        - name: Distributed Execution
+          path: docs/architecture/distributed.md
+        - name: Persistence Layer
+          path: docs/architecture/persistence.md
+    - name: Operations
+      items:
+        - name: Deployment Guide
+          path: docs/ops/deployment.md
+        - name: Job Monitoring
+          path: docs/ops/monitoring.md
+        - name: Scaling Guide
+          path: docs/ops/scaling.md
+        - name: Troubleshooting
+          path: docs/ops/troubleshooting.md
+    - name: Development
+      items:
+        - name: Setup Guide
+          path: docs/dev/setup.md
+        - name: Creating Jobs
+          path: docs/dev/creating-jobs.md
+        - name: Testing Jobs
+          path: docs/dev/testing.md
+        - name: Contributing
+          path: docs/dev/contributing.md

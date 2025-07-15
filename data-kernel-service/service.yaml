@@ -1,0 +1,207 @@
+# Service metadata for Data Kernel Service
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: data-kernel-service
+  title: Data Kernel Service
+  description: Centralized gateway for TerminusDB operations with validation hooks
+  tags:
+    - python
+    - fastapi
+    - grpc
+    - terminusdb
+    - graph-database
+    - data-platform
+  links:
+    - url: https://data-kernel.arrakis.internal/docs
+      title: API Documentation
+      icon: docs
+    - url: https://grafana.arrakis.internal/d/data-kernel-dashboard
+      title: Grafana Dashboard
+      icon: dashboard
+    - url: https://prometheus.arrakis.internal/graph?g0.expr=up{job="data-kernel"}
+      title: Prometheus Metrics
+      icon: dashboard
+    - url: https://terminusdb.arrakis.internal
+      title: TerminusDB Console
+      icon: database
+  annotations:
+    github.com/project-slug: arrakis/data-kernel-service
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/metrics"
+    prometheus.io/port: "8080"
+    backstage.io/kubernetes-id: data-kernel-service
+    datadoghq.com/service-name: data-kernel-service
+    pagerduty.com/integration-key: "PD-DATA-KERNEL-KEY"
+
+spec:
+  type: service
+  lifecycle: production
+  owner: data-platform-team
+  system: arrakis
+
+  # Service dependencies
+  dependsOn:
+    - component:user-service
+    - component:audit-service
+    - component:ontology-management-service
+    - resource:terminusdb-cluster
+    - resource:redis-cluster
+
+  # Health checks
+  healthChecks:
+    - name: http
+      endpoint: /health
+      interval: 30s
+      timeout: 5s
+      successThreshold: 1
+      failureThreshold: 3
+    - name: terminusdb
+      endpoint: /health
+      interval: 60s
+      timeout: 10s
+      successThreshold: 1
+      failureThreshold: 2
+
+  # Metrics and SLOs
+  metrics:
+    - name: query_rate
+      query: rate(data_kernel_queries_total[5m])
+      unit: queries/s
+    - name: query_latency
+      query: histogram_quantile(0.95, rate(data_kernel_query_duration_seconds_bucket[5m]))
+      unit: seconds
+    - name: hook_executions
+      query: rate(data_kernel_hook_executions_total[5m])
+      unit: executions/s
+    - name: graph_operations
+      query: rate(data_kernel_graph_operations_total[5m])
+      unit: ops/s
+    - name: cache_hit_rate
+      query: rate(data_kernel_cache_hits_total[5m]) / rate(data_kernel_cache_requests_total[5m])
+      unit: ratio
+
+  slos:
+    - name: availability
+      description: Service should be available 99.9% of the time
+      target: 99.9
+      window: 30d
+      indicator:
+        ratio:
+          good: http_requests_total{service="data-kernel-service",status!~"5.."}
+          total: http_requests_total{service="data-kernel-service"}
+    - name: query_performance
+      description: 95% of queries should complete within 500ms
+      target: 95
+      window: 7d
+      indicator:
+        percentile:
+          metric: data_kernel_query_duration_seconds
+          percentile: 95
+          threshold: 0.5
+    - name: hook_success_rate
+      description: Hook execution success rate should be above 99%
+      target: 99
+      window: 7d
+      indicator:
+        ratio:
+          good: data_kernel_hook_executions_total{status="success"}
+          total: data_kernel_hook_executions_total
+
+  # Alerts
+  alerts:
+    - name: DataKernelDown
+      condition: up{job="data-kernel-service"} == 0
+      severity: critical
+      annotations:
+        summary: Data Kernel service is down
+        runbook: https://runbooks.arrakis.internal/data-kernel/service-down
+    - name: TerminusDBConnectionFailure
+      condition: data_kernel_terminusdb_connections_failed_total > 0
+      severity: critical
+      annotations:
+        summary: TerminusDB connection failures detected
+        runbook: https://runbooks.arrakis.internal/data-kernel/terminus-connection
+    - name: HighQueryLatency
+      condition: histogram_quantile(0.95, rate(data_kernel_query_duration_seconds_bucket[5m])) > 1
+      severity: warning
+      annotations:
+        summary: High query latency detected
+        runbook: https://runbooks.arrakis.internal/data-kernel/query-performance
+    - name: HookFailures
+      condition: rate(data_kernel_hook_executions_total{status="failure"}[5m]) > 0.01
+      severity: warning
+      annotations:
+        summary: Hook execution failures above threshold
+        runbook: https://runbooks.arrakis.internal/data-kernel/hook-failures
+
+  # Runbooks
+  runbooks:
+    - name: Service Down
+      url: https://runbooks.arrakis.internal/data-kernel/service-down
+      description: Steps to diagnose and recover from service downtime
+      steps:
+        - Check pod status with kubectl get pods
+        - Verify TerminusDB connectivity
+        - Check authentication with TerminusDB
+        - Review error logs
+        - Restart service if necessary
+    - name: TerminusDB Issues
+      url: https://runbooks.arrakis.internal/data-kernel/terminus-connection
+      description: Troubleshooting TerminusDB connection issues
+      steps:
+        - Check TerminusDB cluster health
+        - Verify network connectivity
+        - Check authentication credentials
+        - Review connection pool status
+        - Restart connections if needed
+    - name: Query Performance
+      url: https://runbooks.arrakis.internal/data-kernel/query-performance
+      description: Optimizing query performance
+      steps:
+        - Identify slow queries
+        - Check query complexity
+        - Review cache hit rates
+        - Analyze TerminusDB performance
+        - Consider query optimization
+
+  # Deployment configuration
+  deployment:
+    replicas:
+      min: 2
+      max: 10
+      targetCPU: 70
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "1Gi"
+      limits:
+        cpu: "2000m"
+        memory: "4Gi"
+    env:
+      - name: ENVIRONMENT
+        value: production
+      - name: LOG_LEVEL
+        value: INFO
+      - name: WORKERS
+        value: "4"
+      - name: TERMINUS_POOL_SIZE
+        value: "20"
+      - name: CACHE_TTL
+        value: "300"
+    probes:
+      liveness:
+        httpGet:
+          path: /health
+          port: 8080
+        initialDelaySeconds: 30
+        periodSeconds: 30
+      readiness:
+        httpGet:
+          path: /health
+          port: 8080
+        initialDelaySeconds: 10
+        periodSeconds: 10
+      grpc:
+        port: 50051
+        service: health

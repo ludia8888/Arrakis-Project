@@ -211,8 +211,9 @@ testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-asyncio_mode = "strict"
+# asyncio_mode = "strict"  # Removed - not compatible with current pytest-asyncio
 markers = [
+    "asyncio: marks tests as asyncio tests",
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "integration: marks tests as integration tests",
     "e2e: marks tests as end-to-end tests",
@@ -220,5 +221,14 @@ markers = [
     "etag: marks tests as ETag caching tests (deselect with '-m \"not etag\"')",
     "unit: marks tests as unit tests",
     "benchmark: marks tests as performance benchmarks",
+    # New markers for enhanced testing
+    "security: marks tests as security-related tests",
+    "override: marks tests related to override approval system",
+    "config: marks tests related to configuration system",
+    "audit: marks tests related to audit and logging",
+    "validation: marks tests related to validation and bypass",
+    "authorization: marks tests related to authorization and permissions",
+    "middleware: marks tests related to middleware functionality",
+    "performance: marks tests related to performance characteristics",
+    "compliance: marks tests related to compliance and reporting",
 ]
-

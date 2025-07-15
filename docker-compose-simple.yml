@@ -57,7 +57,7 @@ services:
       context: ./ontology-management-service
       dockerfile: Dockerfile
     environment:
-      - DATABASE_URL=postgresql://arrakis_user:arrakis_password@postgres:5432/oms_db
+      - DATABASE_URL=postgresql://arrakis_user:arrakis_password@postgres:5432/arrakis_db
       - JWT_SECRET=test-jwt-secret
       - REDIS_URL=redis://redis:6379
     ports:

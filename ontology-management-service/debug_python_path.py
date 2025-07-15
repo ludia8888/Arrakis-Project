@@ -8,7 +8,7 @@ print(f"Python executable: {sys.executable}")
 print(f"Current working directory: {os.getcwd()}")
 print(f"\nPython path:")
 for path in sys.path:
-    print(f"  - {path}")
+ print(f" - {path}")
 
 print("\n=== Checking database.clients module ===")
 database_path = os.path.join(os.getcwd(), 'database')
@@ -20,23 +20,23 @@ print(f"database/__init__.py exists: {os.path.exists(os.path.join(database_path,
 print(f"database/clients/__init__.py exists: {os.path.exists(os.path.join(clients_path, '__init__.py'))}")
 
 if os.path.exists(clients_path):
-    print(f"\nFiles in database/clients/:")
-    for file in os.listdir(clients_path):
-        print(f"  - {file}")
+ print(f"\nFiles in database/clients/:")
+ for file in os.listdir(clients_path):
+ print(f" - {file}")
 
 print("\n=== Trying to import database.clients ===")
 try:
-    import database.clients
-    print("✓ Successfully imported database.clients")
-    print(f"  Module path: {database.clients.__file__}")
+ import database.clients
+ print("✓ Successfully imported database.clients")
+ print(f" Module path: {database.clients.__file__}")
 except ImportError as e:
-    print(f"✗ Failed to import database.clients: {e}")
+ print(f"✗ Failed to import database.clients: {e}")
 
 print("\n=== Trying direct import from current directory ===")
 sys.path.insert(0, os.getcwd())
 try:
-    import database.clients
-    print("✓ Successfully imported database.clients after adding cwd to sys.path")
-    print(f"  Module path: {database.clients.__file__}")
+ import database.clients
+ print("✓ Successfully imported database.clients after adding cwd to sys.path")
+ print(f" Module path: {database.clients.__file__}")
 except ImportError as e:
-    print(f"✗ Still failed to import database.clients: {e}")
+ print(f"✗ Still failed to import database.clients: {e}")

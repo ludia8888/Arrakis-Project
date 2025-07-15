@@ -15,7 +15,7 @@ echo "Starting OMS services..."
 
 # Start main API server
 echo "Starting main API server on port 8000..."
-python -m uvicorn main:app --host 0.0.0.0 --port 8000 --workers 1 --log-level debug &
+python -m uvicorn api.main:app --host 0.0.0.0 --port 8000 --workers 1 --log-level debug &
 MAIN_PID=$!
 
 # Start GraphQL services

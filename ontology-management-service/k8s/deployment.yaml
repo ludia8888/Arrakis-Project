@@ -32,7 +32,7 @@ spec:
         fsGroup: 1000
       containers:
       - name: ontology-management-service
-        image: ${ECR_REGISTRY}/ontology-management-service:${IMAGE_TAG}
+        image: 123456789012.dkr.ecr.us-west-2.amazonaws.com/ontology-management-service:latest
         imagePullPolicy: Always
         ports:
         - name: http
@@ -133,7 +133,7 @@ spec:
               command: ["/bin/sh", "-c", "sleep 15"]
       initContainers:
       - name: db-migration
-        image: ${ECR_REGISTRY}/ontology-management-service:${IMAGE_TAG}
+        image: 123456789012.dkr.ecr.us-west-2.amazonaws.com/ontology-management-service:latest
         command: ["python", "-m", "alembic", "upgrade", "head"]
         env:
         - name: DATABASE_URL
@@ -213,7 +213,7 @@ metadata:
   labels:
     app: ontology-management-service
   annotations:
-    eks.amazonaws.com/role-arn: arn:aws:iam::${AWS_ACCOUNT_ID}:role/ontology-management-service-irsa
+    eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/ontology-management-service-irsa
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -302,7 +302,7 @@ metadata:
     app: ontology-management-service
 type: Opaque
 stringData:
-  url: "postgresql://oms_admin:${DB_PASSWORD}@oms-db.${AWS_REGION}.rds.amazonaws.com:5432/oms_db?sslmode=require"
+  url: "postgresql://oms_admin:REPLACE_WITH_SECRET@oms-db.us-west-2.rds.amazonaws.com:5432/oms_db?sslmode=require"
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler

@@ -8,10 +8,10 @@ from .branch_interface import IBranchService
 from .time_travel_interface import ITimeTravelService
 
 __all__ = [
-    "SchemaServiceProtocol",
-    "ValidationServiceProtocol",
-    "EventPublisherProtocol",
-    "DatabaseClientProtocol",
-    "IBranchService",
-    "ITimeTravelService"
+ "SchemaServiceProtocol",
+ "ValidationServiceProtocol",
+ "EventPublisherProtocol",
+ "DatabaseClientProtocol",
+ "IBranchService",
+ "ITimeTravelService"
 ]
