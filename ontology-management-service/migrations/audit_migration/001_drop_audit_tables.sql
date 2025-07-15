@@ -13,8 +13,8 @@
 -- ================================================================
 
 -- Create read-only views for audit data access during transition period
-CREATE OR REPLACE VIEW audit_events_readonly AS 
-SELECT 
+CREATE OR REPLACE VIEW audit_events_readonly AS
+SELECT
     event_id,
     event_type,
     event_category,
@@ -44,9 +44,9 @@ DECLARE
 BEGIN
     -- Count records that should have been migrated
     SELECT COUNT(*) INTO pending_records
-    FROM audit_events_v1 
+    FROM audit_events_v1
     WHERE created_at < migration_date;
-    
+
     IF pending_records > 0 THEN
         RAISE NOTICE 'WARNING: % audit records found before migration date. Verify migration completion before proceeding.', pending_records;
     ELSE
@@ -63,15 +63,15 @@ DO $$
 DECLARE
     trigger_rec RECORD;
 BEGIN
-    FOR trigger_rec IN 
-        SELECT schemaname, tablename, triggername 
-        FROM pg_triggers 
+    FOR trigger_rec IN
+        SELECT schemaname, tablename, triggername
+        FROM pg_triggers
         WHERE triggername LIKE '%audit%'
           AND schemaname = 'public'
     LOOP
-        EXECUTE format('DROP TRIGGER IF EXISTS %I ON %I.%I CASCADE', 
-                      trigger_rec.triggername, 
-                      trigger_rec.schemaname, 
+        EXECUTE format('DROP TRIGGER IF EXISTS %I ON %I.%I CASCADE',
+                      trigger_rec.triggername,
+                      trigger_rec.schemaname,
                       trigger_rec.tablename);
         RAISE NOTICE 'Dropped trigger: %.%', trigger_rec.tablename, trigger_rec.triggername;
     END LOOP;
@@ -96,10 +96,10 @@ DO $$
 DECLARE
     index_rec RECORD;
 BEGIN
-    FOR index_rec IN 
-        SELECT indexname 
-        FROM pg_indexes 
-        WHERE schemaname = 'public' 
+    FOR index_rec IN
+        SELECT indexname
+        FROM pg_indexes
+        WHERE schemaname = 'public'
           AND (tablename LIKE '%audit%' OR indexname LIKE '%audit%')
     LOOP
         EXECUTE format('DROP INDEX IF EXISTS %I CASCADE', index_rec.indexname);
@@ -132,9 +132,9 @@ DO $$
 DECLARE
     func_rec RECORD;
 BEGIN
-    FOR func_rec IN 
+    FOR func_rec IN
         SELECT proname, pg_get_function_identity_arguments(oid) as args
-        FROM pg_proc 
+        FROM pg_proc
         WHERE proname LIKE '%audit%'
           AND pronamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'public')
     LOOP
@@ -174,10 +174,10 @@ DO $$
 DECLARE
     table_rec RECORD;
 BEGIN
-    FOR table_rec IN 
-        SELECT tablename 
-        FROM pg_tables 
-        WHERE schemaname = 'public' 
+    FOR table_rec IN
+        SELECT tablename
+        FROM pg_tables
+        WHERE schemaname = 'public'
           AND tablename LIKE '%audit%'
           AND tablename != 'audit_events_readonly'  -- Keep our readonly view
     LOOP
@@ -231,26 +231,26 @@ DECLARE
 BEGIN
     -- Check remaining audit tables
     SELECT COUNT(*) INTO obj_count
-    FROM pg_tables 
-    WHERE schemaname = 'public' 
+    FROM pg_tables
+    WHERE schemaname = 'public'
       AND tablename LIKE '%audit%'
       AND tablename != 'audit_events_readonly';
     remaining_objects := remaining_objects + obj_count;
-    
+
     -- Check remaining audit functions
     SELECT COUNT(*) INTO obj_count
-    FROM pg_proc 
+    FROM pg_proc
     WHERE proname LIKE '%audit%'
       AND pronamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'public');
     remaining_objects := remaining_objects + obj_count;
-    
+
     -- Check remaining audit indexes
     SELECT COUNT(*) INTO obj_count
-    FROM pg_indexes 
-    WHERE schemaname = 'public' 
+    FROM pg_indexes
+    WHERE schemaname = 'public'
       AND (tablename LIKE '%audit%' OR indexname LIKE '%audit%');
     remaining_objects := remaining_objects + obj_count;
-    
+
     IF remaining_objects > 0 THEN
         RAISE NOTICE 'WARNING: % audit-related objects still remain. Manual cleanup may be required.', remaining_objects;
     ELSE
@@ -298,11 +298,11 @@ ROLLBACK PROCEDURE (if needed):
 4. Verify data integrity:
    SELECT COUNT(*) FROM audit_events_v1;
 
-IMPORTANT: This rollback will lose any audit events created 
+IMPORTANT: This rollback will lose any audit events created
 after the migration to audit-service.
 */
 
-COMMENT ON VIEW audit_events_readonly IS 
+COMMENT ON VIEW audit_events_readonly IS
 'Read-only view of historical audit events. All new events go to audit-service.';
 
 -- End of migration script

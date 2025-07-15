@@ -2,18 +2,19 @@
 Resilience Metrics Dashboard API
 종합적인 리질리언스 메트릭 수집, 분석 및 대시보드 제공
 """
-from typing import Dict, List, Any, Optional
-from fastapi import APIRouter, HTTPException, Depends, Query
+import asyncio
+import json
+import logging
+from dataclasses import asdict
 from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional
+
 from core.auth_utils import UserContext
+from fastapi import APIRouter, Depends, HTTPException, Query
 from middleware.auth_middleware import get_current_user
 from middleware.circuit_breaker_global import get_global_circuit_breaker
 from middleware.etag_middleware import get_adaptive_ttl_manager
-import logging
-import json
-import asyncio
-from dataclasses import asdict
-from enum import Enum
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix = "/resilience", tags = ["Resilience Dashboard"])
@@ -35,8 +36,10 @@ class ResilienceComponent(str, Enum):
 
 @router.get("/dashboard", response_model = Dict[str, Any])
 async def get_resilience_dashboard(
- time_range: MetricTimeRange = Query(MetricTimeRange.LAST_24_HOURS, description = "메트릭 시간 범위"),
- component: ResilienceComponent = Query(ResilienceComponent.ALL, description = "특정 구성요소 필터"),
+ time_range: MetricTimeRange = Query(MetricTimeRange.LAST_24_HOURS,
+     description = "메트릭 시간 범위"),
+ component: ResilienceComponent = Query(ResilienceComponent.ALL,
+     description = "특정 구성요소 필터"),
  current_user: UserContext = Depends(get_current_user)
 ) -> Dict[str, Any]:
  """
@@ -150,7 +153,8 @@ async def resilience_health_check(
  return_exceptions = True
  )
 
- component_names = ["circuit_breaker", "etag_caching", "distributed_caching", "backpressure"]
+ component_names = ["circuit_breaker", "etag_caching", "distributed_caching",
+     "backpressure"]
 
  healthy_components = 0
  total_components = len(component_names)
@@ -169,7 +173,8 @@ async def resilience_health_check(
  elif health.get("status") == "degraded":
  health_status["warnings"].append(f"{name} is degraded: {health.get('message', '')}")
  else:
- health_status["critical_issues"].append(f"{name} is unhealthy: {health.get('message', '')}")
+ health_status["critical_issues"].append(f"{name} is unhealthy: {health.get('message',
+     '')}")
 
  # 전체 상태 결정
  health_ratio = healthy_components / total_components
@@ -196,7 +201,8 @@ async def resilience_health_check(
 
 @router.get("/alerts", response_model = Dict[str, Any])
 async def get_resilience_alerts(
- severity: Optional[str] = Query(None, description = "필터링할 심각도 (critical, warning, info)"),
+ severity: Optional[str] = Query(None, description = "필터링할 심각도 (critical, warning,
+     info)"),
  limit: int = Query(50, description = "반환할 알림 수 제한"),
  current_user: UserContext = Depends(get_current_user)
 ) -> Dict[str, Any]:
@@ -242,7 +248,8 @@ async def _collect_overview_metrics(time_range: MetricTimeRange) -> Dict[str, An
  "last_incident": None
  }
 
-async def _collect_circuit_breaker_metrics(time_range: MetricTimeRange) -> Dict[str, Any]:
+async def _collect_circuit_breaker_metrics(time_range: MetricTimeRange) -> Dict[str,
+    Any]:
  """서킷 브레이커 메트릭 수집"""
  circuit_breaker = get_global_circuit_breaker()
 
@@ -288,7 +295,8 @@ async def _collect_etag_caching_metrics(time_range: MetricTimeRange) -> Dict[str
  "adaptive_adjustments": 12
  }
 
-async def _collect_distributed_caching_metrics(time_range: MetricTimeRange) -> Dict[str, Any]:
+async def _collect_distributed_caching_metrics(time_range: MetricTimeRange) -> Dict[str,
+    Any]:
  """분산 캐싱 메트릭 수집"""
  return {
  "status": "active",
@@ -314,7 +322,9 @@ async def _collect_backpressure_metrics(time_range: MetricTimeRange) -> Dict[str
 
 # --- 상세 메트릭 수집 함수들 ---
 
-async def _collect_circuit_breaker_detailed_metrics(time_range: MetricTimeRange) -> Dict[str, Any]:
+async def _collect_circuit_breaker_detailed_metrics(time_range: MetricTimeRange) -> Dict[str,
+
+    Any]:
  """서킷 브레이커 상세 메트릭"""
  basic_metrics = await _collect_circuit_breaker_metrics(time_range)
 
@@ -325,9 +335,12 @@ async def _collect_circuit_breaker_detailed_metrics(time_range: MetricTimeRange)
  **basic_metrics,
  "time_series": time_series,
  "state_transitions": [
- {"from": "closed", "to": "open", "timestamp": "2025-07-11T20:30:00Z", "reason": "failure_threshold_exceeded"},
- {"from": "open", "to": "half_open", "timestamp": "2025-07-11T20:31:00Z", "reason": "timeout_elapsed"},
- {"from": "half_open", "to": "closed", "timestamp": "2025-07-11T20:31:30Z", "reason": "success_threshold_met"}
+ {"from": "closed", "to": "open", "timestamp": "2025-07-11T20:30:00Z",
+     "reason": "failure_threshold_exceeded"},
+ {"from": "open", "to": "half_open", "timestamp": "2025-07-11T20:31:00Z",
+     "reason": "timeout_elapsed"},
+ {"from": "half_open", "to": "closed", "timestamp": "2025-07-11T20:31:30Z",
+     "reason": "success_threshold_met"}
  ],
  "failure_patterns": {
  "by_endpoint": {"/api/v1/schemas": 15, "/api/v1/documents": 8},
@@ -357,7 +370,9 @@ async def _collect_etag_detailed_metrics(time_range: MetricTimeRange) -> Dict[st
  "time_series": _generate_time_series_data(time_range, "etag_caching")
  }
 
-async def _collect_distributed_caching_detailed_metrics(time_range: MetricTimeRange) -> Dict[str, Any]:
+async def _collect_distributed_caching_detailed_metrics(time_range: MetricTimeRange) -> Dict[str,
+
+    Any]:
  """분산 캐싱 상세 메트릭"""
  basic_metrics = await _collect_distributed_caching_metrics(time_range)
 
@@ -377,7 +392,9 @@ async def _collect_distributed_caching_detailed_metrics(time_range: MetricTimeRa
  }
  }
 
-async def _collect_backpressure_detailed_metrics(time_range: MetricTimeRange) -> Dict[str, Any]:
+async def _collect_backpressure_detailed_metrics(time_range: MetricTimeRange) -> Dict[str,
+
+    Any]:
  """백프레셔 상세 메트릭"""
  basic_metrics = await _collect_backpressure_metrics(time_range)
 
@@ -407,11 +424,13 @@ async def _check_circuit_breaker_health() -> Dict[str, Any]:
  state = status.get("state")
 
  if state == "open":
- return {"status": "unhealthy", "message": f"Circuit breaker is open", "details": status}
+ return {"status": "unhealthy", "message": "Circuit breaker is open", "details": status}
  elif state == "half_open":
- return {"status": "degraded", "message": "Circuit breaker is in recovery mode", "details": status}
+ return {"status": "degraded", "message": "Circuit breaker is in recovery mode",
+     "details": status}
  else:
- return {"status": "healthy", "message": "Circuit breaker is operating normally", "details": status}
+ return {"status": "healthy", "message": "Circuit breaker is operating normally",
+     "details": status}
  except Exception as e:
  return {"status": "error", "message": f"Health check failed: {e}"}
 
@@ -461,7 +480,8 @@ async def _generate_alerts(components: Dict[str, Any]) -> List[Dict[str, Any]]:
  "severity": "warning",
  "component": "etag_caching",
  "title": "Low E-Tag Cache Hit Rate",
- "message": f"Cache hit rate is {etag_caching.get('cache_hit_rate', 0):.1%}, below recommended 70%",
+ "message": f"Cache hit rate is {etag_caching.get('cache_hit_rate', 0):.1%},
+     below recommended 70%",
  "timestamp": datetime.now().isoformat(),
  "actions": ["Review TTL settings", "Check cache invalidation patterns"]
  })
@@ -478,6 +498,8 @@ async def _generate_recommendations(components: Dict[str, Any]) -> List[Dict[str
  "priority": "medium",
  "title": "Consider implementing request deduplication",
  "description": "Reduce duplicate requests by implementing client-side request deduplication",
+
+
  "impact": "10-15% reduction in backend load"
  })
 
@@ -566,7 +588,8 @@ def _get_resilience_grade(score: float) -> str:
  else:
  return "F"
 
-def _generate_time_series_data(time_range: MetricTimeRange, component: str) -> List[Dict[str, Any]]:
+def _generate_time_series_data(time_range: MetricTimeRange,
+    component: str) -> List[Dict[str, Any]]:
  """시계열 데이터 생성 (시뮬레이션)"""
  # 실제로는 Prometheus나 InfluxDB에서 수집
  data_points = []

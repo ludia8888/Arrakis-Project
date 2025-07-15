@@ -2,11 +2,12 @@
 Job Model for Asynchronous Task Processing
 Handles background job tracking for merge operations and other long-running tasks
 """
-from typing import Optional, Dict, Any, List
+import uuid
 from datetime import datetime
 from enum import Enum
-from pydantic import BaseModel, Field, ConfigDict
-import uuid
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class JobStatus(str, Enum):

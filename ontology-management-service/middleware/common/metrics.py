@@ -1,14 +1,14 @@
 """
 Common metrics collection utilities for middleware components
 """
-import time
 import asyncio
-from typing import Dict, Any, Optional, List
-from enum import Enum
+import logging
+import time
+from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from collections import defaultdict, deque
-import logging
+from enum import Enum
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 

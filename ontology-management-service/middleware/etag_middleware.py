@@ -3,29 +3,29 @@ ETag Middleware
 Handles ETag generation and validation for efficient caching using a decorator-based approach
 and resilience patterns.
 """
-from typing import Callable, Optional, Dict, Any
-from fastapi import Request, Response, status
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.types import ASGIApp
-from starlette.responses import JSONResponse
-import json
-import hashlib
-from datetime import datetime, timezone, timedelta
-import time
 import asyncio
+import hashlib
+import json
 import os
-from functools import wraps
-from prometheus_client import Counter, Histogram, Gauge
+import time
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
 from enum import Enum
+from functools import wraps
+from typing import Any, Callable, Dict, Optional
 
-from core.versioning.version_service import get_version_service
-from models.etag import DeltaRequest
-from core.auth import UserContext
 from arrakis_common import get_logger
-from middleware.etag_analytics import get_etag_analytics
 from bootstrap.config import get_config
+from core.auth import UserContext
 from core.resilience.version_service_wrapper import get_resilient_version_service
+from core.versioning.version_service import get_version_service
+from fastapi import Request, Response, status
+from middleware.etag_analytics import get_etag_analytics
+from models.etag import DeltaRequest
+from prometheus_client import Counter, Gauge, Histogram
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import JSONResponse
+from starlette.types import ASGIApp
 
 logger = get_logger(__name__)
 
@@ -137,7 +137,8 @@ class AdaptiveTTLManager:
 
  return calculated_ttl
 
- async def _calculate_adaptive_ttl(self, stats: CacheStatistics, config: AdaptiveTTLConfig) -> int:
+ async def _calculate_adaptive_ttl(self, stats: CacheStatistics,
+     config: AdaptiveTTLConfig) -> int:
  """적응형 TTL 계산 로직"""
  base_ttl = config.base_ttl_seconds
 
@@ -200,7 +201,8 @@ class AdaptiveTTLManager:
  else: # 하루에 10회 이상
  return 0.5
 
- async def record_cache_access(self, resource_type: str, resource_id: str, is_hit: bool):
+ async def record_cache_access(self, resource_type: str, resource_id: str,
+     is_hit: bool):
  """캐시 접근 기록"""
  cache_key = f"{resource_type}:{resource_id}"
  stats = await self._load_cache_statistics(cache_key)
@@ -245,8 +247,14 @@ class AdaptiveTTLManager:
  cache_hits = stats_data.get("cache_hits", 0),
  cache_misses = stats_data.get("cache_misses", 0),
  last_modified = datetime.fromisoformat(stats_data["last_modified"]) if stats_data.get("last_modified") else None,
+
+
  first_access = datetime.fromisoformat(stats_data["first_access"]) if stats_data.get("first_access") else None,
+
+
  last_access = datetime.fromisoformat(stats_data["last_access"]) if stats_data.get("last_access") else None,
+
+
  modification_count = stats_data.get("modification_count", 0)
  )
 
@@ -300,13 +308,15 @@ def set_adaptive_ttl_manager(manager: AdaptiveTTLManager):
 # --- Prometheus Metrics ---
 # (Metrics definitions remain unchanged)
 etag_requests_total = Counter(
- 'etag_requests_total', 'Total number of ETag requests', ['method', 'resource_type', 'result']
+ 'etag_requests_total', 'Total number of ETag requests', ['method', 'resource_type',
+     'result']
 )
 etag_cache_hits = Counter(
  'etag_cache_hits_total', 'Number of ETag cache hits (304 responses)', ['resource_type']
 )
 etag_cache_misses = Counter(
- 'etag_cache_misses_total', 'Number of ETag cache misses (200 responses with ETag)', ['resource_type']
+ 'etag_cache_misses_total', 'Number of ETag cache misses (200 responses with ETag)',
+     ['resource_type']
 )
 etag_validation_duration = Histogram(
  'etag_validation_duration_seconds', 'Time spent validating ETags', ['resource_type']
@@ -315,12 +325,14 @@ etag_generation_duration = Histogram(
  'etag_generation_duration_seconds', 'Time spent generating ETags', ['resource_type']
 )
 etag_cache_effectiveness = Gauge(
- 'etag_cache_effectiveness_ratio', 'Cache hit ratio (hits / total requests)', ['resource_type']
+ 'etag_cache_effectiveness_ratio', 'Cache hit ratio (hits / total requests)',
+     ['resource_type']
 )
 
 # --- Decorator for enabling ETag on routes ---
 
-def enable_etag(resource_type_func: Callable[[Dict], str], resource_id_func: Callable[[Dict], str], branch_func: Callable[[Dict], str]):
+def enable_etag(resource_type_func: Callable[[Dict], str],
+    resource_id_func: Callable[[Dict], str], branch_func: Callable[[Dict], str]):
  """
  Decorator to enable ETag handling for a specific FastAPI route.
  Instead of static strings, this now accepts functions that extract
@@ -416,8 +428,10 @@ class ETagMiddleware(BaseHTTPMiddleware):
  if is_valid:
  # Cache hit - return 304 Not Modified
  etag_cache_hits.labels(resource_type = resource_ctx["type"]).inc()
- etag_requests_total.labels(method = 'GET', resource_type = resource_ctx["type"], result = "cache_hit").inc()
- logger.info("ETag cache hit", extra={"resource_ctx": resource_ctx, "etag": if_none_match})
+ etag_requests_total.labels(method = 'GET', resource_type = resource_ctx["type"],
+     result = "cache_hit").inc()
+ logger.info("ETag cache hit", extra={"resource_ctx": resource_ctx,
+     "etag": if_none_match})
 
  # Record cache hit for adaptive TTL
  if self.adaptive_ttl_manager:
@@ -452,7 +466,8 @@ class ETagMiddleware(BaseHTTPMiddleware):
  )
  self.analytics.record_timeout()
  except Exception as e:
- logger.error(f"ETag validation failed with an unexpected error: {e}", extra={"resource_ctx": resource_ctx})
+ logger.error(f"ETag validation failed with an unexpected error: {e}",
+     extra={"resource_ctx": resource_ctx})
 
  # Now check if the endpoint has ETag enabled (after routing)
  etag_info = self._get_etag_info_from_request(request)
@@ -492,7 +507,8 @@ class ETagMiddleware(BaseHTTPMiddleware):
  response.headers[header] = value
 
  etag_cache_misses.labels(resource_type = resource_ctx["type"]).inc()
- etag_requests_total.labels(method = 'GET', resource_type = resource_ctx["type"], result = "cache_miss").inc()
+ etag_requests_total.labels(method = 'GET', resource_type = resource_ctx["type"],
+     result = "cache_miss").inc()
  logger.info("ETag cache miss - generated new ETag", extra={
  "resource_ctx": resource_ctx,
  "etag": version.current_version.etag,
@@ -563,7 +579,8 @@ class ETagMiddleware(BaseHTTPMiddleware):
  })
 
  except Exception as e:
- logger.error(f"Failed to create initial ETag version: {e}", extra={"resource_ctx": resource_ctx})
+ logger.error(f"Failed to create initial ETag version: {e}",
+     extra={"resource_ctx": resource_ctx})
 
  except asyncio.TimeoutError:
  # Fallback: ETag 검사를 포기하고 실제 응답 반환
@@ -574,7 +591,8 @@ class ETagMiddleware(BaseHTTPMiddleware):
  self.analytics.record_timeout()
  return await call_next(request)
  except Exception as e:
- logger.error(f"ETag generation failed with an unexpected error: {e}", extra={"resource_ctx": resource_ctx})
+ logger.error(f"ETag generation failed with an unexpected error: {e}",
+     extra={"resource_ctx": resource_ctx})
 
  return response
 
@@ -592,7 +610,8 @@ class ETagMiddleware(BaseHTTPMiddleware):
  route = request.scope.get("route") if "route" in request.scope else None
  endpoint = request.scope.get("endpoint") if "endpoint" in request.scope else None
 
- logger.debug(f"Route found: {route is not None}, Endpoint found: {endpoint is not None}")
+ logger.debug(f"Route found: {route is not None},
+     Endpoint found: {endpoint is not None}")
 
  # If endpoint is not directly available, try to extract from route
  if not endpoint and route:
@@ -606,7 +625,7 @@ class ETagMiddleware(BaseHTTPMiddleware):
  if endpoint:
  # Direct attachment
  if hasattr(endpoint, "_etag_info"):
- logger.debug(f"Found ETag info directly on endpoint")
+ logger.debug("Found ETag info directly on endpoint")
  return endpoint._etag_info
 
  # Check wrapped function (common with @inject decorator)
@@ -614,17 +633,17 @@ class ETagMiddleware(BaseHTTPMiddleware):
  wrapped = endpoint.__wrapped__
  logger.debug(f"Checking wrapped function: {wrapped}")
  if hasattr(wrapped, "_etag_info"):
- logger.debug(f"Found ETag info on wrapped endpoint")
+ logger.debug("Found ETag info on wrapped endpoint")
  return wrapped._etag_info
 
  # Check double wrapped (when multiple decorators are used)
  if hasattr(wrapped, "__wrapped__") and hasattr(wrapped.__wrapped__, "_etag_info"):
- logger.debug(f"Found ETag info on double-wrapped endpoint")
+ logger.debug("Found ETag info on double-wrapped endpoint")
  return wrapped.__wrapped__._etag_info
 
  # Check if it's a dependency_injector wrapped function
  if hasattr(endpoint, "func") and hasattr(endpoint.func, "_etag_info"):
- logger.debug(f"Found ETag info on DI wrapped function")
+ logger.debug("Found ETag info on DI wrapped function")
  return endpoint.func._etag_info
 
  # Last resort: check all attributes
@@ -638,7 +657,8 @@ class ETagMiddleware(BaseHTTPMiddleware):
  logger.debug(f"No ETag info found for {request.url.path}")
  return None
 
- def _build_resource_context(self, path_params: Dict, etag_info: Dict[str, Callable]) -> Optional[Dict[str, str]]:
+ def _build_resource_context(self, path_params: Dict, etag_info: Dict[str,
+     Callable]) -> Optional[Dict[str, str]]:
  """Build the resource context using the extractor functions from the decorator."""
  try:
  return {
@@ -655,7 +675,8 @@ class ETagMiddleware(BaseHTTPMiddleware):
  # This function can be simplified as Prometheus can compute ratios with `rate()`
  pass
 
- async def _get_adaptive_cache_headers(self, resource_ctx: Dict[str, str]) -> Dict[str, str]:
+ async def _get_adaptive_cache_headers(self, resource_ctx: Dict[str, str]) -> Dict[str,
+     str]:
  """적응형 캐시 헤더 생성"""
  headers = {}
 

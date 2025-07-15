@@ -3,9 +3,9 @@ Poison message detector for DLQ
 """
 import hashlib
 import json
-from typing import Dict, Any, List, Optional, Set
-from datetime import datetime, timedelta
 import logging
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Set
 
 from .models import DLQMessage
 

@@ -34,7 +34,7 @@ authorization {
       }
     }
   ]
-  
+
   # Default permissions
   default_permissions: {
     publish: {
@@ -44,7 +44,7 @@ authorization {
       allow: ["_INBOX.>", "_INBOX.*"]
     }
   }
-  
+
   # Auth timeout
   timeout: 1
 }
@@ -58,7 +58,7 @@ accounts: {
       {nkey: "${system_user}"}
     ]
   }
-  
+
   # Default account for applications
   $APP_ACCOUNT: {
     jetstream: {

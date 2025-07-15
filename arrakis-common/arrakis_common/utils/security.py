@@ -22,122 +22,122 @@ pwd_context = CryptContext(schemes = ["bcrypt"], deprecated = "auto")
 
 
 def hash_password(password: str) -> str:
- """패스워드 해싱"""
- if not password:
- raise ValueError("Password cannot be empty")
- return pwd_context.hash(password)
+    """패스워드 해싱"""
+    if not password:
+        raise ValueError("Password cannot be empty")
+    return pwd_context.hash(password)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
- """패스워드 검증"""
- if not plain_password or not hashed_password:
- return False
+    """패스워드 검증"""
+    if not plain_password or not hashed_password:
+        return False
 
- try:
- return pwd_context.verify(plain_password, hashed_password)
- except Exception:
- return False
+    try:
+        return pwd_context.verify(plain_password, hashed_password)
+    except Exception:
+        return False
 
 
 def generate_token(length: int = 32) -> str:
- """보안 토큰 생성"""
- return secrets.token_urlsafe(length)
+    """보안 토큰 생성"""
+    return secrets.token_urlsafe(length)
 
 
 def generate_api_key() -> str:
- """API 키 생성"""
- # 프리픽스 + 랜덤 토큰
- prefix = "ak"
- token = secrets.token_urlsafe(32)
- return f"{prefix}_{token}"
+    """API 키 생성"""
+    # 프리픽스 + 랜덤 토큰
+    prefix = "ak"
+    token = secrets.token_urlsafe(32)
+    return f"{prefix}_{token}"
 
 
 def generate_secret_key(length: int = 32) -> str:
- """시크릿 키 생성"""
- return secrets.token_hex(length)
+    """시크릿 키 생성"""
+    return secrets.token_hex(length)
 
 
 def generate_salt(length: int = 16) -> str:
- """솔트 생성"""
- return secrets.token_hex(length)
+    """솔트 생성"""
+    return secrets.token_hex(length)
 
 
 def hash_data(data: str, algorithm: str = "sha256") -> str:
- """데이터 해싱"""
- if algorithm == "sha256":
- return hashlib.sha256(data.encode()).hexdigest()
- elif algorithm == "sha512":
- return hashlib.sha512(data.encode()).hexdigest()
- elif algorithm == "md5":
- return hashlib.md5(data.encode()).hexdigest()
- else:
- raise ValueError(f"Unsupported algorithm: {algorithm}")
+    """데이터 해싱"""
+    if algorithm == "sha256":
+        return hashlib.sha256(data.encode()).hexdigest()
+    elif algorithm == "sha512":
+        return hashlib.sha512(data.encode()).hexdigest()
+    elif algorithm == "md5":
+        return hashlib.md5(data.encode()).hexdigest()
+    else:
+        raise ValueError(f"Unsupported algorithm: {algorithm}")
 
 
 def encode_base64(data: bytes) -> str:
- """Base64 인코딩"""
- return base64.b64encode(data).decode("utf-8")
+    """Base64 인코딩"""
+    return base64.b64encode(data).decode("utf-8")
 
 
 def decode_base64(data: str) -> bytes:
- """Base64 디코딩"""
- return base64.b64decode(data.encode("utf-8"))
+    """Base64 디코딩"""
+    return base64.b64decode(data.encode("utf-8"))
 
 
 def constant_time_compare(val1: str, val2: str) -> bool:
- """상수 시간 문자열 비교 (타이밍 공격 방지)"""
- return secrets.compare_digest(val1, val2)
+    """상수 시간 문자열 비교 (타이밍 공격 방지)"""
+    return secrets.compare_digest(val1, val2)
 
 
 def generate_otp_secret() -> str:
- """OTP 시크릿 생성"""
- return base64.b32encode(secrets.token_bytes(20)).decode("utf-8")
+    """OTP 시크릿 생성"""
+    return base64.b32encode(secrets.token_bytes(20)).decode("utf-8")
 
 
 def mask_sensitive_data(
- data: str, visible_start: int = 4, visible_end: int = 4, mask_char: str = "*"
+    data: str, visible_start: int = 4, visible_end: int = 4, mask_char: str = "*"
 ) -> str:
- """민감한 데이터 마스킹"""
- if not data:
- return ""
+    """민감한 데이터 마스킹"""
+    if not data:
+        return ""
 
- length = len(data)
+    length = len(data)
 
- # 짧은 문자열은 전체 마스킹
- if length <= visible_start + visible_end:
- return mask_char * length
+    # 짧은 문자열은 전체 마스킹
+    if length <= visible_start + visible_end:
+        return mask_char * length
 
- # 시작과 끝 부분만 보이기
- masked_length = length - visible_start - visible_end
- return data[:visible_start] + (mask_char * masked_length) + data[-visible_end:]
+    # 시작과 끝 부분만 보이기
+    masked_length = length - visible_start - visible_end
+    return data[:visible_start] + (mask_char * masked_length) + data[-visible_end:]
 
 
 def generate_csrf_token() -> str:
- """CSRF 토큰 생성"""
- return secrets.token_urlsafe(32)
+    """CSRF 토큰 생성"""
+    return secrets.token_urlsafe(32)
 
 
 def create_secure_filename(filename: str) -> str:
- """보안 파일명 생성"""
- import os
- import re
+    """보안 파일명 생성"""
+    import os
+    import re
 
- # 파일명과 확장자 분리
- base, ext = os.path.splitext(filename)
+    # 파일명과 확장자 분리
+    base, ext = os.path.splitext(filename)
 
- # 위험한 문자 제거
- base = re.sub(r"[^\w\s-]", "", base)
- base = re.sub(r"[-\s]+", "-", base)
+    # 위험한 문자 제거
+    base = re.sub(r"[^\w\s-]", "", base)
+    base = re.sub(r"[-\s]+", "-", base)
 
- # 길이 제한
- base = base[:100]
+    # 길이 제한
+    base = base[:100]
 
- # 타임스탬프 추가
- import time
+    # 타임스탬프 추가
+    import time
 
- timestamp = int(time.time())
+    timestamp = int(time.time())
 
- return f"{base}_{timestamp}{ext}"
+    return f"{base}_{timestamp}{ext}"
 
 
 def encrypt_data(data: str, key: str) -> str:

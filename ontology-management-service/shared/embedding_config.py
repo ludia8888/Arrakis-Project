@@ -2,11 +2,11 @@
 Configuration management for Vector Embedding Providers
 Handles loading and parsing of embedding provider configurations
 """
+import logging
 import os
-from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
 from enum import Enum
-import logging
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -141,6 +141,8 @@ class EmbeddingConfigManager:
  name = "azure_openai",
  provider_type = EmbeddingProviderType.AZURE_OPENAI,
  enabled = bool(os.getenv("AZURE_OPENAI_API_KEY") and os.getenv("AZURE_OPENAI_ENDPOINT")),
+
+
  api_key = os.getenv("AZURE_OPENAI_API_KEY"),
  api_base = os.getenv("AZURE_OPENAI_ENDPOINT"),
  model_name = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "text-embedding-3-large"),
@@ -181,7 +183,8 @@ class EmbeddingConfigManager:
  # Parse fallback order
  fallback_order_str = os.getenv(
  "EMBEDDING_PROVIDER_FALLBACK_ORDER",
- "openai,azure_openai,cohere,huggingface,google_vertex,anthropic,local_sentence_transformers"
+ "openai,azure_openai,cohere,huggingface,google_vertex,anthropic,
+     local_sentence_transformers"
  )
  fallback_order = [name.strip() for name in fallback_order_str.split(",")]
 
@@ -189,7 +192,8 @@ class EmbeddingConfigManager:
  self._config = EmbeddingServiceConfig(
  use_microservice = self._get_bool("USE_EMBEDDING_MS", False),
  service_endpoint = os.getenv("EMBEDDING_SERVICE_ENDPOINT", "embedding-service:50055"),
- default_provider = os.getenv("DEFAULT_EMBEDDING_PROVIDER", "local_sentence_transformers"),
+ default_provider = os.getenv("DEFAULT_EMBEDDING_PROVIDER",
+     "local_sentence_transformers"),
  fallback_enabled = self._get_bool("EMBEDDING_FALLBACK_ENABLED", True),
  fallback_order = fallback_order,
  cache_ttl = self._get_int("EMBEDDING_CACHE_TTL", 3600),
@@ -285,7 +289,7 @@ class EmbeddingConfigManager:
  value = os.getenv(key, "").lower()
  if value in ("true", "1", "yes", "on"):
  return True
- elif value in ("false", "0", "no", "off"):
+ elif value in ("false", "0", "no", "of"):
  return False
  else:
  return default

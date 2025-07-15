@@ -2,10 +2,11 @@
 Async Merge Performance Monitoring
 Prometheus metrics for tracking async merge operations
 """
-from prometheus_client import Counter, Histogram, Gauge, Info
 import time
-from typing import Dict, Any
 from functools import wraps
+from typing import Any, Dict
+
+from prometheus_client import Counter, Gauge, Histogram, Info
 
 # Job metrics
 job_requests_total = Counter(
@@ -222,9 +223,10 @@ async def collect_system_metrics():
  """Collect system-wide metrics"""
  try:
  # Update system info
- import platform
- import psutil
  import os
+ import platform
+
+ import psutil
 
  system_info.info({
  'version': os.getenv('APP_VERSION', 'unknown'),

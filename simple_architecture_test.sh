@@ -4,7 +4,7 @@ Simple Architecture Production Test
 ===================================
 
 전체 마이크로서비스 아키텍처 기본 검증:
-User Request → OMS (8000) → PostgreSQL/Redis/TerminusDB 
+User Request → OMS (8000) → PostgreSQL/Redis/TerminusDB
              → GraphQL (8006) → Audit Service → NATS
 
 NO MOCKS POLICY: 실제 운영환경처럼 동작하는지 검증
@@ -23,11 +23,11 @@ test_endpoint() {
     local url="$1"
     local name="$2"
     local expected_status="${3:-200}"
-    
+
     echo -n "Testing $name: "
-    
+
     response=$(curl -s -w "%{http_code}" -o /dev/null "$url" 2>/dev/null || echo "000")
-    
+
     if [ "$response" = "$expected_status" ]; then
         echo "✅ HEALTHY ($response)"
         return 0
@@ -57,7 +57,7 @@ if docker exec arrakis-redis redis-cli ping 2>/dev/null | grep -q "PONG"; then
     echo "✅ HEALTHY"
     redis_healthy=1
 else
-    echo "❌ FAILED"  
+    echo "❌ FAILED"
     redis_healthy=0
 fi
 

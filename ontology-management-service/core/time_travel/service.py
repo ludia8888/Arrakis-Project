@@ -2,36 +2,46 @@
 Time Travel Query Service
 Service for executing temporal queries and point-in-time data access
 """
-from typing import List, Dict, Any, Optional, Tuple
-from datetime import datetime, timezone, timedelta
 import asyncio
-from collections import defaultdict
 import json
+from collections import defaultdict
+from datetime import datetime, timedelta, timezone
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
-from .models import (
- TemporalQuery, TemporalResourceQuery, TemporalOperator,
- TemporalReference, TemporalResourceVersion, TemporalQueryResult,
- TemporalDiff, TemporalSnapshot, TemporalComparisonQuery,
- TemporalComparisonResult, TimelineEvent, ResourceTimeline
-)
-from .cache import TemporalQueryCache
-from .metrics import (
- track_temporal_query, temporal_query_with_circuit_breaker,
- TemporalQueryMetrics, track_cache_operation
-)
-from .db_optimizations import TimeTravelDBOptimizer, TemporalCursorPagination
-from ..versioning.version_service import VersionTrackingService, get_version_service
 from ..interfaces import IBranchService
-from typing import TYPE_CHECKING
+from ..versioning.version_service import VersionTrackingService, get_version_service
+from .cache import TemporalQueryCache
+from .db_optimizations import TemporalCursorPagination, TimeTravelDBOptimizer
+from .metrics import (
+    TemporalQueryMetrics,
+    temporal_query_with_circuit_breaker,
+    track_cache_operation,
+    track_temporal_query,
+)
+from .models import (
+    ResourceTimeline,
+    TemporalComparisonQuery,
+    TemporalComparisonResult,
+    TemporalDiff,
+    TemporalOperator,
+    TemporalQuery,
+    TemporalQueryResult,
+    TemporalReference,
+    TemporalResourceQuery,
+    TemporalResourceVersion,
+    TemporalSnapshot,
+    TimelineEvent,
+)
 
 # Import concrete type only for type checking to avoid circular import
 if TYPE_CHECKING:
  from ..branch.foundry_branch_service import FoundryBranchService
-from models.etag import ResourceVersion, VersionInfo
-from shared.database.sqlite_connector import SQLiteConnector
-from shared.cache.smart_cache import SmartCache
-from arrakis_common import get_logger
+
 import redis.asyncio as redis
+from arrakis_common import get_logger
+from models.etag import ResourceVersion, VersionInfo
+from shared.cache.smart_cache import SmartCache
+from shared.database.sqlite_connector import SQLiteConnector
 
 logger = get_logger(__name__)
 
@@ -72,7 +82,7 @@ class TimeTravelQueryService:
  await self._optimizer.create_optimized_indexes()
  await self._optimizer.analyze_and_optimize()
 
- @temporal_query_with_circuit_breaker("as_of")
+ @temporal_query_with_circuit_breaker("as_o")
  async def query_as_of(
  self,
  query: TemporalResourceQuery
@@ -183,7 +193,7 @@ class TimeTravelQueryService:
  resources = resources,
  total_count = total_count,
  has_more = len(resources) + query.offset < total_count,
- time_range_covered={"as_of": target_time},
+ time_range_covered={"as_o": target_time},
  versions_scanned = len(rows),
  cache_hit = False,
  cacheable = True
@@ -583,7 +593,8 @@ class TimeTravelQueryService:
  description = description
  )
 
- async def _row_to_temporal_resource(self, row: Dict[str, Any]) -> TemporalResourceVersion:
+ async def _row_to_temporal_resource(self, row: Dict[str,
+     Any]) -> TemporalResourceVersion:
  """Convert database row to temporal resource"""
  content = json.loads(row['content']) if row['content'] else {}
 

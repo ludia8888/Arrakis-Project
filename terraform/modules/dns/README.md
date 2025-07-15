@@ -53,13 +53,13 @@ module "dns" {
 
   project_name = "arrakis"
   environment  = "production"
-  
+
   domain_name = "arrakis.example.com"
-  
+
   # Load balancer integration
   load_balancer_dns_name = "k8s-arrakis-ingress-12345678.us-west-2.elb.amazonaws.com"
   load_balancer_zone_id  = "Z1D633PJN98FT9"
-  
+
   # Subdomains
   subdomains = {
     api = {
@@ -71,11 +71,11 @@ module "dns" {
       alias = true
     }
   }
-  
+
   # Health checks
   enable_health_checks = true
   health_check_path    = "/health"
-  
+
   tags = {
     Environment = "production"
     Project     = "arrakis"
@@ -383,7 +383,7 @@ module "dns" {
 
   project_name = "arrakis"
   environment  = "production"
-  
+
   # Primary domain
   domain_name = "arrakis.example.com"
   certificate_sans = [
@@ -391,11 +391,11 @@ module "dns" {
     "api.arrakis.example.com",
     "monitoring.arrakis.example.com"
   ]
-  
+
   # Load balancer integration
   load_balancer_dns_name = module.eks_cluster.ingress_load_balancer_dns_name
   load_balancer_zone_id  = module.eks_cluster.ingress_load_balancer_zone_id
-  
+
   # Subdomains with health checks
   subdomains = {
     api = {
@@ -416,19 +416,19 @@ module "dns" {
       health_check = false
     }
   }
-  
+
   # Disaster recovery
   enable_failover = true
   failover_load_balancer_dns_name = module.eks_cluster_dr.ingress_load_balancer_dns_name
   failover_load_balancer_zone_id  = module.eks_cluster_dr.ingress_load_balancer_zone_id
-  
+
   # Health monitoring
   enable_health_checks = true
   enable_health_check_alarms = true
   health_check_alarm_actions = [
     module.monitoring.sns_topic_arn
   ]
-  
+
   # Email configuration
   mx_records = [
     "10 aspmx.l.google.com.",
@@ -436,21 +436,21 @@ module "dns" {
   ]
   spf_record = "v=spf1 include:_spf.google.com ~all"
   dmarc_record = "v=DMARC1; p=quarantine; rua=mailto:dmarc@arrakis.example.com"
-  
+
   # Security
   caa_records = [
     "0 issue \"letsencrypt.org\"",
     "0 issue \"amazonaws.com\"",
     "0 iodef \"mailto:security@arrakis.example.com\""
   ]
-  
+
   # Private DNS
   enable_private_dns = true
   vpc_id = module.networking.vpc_id
   private_domain_name = "arrakis.internal"
   resolver_subnet_ids = module.networking.private_subnet_ids
   resolver_security_group_ids = [module.networking.dns_security_group_id]
-  
+
   internal_service_records = {
     database = {
       type    = "A"
@@ -468,15 +468,15 @@ module "dns" {
       ttl     = 300
     }
   }
-  
+
   # Monitoring and logging
   enable_query_logging = true
   query_log_retention_days = 90
-  
+
   # Cost optimization
   enable_cost_optimization = true
   optimize_health_check_regions = true
-  
+
   tags = {
     Environment     = "production"
     Project         = "arrakis"
@@ -522,19 +522,19 @@ module "dns" {
 
   project_name = "arrakis"
   environment  = var.environment
-  
+
   domain_name = local.environments[var.environment].domain_name
-  
+
   # Environment-specific configuration
   enable_failover    = local.environments[var.environment].enable_failover
   enable_private_dns = local.environments[var.environment].enable_private_dns
   health_check_regions = local.environments[var.environment].health_check_regions
   query_log_retention_days = local.environments[var.environment].query_log_retention
-  
+
   # Common configuration
   load_balancer_dns_name = module.eks_cluster.ingress_load_balancer_dns_name
   load_balancer_zone_id  = module.eks_cluster.ingress_load_balancer_zone_id
-  
+
   subdomains = {
     api = {
       type  = "A"
@@ -545,9 +545,9 @@ module "dns" {
       alias = true
     }
   }
-  
+
   enable_health_checks = true
-  
+
   tags = merge(local.common_tags, {
     Environment = var.environment
   })
@@ -623,7 +623,7 @@ aws logs filter-log-events \
    ```bash
    # Test health check endpoint
    curl -I https://arrakis.example.com/health
-   
+
    # Check security groups and NACLs
    # Ensure port 443/80 is accessible from Route53 health checkers
    ```
@@ -633,7 +633,7 @@ aws logs filter-log-events \
    # Verify health check configuration
    aws route53 get-health-check \
      --health-check-id 12345678-1234-1234-1234-123456789012
-   
+
    # Check failover routing policy
    aws route53 list-resource-record-sets \
      --hosted-zone-id Z123456789012345678 \

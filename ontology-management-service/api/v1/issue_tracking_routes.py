@@ -12,12 +12,12 @@ from core.issue_tracking.issue_service import get_issue_service
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from middleware.auth_middleware import get_current_user
 from models.issue_tracking import (
- ChangeIssueLink,
- IssueProvider,
- IssueReference,
- IssueTrackingConfig,
- IssueValidationResult,
- parse_issue_reference,
+    ChangeIssueLink,
+    IssueProvider,
+    IssueReference,
+    IssueTrackingConfig,
+    IssueValidationResult,
+    parse_issue_reference,
 )
 from pydantic import BaseModel, Field
 
@@ -342,7 +342,8 @@ async def get_change_issues(
 # Issue Search and Suggestions
 
 
-@router.post("/search", dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
+@router.post("/search",
+    dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def search_issues(
  request: IssueSearchRequest,
  req: Request,
@@ -510,7 +511,8 @@ async def get_issue_tracking_config(
  }
 
 
-@router.post("/parse", dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
+@router.post("/parse",
+    dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def parse_issue_reference(
  req: Request,
  text: str = Query(..., description = "Text containing issue reference"),

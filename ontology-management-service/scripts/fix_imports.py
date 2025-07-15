@@ -3,10 +3,10 @@
 OMS Import Fixer Script
 모든 잘못된 import 경로를 일괄 수정
 """
+import argparse
 import os
 import re
 from pathlib import Path
-import argparse
 from typing import Dict, List, Tuple
 
 # Import 매핑 규칙 - Final P0 Top-10 Critical Fix
@@ -15,6 +15,8 @@ IMPORT_MAPPINGS = {
  # 사용자 2차 분석 기반 마지막 내부 오타 수정
  r'^from core\.event\.publisher': r'from core.event_publisher',
  r'^from core\.event_publisher\.main_ultimate': r'from core.event_publisher.enhanced_event_service',
+
+
  # Removed deprecated mapping - service_client no longer exists
  r'^from security\.pii_handler': r'from core.security.pii_handler',
  r'^from pii_handler': r'from core.security.pii_handler',
@@ -45,7 +47,11 @@ IMPORT_MAPPINGS = {
  # Relative parent imports
  r'from \.\.config': r'from shared.config',
  r'from \.\.core\.event_publisher\.eventbridge_adapter': r'from core.event_publisher.eventbridge_adapter',
+
+
  r'from \.\.\.core\.event_publisher\.cloudevents_enhanced': r'from core.event_publisher.cloudevents_enhanced',
+
+
 
  # Additional P0 Critical fixes
  r'from cloudevents_adapter': r'from core.event_publisher.cloudevents_adapter',

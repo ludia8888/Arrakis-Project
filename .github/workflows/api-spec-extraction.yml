@@ -4,48 +4,48 @@ on:
   push:
     branches: [main, develop]
     paths:
-      - '*/api/**'
-      - '*/app/**'
-      - '**/main.py'
-      - '**/routes/**'
-      - '**/endpoints/**'
-      - '**/*.proto'
+      - "*/api/**"
+      - "*/app/**"
+      - "**/main.py"
+      - "**/routes/**"
+      - "**/endpoints/**"
+      - "**/*.proto"
   pull_request:
     branches: [main, develop]
     paths:
-      - '*/api/**'
-      - '*/app/**'
-      - '**/main.py'
-      - '**/routes/**'
-      - '**/endpoints/**'
-      - '**/*.proto'
+      - "*/api/**"
+      - "*/app/**"
+      - "**/main.py"
+      - "**/routes/**"
+      - "**/endpoints/**"
+      - "**/*.proto"
   schedule:
     # Run daily at 6 AM UTC
-    - cron: '0 6 * * *'
+    - cron: "0 6 * * *"
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Environment to extract from'
+        description: "Environment to extract from"
         required: true
-        default: 'staging'
+        default: "staging"
         type: choice
         options:
           - local
           - staging
           - production
       service:
-        description: 'Specific service (leave empty for all)'
+        description: "Specific service (leave empty for all)"
         required: false
         type: string
       force_extraction:
-        description: 'Force extraction even if services are not running'
+        description: "Force extraction even if services are not running"
         required: false
         default: false
         type: boolean
 
 env:
-  PYTHON_VERSION: '3.11'
-  DEFAULT_ENVIRONMENT: 'staging'
+  PYTHON_VERSION: "3.11"
+  DEFAULT_ENVIRONMENT: "staging"
 
 jobs:
   detect-changes:
@@ -65,7 +65,7 @@ jobs:
         run: |
           # Define all services
           ALL_SERVICES=("ontology-management-service" "user-service" "audit-service" "data-kernel-service" "embedding-service" "scheduler-service" "event-gateway")
-          
+
           if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ -n "${{ github.event.inputs.service }}" ]; then
             # Manual dispatch with specific service
             CHANGED_SERVICES=("${{ github.event.inputs.service }}")
@@ -81,11 +81,11 @@ jobs:
               fi
             done
           fi
-          
+
           # Convert to JSON array
           printf -v SERVICES_JSON '%s\n' "${CHANGED_SERVICES[@]}" | jq -R . | jq -s .
           echo "services=${SERVICES_JSON}" >> $GITHUB_OUTPUT
-          
+
           echo "Changed services: ${CHANGED_SERVICES[*]}"
 
       - name: Set all services list
@@ -116,7 +116,7 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-      
+
       redis:
         image: redis:7-alpine
         options: >-
@@ -135,7 +135,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
+          cache: "pip"
 
       - name: Install service dependencies
         run: |
@@ -161,10 +161,10 @@ jobs:
       - name: Start service for testing
         run: |
           cd ${{ matrix.service }}
-          
+
           # Copy test environment
           cp ../.env.test .env
-          
+
           # Start service in background
           if [ -f "main.py" ]; then
             python main.py &
@@ -176,13 +176,13 @@ jobs:
             echo "Could not find main.py, skipping service startup"
             exit 0
           fi
-          
+
           SERVICE_PID=$!
           echo "SERVICE_PID=${SERVICE_PID}" >> $GITHUB_ENV
-          
+
           # Wait for service to start
           sleep 10
-          
+
           # Check if service is running
           if kill -0 $SERVICE_PID 2>/dev/null; then
             echo "Service ${{ matrix.service }} started successfully"
@@ -203,7 +203,7 @@ jobs:
             "event-gateway") PORT=8004 ;;
             *) PORT=8000 ;;
           esac
-          
+
           # Wait for service to be ready
           for i in {1..30}; do
             if curl -s "http://localhost:${PORT}/health" > /dev/null; then
@@ -257,16 +257,16 @@ jobs:
           else
             ENVIRONMENT="${{ env.DEFAULT_ENVIRONMENT }}"
           fi
-          
+
           echo "EXTRACTION_ENVIRONMENT=${ENVIRONMENT}" >> $GITHUB_ENV
 
       - name: Extract API specifications
         run: |
           echo "Extracting specifications for ${{ matrix.service }} from ${EXTRACTION_ENVIRONMENT}"
-          
+
           # Create output directory
           mkdir -p docs/api-specs
-          
+
           # Run extraction
           python scripts/extract_api_specs.py \
             --environment local \
@@ -280,18 +280,18 @@ jobs:
             if [ -f "$spec_file" ]; then
               echo "Validating OpenAPI spec: $spec_file"
               python -c "
-import json
-import sys
-from openapi_spec_validator import validate_spec
-try:
-    with open('$spec_file') as f:
-        spec = json.load(f)
-    validate_spec(spec)
-    print('✅ OpenAPI spec is valid')
-except Exception as e:
-    print(f'❌ OpenAPI spec validation failed: {e}')
-    sys.exit(1)
-              "
+                import json
+                import sys
+                from openapi_spec_validator import validate_spec
+                try:
+                    with open('$spec_file') as f:
+                        spec = json.load(f)
+                    validate_spec(spec)
+                    print('✅ OpenAPI spec is valid')
+                except Exception as e:
+                    print(f'❌ OpenAPI spec validation failed: {e}')
+                    sys.exit(1)
+                "
             fi
           done
 
@@ -302,10 +302,10 @@ except Exception as e:
           if [ -d "docs/api-specs/${{ matrix.service }}" ]; then
             echo "## API Specification Changes - ${{ matrix.service }}" > spec_changes.md
             echo "" >> spec_changes.md
-            
+
             # Compare with main branch
             git fetch origin main
-            
+
             if git show origin/main:docs/api-specs/${{ matrix.service }}/openapi.json > /tmp/old_spec.json 2>/dev/null; then
               if [ -f "docs/api-specs/${{ matrix.service }}/openapi.json" ]; then
                 echo "### OpenAPI Changes" >> spec_changes.md
@@ -317,7 +317,7 @@ except Exception as e:
               echo "### New OpenAPI Specification" >> spec_changes.md
               echo "This is a new API specification for ${{ matrix.service }}" >> spec_changes.md
             fi
-            
+
             echo "" >> spec_changes.md
             echo "[View full specifications](../tree/${{ github.head_ref }}/docs/api-specs/${{ matrix.service }}/)" >> spec_changes.md
           fi
@@ -354,7 +354,7 @@ except Exception as e:
       - name: Combine specifications
         run: |
           mkdir -p docs/api-specs
-          
+
           # Copy all extracted specs
           for artifact_dir in artifacts/api-specs-*; do
             if [ -d "$artifact_dir" ]; then
@@ -373,91 +373,91 @@ except Exception as e:
             "services": {}
           }
           EOF
-          
+
           # Add each service to registry
           python3 << 'EOF'
-import json
-import os
-from datetime import datetime
-from pathlib import Path
+          import json
+          import os
+          from datetime import datetime
+          from pathlib import Path
 
-registry_file = "docs/api-specs/registry.json"
-with open(registry_file) as f:
-    registry = json.load(f)
+          registry_file = "docs/api-specs/registry.json"
+          with open(registry_file) as f:
+              registry = json.load(f)
 
-registry["generated"] = datetime.utcnow().isoformat() + "Z"
+          registry["generated"] = datetime.utcnow().isoformat() + "Z"
 
-for service_dir in Path("docs/api-specs").iterdir():
-    if service_dir.is_dir() and service_dir.name != "__pycache__":
-        service_name = service_dir.name
-        openapi_file = service_dir / "openapi.json"
-        
-        if openapi_file.exists():
-            with open(openapi_file) as f:
-                spec = json.load(f)
-            
-            registry["services"][service_name] = {
-                "title": spec.get("info", {}).get("title", service_name),
-                "version": spec.get("info", {}).get("version", "unknown"),
-                "description": spec.get("info", {}).get("description", ""),
-                "openapi_version": spec.get("openapi", "unknown"),
-                "paths_count": len(spec.get("paths", {})),
-                "schemas_count": len(spec.get("components", {}).get("schemas", {})),
-                "spec_url": f"./{service_name}/openapi.json",
-                "docs_url": f"./{service_name}/README.md"
-            }
+          for service_dir in Path("docs/api-specs").iterdir():
+              if service_dir.is_dir() and service_dir.name != "__pycache__":
+                  service_name = service_dir.name
+                  openapi_file = service_dir / "openapi.json"
 
-with open(registry_file, "w") as f:
-    json.dump(registry, f, indent=2)
+                  if openapi_file.exists():
+                      with open(openapi_file) as f:
+                          spec = json.load(f)
+
+                      registry["services"][service_name] = {
+                          "title": spec.get("info", {}).get("title", service_name),
+                          "version": spec.get("info", {}).get("version", "unknown"),
+                          "description": spec.get("info", {}).get("description", ""),
+                          "openapi_version": spec.get("openapi", "unknown"),
+                          "paths_count": len(spec.get("paths", {})),
+                          "schemas_count": len(spec.get("components", {}).get("schemas", {})),
+                          "spec_url": f"./{service_name}/openapi.json",
+                          "docs_url": f"./{service_name}/README.md"
+                      }
+
+          with open(registry_file, "w") as f:
+              json.dump(registry, f, indent=2)
           EOF
 
       - name: Generate index page
         run: |
           cat > docs/api-specs/README.md <<'EOF'
           # Arrakis API Specifications Registry
-          
+
           This directory contains automatically extracted API specifications for all Arrakis microservices.
-          
+
           ## Services
-          
+
           EOF
-          
+
           # Add service table
           python3 << 'EOF'
-import json
+          import json
 
-with open("docs/api-specs/registry.json") as f:
-    registry = json.load(f)
+          with open("docs/api-specs/registry.json") as f:
+              registry = json.load(f)
 
-with open("docs/api-specs/README.md", "a") as f:
-    f.write("| Service | Version | Endpoints | Schemas | Documentation |\n")
-    f.write("|---------|---------|-----------|---------|---------------|\n")
-    
-    for service_name, info in registry["services"].items():
-        f.write(f"| [{info['title']}](./{service_name}/) | {info['version']} | {info['paths_count']} | {info['schemas_count']} | [View]({info['docs_url']}) |\n")
-    
-    f.write(f"\n**Last Updated:** {registry['generated']}\n\n")
-    f.write("## Quick Links\n\n")
-    
-    for service_name, info in registry["services"].items():
-        f.write(f"- **{info['title']}**\n")
-        f.write(f"  - [OpenAPI Spec]({info['spec_url']})\n")
-        f.write(f"  - [Documentation]({info['docs_url']})\n")
-        f.write(f"  - Description: {info['description']}\n\n")
-    
-    f.write("## Usage\n\n")
-    f.write("### Import into API Tools\n")
-    f.write("- **Postman**: Import OpenAPI specs directly\n")
-    f.write("- **Insomnia**: Use OpenAPI import feature\n")
-    f.write("- **curl**: Generate requests from specs\n")
-    f.write("- **SDKs**: Generate client libraries\n\n")
-    
-    f.write("### Automation\n\n")
-    f.write("These specifications are automatically:\n")
-    f.write("- Extracted on code changes\n")
-    f.write("- Validated for correctness\n")
-    f.write("- Updated in documentation portals\n")
-    f.write("- Used for API testing\n")
+          with open("docs/api-specs/README.md", "a") as f:
+              f.write("| Service | Version | Endpoints | Schemas | Documentation |\n")
+              f.write("|---------|---------|-----------|---------|---------------|\n")
+
+              for service_name, info in registry["services"].items():
+                  f.write(f"| [{info['title']}](./{service_name}/) | {info['version']} | {info['paths_count']} | {info['schemas_count']} | [View]({info['docs_url']}) |\n")
+
+              f.write(f"\n**Last Updated:** {registry['generated']}\n\n")
+              f.write("## Quick Links\n\n")
+
+              for service_name, info in registry["services"].items():
+                  f.write(f"- **{info['title']}**\n")
+                  f.write(f"  - [OpenAPI Spec]({info['spec_url']})\n")
+                  f.write(f"  - [Documentation]({info['docs_url']})\n")
+                  f.write(f"  - Description: {info['description']}\n\n")
+
+              f.write("## Usage\n\n")
+              f.write("### Import into API Tools\n")
+              f.write("- **Postman**: Import OpenAPI specs directly\n")
+              f.write("- **Insomnia**: Use OpenAPI import feature\n")
+              f.write("- **curl**: Generate requests from specs\n")
+              f.write("- **SDKs**: Generate client libraries\n\n")
+
+              f.write("### Automation\n\n")
+              f.write("These specifications are automatically:\n")
+              f.write("- Extracted on code changes\n")
+              f.write("- Validated for correctness\n")
+              f.write("- Updated in documentation portals\n")
+              f.write("- Used for API testing\n")
           EOF
 
       - name: Create PR comment with changes
@@ -467,12 +467,12 @@ with open("docs/api-specs/README.md", "a") as f:
           script: |
             const fs = require('fs');
             let comment = '## 📋 API Specification Extraction Report\n\n';
-            
+
             const services = ${{ needs.detect-changes.outputs.changed_services }};
-            
+
             if (services.length > 0) {
               comment += `**Services processed:** ${services.join(', ')}\n\n`;
-              
+
               // Check for individual service changes
               for (const service of services) {
                 const changeFile = `artifacts/spec-changes-${service}/spec_changes.md`;
@@ -481,7 +481,7 @@ with open("docs/api-specs/README.md", "a") as f:
                   comment += changes + '\n\n';
                 }
               }
-              
+
               comment += '### 📊 Summary\n\n';
               comment += `- **Services:** ${services.length}\n`;
               comment += '- **Validation:** ✅ All specifications validated\n';
@@ -490,7 +490,7 @@ with open("docs/api-specs/README.md", "a") as f:
             } else {
               comment += '**No API changes detected** - No specification extraction needed.\n';
             }
-            
+
             github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -525,13 +525,13 @@ with open("docs/api-specs/README.md", "a") as f:
         run: |
           # Install Redocly CLI
           npm install -g @redocly/cli
-          
+
           # Upload each OpenAPI spec to Redocly
           for spec_file in docs/api-specs/*/openapi.json; do
             if [ -f "$spec_file" ]; then
               service_name=$(dirname "$spec_file" | xargs basename)
               echo "Uploading $service_name to Redocly..."
-              
+
               redocly push "$spec_file" \
                 --organization arrakis \
                 --name "$service_name" \
@@ -546,28 +546,28 @@ with open("docs/api-specs/README.md", "a") as f:
           for service in ${{ needs.detect-changes.outputs.all_services }}; do
             if [ -f "$service/catalog-info.yaml" ] && [ -f "docs/api-specs/$service/openapi.json" ]; then
               echo "Updating catalog for $service"
-              
+
               # Update API spec reference in catalog
               python3 << EOF
-import yaml
-import json
+              import yaml
+              import json
 
-# Load catalog
-with open('$service/catalog-info.yaml') as f:
-    catalog = yaml.safe_load(f)
+              # Load catalog
+              with open('$service/catalog-info.yaml') as f:
+                  catalog = yaml.safe_load(f)
 
-# Update spec reference
-if 'spec' not in catalog:
-    catalog['spec'] = {}
-if 'definition' not in catalog['spec']:
-    catalog['spec']['definition'] = {}
+              # Update spec reference
+              if 'spec' not in catalog:
+                  catalog['spec'] = {}
+              if 'definition' not in catalog['spec']:
+                  catalog['spec']['definition'] = {}
 
-catalog['spec']['definition']['$text'] = './openapi.json'
+              catalog['spec']['definition']['$text'] = './openapi.json'
 
-# Save catalog
-with open('$service/catalog-info.yaml', 'w') as f:
-    yaml.dump(catalog, f, default_flow_style=False)
-EOF
+              # Save catalog
+              with open('$service/catalog-info.yaml', 'w') as f:
+                  yaml.dump(catalog, f, default_flow_style=False)
+              EOF
             fi
           done
 
@@ -575,19 +575,19 @@ EOF
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          
+
           git add docs/api-specs/
           git add */catalog-info.yaml
-          
+
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
             git commit -m "chore: update API specifications [skip ci]
 
             Auto-extracted specifications for: ${{ join(fromJson(needs.detect-changes.outputs.changed_services), ', ') }}
-            
+
             🤖 Generated with [Claude Code](https://claude.ai/code)
-            
+
             Co-Authored-By: Claude <noreply@anthropic.com>"
             git push
           fi
@@ -602,9 +602,9 @@ EOF
           if [ "$STATUS" != "success" ]; then
             COLOR="danger"
           fi
-          
+
           SERVICES="${{ join(fromJson(needs.detect-changes.outputs.changed_services), ', ') }}"
-          
+
           curl -X POST -H 'Content-type: application/json' \
             --data "{
               \"attachments\": [{

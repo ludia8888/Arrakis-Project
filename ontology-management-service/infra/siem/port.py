@@ -2,8 +2,8 @@
 SIEM Port Interface (의존성 역전을 위한 Protocol)
 Core 레이어가 의존하는 인터페이스 정의
 """
-from typing import Protocol, Dict, Any, List, Optional
 from abc import abstractmethod
+from typing import Any, Dict, List, Optional, Protocol
 
 
 class ISiemPort(Protocol):

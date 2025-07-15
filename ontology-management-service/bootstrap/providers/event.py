@@ -4,9 +4,11 @@ Uses event gateway stub to support both local and microservice modes.
 """
 
 import os
-from shared.event_gateway_stub import get_event_gateway_stub, EventGatewayStub
-from .base import Provider
+
 from arrakis_common import get_logger
+from shared.event_gateway_stub import EventGatewayStub, get_event_gateway_stub
+
+from .base import Provider
 
 logger = get_logger(__name__)
 
@@ -22,7 +24,8 @@ class EventProvider(Provider[EventGatewayStub]):
  """Provide event gateway stub instance."""
  if not self._stub:
  self._stub = get_event_gateway_stub()
- mode = "microservice" if os.getenv("USE_EVENT_GATEWAY", "false").lower() == "true" else "local"
+ mode = "microservice" if os.getenv("USE_EVENT_GATEWAY",
+     "false").lower() == "true" else "local"
  logger.info(f"Event gateway provider initialized in {mode} mode")
  return self._stub
 

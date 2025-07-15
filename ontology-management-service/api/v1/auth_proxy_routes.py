@@ -2,14 +2,14 @@
 Authentication Proxy Routes
 OMS Monolith에서 User Service로의 인증 프록시 엔드포인트
 """
-from typing import Optional, Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, status, Request, Form
+from typing import Any, Dict, Optional
+
+from arrakis_common import get_logger
+from core.monitoring.audit_metrics import record_audit_service_request
+from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr, constr
-
 from shared.user_service_client import get_user_service_client
-from core.monitoring.audit_metrics import record_audit_service_request
-from arrakis_common import get_logger
 
 logger = get_logger(__name__)
 router = APIRouter()

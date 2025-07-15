@@ -1,11 +1,12 @@
 """
 Base health check interface
 """
+import logging
 import time
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
+
 from ..models import HealthCheckResult, HealthStatus
-import logging
 
 logger = logging.getLogger(__name__)
 

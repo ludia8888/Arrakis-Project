@@ -15,23 +15,23 @@ HAS_ORJSON = True
 
 from arrakis_common import get_logger
 from core.validation.naming_convention import (
- EntityType,
- NamingConvention,
- NamingPattern,
- NamingRule,
+    EntityType,
+    NamingConvention,
+    NamingPattern,
+    NamingRule,
 )
 from core.validation.naming_history import get_naming_history_service
 from core.validation.schema_validator import (
- SchemaValidationError,
- get_schema_validator,
- validate_external_naming_convention,
+    SchemaValidationError,
+    get_schema_validator,
+    validate_external_naming_convention,
 )
 from core.validation.version_manager import (
- VersionCompatibility,
- add_file_version,
- check_file_compatibility,
- get_version_manager,
- migrate_file_if_needed,
+    VersionCompatibility,
+    add_file_version,
+    check_file_compatibility,
+    get_version_manager,
+    migrate_file_if_needed,
 )
 
 logger = get_logger(__name__)
@@ -426,11 +426,11 @@ class NamingConfigService:
  "for",
  "function",
  "goto",
- "if",
+ "i",
  "implements",
  "import",
  "in",
- "instanceof",
+ "instanceo",
  "int",
  "interface",
  "let",
@@ -454,7 +454,7 @@ class NamingConfigService:
  "transient",
  "true",
  "try",
- "typeof",
+ "typeo",
  "var",
  "void",
  "volatile",
@@ -468,9 +468,9 @@ class NamingConfigService:
  "async",
  "await",
  "class",
- "def",
+ "de",
  "del",
- "elif",
+ "eli",
  "except",
  "exec",
  "from",

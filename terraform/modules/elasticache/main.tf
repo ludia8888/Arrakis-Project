@@ -235,7 +235,7 @@ resource "aws_elasticache_replication_group" "main" {
   engine               = "redis"
   engine_version       = each.value.engine_version
   num_cache_clusters   = each.value.num_cache_nodes
-  
+
   # Network Configuration
   subnet_group_name    = aws_elasticache_subnet_group.main.name
   security_group_ids   = [aws_security_group.elasticache.id]
@@ -243,7 +243,7 @@ resource "aws_elasticache_replication_group" "main" {
   # High Availability Configuration
   multi_az_enabled           = each.value.multi_az_enabled
   automatic_failover_enabled = each.value.automatic_failover_enabled
-  
+
   # Cluster Mode Configuration
   num_node_groups         = each.value.num_node_groups
   replicas_per_node_group = each.value.replicas_per_node_group
@@ -463,9 +463,9 @@ resource "aws_elasticache_global_replication_group" "main" {
 
   global_replication_group_id_suffix = "${var.project_name}-${each.key}-global-${var.environment}"
   primary_replication_group_id        = aws_elasticache_replication_group.main[each.key].replication_group_id
-  
+
   global_replication_group_description = "Global replication group for ${each.key}"
-  
+
   # Configuration
   cache_node_type                = each.value.node_type
   engine_version                 = each.value.engine_version
@@ -473,10 +473,10 @@ resource "aws_elasticache_global_replication_group" "main" {
   transit_encryption_enabled     = each.value.transit_encryption_enabled
   auth_token_enabled             = each.value.auth_token_enabled
   automatic_failover_enabled     = each.value.automatic_failover_enabled
-  
+
   # Parameter Group
   parameter_group_name = aws_elasticache_parameter_group.main[each.key].name
-  
+
   # Global Datastore
   global_node_groups {
     global_node_group_id = "${var.project_name}-${each.key}-global-node-${var.environment}"

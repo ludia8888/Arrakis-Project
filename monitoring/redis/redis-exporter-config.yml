@@ -5,20 +5,20 @@ redis:
   # Redis connection details
   addr: "redis://redis:6379"
   password: ""
-  
+
   # Monitoring settings
   check-keys: "*"
-  check-single-keys: 
+  check-single-keys:
     - "circuit_breaker:*"
     - "cache:*"
     - "oms:cache:*"
-  
+
   # Export settings
   namespace: "redis"
-  
+
   # Connection pool monitoring
   connection-timeout: "15s"
-  
+
   # Metrics to expose
   metrics:
     - connections
@@ -30,7 +30,7 @@ redis:
     - commandstats
     - cluster
     - keyspace
-    
+
 # Circuit breaker specific metrics
 circuit_breaker_metrics:
   enabled: true
@@ -39,7 +39,7 @@ circuit_breaker_metrics:
     - "circuit_breaker:*:failures"
     - "circuit_breaker:*:successes"
     - "circuit_breaker:*:last_failure"
-    
+
 # Cache metrics
 cache_metrics:
   enabled: true

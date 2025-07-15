@@ -3,16 +3,17 @@
 Clean up TODO/FIXME/HACK/XXX comments by creating GitHub issues
 and updating the code with issue references
 """
+import json
 import os
 import re
-from pathlib import Path
-from typing import List, Tuple, Dict
 from datetime import datetime
-import json
+from pathlib import Path
+from typing import Dict, List, Tuple
 
 
 class TodoComment:
- def __init__(self, file_path: str, line_num: int, comment_type: str, content: str, context: str = ""):
+ def __init__(self, file_path: str, line_num: int, comment_type: str, content: str,
+     context: str = ""):
  self.file_path = file_path
  self.line_num = line_num
  self.comment_type = comment_type # TODO, FIXME, HACK, XXX
@@ -51,7 +52,8 @@ def find_todo_comments(directory: str = ".") -> List[TodoComment]:
 
  for root, dirs, filenames in os.walk(directory):
  # Skip directories
- dirs[:] = [d for d in dirs if d not in ['venv', '.venv', '__pycache__', '.git', 'archive_*']]
+ dirs[:] = [d for d in dirs if d not in ['venv', '.venv', '__pycache__', '.git',
+     'archive_*']]
 
  for filename in filenames:
  if filename.endswith('.py'):
@@ -95,7 +97,7 @@ def find_todo_comments(directory: str = ".") -> List[TodoComment]:
 
 def create_issue_template(comment: TodoComment) -> str:
  """Create GitHub issue template for a TODO comment"""
- template = f"""## {comment.comment_type}: {comment.content}
+ template = """## {comment.comment_type}: {comment.content}
 
 **File**: `{comment.file_path}`
 **Line**: {comment.line_num}
@@ -123,7 +125,7 @@ This issue was automatically created from a {comment.comment_type} comment in th
 
 def generate_report(comments: List[TodoComment]) -> str:
  """Generate a summary report of all TODO comments"""
- report = f"""# TODO Comments Report
+ report = """# TODO Comments Report
 Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 Total comments found: {len(comments)}
 
@@ -165,7 +167,8 @@ Total comments found: {len(comments)}
  return report
 
 
-def export_to_json(comments: List[TodoComment], output_file: str = "todo_comments.json"):
+def export_to_json(comments: List[TodoComment],
+    output_file: str = "todo_comments.json"):
  """Export comments to JSON for further processing"""
  data = {
  "generated_at": datetime.now().isoformat(),
@@ -213,7 +216,8 @@ def main():
  with open(issue_file, 'w') as f:
  f.write(issue_content)
 
- print(f"Created {min(len(high_priority), 10)} GitHub issue templates in github_issues/")
+ print(f"Created {min(len(high_priority),
+     10)} GitHub issue templates in github_issues/")
 
  # Summary
  print("\nSummary:")

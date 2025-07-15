@@ -1,7 +1,8 @@
 """Database client protocol"""
 
-from typing import Protocol, Any, Dict, List, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Protocol
+
 
 class DatabaseClientProtocol(Protocol):
  """Protocol for database client implementations"""
@@ -30,10 +31,13 @@ class DatabaseClientProtocol(Protocol):
  """Delete schema"""
  ...
 
- async def list_schemas(self, filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+ async def list_schemas(self, filters: Optional[Dict[str, Any]] = None) -> List[Dict[str,
+
+     Any]]:
  """List all schemas with optional filters"""
  ...
 
- async def execute_query(self, query: str, params: Optional[Dict[str, Any]] = None) -> Any:
+ async def execute_query(self, query: str, params: Optional[Dict[str,
+     Any]] = None) -> Any:
  """Execute raw database query"""
  ...

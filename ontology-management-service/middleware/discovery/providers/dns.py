@@ -7,10 +7,10 @@ import socket
 from typing import Any, Dict, List, Optional
 
 from ..models import (
- ServiceEndpoint,
- ServiceInstance,
- ServiceRegistration,
- ServiceStatus,
+    ServiceEndpoint,
+    ServiceInstance,
+    ServiceRegistration,
+    ServiceStatus,
 )
 from .base import DiscoveryProvider
 

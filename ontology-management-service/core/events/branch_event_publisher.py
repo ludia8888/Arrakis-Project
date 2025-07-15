@@ -2,10 +2,11 @@
 Branch Event Publisher Adapter
 Provides domain-specific event publishing methods for branch service
 """
-from typing import Optional, Dict, Any
-from core.events.unified_publisher import UnifiedEventPublisher
-from core.events.backends.cloudevents_enhanced import CloudEventBuilder, EventType
+from typing import Any, Dict, Optional
+
 from arrakis_common import get_logger
+from core.events.backends.cloudevents_enhanced import CloudEventBuilder, EventType
+from core.events.unified_publisher import UnifiedEventPublisher
 
 logger = get_logger(__name__)
 

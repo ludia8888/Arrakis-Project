@@ -2,21 +2,21 @@
 FastAPI 의존성 주입 설정
 Validation 서비스를 위한 DI 구성
 """
-from typing import Annotated, Optional
-from fastapi import Depends
 import os
+from typing import Annotated, Optional
 
-from core.validation.ports import CachePort, TerminusPort, EventPort
-from core.validation.container import ValidationContainer, get_container
-from core.validation.service import ValidationService
 from core.validation.adapters import (
- MockCacheAdapter,
- MockTerminusAdapter,
- MockEventAdapter,
- SmartCacheAdapter,
- TerminusDBAdapter,
- EventPublisherAdapter
+    EventPublisherAdapter,
+    MockCacheAdapter,
+    MockEventAdapter,
+    MockTerminusAdapter,
+    SmartCacheAdapter,
+    TerminusDBAdapter,
 )
+from core.validation.container import ValidationContainer, get_container
+from core.validation.ports import CachePort, EventPort, TerminusPort
+from core.validation.service import ValidationService
+from fastapi import Depends
 
 
 # 환경별 설정

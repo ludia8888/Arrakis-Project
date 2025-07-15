@@ -1,15 +1,22 @@
 """
 Commit Hook Pipeline - Central coordination of validators and sinks
 """
-import os
 import asyncio
 import logging
-from typing import List, Dict, Any, Optional
+import os
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from .base import BaseValidator, BaseSink, BaseHook, DiffContext, CommitMeta, ValidationError
-from .validators import RuleValidator, TamperValidator, SchemaValidator, PIIValidator
-from .sinks import NATSSink, AuditSink, WebhookSink, MetricsSink
+from .base import (
+    BaseHook,
+    BaseSink,
+    BaseValidator,
+    CommitMeta,
+    DiffContext,
+    ValidationError,
+)
+from .sinks import AuditSink, MetricsSink, NATSSink, WebhookSink
+from .validators import PIIValidator, RuleValidator, SchemaValidator, TamperValidator
 
 logger = logging.getLogger(__name__)
 
@@ -147,7 +154,7 @@ class CommitHookPipeline:
 
  @classmethod
  def _build_context(cls, meta: CommitMeta, diff: Dict[str, Any]) -> DiffContext:
- """Build diff context from commit metadata and diff"""
+ """Build diff context from commit metadata and dif"""
  # Extract before/after if available
  before = diff.get("before")
  after = diff.get("after")
@@ -187,7 +194,7 @@ class CommitHookPipeline:
  if diff_size > cls._max_diff_size:
  # Log critical security event for validation bypass
  logger.critical(
- f"VALIDATION_BYPASS_SIZE: Skipping validation due to large diff size. "
+ "VALIDATION_BYPASS_SIZE: Skipping validation due to large diff size. "
  f"Size: {diff_size} bytes (limit: {cls._max_diff_size}), "
  f"Author: {context.meta.author}, Branch: {context.meta.branch}, "
  f"Trace ID: {context.meta.trace_id}"

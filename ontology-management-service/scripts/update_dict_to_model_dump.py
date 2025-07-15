@@ -7,12 +7,14 @@ import re
 from pathlib import Path
 from typing import List
 
+
 def find_files_with_dict_method(directory: str = ".") -> List[Path]:
  """Find all Python files containing '.model_dump()'"""
  files = []
  for root, dirs, filenames in os.walk(directory):
  # Skip virtual environments and cache directories
- dirs[:] = [d for d in dirs if d not in ['venv', '.venv', '__pycache__', '.git', 'archive_*']]
+ dirs[:] = [d for d in dirs if d not in ['venv', '.venv', '__pycache__', '.git',
+     'archive_*']]
 
  for filename in filenames:
  if filename.endswith('.py'):

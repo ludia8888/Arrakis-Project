@@ -16,8 +16,8 @@ from opentelemetry.instrumentation.redis import RedisInstrumentor
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import (
- ConsoleMetricExporter,
- PeriodicExportingMetricReader,
+    ConsoleMetricExporter,
+    PeriodicExportingMetricReader,
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider

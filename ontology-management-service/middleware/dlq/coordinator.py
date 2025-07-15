@@ -2,20 +2,17 @@
 DLQ coordinator - Facade for DLQ components
 """
 import asyncio
-from typing import Dict, Any, Optional, List, Callable
-from datetime import datetime, timedelta
 import logging
+from datetime import datetime, timedelta
+from typing import Any, Callable, Dict, List, Optional
 
-from .models import (
- DLQMessage, MessageStatus, RetryConfig,
- DLQMetrics
-)
-from .storage.redis import RedisMessageStore
-from .handler import DLQHandler
-from .detector import PoisonMessageDetector
-from .deduplicator import MessageDeduplicator
 from ..common.metrics import MetricsCollector
 from ..common.redis_utils import RedisKeyPatterns
+from .deduplicator import MessageDeduplicator
+from .detector import PoisonMessageDetector
+from .handler import DLQHandler
+from .models import DLQMessage, DLQMetrics, MessageStatus, RetryConfig
+from .storage.redis import RedisMessageStore
 
 logger = logging.getLogger(__name__)
 

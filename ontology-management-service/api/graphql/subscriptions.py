@@ -131,7 +131,8 @@ class Subscription:
 
  # 각 필터 주제에 대해 구독
  for filter_subject in filter_subjects:
- consumer_name = f"graphql_schema_{subscription_id}_{filter_subject.replace('.', '_').replace('>', 'all')}"
+ consumer_name = f"graphql_schema_{subscription_id}_{filter_subject.replace('.',
+     '_').replace('>', 'all')}"
  await realtime_publisher.subscribe_to_stream(
  "OMS_SCHEMA_EVENTS",
  consumer_name,
@@ -212,7 +213,8 @@ class Subscription:
 
  # 구독 설정
  for filter_subject in filter_subjects:
- consumer_name = f"graphql_branch_{subscription_id}_{filter_subject.replace('.', '_').replace('>', 'all')}"
+ consumer_name = f"graphql_branch_{subscription_id}_{filter_subject.replace('.',
+     '_').replace('>', 'all')}"
  await realtime_publisher.subscribe_to_stream(
  "OMS_BRANCH_EVENTS",
  consumer_name,
@@ -296,7 +298,8 @@ class Subscription:
 
  # 구독 설정
  for filter_subject in filter_subjects:
- consumer_name = f"graphql_proposal_{subscription_id}_{filter_subject.replace('.', '_').replace('>', 'all')}"
+ consumer_name = f"graphql_proposal_{subscription_id}_{filter_subject.replace('.',
+     '_').replace('>', 'all')}"
  await realtime_publisher.subscribe_to_stream(
  "OMS_PROPOSAL_EVENTS",
  consumer_name,
@@ -411,7 +414,8 @@ class Subscription:
 
  # 구독 설정
  for filter_subject in filter_subjects:
- consumer_name = f"graphql_action_{subscription_id}_{filter_subject.replace('.', '_').replace('>', 'all')}"
+ consumer_name = f"graphql_action_{subscription_id}_{filter_subject.replace('.',
+     '_').replace('>', 'all')}"
  await realtime_publisher.subscribe_to_stream(
  "OMS_ACTION_EVENTS",
  consumer_name,

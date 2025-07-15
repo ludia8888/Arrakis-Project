@@ -11,16 +11,16 @@ from uuid import uuid4
 from arrakis_common import get_logger
 from core.auth_utils import UserContext
 from models.branch_state import (
- BranchLock,
- BranchState,
- BranchStateInfo,
- BranchStateTransition,
- HeartbeatRecord,
- LockScope,
- LockType,
- is_lock_expired_by_heartbeat,
- is_lock_expired_by_ttl,
- is_valid_transition,
+    BranchLock,
+    BranchState,
+    BranchStateInfo,
+    BranchStateTransition,
+    HeartbeatRecord,
+    LockScope,
+    LockType,
+    is_lock_expired_by_heartbeat,
+    is_lock_expired_by_ttl,
+    is_valid_transition,
 )
 
 logger = get_logger(__name__)
@@ -342,7 +342,7 @@ class BranchLockManager:
  )
  logger.warning(
  f"Full branch lock requested for {branch_name} by {locked_by}. "
- f"This may significantly impact developer productivity."
+ "This may significantly impact developer productivity."
  )
  lock_id = await self.acquire_lock(
  branch_name = branch_name,
@@ -388,7 +388,7 @@ class BranchLockManager:
  except LockConflictError as e:
  logger.warning(
  f"Could not lock {resource_type} in {branch_name}: {e}. "
- f"Continuing with other resource types."
+ "Continuing with other resource types."
  )
  # Continue with other resource types - partial indexing is allowed
 
@@ -413,7 +413,7 @@ class BranchLockManager:
  # For resource-type locks, don't change branch state - editing can continue
  logger.info(
  f"Resource-type indexing locks acquired for {branch_name}. "
- f"Branch remains ACTIVE - editing other resources is allowed."
+ "Branch remains ACTIVE - editing other resources is allowed."
  )
 
  await self._store_branch_state(branch_state)
@@ -843,7 +843,8 @@ class BranchLockManager:
  merge_result = await response.json()
  merge_commit = merge_result.get("merge_commit_id")
  logger.info(
- f"Merge operation completed: {source_branch} -> {target_branch}, commit: {merge_commit}"
+ f"Merge operation completed: {source_branch} -> {target_branch},
+     commit: {merge_commit}"
  )
 
  # Verify merge was successful
@@ -945,7 +946,8 @@ class BranchLockManager:
  conflicts = conflict_data.get("conflicts", [])
  for conflict in conflicts[:5]: # Log first 5 conflicts
  logger.warning(
- f"Conflict in {conflict.get('file_path', 'unknown')}: {conflict.get('type', 'unknown')}"
+ f"Conflict in {conflict.get('file_path', 'unknown')}: {conflict.get('type',
+     'unknown')}"
  )
 
  return has_conflicts
@@ -1146,7 +1148,8 @@ class BranchLockManager:
  protected_branches = ["main", "master", "production", "staging"]
  if branch_name in protected_branches:
  logger.warning(
- f"Protected branch {branch_name} requires approval but status unknown, denying auto-merge"
+ f"Protected branch {branch_name} requires approval but status unknown,
+     denying auto-merge"
  )
  return {
  "approved": False,
@@ -1275,7 +1278,7 @@ class BranchLockManager:
  """Send email notification about merge"""
  try:
  subject = f"Auto-merge {status}: {source_branch} → {target_branch}"
- body = f"""
+ body = """
 Auto-merge operation completed with status: {status}
 
 Source Branch: {source_branch}

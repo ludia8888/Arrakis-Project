@@ -9,13 +9,13 @@ repos:
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-yaml
-        args: ['--allow-multiple-documents']
+        args: ["--allow-multiple-documents"]
       - id: check-json
       - id: check-merge-conflict
       - id: check-added-large-files
-        args: ['--maxkb=1000']
+        args: ["--maxkb=1000"]
       - id: mixed-line-ending
-        args: ['--fix=lf']
+        args: ["--fix=lf"]
 
   # Python linting and formatting
   - repo: https://github.com/psf/black
@@ -35,14 +35,14 @@ repos:
     rev: 7.0.0
     hooks:
       - id: flake8
-        args: ['--max-line-length=88', '--extend-ignore=E203,W503']
+        args: ["--max-line-length=88", "--extend-ignore=E203,W503"]
 
   # Docker
   - repo: https://github.com/hadolint/hadolint
     rev: v2.12.0
     hooks:
       - id: hadolint-docker
-        args: ['--ignore', 'DL3008', '--ignore', 'DL3009']
+        args: ["--ignore", "DL3008", "--ignore", "DL3009"]
 
   # YAML formatting
   - repo: https://github.com/pre-commit/mirrors-prettier
@@ -50,7 +50,7 @@ repos:
     hooks:
       - id: prettier
         files: \.(yaml|yml)$
-        args: ['--tab-width=2']
+        args: ["--tab-width=2"]
 
   # Custom hooks for Arrakis Platform
   - repo: local
@@ -63,11 +63,11 @@ repos:
           - -c
           - |
             echo "🎨 Checking if architecture diagrams need updating..."
-            
+
             # Generate Mermaid diagrams
             if [[ -f "scripts/generate-mermaid-diagrams.py" ]]; then
               echo "🎨 Generating Mermaid diagrams..."
-              
+
               if python3 scripts/generate-mermaid-diagrams.py >/dev/null 2>&1; then
                 echo "✅ Mermaid diagrams updated successfully"
                 git add docs/diagrams/mermaid/ || true
@@ -75,18 +75,18 @@ repos:
                 echo "⚠️ Mermaid diagram generation failed, but continuing..."
               fi
             fi
-            
+
             # Check if infrastructure diagram generation script exists
             if [[ -f "scripts/infrastructure-diagrams/generate-diagrams.sh" ]]; then
               echo "📊 Regenerating infrastructure diagrams..."
-              
+
               # Make script executable
               chmod +x scripts/infrastructure-diagrams/generate-diagrams.sh
-              
+
               # Run diagram generation (suppress output for pre-commit)
               if ./scripts/infrastructure-diagrams/generate-diagrams.sh >/dev/null 2>&1; then
                 echo "✅ Infrastructure diagrams updated successfully"
-                
+
                 # Stage any generated diagram files
                 git add docs/diagrams/ || true
               else
@@ -101,7 +101,7 @@ repos:
         pass_filenames: false
         stages: [pre-commit]
         verbose: true
-        description: 'Auto-generate architecture diagrams when relevant files change'
+        description: "Auto-generate architecture diagrams when relevant files change"
 
       # Validate OpenAPI specs if they exist
       - id: validate-openapi-specs
@@ -128,7 +128,7 @@ repos:
               echo "Install with: npm install -g @redocly/cli"
             fi
         pass_filenames: true
-        description: 'Validate OpenAPI specifications with Redocly'
+        description: "Validate OpenAPI specifications with Redocly"
 
       # Check for secrets and sensitive information
       - id: check-secrets
@@ -140,7 +140,7 @@ repos:
           - -c
           - |
             echo "🔍 Checking for potential secrets..."
-            
+
             # Patterns to look for
             secret_patterns=(
               "password\s*=\s*['\"][^'\"]*['\"]"
@@ -150,7 +150,7 @@ repos:
               "private_key"
               "-----BEGIN.*PRIVATE KEY-----"
             )
-            
+
             found_secrets=false
             for file in "$@"; do
               for pattern in "${secret_patterns[@]}"; do
@@ -160,16 +160,16 @@ repos:
                 fi
               done
             done
-            
+
             if [ "$found_secrets" = true ]; then
               echo "❌ Potential secrets detected. Please review and remove them."
               echo "💡 Use environment variables or secret management systems instead."
               exit 1
             fi
-            
+
             echo "✅ No secrets detected"
         pass_filenames: true
-        description: 'Check for hardcoded secrets and sensitive information'
+        description: "Check for hardcoded secrets and sensitive information"
 
       # Validate docker-compose files
       - id: validate-docker-compose
@@ -192,7 +192,7 @@ repos:
               fi
             done
         pass_filenames: true
-        description: 'Validate Docker Compose file syntax'
+        description: "Validate Docker Compose file syntax"
 
       # Update package.json scripts when new scripts are added
       - id: sync-package-scripts
@@ -204,14 +204,14 @@ repos:
           - -c
           - |
             echo "📦 Checking package.json scripts..."
-            
+
             if [ -f "package.json" ]; then
               echo "✅ package.json exists and scripts are managed"
             else
               echo "⚠️  No package.json found"
             fi
         pass_filenames: false
-        description: 'Ensure package.json scripts are up to date'
+        description: "Ensure package.json scripts are up to date"
 
       # Enhanced Terraform validation
       - id: terraform-validate-enhanced
@@ -223,37 +223,37 @@ repos:
           - -c
           - |
             echo "🔍 Enhanced Terraform validation..."
-            
+
             # Find all Terraform directories
             tf_dirs=$(find . -name "*.tf" -type f | xargs dirname | sort -u)
-            
+
             for tf_dir in $tf_dirs; do
               echo "Validating Terraform in: $tf_dir"
               pushd "$tf_dir" > /dev/null
-              
+
               # Format check
               if ! terraform fmt -check=true -diff=true .; then
                 echo "❌ Terraform formatting issues in $tf_dir"
                 exit 1
               fi
-              
+
               # Initialize if needed
               if [[ ! -d ".terraform" ]]; then
                 terraform init -backend=false > /dev/null
               fi
-              
+
               # Validate
               if ! terraform validate; then
                 echo "❌ Terraform validation failed in $tf_dir"
                 exit 1
               fi
-              
+
               popd > /dev/null
             done
-            
+
             echo "✅ Enhanced Terraform validation passed"
         pass_filenames: false
-        description: 'Enhanced Terraform validation with formatting and syntax checks'
+        description: "Enhanced Terraform validation with formatting and syntax checks"
 
       # Python security audit
       - id: python-security-audit
@@ -265,10 +265,10 @@ repos:
           - -c
           - |
             echo "🔒 Running Python security audit..."
-            
+
             # Install security tools if not present
             pip install --quiet bandit safety semgrep || true
-            
+
             # Run bandit security scan
             echo "🔍 Running Bandit security scan..."
             if command -v bandit &> /dev/null; then
@@ -282,7 +282,7 @@ repos:
                 exit 1
               }
             fi
-            
+
             # Run safety check for known vulnerabilities
             echo "🛡️ Checking for known vulnerabilities..."
             if command -v safety &> /dev/null; then
@@ -292,10 +292,10 @@ repos:
                 exit 1
               }
             fi
-            
+
             echo "✅ Python security audit passed"
         pass_filenames: false
-        description: 'Comprehensive Python security audit with Bandit and Safety'
+        description: "Comprehensive Python security audit with Bandit and Safety"
 
       # Infrastructure secret scanning
       - id: infrastructure-secret-scan
@@ -307,7 +307,7 @@ repos:
           - -c
           - |
             echo "🔐 Scanning infrastructure files for secrets..."
-            
+
             # Enhanced secret patterns for infrastructure
             secret_patterns=(
               "aws_access_key_id\s*=\s*['\"][A-Z0-9]{20}['\"]"
@@ -323,7 +323,7 @@ repos:
               "database_password\s*=\s*['\"][^'\"]{8,}['\"]"
               "grafana_admin_password\s*=\s*['\"][^'\"]{8,}['\"]"
             )
-            
+
             found_secrets=false
             for file in "$@"; do
               if [[ -f "$file" ]]; then
@@ -337,16 +337,16 @@ repos:
                 done
               fi
             done
-            
+
             if [ "$found_secrets" = true ]; then
               echo "❌ Potential secrets detected in infrastructure files"
               echo "💡 Use variables, AWS Secrets Manager, or environment variables instead"
               exit 1
             fi
-            
+
             echo "✅ No secrets detected in infrastructure files"
         pass_filenames: true
-        description: 'Enhanced secret scanning for infrastructure files'
+        description: "Enhanced secret scanning for infrastructure files"
 
       # Kubernetes manifest validation
       - id: kubernetes-manifest-validation
@@ -358,7 +358,7 @@ repos:
           - -c
           - |
             echo "☸️ Validating Kubernetes manifests..."
-            
+
             # Install kubectl if not present (for validation)
             if ! command -v kubectl &> /dev/null; then
               echo "ℹ️ kubectl not found, installing for validation..."
@@ -366,19 +366,19 @@ repos:
               chmod +x kubectl
               sudo mv kubectl /usr/local/bin/ 2>/dev/null || mv kubectl ~/bin/ 2>/dev/null || true
             fi
-            
+
             validation_failed=false
             for file in "$@"; do
               if [[ -f "$file" ]]; then
                 echo "Validating: $file"
-                
+
                 # Basic YAML syntax check
                 if ! python3 -c "import yaml; yaml.safe_load(open('$file'))" 2>/dev/null; then
                   echo "❌ YAML syntax error in $file"
                   validation_failed=true
                   continue
                 fi
-                
+
                 # Kubernetes validation if kubectl is available
                 if command -v kubectl &> /dev/null; then
                   if ! kubectl apply --dry-run=client -f "$file" >/dev/null 2>&1; then
@@ -388,15 +388,15 @@ repos:
                 fi
               fi
             done
-            
+
             if [ "$validation_failed" = true ]; then
               echo "❌ Kubernetes manifest validation failed"
               exit 1
             fi
-            
+
             echo "✅ Kubernetes manifest validation passed"
         pass_filenames: true
-        description: 'Validate Kubernetes manifests for syntax and structure'
+        description: "Validate Kubernetes manifests for syntax and structure"
 
 # Configuration for specific tools
 ci:
@@ -405,8 +405,8 @@ ci:
 
     for more information, see https://pre-commit.ci
   autofix_prs: true
-  autoupdate_branch: ''
-  autoupdate_commit_msg: '🔄 [pre-commit.ci] pre-commit autoupdate'
+  autoupdate_branch: ""
+  autoupdate_commit_msg: "🔄 [pre-commit.ci] pre-commit autoupdate"
   autoupdate_schedule: weekly
   skip: []
   submodules: false

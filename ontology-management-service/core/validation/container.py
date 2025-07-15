@@ -2,19 +2,19 @@
 Dependency Injection Container for Validation Service
 의존성 주입 컨테이너 - 실제 구현체와 Port를 연결
 """
-from typing import Optional
 import logging
+from typing import Optional
 
-from core.validation.service import ValidationService
 from core.validation.adapters import (
- create_cache_adapter,
- create_terminus_adapter,
- create_event_adapter,
- MockCacheAdapter,
- MockTerminusAdapter,
- MockEventAdapter
+    MockCacheAdapter,
+    MockEventAdapter,
+    MockTerminusAdapter,
+    create_cache_adapter,
+    create_event_adapter,
+    create_terminus_adapter,
 )
 from core.validation.rule_registry import RuleRegistry
+from core.validation.service import ValidationService
 
 logger = logging.getLogger(__name__)
 
@@ -151,9 +151,9 @@ def create_validation_service_with_legacy_interface(
  레거시 코드 지원을 위한 래퍼 함수
  """
  from core.validation.adapters import (
- SmartCacheAdapter,
- TerminusDBAdapter,
- EventPublisherAdapter
+     EventPublisherAdapter,
+     SmartCacheAdapter,
+     TerminusDBAdapter,
  )
 
  # 어댑터 생성

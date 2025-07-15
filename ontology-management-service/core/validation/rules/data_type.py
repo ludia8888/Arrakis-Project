@@ -5,11 +5,11 @@ import logging
 from typing import Any, Dict, List, Optional
 
 from core.validation.models import (
- BreakingChange,
- ImpactEstimate,
- MigrationStrategy,
- Severity,
- ValidationContext,
+    BreakingChange,
+    ImpactEstimate,
+    MigrationStrategy,
+    Severity,
+    ValidationContext,
 )
 from core.validation.rules.base import BreakingChangeRule
 
@@ -163,6 +163,8 @@ class UniqueConstraintAdditionRule(BreakingChangeRule):
  resource_id = self._get_resource_id(old_schema),
  resource_name = object_type_name,
  description = f"Unique constraints added to existing fields: {', '.join(newly_unique)}",
+
+
  old_value = None,
  new_value={
  "uniqueFields": newly_unique
@@ -230,7 +232,8 @@ class IndexRemovalRule(BreakingChangeRule):
  resource_type = "ObjectType",
  resource_id = self._get_resource_id(old_schema),
  resource_name = object_type_name,
- description = f"Indexes removed (potential performance impact): {', '.join(removed_indexes)}",
+ description = f"Indexes removed (potential performance impact): {',
+     '.join(removed_indexes)}",
  old_value={
  "indexedFields": removed_indexes
  },

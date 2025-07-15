@@ -8,10 +8,10 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Set
 
 from core.validation.models import (
- BreakingChange,
- DataImpact,
- Severity,
- ValidationContext,
+    BreakingChange,
+    DataImpact,
+    Severity,
+    ValidationContext,
 )
 from core.validation.rules.base import BreakingChangeRule
 from database.clients.terminus_db import TerminusDBClient
@@ -84,10 +84,12 @@ class RequiredFieldRemovalRule(BreakingChangeRule):
  if hasattr(context, 'cache') and context.cache:
  cached_analysis = await context.cache.get(cache_key)
  if cached_analysis:
- return await self._create_breaking_change_from_cached(cached_analysis, old_schema, new_schema, context)
+ return await self._create_breaking_change_from_cached(cached_analysis, old_schema,
+     new_schema, context)
 
  # Required Field 분석 수행
- field_analysis = await self._analyze_required_field_changes(old_schema, new_schema, context)
+ field_analysis = await self._analyze_required_field_changes(old_schema, new_schema,
+     context)
 
  # 결과 캐싱 (P4 원칙)
  if hasattr(context, 'cache') and context.cache:
@@ -95,7 +97,8 @@ class RequiredFieldRemovalRule(BreakingChangeRule):
 
  # Breaking Change 여부 결정
  if field_analysis.removed_required_fields:
- return await self._create_breaking_change(field_analysis, old_schema, new_schema, context)
+ return await self._create_breaking_change(field_analysis, old_schema, new_schema,
+     context)
 
  return None
 
@@ -188,7 +191,7 @@ class RequiredFieldRemovalRule(BreakingChangeRule):
  try:
  for field in removed_fields:
  # 필드에 값이 있는 레코드 수 계산
- usage_query = f"""
+ usage_query = """
  SELECT (COUNT(?instance) AS ?usage_count)
  WHERE {{
  ?instance a <{object_type_name}> .
@@ -317,7 +320,7 @@ class RequiredFieldRemovalRule(BreakingChangeRule):
  try:
  for field in removed_fields:
  # 이 필드를 참조하는 LinkType들 조회
- dependency_query = f"""
+ dependency_query = """
  SELECT ?link_type ?source_type ?target_type
  WHERE {{
  ?link a LinkType .
@@ -378,7 +381,8 @@ class RequiredFieldRemovalRule(BreakingChangeRule):
  severity = self._determine_severity(analysis)
 
  # 데이터 영향도 계산
- data_impact = await self._calculate_data_impact(analysis, old_schema, new_schema, context)
+ data_impact = await self._calculate_data_impact(analysis, old_schema, new_schema,
+     context)
 
  # 설명 생성
  description = self._generate_description(analysis)
@@ -504,7 +508,8 @@ class RequiredFieldRemovalRule(BreakingChangeRule):
 
  return min(10, max(1, base_score))
 
- def _estimate_downtime(self, analysis: RequiredFieldAnalysis, affected_records: int) -> int:
+ def _estimate_downtime(self, analysis: RequiredFieldAnalysis,
+     affected_records: int) -> int:
  """예상 다운타임 계산 (분 단위)"""
 
  # 기본 다운타임: 데이터 정리 및 검증 시간
@@ -537,7 +542,8 @@ class RequiredFieldRemovalRule(BreakingChangeRule):
 
  # 비즈니스 중요 필드 위험
  if analysis.business_critical_fields:
- risks.append(f"Business critical fields affected: {', '.join(analysis.business_critical_fields)}")
+ risks.append(f"Business critical fields affected: {',
+     '.join(analysis.business_critical_fields)}")
 
  # 높은 사용률 필드 위험
  high_usage_fields = [
@@ -626,7 +632,8 @@ class RequiredFieldRemovalRule(BreakingChangeRule):
  # Foundry 메타데이터 필드 제거
  foundry_metadata_removed = analysis.removed_required_fields & self.FOUNDRY_METADATA_FIELDS
  if foundry_metadata_removed:
- compliance_issues.append(f"Foundry metadata fields removed: {', '.join(foundry_metadata_removed)}")
+ compliance_issues.append(f"Foundry metadata fields removed: {',
+     '.join(foundry_metadata_removed)}")
 
  # Foundry 의존성 위반
  critical_deps = [
@@ -656,7 +663,8 @@ class RequiredFieldRemovalRule(BreakingChangeRule):
  """캐시된 분석 결과로부터 Breaking Change 생성"""
 
  if cached_analysis.removed_required_fields:
- return await self._create_breaking_change(cached_analysis, old_schema, new_schema, context)
+ return await self._create_breaking_change(cached_analysis, old_schema, new_schema,
+     context)
  return None
 
 
@@ -709,7 +717,8 @@ class RequiredFieldAdditionRule(BreakingChangeRule):
  resource_type = "ObjectType",
  resource_id = self._get_resource_id(old_schema),
  resource_name = object_type_name,
- description = f"Required fields added to existing type: {', '.join(sorted(added_required))}",
+ description = f"Required fields added to existing type: {',
+     '.join(sorted(added_required))}",
  old_value = None,
  new_value={
  "requiredFields": list(added_required)
@@ -749,7 +758,7 @@ class RequiredFieldAdditionRule(BreakingChangeRule):
  ) -> int:
  """기존 레코드 수 계산"""
  try:
- count_query = f"""
+ count_query = """
  SELECT (COUNT(?instance) AS ?count)
  WHERE {{
  ?instance a <{object_type_name}> .

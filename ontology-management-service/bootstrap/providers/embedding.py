@@ -2,13 +2,19 @@
 Enhanced Embedding Service Provider with Multi-Provider Support
 Supports dependency injection and configuration-driven provider initialization
 """
-from typing import Optional, Dict, Any, List
-import os
 import asyncio
-from .base import Provider
-from shared.embedding_stub import get_embedding_stub, EmbeddingStub
-from shared.embedding_config import get_embedding_config, validate_embedding_config, ProviderConfig
+import os
+from typing import Any, Dict, List, Optional
+
 from arrakis_common import get_logger
+from shared.embedding_config import (
+    ProviderConfig,
+    get_embedding_config,
+    validate_embedding_config,
+)
+from shared.embedding_stub import EmbeddingStub, get_embedding_stub
+
+from .base import Provider
 
 logger = get_logger(__name__)
 

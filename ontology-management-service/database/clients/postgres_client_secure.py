@@ -4,10 +4,10 @@ This version includes protection against SQL injection vulnerabilities
 """
 import asyncio
 import re
-from typing import Dict, Any, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set
 
-from shared.database.postgres_connector import PostgresConnector
 from arrakis_common import get_logger
+from shared.database.postgres_connector import PostgresConnector
 
 logger = get_logger(__name__)
 
@@ -104,7 +104,8 @@ class PostgresClientSecure:
  raise ValueError(f"{param_name} must be non-negative, got {value}")
 
  if value > max_value:
- raise ValueError(f"{param_name} exceeds maximum allowed value of {max_value}, got {value}")
+ raise ValueError(f"{param_name} exceeds maximum allowed value of {max_value},
+     got {value}")
 
  return value
 
@@ -238,7 +239,8 @@ class PostgresClientSecure:
 
  return await self._connector.execute(query, params = params)
 
- async def execute_raw(self, query: str, params: Optional[Dict[str, Any]] = None) -> int:
+ async def execute_raw(self, query: str, params: Optional[Dict[str,
+     Any]] = None) -> int:
  """
  Execute a raw SQL query.
  WARNING: This method does not provide SQL injection protection.

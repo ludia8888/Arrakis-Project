@@ -1,6 +1,6 @@
 """
 PII Detection and Handling
-민감 정보 감지 및 처리를 위한 모듈
+Module for sensitive information detection and processing
 """
 import base64
 import copy
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class PIIType(Enum):
- """PII 타입 정의"""
+ """PII type definition"""
 
  EMAIL = "email"
  SSN = "ssn"
@@ -28,7 +28,7 @@ class PIIType(Enum):
  API_KEY = "api_key"
  PASSWORD = "password"
  DATE_OF_BIRTH = "date_of_birth"
- KOREAN_RRN = "korean_rrn" # 주민등록번호
+ KOREAN_RRN = "korean_rrn" # resident registration number
 
 
 @dataclass
@@ -61,11 +61,15 @@ class PIIHandler:
  PIIType.PHONE: r"\b(\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b",
  PIIType.CREDIT_CARD: r"\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b",
  PIIType.IP_ADDRESS: r"\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b",
+
+
  PIIType.AWS_KEY: r"\b(AKIA[0-9A-Z]{16})\b",
  PIIType.API_KEY: r"\b[A-Za-z0-9]{32,}\b", # 일반적인 API 키 패턴
  PIIType.PASSWORD: r"(password|passwd|pwd)[\s:=]+[\S]+",
  PIIType.DATE_OF_BIRTH: r"\b(0[1-9]|1[0-2])[-/](0[1-9]|[12][0-9]|3[01])[-/](19|20)\d{2}\b",
- PIIType.KOREAN_RRN: r"\b\d{6}[-]?[1-4]\d{6}\b", # 주민등록번호
+
+
+ PIIType.KOREAN_RRN: r"\b\d{6}[-]?[1-4]\d{6}\b", # resident registration number
  }
 
  # 필드명 기반 PII 감지
@@ -264,11 +268,11 @@ class PIIHandler:
  return f"user_{hash_value}@{domain}"
 
  elif match.pii_type == PIIType.PHONE:
- # 마지막 4자리만 표시
+ # last 4자리만 표시
  return f"***-***-{match.value[-4:]}" if len(match.value) >= 4 else "***"
 
  elif match.pii_type == PIIType.CREDIT_CARD:
- # 마지막 4자리만 표시
+ # last 4자리만 표시
  return (
  f"****-****-****-{match.value[-4:]}"
  if len(match.value) >= 4
@@ -315,7 +319,7 @@ class PIIHandler:
  return PIIType.API_KEY # 기본값
 
  def _set_value_by_path(self, data: Dict[str, Any], path: str, value: Any):
- """경로를 따라 값 설정"""
+ """경로를 따라 값 setting"""
  parts = path.split(".")
  current = data
 
@@ -329,7 +333,7 @@ class PIIHandler:
  return
  current = current[part]
 
- # 마지막 부분 설정
+ # last part setting
  last_part = parts[-1]
  if last_part.startswith("[") and last_part.endswith("]"):
  index = int(last_part[1:-1])

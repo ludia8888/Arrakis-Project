@@ -2,13 +2,14 @@
 Health checker for service instances
 """
 import asyncio
-import httpx
-from typing import Dict, List, Optional, Any
-from datetime import datetime, timedelta
 import logging
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
+import httpx
+from database.clients.unified_http_client import UnifiedHTTPClient, create_basic_client
 
 from .models import ServiceInstance, ServiceStatus
-from database.clients.unified_http_client import UnifiedHTTPClient, create_basic_client
 
 logger = logging.getLogger(__name__)
 

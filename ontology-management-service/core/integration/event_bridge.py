@@ -16,9 +16,9 @@ from ..events.cqrs_projections import CQRSCoordinator
 
 # Import existing systems (no duplication)
 from ..events.immutable_event_store import (
- EventType,
- ImmutableEvent,
- ImmutableEventStore,
+    EventType,
+    ImmutableEvent,
+    ImmutableEventStore,
 )
 from ..history.service import HistoryService
 from ..time_travel.service import TimeTravelQueryService
@@ -267,9 +267,9 @@ async def create_integrated_event_system(
  from ...middleware.event_state_store import EventStateStore
  from ...shared.messaging.real_nats_client import RealNATSClient
  from ..events.cqrs_projections import (
- CQRSCoordinator,
- ProjectionCheckpoint,
- SQLReadModelManager,
+     CQRSCoordinator,
+     ProjectionCheckpoint,
+     SQLReadModelManager,
  )
  from ..events.immutable_event_store import create_immutable_event_store
  from ..history.service import HistoryService

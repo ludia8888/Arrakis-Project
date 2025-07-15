@@ -6,38 +6,38 @@ rule_files:
   - "rules/*.yml"
 
 scrape_configs:
-  - job_name: 'oms'
+  - job_name: "oms"
     static_configs:
-      - targets: ['oms:8090']
+      - targets: ["oms:8090"]
         labels:
-          service: 'ontology-management-service'
+          service: "ontology-management-service"
 
-  - job_name: 'user-service'
+  - job_name: "user-service"
     static_configs:
-      - targets: ['user-service:8000']
+      - targets: ["user-service:8000"]
         labels:
-          service: 'user-service'
+          service: "user-service"
 
-  - job_name: 'audit-service'
+  - job_name: "audit-service"
     static_configs:
-      - targets: ['audit-service:8000']
+      - targets: ["audit-service:8000"]
         labels:
-          service: 'audit-service'
+          service: "audit-service"
 
-  - job_name: 'event-gateway'
+  - job_name: "event-gateway"
     static_configs:
-      - targets: ['event-gateway:8003']
+      - targets: ["event-gateway:8003"]
         labels:
-          service: 'event-gateway'
+          service: "event-gateway"
 
-  - job_name: 'redis'
+  - job_name: "redis"
     static_configs:
-      - targets: ['redis-exporter:9121']
+      - targets: ["redis-exporter:9121"]
         labels:
-          service: 'redis'
+          service: "redis"
 
-  - job_name: 'postgres'
+  - job_name: "postgres"
     static_configs:
-      - targets: ['postgres-exporter:9187']
+      - targets: ["postgres-exporter:9187"]
         labels:
-          service: 'postgres'
+          service: "postgres"

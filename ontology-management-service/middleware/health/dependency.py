@@ -1,8 +1,8 @@
 """
 Health dependency graph management
 """
-from typing import Dict, Set, List, Optional
 from collections import defaultdict
+from typing import Dict, List, Optional, Set
 
 
 class DependencyGraph:

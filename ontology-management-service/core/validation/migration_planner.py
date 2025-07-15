@@ -9,11 +9,11 @@ from datetime import datetime
 from typing import Any, Dict, List, Set
 
 from core.validation.models import (
- BreakingChange,
- MigrationOptions,
- MigrationPlan,
- MigrationStep,
- MigrationStrategy,
+    BreakingChange,
+    MigrationOptions,
+    MigrationPlan,
+    MigrationStep,
+    MigrationStrategy,
 )
 from database.clients.terminus_db import TerminusDBClient
 
@@ -107,7 +107,7 @@ class MigrationPlanner:
 
  for object_type in grouped_changes:
  # LinkType을 통한 의존성 확인
- query = f"""
+ query = """
  SELECT ?linkType ?targetType
  WHERE {{
  ?linkType a LinkType .

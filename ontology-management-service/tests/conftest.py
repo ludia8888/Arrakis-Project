@@ -160,12 +160,7 @@ def event_loop():
 def production_app_instance():
  """Create production FastAPI app instance for testing."""
  from bootstrap.app import create_app
- from bootstrap.config import (
- AppConfig,
- PostgresConfig,
- RedisConfig,
- TerminusDBConfig,
- )
+ from bootstrap.config import AppConfig, PostgresConfig, RedisConfig, TerminusDBConfig
 
  config = AppConfig(
  postgres = PostgresConfig(
@@ -363,7 +358,7 @@ def production_auth_headers(production_user_context):
  "scope": " ".join(production_user_context.metadata.get("scopes", [])),
  "exp": now + timedelta(hours = 1), # Longer expiry for production tests
  "iat": now,
- "nbf": now,
+ "nb": now,
  "iss": jwt_issuer,
  "aud": jwt_audience,
  "jti": f"prod-jwt-{int(now.timestamp())}",

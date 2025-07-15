@@ -3,27 +3,27 @@ Merge Tasks for Background Processing
 Handles branch merge operations asynchronously
 """
 import asyncio
-from typing import Dict, Any, Optional
+import traceback
+from contextlib import asynccontextmanager
 from datetime import datetime
+from typing import Any, Dict, Optional
+
+import structlog
+from arrakis_common import get_logger
+from bootstrap.providers.redis_provider import RedisProvider
 from celery import Task
 from celery.exceptions import SoftTimeLimitExceeded
-import structlog
-import traceback
-from redis.asyncio import Redis
-from contextlib import asynccontextmanager
-
-from workers.celery_app import app
-from models.job import Job, JobStatus, JobProgress
 from core.branch.foundry_branch_service import FoundryBranchService
-from core.validation.service import ValidationService
-from core.validation.models import ValidationRequest
-from core.validation.dependencies import get_validation_service_from_container
-from services.job_service import JobService
-from bootstrap.providers.redis_provider import RedisProvider
 from core.time_travel.service import get_time_travel_service
+from core.validation.dependencies import get_validation_service_from_container
+from core.validation.models import ValidationRequest
+from core.validation.service import ValidationService
 from core.versioning.version_service import get_version_service
 from database.clients.unified_database_client import get_unified_database_client
-from arrakis_common import get_logger
+from models.job import Job, JobProgress, JobStatus
+from redis.asyncio import Redis
+from services.job_service import JobService
+from workers.celery_app import app
 
 logger = get_logger(__name__)
 
@@ -44,7 +44,8 @@ class MergeTask(Task):
 
  async def initialize(self):
  """Initialize all required services by creating them directly."""
- if all([self.job_service, self.branch_service, self.validation_service, self.redis_client]):
+ if all([self.job_service, self.branch_service, self.validation_service,
+     self.redis_client]):
  return
 
  logger.debug("Initializing services for MergeTask directly...")
@@ -127,7 +128,8 @@ async def _async_branch_merge(task: MergeTask, job_id: str, proposal_id: str,
  logger.error(f"Job {job_id} not found, aborting task.")
  return
 
- await task.job_service.update_job_status(job_id = job_id, status = JobStatus.IN_PROGRESS)
+ await task.job_service.update_job_status(job_id = job_id,
+     status = JobStatus.IN_PROGRESS)
 
  source_branch = job.metadata.source_branch
  target_branch = job.metadata.target_branch
@@ -144,14 +146,16 @@ async def _async_branch_merge(task: MergeTask, job_id: str, proposal_id: str,
  if not source_info or not target_info:
  raise ValueError("Source or target branch not found")
 
- await task.update_progress(job_id, "acquiring_lock", 2, 6, f"Acquiring merge lock for '{target_branch}'")
+ await task.update_progress(job_id, "acquiring_lock", 2, 6,
+     f"Acquiring merge lock for '{target_branch}'")
 
  lock_key = f"merge:lock:{target_branch}"
  async with task.redis_client.lock(lock_key, timeout = 300, blocking = False) as lock:
  if not await lock.acquire():
  raise RuntimeError(f"Could not acquire lock for branch {target_branch}.")
 
- await task.update_progress(job_id, "validating_changes", 3, 6, "Scanning for breaking changes")
+ await task.update_progress(job_id, "validating_changes", 3, 6,
+     "Scanning for breaking changes")
  validation_request = ValidationRequest(
  source_branch = source_branch,
  target_branch = target_branch,
@@ -167,7 +171,8 @@ async def _async_branch_merge(task: MergeTask, job_id: str, proposal_id: str,
  )
  return
 
- await task.update_progress(job_id, "merging", 4, 6, f"Performing '{strategy_str}' merge")
+ await task.update_progress(job_id, "merging", 4, 6,
+     f"Performing '{strategy_str}' merge")
 
  if not parent_commit:
  raise ValueError("parent_commit_hash is required for a three-way merge")
@@ -192,7 +197,8 @@ async def _async_branch_merge(task: MergeTask, job_id: str, proposal_id: str,
  return final_result
 
  except Exception as e:
- logger.error(f"Merge task failed for job_id={job_id}. Error: {str(e)}", exc_info = True)
+ logger.error(f"Merge task failed for job_id={job_id}. Error: {str(e)}",
+     exc_info = True)
  if job and task.job_service:
  await task.job_service.fail_job(
  job_id = job_id,

@@ -48,43 +48,41 @@ Environment Variables:
  GOOGLE_CLOUD_PROJECT: Google Cloud project ID
 """
 
-from .service import VectorEmbeddingService
 from .providers import (
- EmbeddingProvider,
- EmbeddingConfig,
- EmbeddingProviderFactory as ProviderFactory,
- BaseEmbeddingProvider,
- OpenAIEmbeddingProvider,
- CohereEmbeddingProvider,
- HuggingFaceEmbeddingProvider,
- LocalSentenceTransformersProvider,
- AzureOpenAIEmbeddingProvider,
- GoogleVertexEmbeddingProvider,
- AnthropicEmbeddingProvider
+    AnthropicEmbeddingProvider,
+    AzureOpenAIEmbeddingProvider,
+    BaseEmbeddingProvider,
+    CohereEmbeddingProvider,
+    EmbeddingConfig,
+    EmbeddingProvider,
 )
+from .providers import EmbeddingProviderFactory as ProviderFactory
+from .providers import (
+    GoogleVertexEmbeddingProvider,
+    HuggingFaceEmbeddingProvider,
+    LocalSentenceTransformersProvider,
+    OpenAIEmbeddingProvider,
+)
+from .service import VectorEmbeddingService
 
 __all__ = [
- # Service
- "VectorEmbeddingService",
-
- # Configuration
- "EmbeddingProvider",
- "EmbeddingConfig",
-
- # Factory
- "ProviderFactory",
-
- # Base classes
- "BaseEmbeddingProvider",
-
- # Concrete providers
- "OpenAIEmbeddingProvider",
- "CohereEmbeddingProvider",
- "HuggingFaceEmbeddingProvider",
- "LocalSentenceTransformersProvider",
- "AzureOpenAIEmbeddingProvider",
- "GoogleVertexEmbeddingProvider",
- "AnthropicEmbeddingProvider"
+    # Service
+    "VectorEmbeddingService",
+    # Configuration
+    "EmbeddingProvider",
+    "EmbeddingConfig",
+    # Factory
+    "ProviderFactory",
+    # Base classes
+    "BaseEmbeddingProvider",
+    # Concrete providers
+    "OpenAIEmbeddingProvider",
+    "CohereEmbeddingProvider",
+    "HuggingFaceEmbeddingProvider",
+    "LocalSentenceTransformersProvider",
+    "AzureOpenAIEmbeddingProvider",
+    "GoogleVertexEmbeddingProvider",
+    "AnthropicEmbeddingProvider",
 ]
 
 # Version info

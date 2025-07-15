@@ -2,17 +2,21 @@
 Naming Convention Engine - 간단하고 효과적인 접근
 복잡한 약어 처리를 단순화
 """
-import re
-from typing import List, Dict, Optional, Tuple, Set
-from enum import Enum
-from datetime import datetime
 import logging
-from pydantic import BaseModel, Field, field_validator
+import re
+from datetime import datetime
+from enum import Enum
+from typing import Dict, List, Optional, Set, Tuple
 
 from core.validation.naming_convention import (
- EntityType, NamingPattern, NamingRule, NamingConvention,
- ValidationIssue, NamingValidationResult
+    EntityType,
+    NamingConvention,
+    NamingPattern,
+    NamingRule,
+    NamingValidationResult,
+    ValidationIssue,
 )
+from pydantic import BaseModel, Field, field_validator
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +102,9 @@ class ProductionNamingEngine:
  self.validation_count = 0
  self.cache_hit_count = 0
 
- logger.info(f"ProductionNamingEngine initialized with {len(self.active_acronyms)} acronyms, "
+ logger.info(f"ProductionNamingEngine initialized with {len(self.active_acronyms)} acronyms,
+
+     "
  f"caching={'enabled' if enable_caching else 'disabled'}, "
  f"strict_mode={strict_mode}")
 
@@ -151,7 +157,8 @@ class ProductionNamingEngine:
  issues.extend(self._validate_security_concerns(name))
 
  # 5. Semantic validation
- semantic_issues, semantic_metadata = self._validate_semantic_meaning(name, entity_type, context)
+ semantic_issues, semantic_metadata = self._validate_semantic_meaning(name, entity_type,
+     context)
  issues.extend(semantic_issues)
  metadata.update(semantic_metadata)
 
@@ -240,7 +247,8 @@ class ProductionNamingEngine:
 
  # Production-level validation methods
 
- def _validate_basic_requirements(self, name: str, rule: NamingRule) -> List[ValidationIssue]:
+ def _validate_basic_requirements(self, name: str,
+     rule: NamingRule) -> List[ValidationIssue]:
  """Validate basic requirements (length, character sets, etc.)"""
  issues = []
 
@@ -281,7 +289,8 @@ class ProductionNamingEngine:
 
  return issues
 
- def _validate_pattern_compliance(self, name: str, rule: NamingRule) -> List[ValidationIssue]:
+ def _validate_pattern_compliance(self, name: str,
+     rule: NamingRule) -> List[ValidationIssue]:
  """Validate naming pattern compliance"""
  issues = []
 
@@ -412,7 +421,8 @@ class ProductionNamingEngine:
 
  return issues, metadata
 
- def _validate_uniqueness(self, name: str, existing_names: List[str]) -> List[ValidationIssue]:
+ def _validate_uniqueness(self, name: str,
+     existing_names: List[str]) -> List[ValidationIssue]:
  """Validate name uniqueness"""
  issues = []
 
@@ -582,7 +592,8 @@ class ProductionNamingEngine:
 
  def _contains_action_words(self, words: List[str]) -> bool:
  """Check if words contain action verbs"""
- action_words = {'create', 'get', 'update', 'delete', 'list', 'execute', 'process', 'handle', 'manage'}
+ action_words = {'create', 'get', 'update', 'delete', 'list', 'execute', 'process',
+     'handle', 'manage'}
  return any(word.lower() in action_words for word in words)
 
  def _to_camel_case(self, name: str) -> str:
@@ -753,7 +764,7 @@ class ProductionNamingEngine:
  max_length = 60
  )
  },
- reserved_words = ["class", "function", "if", "else", "return", "import", "export",
+ reserved_words = ["class", "function", "i", "else", "return", "import", "export",
  "type", "name", "id", "value", "true", "false", "null"],
  case_sensitive = True,
  auto_fix_enabled = True,

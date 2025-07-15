@@ -2,11 +2,12 @@
 ETag and Version Hash Models
 For efficient delta responses and caching
 """
-from typing import Optional, Dict, Any, List
-from datetime import datetime, timezone
-from pydantic import BaseModel, Field, ConfigDict
 import hashlib
 import json
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class VersionInfo(BaseModel):
@@ -24,14 +25,18 @@ class VersionInfo(BaseModel):
 
  # Change summary
  change_type: str = Field(..., description = "Type of change (create, update, delete)")
- change_summary: Optional[str] = Field(None, description = "Brief description of changes")
- fields_changed: List[str] = Field(default_factory = list, description = "List of changed fields")
+ change_summary: Optional[str] = Field(None,
+     description = "Brief description of changes")
+ fields_changed: List[str] = Field(default_factory = list,
+     description = "List of changed fields")
 
 
 class ResourceVersion(BaseModel):
  """Version tracking for a specific resource"""
 
- resource_type: str = Field(..., description = "Type of resource (object_type, link_type, etc)")
+ resource_type: str = Field(..., description = "Type of resource (object_type, link_type,
+
+     etc)")
  resource_id: str = Field(..., description = "Resource identifier")
  branch: str = Field(..., description = "Branch name")
 
@@ -55,15 +60,19 @@ class DeltaRequest(BaseModel):
  # Client version info
  client_etag: Optional[str] = Field(None, description = "Client's current ETag")
  client_version: Optional[int] = Field(None, description = "Client's current version")
- client_commit: Optional[str] = Field(None, description = "Client's current commit hash")
+ client_commit: Optional[str] = Field(None,
+     description = "Client's current commit hash")
 
  # Options
  include_full: bool = Field(False, description = "Include full resource if changed")
- max_delta_size: Optional[int] = Field(None, description = "Maximum delta size in bytes")
+ max_delta_size: Optional[int] = Field(None,
+     description = "Maximum delta size in bytes")
 
  # Filtering
- resource_types: Optional[List[str]] = Field(None, description = "Filter by resource types")
- modified_since: Optional[datetime] = Field(None, description = "Only changes after this time")
+ resource_types: Optional[List[str]] = Field(None,
+     description = "Filter by resource types")
+ modified_since: Optional[datetime] = Field(None,
+     description = "Only changes after this time")
 
 
 class DeltaResponse(BaseModel):
@@ -77,16 +86,19 @@ class DeltaResponse(BaseModel):
  response_type: str = Field(..., description = "full, delta, or no_change")
 
  # Changes
- changes: List['ResourceDelta'] = Field(default_factory = list, description = "List of changes")
+ changes: List['ResourceDelta'] = Field(default_factory = list,
+     description = "List of changes")
 
  # Metadata
  total_changes: int = Field(..., description = "Total number of changes")
  delta_size: int = Field(..., description = "Size of delta in bytes")
- compression_ratio: Optional[float] = Field(None, description = "Compression ratio if applicable")
+ compression_ratio: Optional[float] = Field(None,
+     description = "Compression ratio if applicable")
 
  # Cache headers
  etag: str = Field(..., description = "ETag for this response")
- cache_control: str = Field("private, max-age = 300", description = "Cache control header")
+ cache_control: str = Field("private, max-age = 300",
+     description = "Cache control header")
 
  class Config:
  json_encoders = {
@@ -112,13 +124,16 @@ class ResourceDelta(BaseModel):
  delta_type: str = Field(..., description = "full, patch, or deleted")
 
  # For updates - JSON Patch format
- patches: Optional[List[Dict[str, Any]]] = Field(None, description = "JSON Patch operations")
+ patches: Optional[List[Dict[str, Any]]] = Field(None,
+     description = "JSON Patch operations")
 
  # For full updates
- full_content: Optional[Dict[str, Any]] = Field(None, description = "Full resource content")
+ full_content: Optional[Dict[str, Any]] = Field(None,
+     description = "Full resource content")
 
  # Metadata
- modified_fields: List[str] = Field(default_factory = list, description = "List of modified fields")
+ modified_fields: List[str] = Field(default_factory = list,
+     description = "List of modified fields")
  size_before: Optional[int] = Field(None, description = "Size before change")
  size_after: Optional[int] = Field(None, description = "Size after change")
 
@@ -132,7 +147,8 @@ class VersionConflict(BaseModel):
  client_version: VersionInfo
  server_version: VersionInfo
 
- conflict_type: str = Field(..., description = "version_mismatch, deleted, or force_update")
+ conflict_type: str = Field(..., description = "version_mismatch, deleted,
+     or force_update")
  resolution_strategy: str = Field(..., description = "merge, overwrite, or manual")
 
  # Conflict details
@@ -147,12 +163,16 @@ class CacheValidation(BaseModel):
  resource_etags: Dict[str, str] = Field(..., description = "Map of resource ID to ETag")
 
  # Validation results
- valid_resources: List[str] = Field(default_factory = list, description = "Resources that are still valid")
- stale_resources: List[str] = Field(default_factory = list, description = "Resources that need refresh")
- deleted_resources: List[str] = Field(default_factory = list, description = "Resources that were deleted")
+ valid_resources: List[str] = Field(default_factory = list,
+     description = "Resources that are still valid")
+ stale_resources: List[str] = Field(default_factory = list,
+     description = "Resources that need refresh")
+ deleted_resources: List[str] = Field(default_factory = list,
+     description = "Resources that were deleted")
 
  # Bulk ETag
- collection_etag: Optional[str] = Field(None, description = "ETag for entire collection")
+ collection_etag: Optional[str] = Field(None,
+     description = "ETag for entire collection")
 
 
 # Helper functions
@@ -181,7 +201,8 @@ def generate_commit_hash(
  return hashlib.sha256(commit_str.encode()).hexdigest()
 
 
-def create_json_patch(old_content: Dict[str, Any], new_content: Dict[str, Any]) -> List[Dict[str, Any]]:
+def create_json_patch(old_content: Dict[str, Any], new_content: Dict[str,
+    Any]) -> List[Dict[str, Any]]:
  """Create JSON Patch operations for delta"""
  # Simplified version - in production, use a proper JSON Patch library
  patches = []

@@ -7,8 +7,8 @@ import os
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
-from bootstrap.config import get_config
 from arrakis_common import get_logger
+from bootstrap.config import get_config
 from database.clients.postgres_client_secure import PostgresClientSecure
 from models.issue_tracking import ChangeIssueLink, IssueProvider, IssueReference
 
@@ -134,7 +134,9 @@ class IssueTrackingDatabase:
  "CREATE INDEX IF NOT EXISTS idx_change_issue_links_branch ON change_issue_links(branch_name)"
  )
  await self._client.execute(
- "CREATE INDEX IF NOT EXISTS idx_change_issue_links_primary_issue ON change_issue_links(primary_issue_provider, primary_issue_id)"
+ "CREATE INDEX IF NOT EXISTS idx_change_issue_links_primary_issue ON change_issue_links(primary_issue_provider,
+
+     primary_issue_id)"
  )
  await self._client.execute(
  "CREATE INDEX IF NOT EXISTS idx_issue_metadata_cache_expires ON issue_metadata_cache(expires_at)"
@@ -616,7 +618,7 @@ class IssueTrackingDatabase:
  set_clauses.append("resolved_at = %(resolved_at)s")
  params["resolved_at"] = datetime.now(timezone.utc)
 
- query = f"""
+ query = """
  UPDATE internal_issues
  SET {', '.join(set_clauses)}
  WHERE issue_id = %(issue_id)s
@@ -665,7 +667,7 @@ class IssueTrackingDatabase:
 
  where_clause = "WHERE " + " AND ".join(conditions) if conditions else ""
 
- query = f"""
+ query = """
  SELECT * FROM internal_issues
  {where_clause}
  ORDER BY created_at DESC

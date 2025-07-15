@@ -2,26 +2,26 @@
 IAM Service Client with Fallback Support
 MSA 통합 + 로컬 JWT 검증 fallback
 """
-import os
 import asyncio
-from typing import Optional, List, Dict, Any
-from datetime import datetime, timezone, timedelta
+import os
+from datetime import datetime, timedelta, timezone
+from functools import lru_cache
+from typing import Any, Dict, List, Optional
+
+import backoff
 import httpx
 import jwt
-from jwt import PyJWKClient
-from functools import lru_cache
-import backoff
-
-from shared.iam_contracts import (
- IAMScope,
- TokenValidationRequest,
- TokenValidationResponse,
- UserInfoResponse
-)
-from core.auth_utils import UserContext
 from arrakis_common import get_logger
-from prometheus_client import Counter, Histogram, Gauge
+from core.auth_utils import UserContext
 from database.clients.unified_http_client import create_iam_client
+from jwt import PyJWKClient
+from prometheus_client import Counter, Gauge, Histogram
+from shared.iam_contracts import (
+    IAMScope,
+    TokenValidationRequest,
+    TokenValidationResponse,
+    UserInfoResponse,
+)
 
 logger = get_logger(__name__)
 
@@ -103,7 +103,7 @@ class LocalJWTValidator:
  raise ValueError("SECURITY: JWT_SECRET cannot be a common weak value")
 
  # Check for obviously dangerous patterns (injection attempts)
- dangerous_patterns = ["drop", "delete", "script", "<script", "rm -rf", "../"]
+ dangerous_patterns = ["drop", "delete", "script", "<script", "rm -r", "../"]
  if any(pattern in secret.lower() for pattern in dangerous_patterns):
  raise ValueError("SECURITY: JWT_SECRET contains suspicious patterns")
 
@@ -302,7 +302,8 @@ class IAMServiceClientWithFallback:
  self._circuit_open = False
  iam_service_health.set(1)
 
- async def validate_token(self, token: str, required_scopes: Optional[List[str]] = None) -> TokenValidationResponse:
+ async def validate_token(self, token: str,
+     required_scopes: Optional[List[str]] = None) -> TokenValidationResponse:
  """
  Validate JWT token with automatic fallback
  1. Try IAM service (if circuit is closed)
@@ -408,7 +409,8 @@ class IAMServiceClientWithFallback:
  self._record_failure()
  raise IAMServiceError(f"Unexpected IAM service error: {type(e).__name__}") from e
 
- def create_user_context(self, validation_response: TokenValidationResponse) -> UserContext:
+ def create_user_context(self,
+     validation_response: TokenValidationResponse) -> UserContext:
  """Create UserContext from validation response"""
  if not validation_response.valid:
  raise ValueError("Cannot create context from invalid token")
@@ -444,7 +446,8 @@ class IAMServiceClientWithFallback:
  "status": "healthy",
  "circuit_breaker": "closed",
  "failures": self._circuit_failures,
- "response_time_ms": response.elapsed.total_seconds() * 1000 if hasattr(response, 'elapsed') else 0
+ "response_time_ms": response.elapsed.total_seconds() * 1000 if hasattr(response,
+     'elapsed') else 0
  }
  else:
  logger.warning(f"Health check returned status {response.status_code}")

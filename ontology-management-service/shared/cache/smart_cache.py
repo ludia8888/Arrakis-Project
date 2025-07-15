@@ -11,8 +11,8 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Union
 
 import redis.asyncio as redis
-from cachetools import TTLCache
 from arrakis_common import get_logger
+from cachetools import TTLCache
 from core.validation.ports import CachePort
 from database.clients.terminus_db import TerminusDBClient
 from middleware.common.metrics import get_metrics_collector

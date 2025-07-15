@@ -2,20 +2,28 @@
 Shadow Index API Routes
 Near-zero downtime indexing with atomic switch pattern
 """
-from typing import List, Optional, Dict, Any
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Request
-from pydantic import BaseModel, Field
+from typing import Any, Dict, List, Optional
 
+from arrakis_common import get_logger
 from core.auth_utils import UserContext
-from middleware.auth_middleware import get_current_user
-from core.shadow_index.manager import get_shadow_manager, ShadowIndexConflictError, SwitchValidationError
-from models.shadow_index import (
- ShadowIndexInfo, ShadowIndexState, IndexType, SwitchRequest, SwitchResult
-)
 from core.iam.dependencies import require_scope
 from core.iam.iam_integration import IAMScope
-from arrakis_common import get_logger
+from core.shadow_index.manager import (
+    ShadowIndexConflictError,
+    SwitchValidationError,
+    get_shadow_manager,
+)
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
+from middleware.auth_middleware import get_current_user
+from models.shadow_index import (
+    IndexType,
+    ShadowIndexInfo,
+    ShadowIndexState,
+    SwitchRequest,
+    SwitchResult,
+)
+from pydantic import BaseModel, Field
 
 logger = get_logger(__name__)
 router = APIRouter(prefix = "/shadow-index", tags = ["Shadow Index Management"])
@@ -29,7 +37,8 @@ class StartShadowBuildRequest(BaseModel):
  index_type: IndexType = Field(..., description = "Type of index to build")
  resource_types: List[str] = Field(..., description = "Resource types to include")
  service_instance_id: Optional[str] = Field(None, description = "Service instance ID")
- build_config: Optional[Dict[str, Any]] = Field(None, description = "Additional build configuration")
+ build_config: Optional[Dict[str, Any]] = Field(None,
+     description = "Additional build configuration")
 
 
 class StartShadowBuildResponse(BaseModel):
@@ -41,8 +50,10 @@ class StartShadowBuildResponse(BaseModel):
 
 class UpdateProgressRequest(BaseModel):
  """Request to update build progress"""
- progress_percent: int = Field(..., ge = 0, le = 100, description = "Build progress percentage")
- estimated_completion_seconds: Optional[int] = Field(None, description = "Estimated time to completion")
+ progress_percent: int = Field(..., ge = 0, le = 100,
+     description = "Build progress percentage")
+ estimated_completion_seconds: Optional[int] = Field(None,
+     description = "Estimated time to completion")
  record_count: Optional[int] = Field(None, description = "Current record count")
 
 
@@ -50,7 +61,8 @@ class CompleteBuildRequest(BaseModel):
  """Request to mark build as complete"""
  index_size_bytes: int = Field(..., description = "Final index size in bytes")
  record_count: int = Field(..., description = "Final record count")
- build_summary: Optional[Dict[str, Any]] = Field(None, description = "Build summary information")
+ build_summary: Optional[Dict[str, Any]] = Field(None,
+     description = "Build summary information")
 
 
 class ShadowIndexStatusResponse(BaseModel):
@@ -91,7 +103,8 @@ class ShadowIndexListResponse(BaseModel):
 
 # Shadow Index Management Endpoints
 
-@router.post("/start", dependencies = [Depends(require_scope([IAMScope.SYSTEM_ADMIN, IAMScope.SERVICE_ACCOUNT]))])
+@router.post("/start", dependencies = [Depends(require_scope([IAMScope.SYSTEM_ADMIN,
+    IAMScope.SERVICE_ACCOUNT]))])
 async def start_shadow_build(
  request: StartShadowBuildRequest,
  background_tasks: BackgroundTasks,
@@ -139,7 +152,8 @@ async def start_shadow_build(
  )
 
 
-@router.post("/{shadow_index_id}/progress", dependencies = [Depends(require_scope([IAMScope.SERVICE_ACCOUNT]))])
+@router.post("/{shadow_index_id}/progress",
+    dependencies = [Depends(require_scope([IAMScope.SERVICE_ACCOUNT]))])
 async def update_build_progress(
  shadow_index_id: str,
  request: UpdateProgressRequest,
@@ -170,7 +184,8 @@ async def update_build_progress(
  }
 
 
-@router.post("/{shadow_index_id}/complete", dependencies = [Depends(require_scope([IAMScope.SERVICE_ACCOUNT]))])
+@router.post("/{shadow_index_id}/complete",
+    dependencies = [Depends(require_scope([IAMScope.SERVICE_ACCOUNT]))])
 async def complete_shadow_build(
  shadow_index_id: str,
  request: CompleteBuildRequest,
@@ -205,7 +220,9 @@ async def complete_shadow_build(
  }
 
 
-@router.post("/{shadow_index_id}/switch", dependencies = [Depends(require_scope([IAMScope.SYSTEM_ADMIN, IAMScope.SERVICE_ACCOUNT]))])
+@router.post("/{shadow_index_id}/switch",
+    dependencies = [Depends(require_scope([IAMScope.SYSTEM_ADMIN,
+    IAMScope.SERVICE_ACCOUNT]))])
 async def request_atomic_switch(
  shadow_index_id: str,
  request: SwitchRequest,
@@ -252,7 +269,8 @@ async def request_atomic_switch(
  )
 
 
-@router.get("/{shadow_index_id}/status", dependencies = [Depends(require_scope([IAMScope.SYSTEM_ADMIN]))])
+@router.get("/{shadow_index_id}/status",
+    dependencies = [Depends(require_scope([IAMScope.SYSTEM_ADMIN]))])
 async def get_shadow_status(
  shadow_index_id: str,
  req: Request,
@@ -361,7 +379,8 @@ async def list_shadow_indexes(
  )
 
 
-@router.delete("/{shadow_index_id}", dependencies = [Depends(require_scope([IAMScope.SYSTEM_ADMIN]))])
+@router.delete("/{shadow_index_id}",
+    dependencies = [Depends(require_scope([IAMScope.SYSTEM_ADMIN]))])
 async def cancel_shadow_build(
  shadow_index_id: str,
  req: Request,
@@ -394,7 +413,8 @@ async def cancel_shadow_build(
 
 # Monitoring and Dashboard Endpoints
 
-@router.get("/dashboard", dependencies = [Depends(require_scope([IAMScope.SYSTEM_ADMIN]))])
+@router.get("/dashboard",
+    dependencies = [Depends(require_scope([IAMScope.SYSTEM_ADMIN]))])
 async def get_shadow_dashboard(
  req: Request,
  user: UserContext = Depends(get_current_user),

@@ -2,11 +2,10 @@
 Sliding window rate limiting strategy
 """
 from datetime import datetime, timedelta
-from typing import Optional, List, Tuple
+from typing import List, Optional, Tuple
+
+from ..models import RateLimitConfig, RateLimitKey, RateLimitResult, RateLimitState
 from .base import RateLimitStrategy
-from ..models import (
- RateLimitConfig, RateLimitResult, RateLimitState, RateLimitKey
-)
 
 
 class SlidingWindowStrategy(RateLimitStrategy):

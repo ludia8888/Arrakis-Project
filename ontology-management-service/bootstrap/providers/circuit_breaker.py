@@ -1,8 +1,10 @@
 """Circuit Breaker Provider"""
 from typing import Optional
+
 import redis.asyncio as redis
-from middleware.circuit_breaker import CircuitBreakerGroup, CircuitConfig
 from bootstrap.providers.redis_provider import RedisProvider
+from middleware.circuit_breaker import CircuitBreakerGroup, CircuitConfig
+
 
 class CircuitBreakerProvider:
  """Provides and manages the CircuitBreakerGroup."""

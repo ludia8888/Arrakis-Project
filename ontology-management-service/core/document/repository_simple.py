@@ -67,7 +67,8 @@ class DocumentRepository:
  logger.error(f"Error getting document '{doc_id}': {e}")
  return None
 
- async def list_documents(self, branch: str, object_type: Optional[str] = None) -> List[Dict[str, Any]]:
+ async def list_documents(self, branch: str,
+     object_type: Optional[str] = None) -> List[Dict[str, Any]]:
  """
  List documents in a branch
  """
@@ -78,7 +79,8 @@ class DocumentRepository:
  logger.error(f"Error listing documents: {e}")
  return []
 
- async def update_document(self, branch: str, doc_id: str, updates: Dict[str, Any]) -> bool:
+ async def update_document(self, branch: str, doc_id: str, updates: Dict[str,
+     Any]) -> bool:
  """
  Update a document
  """

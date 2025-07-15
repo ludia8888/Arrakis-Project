@@ -1,10 +1,10 @@
 """
 CloudWatch Alarms Configuration for OMS EventBridge
-OMS EventBridge 모니터링을 위한 CloudWatch 알람 설정
+CloudWatch alarm configuration for OMS EventBridge monitoring
 """
 import json
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 import boto3
 from botocore.exceptions import ClientError
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class CloudWatchAlarmsManager:
- """CloudWatch 알람 관리자"""
+ """CloudWatch alarm manager"""
 
  def __init__(
  self,
@@ -30,7 +30,7 @@ class CloudWatchAlarmsManager:
  alarm_prefix: str = "oms"
  ) -> List[Dict[str, Any]]:
  """
- EventBridge 관련 CloudWatch 알람 생성
+ Create EventBridge related CloudWatch alarms
 
  Args:
  event_bus_name: 모니터링할 이벤트 버스
@@ -188,7 +188,7 @@ class CloudWatchAlarmsManager:
  namespace: 네임스페이스
  statistic: 통계 (Sum, Average, etc.)
  dimensions: 디멘션 목록
- period: 기간 (초)
+ period: 기간 (seconds)
  evaluation_periods: 평가 기간 수
  threshold: 임계값
  comparison_operator: 비교 연산자
@@ -386,7 +386,8 @@ if __name__ == "__main__":
  import argparse
 
  parser = argparse.ArgumentParser(description = 'Setup CloudWatch Alarms for OMS')
- parser.add_argument('--event-bus-name', default = 'oms-events', help = 'Event bus name')
+ parser.add_argument('--event-bus-name', default = 'oms-events',
+     help = 'Event bus name')
  parser.add_argument('--sns-topic-arn', help = 'SNS topic ARN for notifications')
  parser.add_argument('--aws-region', default = 'us-east-1', help = 'AWS region')
 

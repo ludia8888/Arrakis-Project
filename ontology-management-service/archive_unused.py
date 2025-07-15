@@ -5,8 +5,8 @@ Archive unused files safely
 import json
 import os
 import shutil
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 # Load results
 with open('unused_files_final.json', 'r') as f:
@@ -26,7 +26,8 @@ archive_info = {
  'reason': 'No references found in codebase',
  'total_files': len(unused_files),
  'files': unused_files,
- 'analysis_method': 'grep-based reference check across all Python, YAML, JSON, and shell files'
+ 'analysis_method': 'grep-based reference check across all Python, YAML, JSON,
+     and shell files'
 }
 
 with open(archive_dir / 'ARCHIVE_INFO.json', 'w') as f:
@@ -60,7 +61,7 @@ for file in unused_files:
  print(f"❌ Error archiving {file}: {e}")
 
 # Create recovery script
-recovery_script = f'''#!/bin/bash
+recovery_script = '''#!/bin/bash
 # Recovery script for archived files
 # Generated on {datetime.now().isoformat()}
 
@@ -81,19 +82,19 @@ with open(archive_dir / 'recover.sh', 'w') as f:
 os.chmod(archive_dir / 'recover.sh', 0o755)
 
 # Summary
-print(f"\n📊 Archive Summary:")
+print("\n📊 Archive Summary:")
 print(f"✅ Successfully archived: {archived} files")
 print(f"❌ Errors: {len(errors)} files")
 print(f"📁 Archive location: {archive_dir}/")
 print(f"🔄 Recovery script: {archive_dir}/recover.sh")
 
 if errors:
- print(f"\n⚠️ Files with errors:")
+ print("\n⚠️ Files with errors:")
  for err in errors[:5]:
  print(f" - {err['file']}: {err['error']}")
 
 # Create a summary file
-summary = f"""Legacy Code Archive Summary
+summary = """Legacy Code Archive Summary
 ==========================
 Date: {datetime.now().strftime('%Y-%m-%d %H:%M')}
 Total files archived: {archived}

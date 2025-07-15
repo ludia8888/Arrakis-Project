@@ -13,18 +13,19 @@ Features:
 """
 
 import asyncio
+import logging
+import random
 import time
 from abc import ABC, abstractmethod
+from collections import deque
+from contextvars import ContextVar
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Dict, List, Optional, Callable, Any, TypeVar, Generic, Set
-import redis.asyncio as redis
-from collections import deque
 from functools import wraps
-import logging
-import random
-from contextvars import ContextVar
+from typing import Any, Callable, Dict, Generic, List, Optional, Set, TypeVar
+
+import redis.asyncio as redis
 
 logger = logging.getLogger(__name__)
 
@@ -119,7 +120,8 @@ class BackpressureHandler:
  self.queues: Dict[str, deque] = {}
  self.processing_counts: Dict[str, int] = {}
 
- def can_accept_request(self, circuit_name: str, threshold: Optional[int] = None) -> bool:
+ def can_accept_request(self, circuit_name: str,
+     threshold: Optional[int] = None) -> bool:
  """Check if we can accept more requests."""
  queue_size = len(self.queues.get(circuit_name, []))
  processing = self.processing_counts.get(circuit_name, 0)
@@ -153,7 +155,8 @@ class BackpressureHandler:
  return {
  'queued': len(self.queues.get(circuit_name, [])),
  'processing': self.processing_counts.get(circuit_name, 0),
- 'total': len(self.queues.get(circuit_name, [])) + self.processing_counts.get(circuit_name, 0)
+ 'total': len(self.queues.get(circuit_name,
+     [])) + self.processing_counts.get(circuit_name, 0)
  }
 
 

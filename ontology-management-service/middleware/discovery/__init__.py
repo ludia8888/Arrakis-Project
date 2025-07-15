@@ -2,27 +2,30 @@
 Service discovery middleware package
 """
 
+from .balancer import LoadBalancer
+from .coordinator import DiscoveryCoordinator
+from .health import HealthChecker
 from .models import (
- ServiceInstance, ServiceEndpoint, ServiceStatus,
- LoadBalancerStrategy, ServiceRegistration
+    LoadBalancerStrategy,
+    ServiceEndpoint,
+    ServiceInstance,
+    ServiceRegistration,
+    ServiceStatus,
 )
 from .providers.base import DiscoveryProvider
-from .providers.redis import RedisDiscoveryProvider
 from .providers.dns import DnsDiscoveryProvider
-from .balancer import LoadBalancer
-from .health import HealthChecker
-from .coordinator import DiscoveryCoordinator
+from .providers.redis import RedisDiscoveryProvider
 
 __all__ = [
- 'ServiceInstance',
- 'ServiceEndpoint',
- 'ServiceStatus',
- 'LoadBalancerStrategy',
- 'ServiceRegistration',
- 'DiscoveryProvider',
- 'RedisDiscoveryProvider',
- 'DnsDiscoveryProvider',
- 'LoadBalancer',
- 'HealthChecker',
- 'DiscoveryCoordinator',
+    "ServiceInstance",
+    "ServiceEndpoint",
+    "ServiceStatus",
+    "LoadBalancerStrategy",
+    "ServiceRegistration",
+    "DiscoveryProvider",
+    "RedisDiscoveryProvider",
+    "DnsDiscoveryProvider",
+    "LoadBalancer",
+    "HealthChecker",
+    "DiscoveryCoordinator",
 ]

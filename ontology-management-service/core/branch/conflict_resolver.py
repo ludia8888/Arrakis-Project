@@ -5,12 +5,7 @@ REQ-OMS-F2-AC3: 충돌 해결 엔진
 import logging
 from typing import Any, Dict, List, Optional
 
-from core.branch.models import (
- Conflict,
- ConflictType,
- DiffEntry,
- ThreeWayDiff,
-)
+from core.branch.models import Conflict, ConflictType, DiffEntry, ThreeWayDiff
 
 logger = logging.getLogger(__name__)
 

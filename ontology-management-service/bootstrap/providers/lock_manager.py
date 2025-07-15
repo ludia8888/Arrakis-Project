@@ -2,11 +2,14 @@
 Provider for the distributed lock manager.
 """
 from typing import Any
+
+import redis.asyncio as redis
 from bootstrap.config import get_config
 from core.branch.lock_manager import BranchLockManager as MemoryLockManager
 from core.branch.redis_lock_manager import RedisLockManager
+
 from .base import Provider
-import redis.asyncio as redis
+
 
 class LockManagerProvider(Provider[Any]):
  """

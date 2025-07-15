@@ -9,10 +9,10 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from core.validation.models import (
- MigrationPlan,
- MigrationResult,
- MigrationStatus,
- MigrationStep,
+    MigrationPlan,
+    MigrationResult,
+    MigrationStatus,
+    MigrationStep,
 )
 from database.clients.terminus_db import TerminusDBClient
 from middleware.circuit_breaker_http import http_circuit_breaker

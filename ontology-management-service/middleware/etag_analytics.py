@@ -2,13 +2,14 @@
 ETag Performance Analytics
 Provides hooks for analyzing cache effectiveness and performance
 """
-from typing import Dict, List, Optional, Tuple
-from datetime import datetime, timedelta
-from collections import defaultdict, deque
 import asyncio
 import json
-from prometheus_client import generate_latest
+from collections import defaultdict, deque
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Tuple
+
 from arrakis_common import get_logger
+from prometheus_client import generate_latest
 
 logger = get_logger(__name__)
 
@@ -186,7 +187,7 @@ def log_slow_requests_hook(resource_type: str, request_data: Dict):
  """Log requests that take longer than 100ms"""
  if request_data["response_time_ms"] > 100:
  logger.warning(
- f"Slow ETag request",
+ "Slow ETag request",
  extra={
  "resource_type": resource_type,
  "response_time_ms": request_data["response_time_ms"],

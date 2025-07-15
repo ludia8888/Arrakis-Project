@@ -2,14 +2,14 @@
 Schema Event Consumer
 Idempotent consumer for schema change events
 """
-from typing import Dict, Any, Optional, List
 from datetime import datetime, timezone
-from pydantic import BaseModel, Field
+from typing import Any, Dict, List, Optional
 
-from core.idempotent.consumer_service import IdempotentConsumer
-from models.idempotency import EventEnvelope
-from models.domain import ObjectType, LinkType
 from arrakis_common import get_logger
+from core.idempotent.consumer_service import IdempotentConsumer
+from models.domain import LinkType, ObjectType
+from models.idempotency import EventEnvelope
+from pydantic import BaseModel, Field
 
 logger = get_logger(__name__)
 

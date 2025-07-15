@@ -5,15 +5,15 @@ Enterprise-grade configuration management per component
 
 import json
 import os
-from typing import Any, Dict, Optional, Set, List
 from dataclasses import dataclass, field
 from enum import Enum
-import yaml
-from pydantic import BaseModel, Field, validator
+from typing import Any, Dict, List, Optional, Set
 
+import yaml
 from database.clients import RedisHAClient
-from utils import logging
+from pydantic import BaseModel, Field, validator
 from shared.observability import metrics
+from utils import logging
 
 logger = logging.get_logger(__name__)
 
@@ -189,7 +189,7 @@ class EnterpriseConfigManager:
  retry_policies={
  "default": {
  "max_retries": 3,
- "backoff": "exponential",
+ "backof": "exponential",
  "base_delay": 1.0
  }
  },
@@ -214,7 +214,7 @@ class EnterpriseConfigManager:
  },
  timeouts={
  "merge": 60.0,
- "diff": 30.0
+ "dif": 30.0
  }
  ),
  "validation": ServiceConfig(
@@ -249,7 +249,7 @@ class EnterpriseConfigManager:
  retry_policies={
  "webhook": {
  "max_retries": 5,
- "backoff": "exponential",
+ "backof": "exponential",
  "base_delay": 2.0
  }
  }
@@ -391,7 +391,8 @@ class EnterpriseConfigManager:
  return config.timeouts[timeout_key]
 
  # Check other settings
- for attr in ["retry_policies", "cache_settings", "security_settings", "monitoring_settings", "custom_behavior"]:
+ for attr in ["retry_policies", "cache_settings", "security_settings",
+     "monitoring_settings", "custom_behavior"]:
  settings = getattr(config, attr, {})
  if key in settings:
  return settings[key]
@@ -461,7 +462,8 @@ class EnterpriseConfigManager:
 
  # Persist to Redis
  if self.redis_client:
- await self._persist_config(key, config_value, level, service, component, endpoint, user_id)
+ await self._persist_config(key, config_value, level, service, component, endpoint,
+     user_id)
 
  def _update_service_config(self, config: ServiceConfig, key: str, value: Any):
  """Update service configuration"""
@@ -514,7 +516,8 @@ class EnterpriseConfigManager:
 
  def _clear_cache_pattern(self, pattern: str):
  """Clear cache entries matching pattern"""
- keys_to_remove = [k for k in self._config_cache.keys() if self._matches_pattern(k, pattern)]
+ keys_to_remove = [k for k in self._config_cache.keys() if self._matches_pattern(k,
+     pattern)]
  for key in keys_to_remove:
  del self._config_cache[key]
 

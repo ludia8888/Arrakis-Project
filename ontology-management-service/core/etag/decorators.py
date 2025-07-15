@@ -3,18 +3,17 @@ ETag Decorator System
 Provides decorators for enabling ETag support on API endpoints
 """
 import functools
-from typing import Optional, Dict, Any, Callable, Union, List
-from enum import Enum
 import inspect
 import time
 from datetime import datetime
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Union
 
+import structlog
+from core.auth_utils import UserContext
 from fastapi import Request, Response, status
 from fastapi.responses import JSONResponse
-import structlog
-
 from models.etag import ResourceVersion
-from core.auth_utils import UserContext
 
 logger = structlog.get_logger(__name__)
 
@@ -55,7 +54,8 @@ class ETagConfig:
  branch_param: Optional[str] = "branch",
  custom_extractor: Optional[Callable] = None
  ):
- self.resource_type = resource_type if isinstance(resource_type, str) else resource_type.value
+ self.resource_type = resource_type if isinstance(resource_type,
+     str) else resource_type.value
  self.mode = mode
  self.cache_control = cache_control
  self.enable_delta = enable_delta
@@ -121,7 +121,8 @@ def enable_etag(
  params = list(sig.parameters.keys())
 
  # Auto-detect resource_id parameter if not specified
- if not config.resource_id_param and config.resource_type not in ['branches', 'proposals']:
+ if not config.resource_id_param and config.resource_type not in ['branches',
+     'proposals']:
  # Common parameter names for resource IDs
  id_params = ['id', 'type_id', 'resource_id', 'proposal_id', 'document_id']
  for param in id_params:
@@ -219,7 +220,8 @@ def extract_resource_info(
  # Extract resource ID
  if config.resource_id_param and config.resource_id_param in path_params:
  resource_info["id"] = path_params[config.resource_id_param]
- elif config.resource_type in ["branches", "proposals", "object_types", "link_types", "action_types"]:
+ elif config.resource_type in ["branches", "proposals", "object_types", "link_types",
+     "action_types"]:
  # Collection endpoints - use composite ID
  resource_info["id"] = f"{resource_info['branch']}_{config.resource_type}"
  else:

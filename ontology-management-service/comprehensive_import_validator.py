@@ -456,9 +456,9 @@ def main():
  with open(f"{root_path}/import_validation_report.txt", "w") as f:
  f.write(report)
 
- print(f"\n📁 Results saved to:")
- print(f" - import_validation_results.json")
- print(f" - import_validation_report.txt")
+ print("\n📁 Results saved to:")
+ print(" - import_validation_results.json")
+ print(" - import_validation_report.txt")
 
  # Exit with error code if there are issues
  if results["errors"] or results["circular_imports"]:

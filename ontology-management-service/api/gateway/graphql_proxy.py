@@ -8,9 +8,13 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 import httpx
+from database.clients.unified_http_client import (
+    HTTPClientConfig,
+    UnifiedHTTPClient,
+    create_basic_client,
+)
 from graphql import DocumentNode, parse
 from graphql.language import ast
-from database.clients.unified_http_client import UnifiedHTTPClient, create_basic_client, HTTPClientConfig
 
 logger = logging.getLogger(__name__)
 
@@ -637,7 +641,7 @@ class GraphQLSchemaFederation:
  """페더레이션 디렉티브 추가"""
 
  # 간단한 예시 - 실제로는 파싱하여 처리 필요
- return f"""
+ return """
  # Service: {service_name}
  {schema}
  """

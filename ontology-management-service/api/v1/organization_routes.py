@@ -310,6 +310,8 @@ async def delete_organization(
  raise HTTPException(
  status_code = 409,
  detail = f"Cannot delete organization with {project_count} active projects. Remove all projects first.",
+
+
  )
 
  # Perform soft delete (mark as deleted)

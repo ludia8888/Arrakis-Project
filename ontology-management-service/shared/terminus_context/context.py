@@ -3,8 +3,8 @@ Context variables and helpers for TerminusDB metadata
 """
 import contextvars
 from contextlib import contextmanager
-from typing import Optional, Dict, Any
 from datetime import datetime
+from typing import Any, Dict, Optional
 
 from .constants import DEFAULT_BRANCH, SERVICE_NAME, format_author
 

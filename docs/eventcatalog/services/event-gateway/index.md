@@ -1,7 +1,7 @@
 ---
 name: Event Gateway
 summary: |
-  Event streaming and webhook management service that routes events between 
+  Event streaming and webhook management service that routes events between
   internal services and external systems with reliable delivery guarantees.
 owners:
   - platform-team
@@ -61,18 +61,18 @@ This service consumes **ALL** events from other services and routes them based o
 ```python
 async def handle_all_events(event: CloudEvent):
     """Route all events through the gateway"""
-    
+
     # 1. Event validation and enrichment
     validated_event = await validate_and_enrich(event)
-    
+
     # 2. Find matching webhooks
     webhooks = await find_matching_webhooks(validated_event)
-    
+
     # 3. Transform event for each webhook
     for webhook in webhooks:
         transformed_event = await transform_event(validated_event, webhook)
         await deliver_webhook(webhook, transformed_event)
-    
+
     # 4. Stream to real-time subscribers
     await stream_to_subscribers(validated_event)
 ```
@@ -93,7 +93,7 @@ sequenceDiagram
     EG->>Redis: Check webhook filters
     EG->>EG: Transform event
     EG->>WH: HTTP POST with event
-    
+
     alt Webhook Success
         WH-->>EG: 200 OK
         EG->>NATS: webhook.succeeded
@@ -115,13 +115,13 @@ sequenceDiagram
     Client->>EG: WebSocket connect
     Client->>EG: Subscribe to stream
     EG->>Redis: Store subscription
-    
+
     loop Event Stream
         NATS->>EG: New event
         EG->>EG: Check subscriptions
         EG->>Client: Stream event (WebSocket)
     end
-    
+
     Client->>EG: Unsubscribe
     EG->>Redis: Remove subscription
 ```
@@ -140,7 +140,7 @@ webhooks:
       - field: "data.namespace"
         operator: "equals"
         value: "customer"
-    
+
   analytics_platform:
     url: "https://analytics.company.com/events"
     events:
@@ -169,14 +169,14 @@ streams:
       - "ontology.schema.*"
     retention: "7d"
     max_messages: 1000000
-    
+
   data_processing_events:
     subjects:
       - "terminus.commit.*"
       - "scheduler.job.*"
     retention: "30d"
     max_messages: 10000000
-    
+
   audit_stream:
     subjects:
       - "audit.events.*"
@@ -191,16 +191,16 @@ streams:
 ```python
 async def transform_for_webhook(event: CloudEvent, webhook_config: dict) -> dict:
     """Transform CloudEvent to webhook-specific format"""
-    
+
     transformation_type = webhook_config.get('transformation', 'standard')
-    
+
     transformations = {
         'standard': transform_standard,
         'analytics_format': transform_analytics,
         'crm_format': transform_crm,
         'siem_format': transform_siem
     }
-    
+
     transformer = transformations.get(transformation_type, transform_standard)
     return await transformer(event, webhook_config)
 
@@ -223,7 +223,7 @@ async def transform_analytics(event: CloudEvent, config: dict) -> dict:
 ```python
 async def enrich_event(event: CloudEvent) -> CloudEvent:
     """Add additional context to events"""
-    
+
     enriched_data = {
         **event.data,
         'enrichment': {
@@ -233,7 +233,7 @@ async def enrich_event(event: CloudEvent) -> CloudEvent:
             'related_events': await find_related_events(event)
         }
     }
-    
+
     return CloudEvent({
         **event.get_attributes(),
         'data': enriched_data
@@ -275,7 +275,7 @@ async def track_delivery(webhook_id: str, event_id: str, status: str):
 
 ### Authentication Methods
 - **API Keys**: Simple token-based auth
-- **Bearer Tokens**: OAuth 2.0 / JWT tokens  
+- **Bearer Tokens**: OAuth 2.0 / JWT tokens
 - **HMAC Signatures**: Request signing with shared secrets
 - **mTLS**: Mutual TLS certificate authentication
 
@@ -310,7 +310,7 @@ async def track_delivery(webhook_id: str, event_id: str, status: str):
 ```python
 async def handle_webhook_failure(webhook: Webhook, event: CloudEvent, error: Exception):
     """Handle webhook delivery failures"""
-    
+
     failure_event = CloudEvent({
         'type': 'webhook.failed',
         'source': 'event-gateway',
@@ -323,9 +323,9 @@ async def handle_webhook_failure(webhook: Webhook, event: CloudEvent, error: Exc
             'retry_count': await get_retry_count(webhook.id, event.get_id())
         }
     })
-    
+
     await publish_event(failure_event)
-    
+
     # Queue for retry if attempts remaining
     if should_retry(webhook, error):
         await queue_for_retry(webhook, event)

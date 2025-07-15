@@ -3,11 +3,13 @@
 모든 서비스에서 사용하는 감사 로그 스키마
 """
 import uuid
-from typing import Optional, List, Dict, Any
 from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, List, Optional
+
 from pydantic import Field
-from .base import BaseModel, BaseEntity
+
+from .base import BaseEntity, BaseModel
 
 
 class AuditLevel(str, Enum):
@@ -237,7 +239,8 @@ class AuditAlert(BaseModel):
  event_count: int
 
  # 상태
- status: str = Field(default = "open", pattern = "^(open|acknowledged|resolved|false_positive)$")
+ status: str = Field(default = "open",
+     pattern = "^(open|acknowledged|resolved|false_positive)$")
  acknowledged_by: Optional[str] = None
  acknowledged_at: Optional[datetime] = None
  resolved_by: Optional[str] = None

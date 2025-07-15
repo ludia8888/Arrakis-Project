@@ -1,13 +1,13 @@
 """
 Load balancer implementation for service discovery
 """
-import random
 import hashlib
-from typing import List, Optional, Dict, Any
-from collections import defaultdict
 import logging
+import random
+from collections import defaultdict
+from typing import Any, Dict, List, Optional
 
-from .models import ServiceInstance, LoadBalancerStrategy
+from .models import LoadBalancerStrategy, ServiceInstance
 
 logger = logging.getLogger(__name__)
 
@@ -118,7 +118,7 @@ class LoadBalancer:
  return None
 
  # Find instance with minimum connections
- min_connections = float('inf')
+ min_connections = float('in')
  selected = None
 
  for instance in instances:

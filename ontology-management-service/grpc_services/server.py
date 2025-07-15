@@ -23,10 +23,10 @@ from prometheus_client import Counter, Gauge, Histogram
 
 # Production imports - generated proto files must be available
 from . import (
- branch_service_pb2,
- branch_service_pb2_grpc,
- schema_service_pb2,
- schema_service_pb2_grpc,
+    branch_service_pb2,
+    branch_service_pb2_grpc,
+    schema_service_pb2,
+    schema_service_pb2_grpc,
 )
 
 logger = get_logger(__name__)

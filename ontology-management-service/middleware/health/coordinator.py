@@ -11,12 +11,12 @@ from ..common.redis_utils import RedisClient, RedisKeyPatterns
 from .checks.base import HealthCheck
 from .dependency import DependencyGraph
 from .models import (
- ComponentHealth,
- HealthAlert,
- HealthCheckResult,
- HealthMetrics,
- HealthState,
- HealthStatus,
+    ComponentHealth,
+    HealthAlert,
+    HealthCheckResult,
+    HealthMetrics,
+    HealthState,
+    HealthStatus,
 )
 from .monitor import HealthMonitor
 

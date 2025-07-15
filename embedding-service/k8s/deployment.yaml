@@ -49,23 +49,32 @@ data:
   ENABLE_ONNX_RUNTIME: "true"
 
 ---
-apiVersion: v1
-kind: Secret
-metadata:
-  name: embedding-service-secrets
-  namespace: embedding-service
-type: Opaque
-stringData:
-  DATABASE_URL: "postgresql://embedding_service:password@postgres-rds.cluster-xxx.us-east-1.rds.amazonaws.com:5432/embedding_service_db"
-  REDIS_URL: "redis://redis-cluster.xxx.cache.amazonaws.com:6379/2"
-  NATS_URL: "nats://nats-cluster.embedding-service.svc.cluster.local:4222"
-  S3_MODEL_BUCKET: "arrakis-ml-models"
-  S3_ACCESS_KEY: "your-s3-access-key"
-  S3_SECRET_KEY: "your-s3-secret-key"
-  HUGGINGFACE_TOKEN: "your-huggingface-token"
-  OPENAI_API_KEY: "your-openai-api-key"
-  ANTHROPIC_API_KEY: "your-anthropic-api-key"
-  COHERE_API_KEY: "your-cohere-api-key"
+# WARNING: This Secret template should NOT be applied directly to production!
+# Create secrets using kubectl or external secret management systems:
+#
+# kubectl create secret generic embedding-service-secrets \
+#   --namespace=embedding-service \
+#   --from-literal=DATABASE_URL="${DATABASE_URL}" \
+#   --from-literal=REDIS_URL="${REDIS_URL}" \
+#   --from-literal=NATS_URL="${NATS_URL}" \
+#   --from-literal=S3_MODEL_BUCKET="${S3_MODEL_BUCKET}" \
+#   --from-literal=S3_ACCESS_KEY="${S3_ACCESS_KEY}" \
+#   --from-literal=S3_SECRET_KEY="${S3_SECRET_KEY}" \
+#   --from-literal=HUGGINGFACE_TOKEN="${HUGGINGFACE_TOKEN}" \
+#   --from-literal=OPENAI_API_KEY="${OPENAI_API_KEY}" \
+#   --from-literal=ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY}" \
+#   --from-literal=COHERE_API_KEY="${COHERE_API_KEY}"
+#
+# SECURITY NOTE: AI API keys are highly sensitive and should be managed through
+# external secret management systems (AWS Secrets Manager, HashiCorp Vault, etc.)
+#
+# apiVersion: v1
+# kind: Secret
+# metadata:
+#   name: embedding-service-secrets
+#   namespace: embedding-service
+# type: Opaque
+# # Data should be provided by external secret management system
 
 ---
 apiVersion: apps/v1

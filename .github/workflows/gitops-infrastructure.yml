@@ -4,42 +4,42 @@ on:
   push:
     branches: [main]
     paths:
-      - 'terraform/**'
-      - '.github/workflows/gitops-infrastructure.yml'
+      - "terraform/**"
+      - ".github/workflows/gitops-infrastructure.yml"
   pull_request:
     branches: [main]
     paths:
-      - 'terraform/**'
+      - "terraform/**"
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Target environment for infrastructure deployment'
+        description: "Target environment for infrastructure deployment"
         required: true
-        default: 'staging'
+        default: "staging"
         type: choice
         options:
           - staging
           - production
       action:
-        description: 'Terraform action to perform'
+        description: "Terraform action to perform"
         required: true
-        default: 'plan'
+        default: "plan"
         type: choice
         options:
           - plan
           - apply
           - destroy
       force_unlock:
-        description: 'Force unlock Terraform state (emergency only)'
+        description: "Force unlock Terraform state (emergency only)"
         required: false
         default: false
         type: boolean
 
 env:
-  TERRAFORM_VERSION: '1.6.0'
-  AWS_REGION: 'us-west-2'
-  TF_IN_AUTOMATION: 'true'
-  TF_INPUT: 'false'
+  TERRAFORM_VERSION: "1.6.0"
+  AWS_REGION: "us-west-2"
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
 
 permissions:
   contents: read
@@ -54,45 +54,45 @@ jobs:
   terraform-state-check:
     name: 🔍 Terraform State Verification
     runs-on: ubuntu-latest
-    
+
     strategy:
       matrix:
         environment: [staging, production]
-    
+
     outputs:
       state-status: ${{ steps.state-check.outputs.status }}
-      
+
     steps:
       - name: 📥 Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
+
       - name: 🔧 Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
-      
+
       - name: 🔐 Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-      
+
       - name: 🔍 Check Terraform State
         id: state-check
         working-directory: ./terraform
         run: |
           echo "🔍 Checking Terraform state for ${{ matrix.environment }}..."
-          
+
           # Initialize Terraform
           terraform init \
             -backend-config="bucket=arrakis-terraform-state-${{ matrix.environment }}" \
             -backend-config="key=terraform/${{ matrix.environment }}/terraform.tfstate" \
             -backend-config="region=${{ env.AWS_REGION }}" \
             -backend-config="dynamodb_table=arrakis-terraform-locks-${{ matrix.environment }}"
-          
+
           # Check state status
           if terraform refresh -var-file="environments/${{ matrix.environment }}.tfvars"; then
             echo "✅ Terraform state is healthy for ${{ matrix.environment }}"
@@ -101,7 +101,7 @@ jobs:
             echo "⚠️ Terraform state issues detected for ${{ matrix.environment }}"
             echo "status=issues" >> $GITHUB_OUTPUT
           fi
-          
+
           # Check for drift
           if terraform plan -var-file="environments/${{ matrix.environment }}.tfvars" -detailed-exitcode; then
             echo "✅ No infrastructure drift detected"
@@ -124,27 +124,27 @@ jobs:
     runs-on: ubuntu-latest
     needs: terraform-state-check
     if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
-    
+
     strategy:
       matrix:
         environment: [staging, production]
-    
+
     steps:
       - name: 📥 Checkout Repository
         uses: actions/checkout@v4
-      
+
       - name: 🔧 Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
-      
+
       - name: 🔐 Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-      
+
       - name: 🔧 Terraform Init
         working-directory: ./terraform
         run: |
@@ -153,28 +153,28 @@ jobs:
             -backend-config="key=terraform/${{ matrix.environment }}/terraform.tfstate" \
             -backend-config="region=${{ env.AWS_REGION }}" \
             -backend-config="dynamodb_table=arrakis-terraform-locks-${{ matrix.environment }}"
-      
+
       - name: 📋 Terraform Plan
         id: plan
         working-directory: ./terraform
         run: |
           echo "📋 Creating Terraform plan for ${{ matrix.environment }}..."
-          
+
           # Create detailed plan
           terraform plan \
             -var-file="environments/${{ matrix.environment }}.tfvars" \
             -out="tfplan-${{ matrix.environment }}" \
             -detailed-exitcode
-          
+
           plan_exit_code=$?
-          
+
           # Save plan output for PR comment
           terraform show -no-color "tfplan-${{ matrix.environment }}" > plan-output-${{ matrix.environment }}.txt
-          
+
           # Create plan summary
           echo "## 📋 Terraform Plan Summary - ${{ matrix.environment }}" > plan-summary-${{ matrix.environment }}.md
           echo "" >> plan-summary-${{ matrix.environment }}.md
-          
+
           if [ $plan_exit_code -eq 0 ]; then
             echo "✅ **No changes required** - Infrastructure is up to date" >> plan-summary-${{ matrix.environment }}.md
           elif [ $plan_exit_code -eq 2 ]; then
@@ -188,9 +188,9 @@ jobs:
             echo "❌ **Plan failed** - Please review errors" >> plan-summary-${{ matrix.environment }}.md
             exit 1
           fi
-          
+
           echo "plan_exit_code=$plan_exit_code" >> $GITHUB_OUTPUT
-      
+
       - name: 📊 Upload Plan Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -200,7 +200,7 @@ jobs:
             terraform/plan-output-${{ matrix.environment }}.txt
             terraform/plan-summary-${{ matrix.environment }}.md
           retention-days: 30
-      
+
       - name: 💬 Comment on PR
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
@@ -208,10 +208,10 @@ jobs:
           script: |
             const fs = require('fs');
             const environment = '${{ matrix.environment }}';
-            
+
             try {
               const summary = fs.readFileSync(`terraform/plan-summary-${environment}.md`, 'utf8');
-              
+
               github.rest.issues.createComment({
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
@@ -231,29 +231,29 @@ jobs:
     needs: [terraform-state-check, terraform-plan]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     environment: staging
-    
+
     steps:
       - name: 📥 Checkout Repository
         uses: actions/checkout@v4
-      
+
       - name: 🔧 Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
-      
+
       - name: 🔐 Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-      
+
       - name: 📥 Download Plan Artifact
         uses: actions/download-artifact@v4
         with:
           name: terraform-plan-staging
           path: terraform/
-      
+
       - name: 🔧 Terraform Init
         working-directory: ./terraform
         run: |
@@ -262,20 +262,20 @@ jobs:
             -backend-config="key=terraform/staging/terraform.tfstate" \
             -backend-config="region=${{ env.AWS_REGION }}" \
             -backend-config="dynamodb_table=arrakis-terraform-locks-staging"
-      
+
       - name: 🚀 Terraform Apply
         working-directory: ./terraform
         run: |
           echo "🚀 Applying Terraform changes to staging..."
-          
+
           # Apply the planned changes
           terraform apply -auto-approve "tfplan-staging"
-          
+
           # Save outputs
           terraform output -json > outputs-staging.json
-          
+
           echo "✅ Terraform apply completed for staging"
-      
+
       - name: 📊 Upload Apply Results
         uses: actions/upload-artifact@v4
         with:
@@ -283,16 +283,16 @@ jobs:
           path: |
             terraform/outputs-staging.json
           retention-days: 90
-      
+
       - name: 🧪 Post-Deployment Validation
         run: |
           echo "🧪 Running post-deployment validation for staging..."
-          
+
           # Validate EKS cluster
           aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name arrakis-eks-staging
           kubectl get nodes
           kubectl get namespaces
-          
+
           # Validate RDS connectivity
           echo "✅ Post-deployment validation completed"
 
@@ -305,23 +305,23 @@ jobs:
     needs: [terraform-state-check, terraform-plan, terraform-apply-staging]
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production' && github.event.inputs.action == 'apply'
     environment: production
-    
+
     steps:
       - name: 📥 Checkout Repository
         uses: actions/checkout@v4
-      
+
       - name: 🔧 Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
-      
+
       - name: 🔐 Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
           aws-region: ${{ env.AWS_REGION }}
-      
+
       - name: 🚨 Production Deployment Approval
         run: |
           echo "🚨 PRODUCTION DEPLOYMENT INITIATED"
@@ -329,13 +329,13 @@ jobs:
           echo "Action: ${{ github.event.inputs.action }}"
           echo "Triggered by: ${{ github.actor }}"
           echo "Commit: ${{ github.sha }}"
-      
+
       - name: 📥 Download Plan Artifact
         uses: actions/download-artifact@v4
         with:
           name: terraform-plan-production
           path: terraform/
-      
+
       - name: 🔧 Terraform Init
         working-directory: ./terraform
         run: |
@@ -344,20 +344,20 @@ jobs:
             -backend-config="key=terraform/production/terraform.tfstate" \
             -backend-config="region=${{ env.AWS_REGION }}" \
             -backend-config="dynamodb_table=arrakis-terraform-locks-production"
-      
+
       - name: 🚀 Terraform Apply
         working-directory: ./terraform
         run: |
           echo "🚀 Applying Terraform changes to PRODUCTION..."
-          
+
           # Apply the planned changes with extra confirmation
           terraform apply -auto-approve "tfplan-production"
-          
+
           # Save outputs
           terraform output -json > outputs-production.json
-          
+
           echo "✅ Terraform apply completed for PRODUCTION"
-      
+
       - name: 📊 Upload Apply Results
         uses: actions/upload-artifact@v4
         with:
@@ -365,20 +365,20 @@ jobs:
           path: |
             terraform/outputs-production.json
           retention-days: 365
-      
+
       - name: 🧪 Post-Deployment Validation
         run: |
           echo "🧪 Running post-deployment validation for PRODUCTION..."
-          
+
           # Validate EKS cluster
           aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name arrakis-eks-production
           kubectl get nodes
           kubectl get namespaces
-          
+
           # Validate critical services
           kubectl get pods -n arrakis
           kubectl get services -n arrakis
-          
+
           echo "✅ Post-deployment validation completed for PRODUCTION"
 
   # ==========================================
@@ -389,7 +389,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch' && (github.event.inputs.action == 'destroy' || github.event.inputs.force_unlock == 'true')
     environment: emergency
-    
+
     steps:
       - name: 🚨 Emergency Operation Warning
         run: |
@@ -399,26 +399,26 @@ jobs:
           echo "Force Unlock: ${{ github.event.inputs.force_unlock }}"
           echo "Triggered by: ${{ github.actor }}"
           echo "Timestamp: $(date -u)"
-          
+
           # Require manual confirmation
           echo "This is an emergency operation that requires careful consideration."
           echo "Please ensure you have proper authorization for this action."
-      
+
       - name: 📥 Checkout Repository
         uses: actions/checkout@v4
-      
+
       - name: 🔧 Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
-      
+
       - name: 🔐 Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-      
+
       - name: 🔧 Terraform Init
         working-directory: ./terraform
         run: |
@@ -427,29 +427,29 @@ jobs:
             -backend-config="key=terraform/${{ github.event.inputs.environment }}/terraform.tfstate" \
             -backend-config="region=${{ env.AWS_REGION }}" \
             -backend-config="dynamodb_table=arrakis-terraform-locks-${{ github.event.inputs.environment }}"
-      
+
       - name: 🔓 Force Unlock State
         if: github.event.inputs.force_unlock == 'true'
         working-directory: ./terraform
         run: |
           echo "🔓 Force unlocking Terraform state..."
           terraform force-unlock -force ${{ github.event.inputs.lock_id || 'LOCK_ID_REQUIRED' }}
-      
+
       - name: 💥 Terraform Destroy
         if: github.event.inputs.action == 'destroy'
         working-directory: ./terraform
         run: |
           echo "💥 DESTROYING infrastructure for ${{ github.event.inputs.environment }}..."
           echo "This action is IRREVERSIBLE and will delete all resources!"
-          
+
           # Create destroy plan first
           terraform plan -destroy \
             -var-file="environments/${{ github.event.inputs.environment }}.tfvars" \
             -out="destroy-plan"
-          
+
           # Apply destroy plan
           terraform apply -auto-approve "destroy-plan"
-          
+
           echo "💥 Infrastructure destruction completed"
 
   # ==========================================
@@ -460,42 +460,42 @@ jobs:
     runs-on: ubuntu-latest
     needs: [terraform-state-check, terraform-plan, terraform-apply-staging]
     if: always()
-    
+
     steps:
       - name: 📊 Generate GitOps Report
         run: |
           echo "📊 Generating GitOps operation report..."
-          
+
           cat > gitops-report.md << EOF
           # 🔄 GitOps Infrastructure Report
-          
+
           **Workflow Run:** #${{ github.run_number }}
           **Triggered by:** ${{ github.actor }}
           **Event:** ${{ github.event_name }}
           **Branch:** ${{ github.ref_name }}
           **Commit:** ${{ github.sha }}
           **Timestamp:** $(date -u)
-          
+
           ## 📋 Operation Summary
-          
+
           | Job | Status |
           |-----|--------|
           | State Check | ${{ needs.terraform-state-check.result }} |
           | Terraform Plan | ${{ needs.terraform-plan.result }} |
           | Staging Apply | ${{ needs.terraform-apply-staging.result }} |
-          
+
           ## 🎯 Next Steps
-          
+
           EOF
-          
+
           if [ "${{ needs.terraform-apply-staging.result }}" = "success" ]; then
             echo "✅ Staging deployment successful - Ready for production" >> gitops-report.md
           else
             echo "❌ Issues detected - Review required before production" >> gitops-report.md
           fi
-          
+
           cat gitops-report.md
-      
+
       - name: 📢 Create Issue on Failure
         if: failure()
         uses: actions/github-script@v7
@@ -507,7 +507,7 @@ jobs:
               title: `🚨 GitOps Infrastructure Operation Failed - Run #${{ github.run_number }}`,
               body: `
                 ## 🚨 GitOps Infrastructure Failure
-                
+
                 **Workflow Run:** #${{ github.run_number }}
                 **Environment:** ${{ github.event.inputs.environment || 'N/A' }}
                 **Action:** ${{ github.event.inputs.action || 'automatic' }}
@@ -515,17 +515,17 @@ jobs:
                 **Commit:** ${{ github.sha }}
                 **Actor:** ${{ github.actor }}
                 **Timestamp:** ${new Date().toISOString()}
-                
+
                 ### 🔍 Action Required
                 1. Review the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
                 2. Check Terraform state integrity
                 3. Verify AWS credentials and permissions
                 4. Review infrastructure drift
                 5. Re-run the workflow after fixes
-                
+
                 ### 📁 Artifacts
                 Check workflow artifacts for detailed plans and logs.
-                
+
                 ---
                 *This issue was automatically created by the GitOps Infrastructure workflow*
               `,

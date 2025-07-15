@@ -141,7 +141,7 @@ echo -n "  Prometheus metrics: "
 METRICS_RESPONSE=$(curl -s http://localhost:9090/metrics -o /dev/null -w "%{http_code}")
 if [ "$METRICS_RESPONSE" = "200" ]; then
     echo -e "${GREEN}✅ OK${NC}"
-    
+
     # Check for specific metrics
     AUDIT_METRICS=$(curl -s http://localhost:9090/metrics | grep -c "audit_events_total")
     if [ "$AUDIT_METRICS" -gt 0 ]; then

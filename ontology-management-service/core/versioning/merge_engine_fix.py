@@ -6,14 +6,14 @@ treated as fast-forward merges without actual conflict detection.
 """
 
 import asyncio
-from typing import Dict, List, Optional, Tuple, Any
-from dataclasses import dataclass
-from datetime import datetime
 import hashlib
 import json
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
 
-from models.domain import ObjectType, Property, LinkType
 from arrakis_common import get_logger
+from models.domain import LinkType, ObjectType, Property
 
 logger = get_logger(__name__)
 
@@ -324,7 +324,8 @@ class FixedMergeEngine:
  return await strategy(conflict)
  return None
 
- async def _resolve_property_type_conflict(self, conflict: SchemaConflict) -> Optional[Dict]:
+ async def _resolve_property_type_conflict(self,
+     conflict: SchemaConflict) -> Optional[Dict]:
  """
  Resolve property type conflicts
  """
@@ -356,7 +357,8 @@ class FixedMergeEngine:
  # Cannot auto-resolve unique conflicts
  return None
 
- async def _resolve_cardinality_conflict(self, conflict: SchemaConflict) -> Optional[Dict]:
+ async def _resolve_cardinality_conflict(self,
+     conflict: SchemaConflict) -> Optional[Dict]:
  """
  Resolve cardinality conflicts
  """
@@ -365,7 +367,8 @@ class FixedMergeEngine:
  return {"resolved_cardinality": "ONE_TO_MANY", "strategy": "expand_cardinality"}
  return None
 
- async def _resolve_new_property_conflict(self, conflict: SchemaConflict) -> Optional[Dict]:
+ async def _resolve_new_property_conflict(self,
+     conflict: SchemaConflict) -> Optional[Dict]:
  """
  Resolve conflicts where both branches added the same property
  """

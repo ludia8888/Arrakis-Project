@@ -17,15 +17,15 @@ from core.branch.conflict_resolver import ConflictResolver
 from core.branch.diff_engine import DiffEngine
 from core.branch.merge_strategies import MergeStrategyImplementor
 from core.branch.models import (
- BranchDiff,
- ChangeProposal,
- ConflictType,
- DiffEntry,
- MergeResult,
- MergeStrategy,
- ProposalStatus,
- ProposalUpdate,
- ProtectionRule,
+    BranchDiff,
+    ChangeProposal,
+    ConflictType,
+    DiffEntry,
+    MergeResult,
+    MergeStrategy,
+    ProposalStatus,
+    ProposalUpdate,
+    ProtectionRule,
 )
 
 # Import real branch service and related models
@@ -116,7 +116,8 @@ async def real_postgres_client():
 @pytest.fixture
 async def real_redis_client():
  """Create REAL Redis client for production testing"""
- redis_url = f"redis://{os.getenv('REDIS_HOST', 'redis')}:{os.getenv('REDIS_PORT', '6379')}/{os.getenv('REDIS_DB', '0')}"
+ redis_url = f"redis://{os.getenv('REDIS_HOST', 'redis')}:{os.getenv('REDIS_PORT',
+     '6379')}/{os.getenv('REDIS_DB', '0')}"
 
  try:
  client = await aioredis.from_url(redis_url, decode_responses = True)

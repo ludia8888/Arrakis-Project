@@ -9,19 +9,19 @@ option java_package = "com.arrakis.oms.services.embedding";
 service EmbeddingService {
   // Generate embedding for text
   rpc GenerateEmbedding(EmbeddingRequest) returns (EmbeddingResponse);
-  
+
   // Generate embeddings for multiple texts (batch)
   rpc GenerateBatchEmbeddings(BatchEmbeddingRequest) returns (BatchEmbeddingResponse);
-  
+
   // Calculate similarity between two embeddings
   rpc CalculateSimilarity(SimilarityRequest) returns (SimilarityResponse);
-  
+
   // Find similar documents
   rpc FindSimilar(SimilarSearchRequest) returns (SimilarSearchResponse);
-  
+
   // Store embedding with metadata
   rpc StoreEmbedding(StoreEmbeddingRequest) returns (StoreEmbeddingResponse);
-  
+
   // Health check
   rpc HealthCheck(HealthRequest) returns (HealthResponse);
 }

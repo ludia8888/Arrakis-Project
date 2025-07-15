@@ -415,7 +415,7 @@ SYSTEM_DATA_TYPES = {
  "between",
  "is_null",
  "is_not_null",
- "date_diff",
+ "date_di",
  ],
  "compatible_types": ["string", "datetime", "timestamp"],
  "metadata": {"format": "YYYY-MM-DD", "example": "2024-06-23"},
@@ -450,7 +450,7 @@ SYSTEM_DATA_TYPES = {
  "between",
  "is_null",
  "is_not_null",
- "date_diff",
+ "date_di",
  "date_add",
  "date_subtract",
  ],
@@ -473,7 +473,7 @@ SYSTEM_DATA_TYPES = {
  "between",
  "is_null",
  "is_not_null",
- "date_diff",
+ "date_di",
  "date_add",
  "date_subtract",
  ],
@@ -826,6 +826,10 @@ class DataTypeValidator:
  logger = logging.getLogger(__name__)
  logger.error(
  f"Unexpected constraint validation error for '{constraint.constraint_type}' with value {value}: {e}",
+
+
+
+
  exc_info = True,
  )
  return False

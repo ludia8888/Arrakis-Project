@@ -5,10 +5,9 @@ Provides centralized logging configuration
 
 import logging
 import os
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
-from . import JSONFormatter, StructuredFormatter, ServiceFilter
-
+from . import JSONFormatter, ServiceFilter, StructuredFormatter
 
 # Global logger cache
 _loggers: Dict[str, logging.Logger] = {}

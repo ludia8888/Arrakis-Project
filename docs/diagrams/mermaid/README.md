@@ -1,6 +1,6 @@
 # 🎨 Mermaid Diagrams Index
 
-**Generated:** 2025-07-15 10:17:33 UTC
+**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}
 
 This directory contains automatically generated Mermaid diagrams for the Arrakis Platform.
 
@@ -11,7 +11,7 @@ This directory contains automatically generated Mermaid diagrams for the Arrakis
 - **[Infrastructure Architecture](infrastructure-architecture.md)** - Complete AWS infrastructure layout
 - **[Security Architecture](security-architecture.md)** - Security controls and compliance
 
-### 🔄 Process Diagrams  
+### 🔄 Process Diagrams
 - **[Data Flow](data-flow.md)** - Request/response flow through the system
 - **[CI/CD Flow](cicd-flow.md)** - Development to production pipeline
 
@@ -26,7 +26,7 @@ All diagrams are automatically rendered in GitHub:
 ### Automated Updates
 Diagrams are automatically updated when:
 - 🔄 Code changes are committed
-- 🏗️ Infrastructure is modified  
+- 🏗️ Infrastructure is modified
 - 📝 Documentation is updated
 - 🤖 GitHub Actions workflows run
 
@@ -54,7 +54,7 @@ npm install -g @mermaid-js/mermaid-cli
 # Export to PNG
 mmdc -i diagram.md -o diagram.png
 
-# Export to SVG  
+# Export to SVG
 mmdc -i diagram.md -o diagram.svg
 ```
 
@@ -77,7 +77,7 @@ mmdc -i diagram.md -o diagram.svg
 ## 🔗 Related Documentation
 
 - **[Infrastructure Diagrams](../infrastructure/)** - Generated infrastructure diagrams
-- **[Architecture Diagrams](../architecture/)** - Python-generated architecture diagrams  
+- **[Architecture Diagrams](../architecture/)** - Python-generated architecture diagrams
 - **[API Documentation](../../api/)** - Service API documentation
 - **[Monitoring Documentation](../../monitoring/)** - Observability setup
 

@@ -15,8 +15,8 @@ import pytest
 
 # Import real middleware and test utilities
 from middleware.request_body_caching import (
- ASGIRequestBodyCachingMiddleware,
- RequestBodyCachingMiddleware,
+    ASGIRequestBodyCachingMiddleware,
+    RequestBodyCachingMiddleware,
 )
 from starlette.applications import Starlette
 from starlette.middleware import Middleware

@@ -9,9 +9,9 @@ from typing import Any, Dict
 import pytest
 from arrakis_common import get_logger
 from core.versioning.delta_compression import (
- CompressionMetrics,
- DeltaType,
- EnhancedDeltaEncoder,
+    CompressionMetrics,
+    DeltaType,
+    EnhancedDeltaEncoder,
 )
 from core.versioning.version_service import VersionService
 from shared.cache.smart_cache import SmartCache
@@ -110,7 +110,7 @@ class TestDeltaEncodingIntegration:
  )
 
  # Force uncompressed patch
- encoder.compression_threshold = float("inf")
+ encoder.compression_threshold = float("in")
  _, uncompressed_encoded, uncompressed_size = encoder.encode_delta(
  docs["old"], docs["new"]
  )

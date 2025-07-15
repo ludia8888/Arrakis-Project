@@ -1,230 +1,256 @@
 """
 GraphQL Realtime Publisher
-실시간 이벤트 발행 및 구독 관리
+Real-time event publishing and subscription management
 """
+
 import asyncio
-import logging
-from typing import Dict, Set, Optional, Any, AsyncIterator
-from dataclasses import dataclass
-from enum import Enum
 import json
+import logging
 import time
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
+from enum import Enum
+from typing import Any, AsyncIterator, Dict, Optional, Set
 
 logger = logging.getLogger(__name__)
 
+
 class EventType(str, Enum):
- """실시간 이벤트 유형"""
- SCHEMA_CHANGED = "schema_changed"
- BRANCH_UPDATED = "branch_updated"
- ACTION_PROGRESS = "action_progress"
- PROPOSAL_UPDATED = "proposal_updated"
- USER_NOTIFICATION = "user_notification"
+    """Real-time event types"""
+
+    SCHEMA_CHANGED = "schema_changed"
+    BRANCH_UPDATED = "branch_updated"
+    ACTION_PROGRESS = "action_progress"
+    PROPOSAL_UPDATED = "proposal_updated"
+    USER_NOTIFICATION = "user_notification"
+
 
 @dataclass
 class RealtimeEvent:
- """실시간 이벤트"""
- event_type: EventType
- payload: Dict[str, Any]
- user_id: Optional[str] = None
- timestamp: float = None
+    """Real-time event"""
 
- def __post_init__(self):
- if self.timestamp is None:
- self.timestamp = time.time()
+    event_type: EventType
+    payload: Dict[str, Any]
+    user_id: Optional[str] = None
+    timestamp: float = None
+
+    def __post_init__(self):
+        if self.timestamp is None:
+            self.timestamp = time.time()
+
 
 class RealtimeSubscription:
- """실시간 구독"""
- def __init__(self, subscription_id: str, user_id: str, event_types: Set[EventType]):
- self.subscription_id = subscription_id
- self.user_id = user_id
- self.event_types = event_types
- self.queue: asyncio.Queue = asyncio.Queue()
- self.created_at = time.time()
- self.last_activity = time.time()
+    """Real-time subscription"""
 
- async def send_event(self, event: RealtimeEvent):
- """이벤트 전송"""
- if event.event_type in self.event_types:
- if event.user_id is None or event.user_id == self.user_id:
- await self.queue.put(event)
- self.last_activity = time.time()
+    def __init__(self, subscription_id: str, user_id: str, event_types: Set[EventType]):
+        self.subscription_id = subscription_id
+        self.user_id = user_id
+        self.event_types = event_types
+        self.queue: asyncio.Queue = asyncio.Queue()
+        self.created_at = time.time()
+        self.last_activity = time.time()
 
- async def get_events(self) -> AsyncIterator[RealtimeEvent]:
- """이벤트 수신"""
- while True:
- try:
- event = await asyncio.wait_for(self.queue.get(), timeout = 30.0)
- yield event
- except asyncio.TimeoutError:
- # Keepalive
- keepalive_event = RealtimeEvent(
- event_type = EventType.USER_NOTIFICATION,
- payload={"type": "keepalive"},
- user_id = self.user_id
- )
- yield keepalive_event
+    async def send_event(self, event: RealtimeEvent):
+        """Send event"""
+        if event.event_type in self.event_types:
+            if event.user_id is None or event.user_id == self.user_id:
+                await self.queue.put(event)
+                self.last_activity = time.time()
+
+    async def get_events(self) -> AsyncIterator[RealtimeEvent]:
+        """Receive events"""
+        while True:
+            try:
+                event = await asyncio.wait_for(self.queue.get(), timeout=30.0)
+                yield event
+            except asyncio.TimeoutError:
+                # Keepalive
+                keepalive_event = RealtimeEvent(
+                    event_type=EventType.USER_NOTIFICATION,
+                    payload={"type": "keepalive"},
+                    user_id=self.user_id,
+                )
+                yield keepalive_event
+
 
 class RealtimePublisher:
- """실시간 발행자"""
+    """Real-time publisher"""
 
- def __init__(self):
- self.subscriptions: Dict[str, RealtimeSubscription] = {}
- self.user_subscriptions: Dict[str, Set[str]] = {}
- self._cleanup_task = None
- self.nc: Optional[object] = None
- # Don't start cleanup task in __init__ to avoid event loop issues
+    def __init__(self):
+        self.subscriptions: Dict[str, RealtimeSubscription] = {}
+        self.user_subscriptions: Dict[str, Set[str]] = {}
+        self._cleanup_task = None
+        self.nc: Optional[object] = None
+        self._connected = False
+        # Don't start cleanup task in __init__ to avoid event loop issues
 
- def _start_cleanup_task(self):
- """정리 작업 시작"""
- async def cleanup_stale_subscriptions():
- while True:
- try:
- await asyncio.sleep(60) # 1분마다 정리
- current_time = time.time()
- stale_subscriptions = []
+    def _start_cleanup_task(self):
+        """Start cleanup task"""
 
- for sub_id, subscription in self.subscriptions.items():
- if current_time - subscription.last_activity > 300: # 5분 비활성
- stale_subscriptions.append(sub_id)
+        async def cleanup_stale_subscriptions():
+            while True:
+                try:
+                    await asyncio.sleep(60)  # Clean up every minute
+                    current_time = time.time()
+                    stale_subscriptions = []
 
- for sub_id in stale_subscriptions:
- await self.unsubscribe(sub_id)
+                    for sub_id, subscription in self.subscriptions.items():
+                        if (
+                            current_time - subscription.last_activity > 300
+                        ):  # 5 minutes inactive
+                            stale_subscriptions.append(sub_id)
 
- except Exception as e:
- logger.error(f"Cleanup task error: {e}")
+                    for sub_id in stale_subscriptions:
+                        await self.unsubscribe(sub_id)
 
- if self._cleanup_task is None:
- self._cleanup_task = asyncio.create_task(cleanup_stale_subscriptions())
+                except Exception as e:
+                    logger.error(f"Cleanup task error: {e}")
 
- async def subscribe(self, user_id: str, event_types: Set[EventType]) -> str:
- """구독 등록"""
- # Start cleanup task on first subscription if not already started
- if self._cleanup_task is None:
- self._start_cleanup_task()
+        if self._cleanup_task is None:
+            self._cleanup_task = asyncio.create_task(cleanup_stale_subscriptions())
 
- subscription_id = f"{user_id}_{int(time.time() * 1000)}"
- subscription = RealtimeSubscription(subscription_id, user_id, event_types)
+    async def subscribe(self, user_id: str, event_types: Set[EventType]) -> str:
+        """Register subscription"""
+        # Start cleanup task on first subscription if not already started
+        if self._cleanup_task is None:
+            self._start_cleanup_task()
 
- self.subscriptions[subscription_id] = subscription
+        subscription_id = f"{user_id}_{int(time.time() * 1000)}"
+        subscription = RealtimeSubscription(subscription_id, user_id, event_types)
 
- if user_id not in self.user_subscriptions:
- self.user_subscriptions[user_id] = set()
- self.user_subscriptions[user_id].add(subscription_id)
+        self.subscriptions[subscription_id] = subscription
 
- logger.info(f"Created subscription {subscription_id} for user {user_id}")
- return subscription_id
+        if user_id not in self.user_subscriptions:
+            self.user_subscriptions[user_id] = set()
+        self.user_subscriptions[user_id].add(subscription_id)
 
- async def unsubscribe(self, subscription_id: str):
- """구독 해제"""
- if subscription_id in self.subscriptions:
- subscription = self.subscriptions[subscription_id]
- user_id = subscription.user_id
+        logger.info(f"Created subscription {subscription_id} for user {user_id}")
+        return subscription_id
 
- del self.subscriptions[subscription_id]
+    async def unsubscribe(self, subscription_id: str):
+        """Unregister subscription"""
+        if subscription_id in self.subscriptions:
+            subscription = self.subscriptions[subscription_id]
+            user_id = subscription.user_id
 
- if user_id in self.user_subscriptions:
- self.user_subscriptions[user_id].discard(subscription_id)
- if not self.user_subscriptions[user_id]:
- del self.user_subscriptions[user_id]
+            del self.subscriptions[subscription_id]
 
- logger.info(f"Removed subscription {subscription_id}")
+            if user_id in self.user_subscriptions:
+                self.user_subscriptions[user_id].discard(subscription_id)
+                if not self.user_subscriptions[user_id]:
+                    del self.user_subscriptions[user_id]
 
- async def publish(self, event: RealtimeEvent):
- """이벤트 발행"""
- logger.debug(f"Publishing event {event.event_type} to {len(self.subscriptions)} subscriptions")
+            logger.info(f"Removed subscription {subscription_id}")
 
- tasks = []
- for subscription in self.subscriptions.values():
- tasks.append(subscription.send_event(event))
+    async def publish(self, event: RealtimeEvent):
+        """Publish event"""
+        logger.debug(
+            f"Publishing event {event.event_type} to {len(self.subscriptions)} subscriptions"
+        )
 
- if tasks:
- await asyncio.gather(*tasks, return_exceptions = True)
+        tasks = []
+        for subscription in self.subscriptions.values():
+            tasks.append(subscription.send_event(event))
 
- async def get_subscription_events(self, subscription_id: str) -> AsyncIterator[RealtimeEvent]:
- """구독 이벤트 스트림"""
- if subscription_id not in self.subscriptions:
- return
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
 
- subscription = self.subscriptions[subscription_id]
- async for event in subscription.get_events():
- yield event
+    async def get_subscription_events(
+        self, subscription_id: str
+    ) -> AsyncIterator[RealtimeEvent]:
+        """Subscription event stream"""
+        if subscription_id not in self.subscriptions:
+            return
 
- def get_subscription_count(self) -> int:
- """활성 구독 수"""
- return len(self.subscriptions)
+        subscription = self.subscriptions[subscription_id]
+        async for event in subscription.get_events():
+            yield event
 
- def get_user_subscription_count(self, user_id: str) -> int:
- """사용자별 구독 수"""
- return len(self.user_subscriptions.get(user_id, set()))
+    def get_subscription_count(self) -> int:
+        """Active subscription count"""
+        return len(self.subscriptions)
 
- async def connect(self):
- """NATS JetStream 연결 (현재는 더미 구현).
+    def get_user_subscription_count(self, user_id: str) -> int:
+        """User subscription count"""
+        return len(self.user_subscriptions.get(user_id, set()))
 
- GraphQL 서비스 라이프사이클에서 호출되므로 존재만 해도 된다.
- 추후 nats-py 사용 시 실제 연결 로직으로 대체 가능.
- """
- if self.nc is None:
- # 더미 객체로 연결 완료 표시
- self.nc = object()
- logger.info("RealtimePublisher dummy connect called – marked as connected")
+    async def connect(self):
+        """NATS JetStream connection (currently dummy implementation).
 
- async def disconnect(self):
- """NATS 연결 해제 (더미)."""
- if self.nc is not None:
- self.nc = None
- logger.info("RealtimePublisher dummy disconnect called – marked as disconnected")
+        Called from GraphQL service lifecycle so it just needs to exist.
+        Can be replaced with actual connection logic when using nats-py later.
+        """
+        if self.nc is None:
+            # Mark as connected with dummy object
+            self.nc = object()
+            self._connected = True
+            logger.info("RealtimePublisher dummy connect called - marked as connected")
 
- @asynccontextmanager
- async def connection(self):
- """NATS 연결 컨텍스트 매니저 (더미)."""
- try:
- await self.connect()
- yield self
- finally:
- # 유지 연결이 필요하면 disconnect 생략 가능
- pass
+    async def disconnect(self):
+        """NATS connection disconnect (dummy)."""
+        if self.nc is not None:
+            self.nc = None
+            self._connected = False
+            logger.info(
+                "RealtimePublisher dummy disconnect called - marked as disconnected"
+            )
 
-# 전역 실시간 발행자 인스턴스
+    @asynccontextmanager
+    async def connection(self):
+        """NATS connection context manager (dummy)."""
+        try:
+            await self.connect()
+            yield self
+        finally:
+            # Can skip disconnect if persistent connection is needed
+            pass
+
+
+# Global real-time publisher instance
 realtime_publisher = RealtimePublisher()
+
 
 # Convenience functions
 async def publish_schema_change(schema_id: str, change_type: str, user_id: str = None):
- """스키마 변경 이벤트 발행"""
- event = RealtimeEvent(
- event_type = EventType.SCHEMA_CHANGED,
- payload={
- "schema_id": schema_id,
- "change_type": change_type,
- "timestamp": time.time()
- },
- user_id = user_id
- )
- await realtime_publisher.publish(event)
+    """Publish schema change event"""
+    event = RealtimeEvent(
+        event_type=EventType.SCHEMA_CHANGED,
+        payload={
+            "schema_id": schema_id,
+            "change_type": change_type,
+            "timestamp": time.time(),
+        },
+        user_id=user_id,
+    )
+    await realtime_publisher.publish(event)
+
 
 async def publish_branch_update(branch_name: str, operation: str, user_id: str = None):
- """브랜치 업데이트 이벤트 발행"""
- event = RealtimeEvent(
- event_type = EventType.BRANCH_UPDATED,
- payload={
- "branch_name": branch_name,
- "operation": operation,
- "timestamp": time.time()
- },
- user_id = user_id
- )
- await realtime_publisher.publish(event)
+    """Publish branch update event"""
+    event = RealtimeEvent(
+        event_type=EventType.BRANCH_UPDATED,
+        payload={
+            "branch_name": branch_name,
+            "operation": operation,
+            "timestamp": time.time(),
+        },
+        user_id=user_id,
+    )
+    await realtime_publisher.publish(event)
 
-async def publish_action_progress(action_id: str, progress: float, status: str, user_id: str = None):
- """액션 진행상황 이벤트 발행"""
- event = RealtimeEvent(
- event_type = EventType.ACTION_PROGRESS,
- payload={
- "action_id": action_id,
- "progress": progress,
- "status": status,
- "timestamp": time.time()
- },
- user_id = user_id
- )
- await realtime_publisher.publish(event)
+
+async def publish_action_progress(
+    action_id: str, progress: float, status: str, user_id: str = None
+):
+    """Publish action progress event"""
+    event = RealtimeEvent(
+        event_type=EventType.ACTION_PROGRESS,
+        payload={
+            "action_id": action_id,
+            "progress": progress,
+            "status": status,
+            "timestamp": time.time(),
+        },
+        user_id=user_id,
+    )
+    await realtime_publisher.publish(event)

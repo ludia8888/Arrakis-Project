@@ -4,15 +4,15 @@ Real NATS Client Implementation with JetStream support
 import asyncio
 import json
 import os
-from typing import Callable, Optional, Dict, Any, List
 from datetime import datetime
+from typing import Any, Callable, Dict, List, Optional
+
 import nats
+from arrakis_common import get_logger
 from nats.aio.client import Client as NATS
+from nats.errors import NoServersError, TimeoutError
 from nats.js import JetStreamContext
 from nats.js.errors import NotFoundError
-from nats.errors import TimeoutError, NoServersError
-
-from arrakis_common import get_logger
 
 logger = get_logger(__name__)
 
@@ -96,7 +96,8 @@ class RealNATSClient:
  )
  logger.info(f"Created stream {stream_name}")
 
- async def publish(self, subject: str, data: Any, headers: Optional[Dict[str, str]] = None):
+ async def publish(self, subject: str, data: Any, headers: Optional[Dict[str,
+     str]] = None):
  """Publish message to NATS"""
  if not self.nc or not self.nc.is_connected:
  raise RuntimeError("Not connected to NATS")
@@ -124,7 +125,8 @@ class RealNATSClient:
  logger.error(f"Failed to publish to {subject}: {e}")
  raise
 
- async def publish_with_reply(self, subject: str, data: Any, timeout: float = 5.0) -> Any:
+ async def publish_with_reply(self, subject: str, data: Any,
+     timeout: float = 5.0) -> Any:
  """Publish and wait for reply"""
  if not self.nc or not self.nc.is_connected:
  raise RuntimeError("Not connected to NATS")

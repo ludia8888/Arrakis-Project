@@ -2,16 +2,16 @@
 User Service Client for Auth Integration
 완전한 user-service 통합을 위한 HTTP 클라이언트
 """
-import os
-import httpx
-import json
-from typing import Optional, Dict, Any, List
-from datetime import datetime, timezone
 import asyncio
+import json
+import os
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
 from urllib.parse import urljoin
 
-from core.auth_utils import UserContext
+import httpx
 from arrakis_common import get_logger
+from core.auth_utils import UserContext
 
 logger = get_logger(__name__)
 
@@ -71,7 +71,8 @@ class UserServiceClient:
  raise
  await asyncio.sleep(1)
 
- async def login(self, username: str, password: str, mfa_code: Optional[str] = None) -> Dict[str, Any]:
+ async def login(self, username: str, password: str,
+     mfa_code: Optional[str] = None) -> Dict[str, Any]:
  """사용자 로그인 - 2단계 인증 처리"""
  # Step 1: Username/password authentication
  step1_data = {
@@ -107,7 +108,8 @@ class UserServiceClient:
  # No legacy fallback - two-step authentication is now required
  raise
 
- async def register(self, username: str, email: str, password: str, full_name: Optional[str] = None) -> Dict[str, Any]:
+ async def register(self, username: str, email: str, password: str,
+     full_name: Optional[str] = None) -> Dict[str, Any]:
  """사용자 회원가입"""
  data = {
  "username": username,
@@ -133,14 +135,16 @@ class UserServiceClient:
  data = {"refresh_token": refresh_token}
  return await self._request("POST", "/auth/refresh", json = data)
 
- async def change_password(self, token: str, old_password: str, new_password: str) -> Dict[str, Any]:
+ async def change_password(self, token: str, old_password: str,
+     new_password: str) -> Dict[str, Any]:
  """비밀번호 변경"""
  headers = {"Authorization": f"Bearer {token}"}
  data = {
  "old_password": old_password,
  "new_password": new_password
  }
- return await self._request("POST", "/auth/change-password", json = data, headers = headers)
+ return await self._request("POST", "/auth/change-password", json = data,
+     headers = headers)
 
  async def logout(self, token: str) -> Dict[str, Any]:
  """로그아웃"""
@@ -173,7 +177,8 @@ class UserServiceClient:
  data = {"password": password, "code": code}
  return await self._request("POST", "/auth/mfa/disable", json = data, headers = headers)
 
- async def check_permission(self, token: str, user_id: str, resource_type: str, resource_id: str, action: str) -> bool:
+ async def check_permission(self, token: str, user_id: str, resource_type: str,
+     resource_id: str, action: str) -> bool:
  """권한 확인"""
  try:
  headers = {"Authorization": f"Bearer {token}"}
@@ -183,7 +188,8 @@ class UserServiceClient:
  "resource_id": resource_id,
  "action": action
  }
- response = await self._request("POST", "/auth/check-permission", params = params, headers = headers)
+ response = await self._request("POST", "/auth/check-permission", params = params,
+     headers = headers)
  return response.get("allowed", False)
  except Exception as e:
  logger.error(f"Permission check failed: {e}")
@@ -239,7 +245,8 @@ async def validate_jwt_token_via_user_service(token: str) -> Optional[UserContex
  return None
 
 
-async def login_via_user_service(username: str, password: str, mfa_code: Optional[str] = None) -> Optional[Dict[str, Any]]:
+async def login_via_user_service(username: str, password: str,
+    mfa_code: Optional[str] = None) -> Optional[Dict[str, Any]]:
  """User Service를 통한 로그인"""
  client = get_user_service_client()
 
@@ -251,7 +258,8 @@ async def login_via_user_service(username: str, password: str, mfa_code: Optiona
  return None
 
 
-async def register_via_user_service(username: str, email: str, password: str, full_name: Optional[str] = None) -> Optional[Dict[str, Any]]:
+async def register_via_user_service(username: str, email: str, password: str,
+    full_name: Optional[str] = None) -> Optional[Dict[str, Any]]:
  """User Service를 통한 회원가입"""
  client = get_user_service_client()
 

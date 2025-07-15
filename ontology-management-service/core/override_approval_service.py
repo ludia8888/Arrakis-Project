@@ -156,7 +156,7 @@ class NotificationService:
  self, request: OverrideApprovalRequest, required_roles: List[str]
  ) -> str:
  """Format approval request message"""
- return f"""
+ return """
 🚨 **Override Approval Required**
 
 **Type**: {request.override_type.value}
@@ -177,7 +177,7 @@ Please review and approve/reject this override request.
  self, request: OverrideApprovalRequest, rejector: str, reason: str
  ) -> str:
  """Format rejection message"""
- return f"""
+ return """
 ❌ **Override Request Rejected**
 
 **Request ID**: {request.id}

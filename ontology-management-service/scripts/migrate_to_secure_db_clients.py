@@ -3,12 +3,12 @@
 Migration script to update codebase to use secure database clients
 This script helps replace vulnerable database client usage with secure versions
 """
+import argparse
 import os
 import re
-import argparse
-from pathlib import Path
-from typing import List, Tuple, Dict, Any
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Tuple
 
 
 class DatabaseClientMigrator:

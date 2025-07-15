@@ -2,11 +2,12 @@
 Idempotency Models
 Ensures exactly-once processing with Event ID and Commit Hash tracking
 """
-from typing import Optional, Dict, Any, List
-from datetime import datetime, timezone
-from pydantic import BaseModel, Field
 import hashlib
 import uuid
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field
 
 
 class IdempotencyKey(BaseModel):
@@ -48,7 +49,8 @@ class EventProcessingRecord(BaseModel):
 
  # Processing metadata
  processed_at: datetime = Field(default_factory = lambda: datetime.now(timezone.utc))
- processing_duration_ms: int = Field(..., description = "Processing time in milliseconds")
+ processing_duration_ms: int = Field(...,
+     description = "Processing time in milliseconds")
 
  # Result tracking
  status: str = Field(..., description = "success, failed, skipped")
@@ -56,9 +58,12 @@ class EventProcessingRecord(BaseModel):
  retry_count: int = Field(0, description = "Number of retry attempts")
 
  # Side effects
- side_effects: List[str] = Field(default_factory = list, description = "List of side effects")
- created_resources: List[str] = Field(default_factory = list, description = "Resources created")
- updated_resources: List[str] = Field(default_factory = list, description = "Resources updated")
+ side_effects: List[str] = Field(default_factory = list,
+     description = "List of side effects")
+ created_resources: List[str] = Field(default_factory = list,
+     description = "Resources created")
+ updated_resources: List[str] = Field(default_factory = list,
+     description = "Resources updated")
 
  # Idempotency
  idempotency_key: str = Field(..., description = "Composite idempotency key")
@@ -111,9 +116,12 @@ class ConsumerState(BaseModel):
  consumer_version: str = Field(..., description = "Consumer version")
 
  # Position tracking
- last_processed_event_id: Optional[str] = Field(None, description = "Last successfully processed event")
- last_processed_timestamp: Optional[datetime] = Field(None, description = "Timestamp of last processing")
- last_sequence_number: Optional[int] = Field(None, description = "Last processed sequence number")
+ last_processed_event_id: Optional[str] = Field(None,
+     description = "Last successfully processed event")
+ last_processed_timestamp: Optional[datetime] = Field(None,
+     description = "Timestamp of last processing")
+ last_sequence_number: Optional[int] = Field(None,
+     description = "Last processed sequence number")
 
  # State hash
  state_commit_hash: str = Field(..., description = "Current state commit hash")
@@ -146,12 +154,14 @@ class IdempotentResult(BaseModel):
  was_duplicate: bool = Field(..., description = "Whether event was already processed")
 
  # State transition
- previous_commit_hash: Optional[str] = Field(None, description = "State before processing")
+ previous_commit_hash: Optional[str] = Field(None,
+     description = "State before processing")
  new_commit_hash: Optional[str] = Field(None, description = "State after processing")
 
  # Result data
  result: Optional[Dict[str, Any]] = Field(None, description = "Processing result")
- side_effects: List[str] = Field(default_factory = list, description = "Side effects executed")
+ side_effects: List[str] = Field(default_factory = list,
+     description = "Side effects executed")
 
  # Error handling
  error: Optional[str] = Field(None, description = "Error message if failed")
@@ -168,14 +178,16 @@ class EventReplayRequest(BaseModel):
  consumer_id: str = Field(..., description = "Consumer to replay for")
 
  # Replay range
- from_event_id: Optional[str] = Field(None, description = "Start from this event (exclusive)")
+ from_event_id: Optional[str] = Field(None,
+     description = "Start from this event (exclusive)")
  to_event_id: Optional[str] = Field(None, description = "End at this event (inclusive)")
  from_timestamp: Optional[datetime] = Field(None, description = "Start from this time")
  to_timestamp: Optional[datetime] = Field(None, description = "End at this time")
 
  # Replay options
  skip_side_effects: bool = Field(False, description = "Skip external side effects")
- force_reprocess: bool = Field(False, description = "Reprocess even if already processed")
+ force_reprocess: bool = Field(False,
+     description = "Reprocess even if already processed")
  dry_run: bool = Field(False, description = "Simulate replay without changes")
 
  # Filtering
@@ -199,7 +211,8 @@ class ConsumerCheckpoint(BaseModel):
  state_data: Optional[Dict[str, Any]] = Field(None, description = "Serialized state")
 
  # Metadata
- events_since_last: int = Field(..., description = "Events processed since last checkpoint")
+ events_since_last: int = Field(...,
+     description = "Events processed since last checkpoint")
  created_at: datetime = Field(default_factory = lambda: datetime.now(timezone.utc))
  expires_at: Optional[datetime] = Field(None, description = "Checkpoint expiration")
 

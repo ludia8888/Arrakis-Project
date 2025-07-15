@@ -50,7 +50,7 @@ channels:
     description: Published when new ontology schemas are created
     messages:
       schemaCreated:
-        $ref: '#/components/messages/SchemaCreated'
+        $ref: "#/components/messages/SchemaCreated"
     bindings:
       nats:
         subject: ontology.schema.created
@@ -61,7 +61,7 @@ channels:
     description: Published when schemas are modified
     messages:
       schemaUpdated:
-        $ref: '#/components/messages/SchemaUpdated'
+        $ref: "#/components/messages/SchemaUpdated"
     bindings:
       nats:
         subject: ontology.schema.updated
@@ -72,7 +72,7 @@ channels:
     description: Published when schemas are removed
     messages:
       schemaDeleted:
-        $ref: '#/components/messages/SchemaDeleted'
+        $ref: "#/components/messages/SchemaDeleted"
     bindings:
       nats:
         subject: ontology.schema.deleted
@@ -83,7 +83,7 @@ channels:
     description: Published after schema validation processes
     messages:
       schemaValidated:
-        $ref: '#/components/messages/SchemaValidated'
+        $ref: "#/components/messages/SchemaValidated"
 
   # Branch Management Publishing
   branch/created:
@@ -92,7 +92,7 @@ channels:
     description: Published when new schema branches are created
     messages:
       branchCreated:
-        $ref: '#/components/messages/BranchCreated'
+        $ref: "#/components/messages/BranchCreated"
 
   branch/merged:
     address: ontology.branch.merged
@@ -100,7 +100,7 @@ channels:
     description: Published when schema branches are merged
     messages:
       branchMerged:
-        $ref: '#/components/messages/BranchMerged'
+        $ref: "#/components/messages/BranchMerged"
 
   # Data Consistency Publishing
   violation/detected:
@@ -109,7 +109,7 @@ channels:
     description: Published when data consistency violations are detected
     messages:
       violationDetected:
-        $ref: '#/components/messages/ViolationDetected'
+        $ref: "#/components/messages/ViolationDetected"
 
   # Event Consumption Channels
   terminus/commits:
@@ -118,7 +118,7 @@ channels:
     description: Consumed from Data Kernel Service for data consistency checks
     messages:
       commitReceived:
-        $ref: '#/components/messages/TerminusCommitReceived'
+        $ref: "#/components/messages/TerminusCommitReceived"
 
   user/authentication:
     address: user.authenticated
@@ -126,7 +126,7 @@ channels:
     description: Consumed from User Service for access tracking
     messages:
       userAuthenticated:
-        $ref: '#/components/messages/UserAuthenticated'
+        $ref: "#/components/messages/UserAuthenticated"
 
   job/completion:
     address: scheduler.job.completed
@@ -134,14 +134,14 @@ channels:
     description: Consumed from Scheduler Service for validation results
     messages:
       jobCompleted:
-        $ref: '#/components/messages/JobCompleted'
+        $ref: "#/components/messages/JobCompleted"
 
 operations:
   # Publishing Operations
   publishSchemaCreated:
     action: send
     channel:
-      $ref: '#/channels/schema~1created'
+      $ref: "#/channels/schema~1created"
     title: Publish Schema Created
     summary: Notify system of new schema creation
     description: |
@@ -151,42 +151,42 @@ operations:
   publishSchemaUpdated:
     action: send
     channel:
-      $ref: '#/channels/schema~1updated'
+      $ref: "#/channels/schema~1updated"
     title: Publish Schema Updated
     summary: Notify system of schema modifications
 
   publishSchemaDeleted:
     action: send
     channel:
-      $ref: '#/channels/schema~1deleted'
+      $ref: "#/channels/schema~1deleted"
     title: Publish Schema Deleted
     summary: Notify system of schema removal
 
   publishSchemaValidated:
     action: send
     channel:
-      $ref: '#/channels/schema~1validated'
+      $ref: "#/channels/schema~1validated"
     title: Publish Schema Validation Results
     summary: Share schema validation outcomes
 
   publishBranchCreated:
     action: send
     channel:
-      $ref: '#/channels/branch~1created'
+      $ref: "#/channels/branch~1created"
     title: Publish Branch Created
     summary: Notify of new schema branch
 
   publishBranchMerged:
     action: send
     channel:
-      $ref: '#/channels/branch~1merged'
+      $ref: "#/channels/branch~1merged"
     title: Publish Branch Merged
     summary: Notify of branch merge completion
 
   publishViolationDetected:
     action: send
     channel:
-      $ref: '#/channels/violation~1detected'
+      $ref: "#/channels/violation~1detected"
     title: Publish Data Violation
     summary: Alert system to data consistency issues
 
@@ -194,7 +194,7 @@ operations:
   receiveTerminusCommits:
     action: receive
     channel:
-      $ref: '#/channels/terminus~1commits'
+      $ref: "#/channels/terminus~1commits"
     title: Receive Terminus Commits
     summary: Process TerminusDB commit notifications
     description: |
@@ -204,14 +204,14 @@ operations:
   receiveUserAuthentication:
     action: receive
     channel:
-      $ref: '#/channels/user~1authentication'
+      $ref: "#/channels/user~1authentication"
     title: Receive User Authentication
     summary: Track user access patterns
 
   receiveJobCompletion:
     action: receive
     channel:
-      $ref: '#/channels/job~1completion'
+      $ref: "#/channels/job~1completion"
     title: Receive Job Completion
     summary: Process background job results
 
@@ -224,7 +224,7 @@ components:
       summary: New ontology schema has been created
       contentType: application/cloudevents+json
       payload:
-        $ref: '#/components/schemas/SchemaCreatedPayload'
+        $ref: "#/components/schemas/SchemaCreatedPayload"
       examples:
         - name: UserProfileSchema
           summary: User profile schema creation
@@ -252,7 +252,7 @@ components:
       summary: Existing ontology schema has been modified
       contentType: application/cloudevents+json
       payload:
-        $ref: '#/components/schemas/SchemaUpdatedPayload'
+        $ref: "#/components/schemas/SchemaUpdatedPayload"
 
     SchemaDeleted:
       name: SchemaDeleted
@@ -260,7 +260,7 @@ components:
       summary: Ontology schema has been removed
       contentType: application/cloudevents+json
       payload:
-        $ref: '#/components/schemas/SchemaDeletedPayload'
+        $ref: "#/components/schemas/SchemaDeletedPayload"
 
     SchemaValidated:
       name: SchemaValidated
@@ -268,7 +268,7 @@ components:
       summary: Schema validation process completed
       contentType: application/cloudevents+json
       payload:
-        $ref: '#/components/schemas/SchemaValidatedPayload'
+        $ref: "#/components/schemas/SchemaValidatedPayload"
 
     BranchCreated:
       name: BranchCreated
@@ -276,7 +276,7 @@ components:
       summary: New schema branch has been created
       contentType: application/cloudevents+json
       payload:
-        $ref: '#/components/schemas/BranchCreatedPayload'
+        $ref: "#/components/schemas/BranchCreatedPayload"
 
     BranchMerged:
       name: BranchMerged
@@ -284,7 +284,7 @@ components:
       summary: Schema branch has been merged
       contentType: application/cloudevents+json
       payload:
-        $ref: '#/components/schemas/BranchMergedPayload'
+        $ref: "#/components/schemas/BranchMergedPayload"
 
     ViolationDetected:
       name: ViolationDetected
@@ -292,7 +292,7 @@ components:
       summary: Data consistency violation has been identified
       contentType: application/cloudevents+json
       payload:
-        $ref: '#/components/schemas/ViolationDetectedPayload'
+        $ref: "#/components/schemas/ViolationDetectedPayload"
 
     # Consumption Messages
     TerminusCommitReceived:
@@ -301,7 +301,7 @@ components:
       summary: TerminusDB commit event for processing
       contentType: application/cloudevents+json
       payload:
-        $ref: '#/components/schemas/TerminusCommitPayload'
+        $ref: "#/components/schemas/TerminusCommitPayload"
 
     UserAuthenticated:
       name: UserAuthenticated
@@ -309,7 +309,7 @@ components:
       summary: User authentication event for tracking
       contentType: application/cloudevents+json
       payload:
-        $ref: '#/components/schemas/UserAuthenticatedPayload'
+        $ref: "#/components/schemas/UserAuthenticatedPayload"
 
     JobCompleted:
       name: JobCompleted
@@ -317,7 +317,7 @@ components:
       summary: Background job completion for processing
       contentType: application/cloudevents+json
       payload:
-        $ref: '#/components/schemas/JobCompletedPayload'
+        $ref: "#/components/schemas/JobCompletedPayload"
 
   schemas:
     # Base CloudEvents Schema
@@ -355,7 +355,7 @@ components:
     # Publishing Event Payloads
     SchemaCreatedPayload:
       allOf:
-        - $ref: '#/components/schemas/CloudEventsBase'
+        - $ref: "#/components/schemas/CloudEventsBase"
         - type: object
           properties:
             type:
@@ -372,7 +372,7 @@ components:
               properties:
                 schema_id:
                   type: string
-                  pattern: '^[a-z0-9][a-z0-9-]*[a-z0-9]$'
+                  pattern: "^[a-z0-9][a-z0-9-]*[a-z0-9]$"
                   description: Unique schema identifier
                 name:
                   type: string
@@ -402,7 +402,7 @@ components:
                       type: array
                       items:
                         type: string
-                        pattern: '^[a-z0-9][a-z0-9-]*[a-z0-9]$'
+                        pattern: "^[a-z0-9][a-z0-9-]*[a-z0-9]$"
                       maxItems: 10
                     category:
                       type: string
@@ -428,7 +428,7 @@ components:
 
     SchemaUpdatedPayload:
       allOf:
-        - $ref: '#/components/schemas/CloudEventsBase'
+        - $ref: "#/components/schemas/CloudEventsBase"
         - type: object
           properties:
             type:
@@ -511,7 +511,7 @@ components:
 
     SchemaDeletedPayload:
       allOf:
-        - $ref: '#/components/schemas/CloudEventsBase'
+        - $ref: "#/components/schemas/CloudEventsBase"
         - type: object
           properties:
             type:
@@ -568,7 +568,7 @@ components:
 
     SchemaValidatedPayload:
       allOf:
-        - $ref: '#/components/schemas/CloudEventsBase'
+        - $ref: "#/components/schemas/CloudEventsBase"
         - type: object
           properties:
             type:
@@ -651,7 +651,7 @@ components:
 
     BranchCreatedPayload:
       allOf:
-        - $ref: '#/components/schemas/CloudEventsBase'
+        - $ref: "#/components/schemas/CloudEventsBase"
         - type: object
           properties:
             type:
@@ -670,7 +670,7 @@ components:
                   type: string
                 branch_name:
                   type: string
-                  pattern: '^[a-zA-Z0-9][a-zA-Z0-9-_]*[a-zA-Z0-9]$'
+                  pattern: "^[a-zA-Z0-9][a-zA-Z0-9-_]*[a-zA-Z0-9]$"
                 base_schema_id:
                   type: string
                 base_version:
@@ -707,7 +707,7 @@ components:
 
     BranchMergedPayload:
       allOf:
-        - $ref: '#/components/schemas/CloudEventsBase'
+        - $ref: "#/components/schemas/CloudEventsBase"
         - type: object
           properties:
             type:
@@ -778,7 +778,7 @@ components:
 
     ViolationDetectedPayload:
       allOf:
-        - $ref: '#/components/schemas/CloudEventsBase'
+        - $ref: "#/components/schemas/CloudEventsBase"
         - type: object
           properties:
             type:
@@ -798,7 +798,14 @@ components:
                   type: string
                 violation_type:
                   type: string
-                  enum: [schema_mismatch, constraint_violation, referential_integrity, data_type_mismatch, required_field_missing]
+                  enum:
+                    [
+                      schema_mismatch,
+                      constraint_violation,
+                      referential_integrity,
+                      data_type_mismatch,
+                      required_field_missing,
+                    ]
                 schema_id:
                   type: string
                 schema_version:
@@ -871,7 +878,7 @@ components:
     # Consumption Event Payloads (simplified for processing)
     TerminusCommitPayload:
       allOf:
-        - $ref: '#/components/schemas/CloudEventsBase'
+        - $ref: "#/components/schemas/CloudEventsBase"
         - type: object
           properties:
             type:
@@ -907,7 +914,7 @@ components:
 
     UserAuthenticatedPayload:
       allOf:
-        - $ref: '#/components/schemas/CloudEventsBase'
+        - $ref: "#/components/schemas/CloudEventsBase"
         - type: object
           properties:
             type:
@@ -937,7 +944,7 @@ components:
 
     JobCompletedPayload:
       allOf:
-        - $ref: '#/components/schemas/CloudEventsBase'
+        - $ref: "#/components/schemas/CloudEventsBase"
         - type: object
           properties:
             type:

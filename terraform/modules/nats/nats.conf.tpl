@@ -9,14 +9,14 @@ listen: 0.0.0.0:4222
 cluster {
   name: ${cluster_name}
   listen: 0.0.0.0:6222
-  
+
   # Routes to other nodes
   routes: [
     %{ for i in range(cluster_size) ~}
     nats-route://nats-${i}.nats.${namespace}.svc.cluster.local:6222
     %{ endfor ~}
   ]
-  
+
   # Cluster authorization
   %{ if auth_enabled ~}
   authorization {
@@ -25,7 +25,7 @@ cluster {
     timeout: 2
   }
   %{ endif ~}
-  
+
   # TLS for cluster communication
   %{ if tls_enabled ~}
   tls {
@@ -84,17 +84,17 @@ jetstream {
   store_dir: /data/jetstream
   max_mem: ${jetstream_max_memory}
   max_file: ${jetstream_max_storage}
-  
+
   # Domain configuration for multi-tenancy
   domain: ${cluster_name}
-  
+
   # Encryption at rest
   cipher: "AES"
-  
+
   # Limits
   max_streams: 1000
   max_consumers: 10000
-  
+
   # Resource limits per account
   limits {
     max_memory: ${jetstream_max_memory}
@@ -113,7 +113,7 @@ jetstream {
 %{ if leafnode_enabled ~}
 leafnodes {
   listen: 0.0.0.0:7422
-  
+
   # TLS for leafnode connections
   %{ if tls_enabled ~}
   tls {
@@ -124,7 +124,7 @@ leafnodes {
     timeout: 2
   }
   %{ endif ~}
-  
+
   # Authorization
   %{ if auth_enabled ~}
   authorization {
@@ -141,7 +141,7 @@ leafnodes {
 gateway {
   name: ${cluster_name}
   listen: 0.0.0.0:7522
-  
+
   # TLS for gateway connections
   %{ if tls_enabled ~}
   tls {
@@ -152,7 +152,7 @@ gateway {
     timeout: 2
   }
   %{ endif ~}
-  
+
   # Authorization
   %{ if auth_enabled ~}
   authorization {
@@ -168,7 +168,7 @@ gateway {
 %{ if websocket_enabled ~}
 websocket {
   listen: 0.0.0.0:8080
-  
+
   # TLS for WebSocket
   %{ if tls_enabled ~}
   tls {
@@ -176,14 +176,14 @@ websocket {
     key_file: /etc/nats/tls/tls.key
   }
   %{ endif ~}
-  
+
   # Compression
   compression: true
-  
+
   # Same origin policy
   same_origin: false
   allowed_origins: ["*"]
-  
+
   # JWT-based auth for WebSocket
   %{ if auth_enabled ~}
   jwt_cookie: "jwt"
@@ -195,7 +195,7 @@ websocket {
 %{ if mqtt_enabled ~}
 mqtt {
   listen: 0.0.0.0:1883
-  
+
   # TLS for MQTT
   %{ if tls_enabled ~}
   tls {
@@ -203,7 +203,7 @@ mqtt {
     key_file: /etc/nats/tls/tls.key
   }
   %{ endif ~}
-  
+
   # MQTT specific settings
   max_ack_pending: 100
   ack_wait: "1m"

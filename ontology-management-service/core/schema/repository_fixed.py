@@ -68,7 +68,8 @@ class SchemaRepository:
  logger.error(f"Error listing all object types from branch '{branch}': {e}")
  raise
 
- async def create_new_object_type(self, branch: str, data: ObjectTypeCreate, author: str) -> bool:
+ async def create_new_object_type(self, branch: str, data: ObjectTypeCreate,
+     author: str) -> bool:
  """
  Create a new ObjectType in the schema
 
@@ -142,7 +143,8 @@ class SchemaRepository:
  logger.error(f"Error creating new object type '{data.name}': {e}")
  raise
 
- async def get_object_type_by_name(self, name: str, branch: str) -> Optional[Dict[str, Any]]:
+ async def get_object_type_by_name(self, name: str, branch: str) -> Optional[Dict[str,
+     Any]]:
  """
  Get ObjectType by name
  """
@@ -184,7 +186,8 @@ class SchemaRepository:
  logger.error(f"Error getting object type by name '{name}': {e}", exc_info = True)
  return None
 
- async def update_object_type(self, schema_id: str, branch: str, schema_def: Dict[str, Any], updated_by: str) -> bool:
+ async def update_object_type(self, schema_id: str, branch: str, schema_def: Dict[str,
+     Any], updated_by: str) -> bool:
  """
  Update ObjectType
  """
@@ -239,7 +242,9 @@ class SchemaRepository:
  logger.error(f"Error updating object type '{schema_id}': {e}", exc_info = True)
  return False
 
- async def get_object_type_by_id(self, schema_id: str, branch: str) -> Optional[Dict[str, Any]]:
+ async def get_object_type_by_id(self, schema_id: str, branch: str) -> Optional[Dict[str,
+
+     Any]]:
  """
  Get ObjectType by ID
  """
@@ -247,7 +252,8 @@ class SchemaRepository:
  name = schema_id.replace("ObjectType/", "")
  return await self.get_object_type_by_name(name, branch)
 
- async def mark_object_type_deleted(self, schema_id: str, branch: str, deleted_by: str) -> bool:
+ async def mark_object_type_deleted(self, schema_id: str, branch: str,
+     deleted_by: str) -> bool:
  """
  Mark ObjectType as deleted (soft delete)
  """
@@ -283,5 +289,6 @@ class SchemaRepository:
 
  return False
  except Exception as e:
- logger.error(f"Error marking object type '{schema_id}' as deleted: {e}", exc_info = True)
+ logger.error(f"Error marking object type '{schema_id}' as deleted: {e}",
+     exc_info = True)
  return False

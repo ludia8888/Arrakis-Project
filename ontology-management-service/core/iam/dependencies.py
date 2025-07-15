@@ -2,12 +2,13 @@
 FastAPI Dependencies for IAM (Identity and Access Management)
 """
 from typing import List, Optional, Union
-from fastapi import Request, HTTPException, Depends, status
+
+from fastapi import Depends, HTTPException, Request, status
+from models.permissions import Action, ResourceType
 
 from ..auth_utils import UserContext
-from .iam_integration import get_iam_integration, IAMScope
+from .iam_integration import IAMScope, get_iam_integration
 from .scope_mapper import get_scope_mapper
-from models.permissions import ResourceType, Action
 
 iam_integration = get_iam_integration()
 scope_mapper = get_scope_mapper()
@@ -59,7 +60,8 @@ def require_scope(required_scopes: Union[List[IAMScope], IAMScope]):
  "error": "Insufficient permissions",
  "required_scopes": [s.value for s in required_scopes],
  "user_scopes": user_scopes,
- "message": f"This action requires one of: {', '.join([s.value for s in required_scopes])}"
+ "message": f"This action requires one of: {',
+     '.join([s.value for s in required_scopes])}"
  },
  headers={
  "X-Required-Scopes": ",".join([s.value for s in required_scopes])

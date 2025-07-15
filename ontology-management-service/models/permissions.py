@@ -3,7 +3,8 @@ Permission Matrix and Role Definitions for OMS
 Implements fine-grained RBAC for all resources
 """
 from enum import Enum
-from typing import Dict, List, Set, Optional, Any
+from typing import Any, Dict, List, Optional, Set
+
 from pydantic import BaseModel
 
 
@@ -55,28 +56,46 @@ PERMISSION_MATRIX: Dict[Role, List[Permission]] = {
  Role.ADMIN: [
  # Admin has restricted access following least privilege principle
  # Cannot delete critical resources or modify audit logs
- Permission(resource_type = ResourceType.SCHEMA, actions = [Action.CREATE, Action.READ, Action.UPDATE]),
- Permission(resource_type = ResourceType.OBJECT_TYPE, actions = [Action.CREATE, Action.READ, Action.UPDATE]),
- Permission(resource_type = ResourceType.LINK_TYPE, actions = [Action.CREATE, Action.READ, Action.UPDATE]),
- Permission(resource_type = ResourceType.ACTION_TYPE, actions = [Action.CREATE, Action.READ, Action.UPDATE]),
- Permission(resource_type = ResourceType.FUNCTION_TYPE, actions = [Action.CREATE, Action.READ, Action.UPDATE]),
- Permission(resource_type = ResourceType.BRANCH, actions = [Action.CREATE, Action.READ, Action.UPDATE, Action.MERGE]),
- Permission(resource_type = ResourceType.PROPOSAL, actions = [Action.CREATE, Action.READ, Action.UPDATE, Action.APPROVE, Action.REJECT]),
- Permission(resource_type = ResourceType.AUDIT, actions = [Action.READ]), # Read-only audit logs
- Permission(resource_type = ResourceType.WEBHOOK, actions = [Action.CREATE, Action.READ, Action.UPDATE, Action.EXECUTE]),
+ Permission(resource_type = ResourceType.SCHEMA, actions = [Action.CREATE, Action.READ,
+     Action.UPDATE]),
+ Permission(resource_type = ResourceType.OBJECT_TYPE, actions = [Action.CREATE,
+     Action.READ, Action.UPDATE]),
+ Permission(resource_type = ResourceType.LINK_TYPE, actions = [Action.CREATE,
+     Action.READ, Action.UPDATE]),
+ Permission(resource_type = ResourceType.ACTION_TYPE, actions = [Action.CREATE,
+     Action.READ, Action.UPDATE]),
+ Permission(resource_type = ResourceType.FUNCTION_TYPE, actions = [Action.CREATE,
+     Action.READ, Action.UPDATE]),
+ Permission(resource_type = ResourceType.BRANCH, actions = [Action.CREATE, Action.READ,
+     Action.UPDATE, Action.MERGE]),
+ Permission(resource_type = ResourceType.PROPOSAL, actions = [Action.CREATE, Action.READ,
+
+     Action.UPDATE, Action.APPROVE, Action.REJECT]),
+ Permission(resource_type = ResourceType.AUDIT, actions = [Action.READ]),
+     # Read-only audit logs
+ Permission(resource_type = ResourceType.WEBHOOK, actions = [Action.CREATE, Action.READ,
+     Action.UPDATE, Action.EXECUTE]),
  ],
 
  Role.DEVELOPER: [
  # Developers can read all, create/update most, but not delete critical resources
  Permission(resource_type = ResourceType.SCHEMA, actions = [Action.READ]),
- Permission(resource_type = ResourceType.OBJECT_TYPE, actions = [Action.CREATE, Action.READ, Action.UPDATE]),
- Permission(resource_type = ResourceType.LINK_TYPE, actions = [Action.CREATE, Action.READ, Action.UPDATE]),
- Permission(resource_type = ResourceType.ACTION_TYPE, actions = [Action.CREATE, Action.READ, Action.UPDATE]),
- Permission(resource_type = ResourceType.FUNCTION_TYPE, actions = [Action.CREATE, Action.READ, Action.UPDATE]),
- Permission(resource_type = ResourceType.BRANCH, actions = [Action.CREATE, Action.READ, Action.UPDATE, Action.DELETE]),
- Permission(resource_type = ResourceType.PROPOSAL, actions = [Action.CREATE, Action.READ, Action.UPDATE]),
+ Permission(resource_type = ResourceType.OBJECT_TYPE, actions = [Action.CREATE,
+     Action.READ, Action.UPDATE]),
+ Permission(resource_type = ResourceType.LINK_TYPE, actions = [Action.CREATE,
+     Action.READ, Action.UPDATE]),
+ Permission(resource_type = ResourceType.ACTION_TYPE, actions = [Action.CREATE,
+     Action.READ, Action.UPDATE]),
+ Permission(resource_type = ResourceType.FUNCTION_TYPE, actions = [Action.CREATE,
+     Action.READ, Action.UPDATE]),
+ Permission(resource_type = ResourceType.BRANCH, actions = [Action.CREATE, Action.READ,
+     Action.UPDATE, Action.DELETE]),
+ Permission(resource_type = ResourceType.PROPOSAL, actions = [Action.CREATE, Action.READ,
+
+     Action.UPDATE]),
  Permission(resource_type = ResourceType.AUDIT, actions = [Action.READ]),
- Permission(resource_type = ResourceType.WEBHOOK, actions = [Action.READ, Action.EXECUTE]),
+ Permission(resource_type = ResourceType.WEBHOOK, actions = [Action.READ,
+     Action.EXECUTE]),
  ],
 
  Role.REVIEWER: [
@@ -87,7 +106,8 @@ PERMISSION_MATRIX: Dict[Role, List[Permission]] = {
  Permission(resource_type = ResourceType.ACTION_TYPE, actions = [Action.READ]),
  Permission(resource_type = ResourceType.FUNCTION_TYPE, actions = [Action.READ]),
  Permission(resource_type = ResourceType.BRANCH, actions = [Action.READ]),
- Permission(resource_type = ResourceType.PROPOSAL, actions = [Action.READ, Action.APPROVE, Action.REJECT]),
+ Permission(resource_type = ResourceType.PROPOSAL, actions = [Action.READ,
+     Action.APPROVE, Action.REJECT]),
  Permission(resource_type = ResourceType.AUDIT, actions = [Action.READ]),
  Permission(resource_type = ResourceType.WEBHOOK, actions = [Action.READ]),
  ],
@@ -111,7 +131,8 @@ PERMISSION_MATRIX: Dict[Role, List[Permission]] = {
  Permission(resource_type = ResourceType.LINK_TYPE, actions = [Action.READ]),
  Permission(resource_type = ResourceType.ACTION_TYPE, actions = [Action.READ]),
  Permission(resource_type = ResourceType.FUNCTION_TYPE, actions = [Action.READ]),
- Permission(resource_type = ResourceType.WEBHOOK, actions = [Action.READ, Action.EXECUTE]),
+ Permission(resource_type = ResourceType.WEBHOOK, actions = [Action.READ,
+     Action.EXECUTE]),
  Permission(resource_type = ResourceType.AUDIT, actions = [Action.CREATE, Action.READ]),
  ],
 }
@@ -198,7 +219,8 @@ class PermissionChecker:
 
  return False
 
- def _check_conditions(self, conditions: Dict[str, Any], context: Dict[str, Any]) -> bool:
+ def _check_conditions(self, conditions: Dict[str, Any], context: Dict[str,
+     Any]) -> bool:
  """Check if conditions are met"""
  for key, expected_value in conditions.items():
  if key not in context:
@@ -229,11 +251,13 @@ class PermissionChecker:
 
  def can_approve_proposal(self, user_roles: List[str]) -> bool:
  """Check if user can approve proposals"""
- return self.check_permission(user_roles, ResourceType.PROPOSAL.value, Action.APPROVE.value)
+ return self.check_permission(user_roles, ResourceType.PROPOSAL.value,
+     Action.APPROVE.value)
 
  def can_create_branch(self, user_roles: List[str]) -> bool:
  """Check if user can create branches"""
- return self.check_permission(user_roles, ResourceType.BRANCH.value, Action.CREATE.value)
+ return self.check_permission(user_roles, ResourceType.BRANCH.value,
+     Action.CREATE.value)
 
  def can_modify_schema(self, user_roles: List[str], resource_type: str) -> bool:
  """Check if user can modify schema resources"""

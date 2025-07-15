@@ -2,10 +2,10 @@
 Validation 도메인 이벤트 정의
 순환 참조 해결을 위해 모든 이벤트 데이터 클래스를 중앙화
 """
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Dict, Any, Optional, List
+from typing import Any, Dict, List, Optional
 
 
 class EventSeverity(str, Enum):

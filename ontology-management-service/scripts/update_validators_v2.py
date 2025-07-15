@@ -7,6 +7,7 @@ import re
 from pathlib import Path
 from typing import List
 
+
 def find_files_with_validator(directory: str = ".") -> List[Path]:
  """Find all Python files containing '@validator'"""
  files = []
@@ -54,7 +55,9 @@ def update_validators_in_file(filepath: Path) -> bool:
  method_name = match.group(3)
 
  # Build the replacement
- result = f'@field_validator({params})\n{indent}@classmethod\n{indent}def {method_name}(cls,'
+ result = f'@field_validator({params})\n{indent}@classmethod\n{indent}def {method_name}(cls,
+
+     '
  return result
 
  content = re.sub(pattern, replace_validator, content)

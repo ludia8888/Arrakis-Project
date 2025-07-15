@@ -2,7 +2,7 @@
 TerminusDB Branch and Author naming conventions
 """
 import os
-from typing import Tuple, Optional
+from typing import Optional, Tuple
 
 # Environment detection
 ENV = os.getenv("DEPLOY_ENV", "dev")

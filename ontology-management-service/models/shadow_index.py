@@ -2,11 +2,12 @@
 Shadow Index Models
 Supports near-zero downtime indexing with atomic switch pattern
 """
-from enum import Enum
-from typing import Optional, Dict, Any, List
 from datetime import datetime, timezone
-from pydantic import BaseModel, Field
+from enum import Enum
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
+
+from pydantic import BaseModel, Field
 
 
 class ShadowIndexState(str, Enum):
@@ -58,8 +59,10 @@ class ShadowIndexInfo(BaseModel):
  estimated_completion_seconds: Optional[int] = None
 
  # Switch configuration
- max_switch_duration_seconds: int = Field(10, description = "Maximum switch time allowed")
- switch_strategy: str = Field("ATOMIC_RENAME", description = "Strategy for index switch")
+ max_switch_duration_seconds: int = Field(10,
+     description = "Maximum switch time allowed")
+ switch_strategy: str = Field("ATOMIC_RENAME",
+     description = "Strategy for index switch")
 
  # Error handling
  error_message: Optional[str] = None
@@ -96,10 +99,12 @@ class ShadowIndexOperation(BaseModel):
 class SwitchRequest(BaseModel):
  """Request to switch from shadow to primary index"""
  shadow_index_id: str
- force_switch: bool = Field(False, description = "Force switch even if validation fails")
+ force_switch: bool = Field(False,
+     description = "Force switch even if validation fails")
  validation_checks: List[str] = Field(default_factory = list)
  backup_current: bool = Field(True, description = "Backup current index before switch")
- switch_timeout_seconds: int = Field(10, description = "Maximum time allowed for switch")
+ switch_timeout_seconds: int = Field(10,
+     description = "Maximum time allowed for switch")
 
 
 class SwitchResult(BaseModel):
@@ -162,7 +167,8 @@ SHADOW_INDEX_TRANSITIONS = {
 }
 
 
-def is_valid_shadow_transition(from_state: ShadowIndexState, to_state: ShadowIndexState) -> bool:
+def is_valid_shadow_transition(from_state: ShadowIndexState,
+    to_state: ShadowIndexState) -> bool:
  """Check if a shadow index state transition is valid"""
  return to_state in SHADOW_INDEX_TRANSITIONS.get(from_state, [])
 
@@ -172,7 +178,8 @@ def get_switch_critical_states() -> List[ShadowIndexState]:
  return [ShadowIndexState.SWITCHING]
 
 
-def estimate_switch_duration(index_size_bytes: Optional[int], strategy: str = "ATOMIC_RENAME") -> int:
+def estimate_switch_duration(index_size_bytes: Optional[int],
+    strategy: str = "ATOMIC_RENAME") -> int:
  """Estimate switch duration in seconds based on index size and strategy"""
  if not index_size_bytes:
  return 5 # Default 5 seconds

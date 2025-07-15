@@ -4,7 +4,7 @@ EventBridge 규칙 설정 및 재시도/DLQ 구성
 """
 import json
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 import boto3
 from botocore.exceptions import ClientError
@@ -311,7 +311,8 @@ if __name__ == "__main__":
  import argparse
 
  parser = argparse.ArgumentParser(description = 'Setup EventBridge Rules with DLQ')
- parser.add_argument('--event-bus-name', default = 'oms-events', help = 'Event bus name')
+ parser.add_argument('--event-bus-name', default = 'oms-events',
+     help = 'Event bus name')
  parser.add_argument('--target-arn', required = True, help = 'Target ARN for events')
  parser.add_argument('--aws-region', default = 'us-east-1', help = 'AWS region')
 

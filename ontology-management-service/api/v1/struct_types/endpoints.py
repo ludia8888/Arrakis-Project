@@ -314,7 +314,9 @@ async def delete_struct_type(
  ]
  raise HTTPException(
  status_code = 409,
- detail = f"Cannot delete struct type '{struct_type_id}' as it is used by properties: {', '.join(property_names)}",
+ detail = f"Cannot delete struct type '{struct_type_id}' as it is used by properties: {',
+
+     '.join(property_names)}",
  )
 
  # Also check if any other struct types reference this one as a field type
@@ -329,7 +331,9 @@ async def delete_struct_type(
  if dependent_structs:
  raise HTTPException(
  status_code = 409,
- detail = f"Cannot delete struct type '{struct_type_id}' as it is referenced by struct types: {', '.join(dependent_structs)}",
+ detail = f"Cannot delete struct type '{struct_type_id}' as it is referenced by struct types: {',
+
+     '.join(dependent_structs)}",
  )
 
  except HTTPException:

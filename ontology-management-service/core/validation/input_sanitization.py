@@ -2,13 +2,14 @@
 Input Sanitization Layer
 입력 정제 및 보안 검증 전처리 계층
 """
+import html
+import logging
 import re
 import unicodedata
-import html
-from typing import Any, Dict, List, Optional, Tuple, Union
 from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 from pydantic import BaseModel
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -38,14 +39,18 @@ class InputSanitizer:
  DANGEROUS_PATTERNS = {
  'null_bytes': re.compile(r'\x00'),
  'control_chars': re.compile(r'[\x01-\x08\x0B\x0C\x0E-\x1F\x7F]'),
- 'sql_injection': re.compile(r'(\b(union|select|insert|update|delete|drop|exec|script)\b|--|;|\'\s*or\s*\'|\/\*.*\*\/)', re.IGNORECASE),
- 'xss_scripts': re.compile(r'<\s*script[^>]*>.*?<\s*/\s*script\s*>', re.IGNORECASE | re.DOTALL),
+ 'sql_injection': re.compile(r'(\b(union|select|insert|update|delete|drop|exec|script)\b|--|;|\'\s*or\s*\'|\/\*.*\*\/)',
+
+     re.IGNORECASE),
+ 'xss_scripts': re.compile(r'<\s*script[^>]*>.*?<\s*/\s*script\s*>',
+     re.IGNORECASE | re.DOTALL),
  'command_injection': re.compile(r'(\$\(|\`|&&|\|\||\;|\|)', re.IGNORECASE),
  'path_traversal': re.compile(r'(\.\./|\.\.\\|%2e%2e%2f|%2e%2e%5c)', re.IGNORECASE),
  'log4j_injection': re.compile(r'\$\{jndi:', re.IGNORECASE),
  'template_injection': re.compile(r'(\{\{.*\}\}|\{%.*%\})', re.IGNORECASE),
  'html_entities': re.compile(r'&[a-zA-Z]+;|&#\d+;|&#x[a-fA-F0-9]+;'),
- 'unicode_exploitation': re.compile(r'[\u200b-\u200f\u202a-\u202e\u2060-\u206f\ufeff]'), # Zero-width, bidi override
+ 'unicode_exploitation': re.compile(r'[\u200b-\u200f\u202a-\u202e\u2060-\u206f\ufeff]'),
+     # Zero-width, bidi override
  'suspicious_chars': re.compile(r'[<>&"\'\\\x00-\x1f\x7f-\x9f]'),
  'excessive_length': lambda x: len(x) > 10000,
  'repeated_chars': re.compile(r'(.)\1{100,}'), # 같은 문자 100개 이상 반복
@@ -225,7 +230,8 @@ class InputSanitizer:
  normalized = unicodedata.normalize('NFKC', value)
 
  # 위험한 유니코드 카테고리 제거
- safe_categories = {'L', 'N', 'P', 'S', 'Z'} # Letter, Number, Punctuation, Symbol, Separator
+ safe_categories = {'L', 'N', 'P', 'S', 'Z'} # Letter, Number, Punctuation, Symbol,
+     Separator
  filtered = ''.join(
  char for char in normalized
  if unicodedata.category(char)[0] in safe_categories
@@ -246,7 +252,8 @@ class InputSanitizer:
  def _prevent_injections(self, value: str) -> str:
  """인젝션 공격 방지"""
  # SQL 키워드 이스케이프
- sql_keywords = ['union', 'select', 'insert', 'update', 'delete', 'drop', 'exec', 'script']
+ sql_keywords = ['union', 'select', 'insert', 'update', 'delete', 'drop', 'exec',
+     'script']
  for keyword in sql_keywords:
  # 단어 경계에서만 매치되도록 개선
  pattern = re.compile(rf'\b{keyword}\b', re.IGNORECASE)
@@ -279,7 +286,8 @@ class InputSanitizer:
  # 기타 위험한 태그들 제거
  dangerous_tags = ['script', 'iframe', 'object', 'embed', 'form', 'input']
  for tag in dangerous_tags:
- pattern = re.compile(f'<\\s*{tag}[^>]*>.*?<\\s*/\\s*{tag}\\s*>', re.IGNORECASE | re.DOTALL)
+ pattern = re.compile(f'<\\s*{tag}[^>]*>.*?<\\s*/\\s*{tag}\\s*>',
+     re.IGNORECASE | re.DOTALL)
  value = pattern.sub('', value)
  pattern = re.compile(f'<\\s*{tag}[^>]*/?>', re.IGNORECASE)
  value = pattern.sub('', value)
@@ -547,7 +555,8 @@ def get_secure_processor() -> SecureInputProcessor:
  _secure_processor = SecureInputProcessor()
  return _secure_processor
 
-def sanitize_input(value: str, level: SanitizationLevel = SanitizationLevel.STANDARD) -> SanitizationResult:
+def sanitize_input(value: str,
+    level: SanitizationLevel = SanitizationLevel.STANDARD) -> SanitizationResult:
  """편의 함수: 입력 정제"""
  sanitizer = get_input_sanitizer(level)
  return sanitizer.sanitize(value, level)

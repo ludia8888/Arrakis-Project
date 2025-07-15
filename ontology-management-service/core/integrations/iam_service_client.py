@@ -2,33 +2,33 @@
 IAM Service Client for MSA Integration
 Clean implementation without circular dependencies
 """
-import os
 import asyncio
-from typing import Optional, List, Dict, Any
+import os
 from datetime import datetime, timedelta
+from functools import lru_cache
+from typing import Any, Dict, List, Optional
+
+import backoff
 import httpx
 import jwt
-from jwt import PyJWKClient
-from functools import lru_cache
-import backoff
-
-from shared.iam_contracts import (
- IAMScope,
- IAMConfig,
- TokenValidationRequest,
- TokenValidationResponse,
- UserInfoRequest,
- UserInfoResponse,
- ServiceAuthRequest,
- ServiceAuthResponse,
- ScopeCheckRequest,
- ScopeCheckResponse,
- IAMHealthResponse
-)
-from core.auth_utils import UserContext
-from arrakis_common import get_logger
-from database.clients.unified_http_client import UnifiedHTTPClient, HTTPClientConfig
 import redis.asyncio as redis
+from arrakis_common import get_logger
+from core.auth_utils import UserContext
+from database.clients.unified_http_client import HTTPClientConfig, UnifiedHTTPClient
+from jwt import PyJWKClient
+from shared.iam_contracts import (
+    IAMConfig,
+    IAMHealthResponse,
+    IAMScope,
+    ScopeCheckRequest,
+    ScopeCheckResponse,
+    ServiceAuthRequest,
+    ServiceAuthResponse,
+    TokenValidationRequest,
+    TokenValidationResponse,
+    UserInfoRequest,
+    UserInfoResponse,
+)
 
 logger = get_logger(__name__)
 
@@ -140,7 +140,8 @@ class IAMServiceClient:
  )
  return response.json()
 
- async def validate_token(self, token: str, required_scopes: Optional[List[str]] = None) -> TokenValidationResponse:
+ async def validate_token(self, token: str,
+     required_scopes: Optional[List[str]] = None) -> TokenValidationResponse:
  """
  Validate JWT token with IAM service
 
@@ -350,7 +351,8 @@ class IAMServiceClient:
  timestamp = datetime.utcnow().isoformat()
  )
 
- def create_user_context(self, validation_response: TokenValidationResponse) -> UserContext:
+ def create_user_context(self,
+     validation_response: TokenValidationResponse) -> UserContext:
  """
  Create UserContext from token validation response
 
@@ -400,7 +402,8 @@ def get_iam_client() -> IAMServiceClient:
  return _iam_client
 
 
-async def validate_token_with_iam(token: str, required_scopes: Optional[List[str]] = None) -> Optional[UserContext]:
+async def validate_token_with_iam(token: str,
+    required_scopes: Optional[List[str]] = None) -> Optional[UserContext]:
  """
  Convenience function to validate token and get user context
 

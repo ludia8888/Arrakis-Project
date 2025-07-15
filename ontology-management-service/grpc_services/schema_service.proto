@@ -15,16 +15,16 @@ service SchemaService {
   rpc CreateObjectType(CreateObjectTypeRequest) returns (ObjectType);
   rpc UpdateObjectType(UpdateObjectTypeRequest) returns (ObjectType);
   rpc DeleteObjectType(DeleteObjectTypeRequest) returns (google.protobuf.Empty);
-  
+
   // Property operations
   rpc AddProperty(AddPropertyRequest) returns (Property);
   rpc UpdateProperty(UpdatePropertyRequest) returns (Property);
   rpc RemoveProperty(RemovePropertyRequest) returns (google.protobuf.Empty);
-  
+
   // Batch operations
   rpc BatchCreateObjectTypes(BatchCreateObjectTypesRequest) returns (BatchCreateObjectTypesResponse);
   rpc BatchValidate(BatchValidateRequest) returns (BatchValidateResponse);
-  
+
   // Version operations
   rpc GetVersion(GetVersionRequest) returns (SchemaVersion);
   rpc CompareVersions(CompareVersionsRequest) returns (VersionDiff);

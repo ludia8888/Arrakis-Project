@@ -13,17 +13,18 @@ from typing import Any, Callable, Dict, List, Optional
 
 import redis.asyncio as redis
 from prometheus_client import Counter, Gauge, Histogram
-
 from shared.infrastructure.nats_client import NATSClient
 
 logger = logging.getLogger(__name__)
 
 # Metrics
 dlq_messages = Counter('dlq_messages_total', 'Total DLQ messages', ['queue', 'reason'])
-dlq_retries = Counter('dlq_retry_attempts_total', 'DLQ retry attempts', ['queue', 'status'])
+dlq_retries = Counter('dlq_retry_attempts_total', 'DLQ retry attempts', ['queue',
+    'status'])
 dlq_size = Gauge('dlq_size', 'Current DLQ size', ['queue'])
 dlq_age = Histogram('dlq_message_age_seconds', 'Age of messages in DLQ', ['queue'])
-dlq_processing_time = Histogram('dlq_processing_time_seconds', 'Time to process DLQ message', ['queue'])
+dlq_processing_time = Histogram('dlq_processing_time_seconds',
+    'Time to process DLQ message', ['queue'])
 
 class DLQReason(Enum):
  """Reasons for sending message to DLQ"""
@@ -350,7 +351,8 @@ class DLQHandler:
 
  messages = []
  for message_id in message_ids:
- dlq_key = f"dlq:{queue_name}:{message_id.decode() if isinstance(message_id, bytes) else message_id}"
+ dlq_key = f"dlq:{queue_name}:{message_id.decode() if isinstance(message_id,
+     bytes) else message_id}"
  message_data = await self.redis.get(dlq_key)
 
  if message_data:

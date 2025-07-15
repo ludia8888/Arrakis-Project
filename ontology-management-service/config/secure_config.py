@@ -1,28 +1,28 @@
 """
 Secure Configuration Manager
-환경 변수 기반 안전한 설정 관리
+Secure configuration management based on environment variables
 """
-import os
 import logging
-from typing import Dict, Any, List, Optional
+import os
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
 
 @dataclass
 class JWTConfig:
- """JWT 설정 구성"""
+ """JWT configuration settings"""
  issuer: str
  audience: str
  algorithms: List[str]
  jwks_url: str
- cache_ttl: int = 300 # 5분
+ cache_ttl: int = 300 # 5 minutes
 
 
 @dataclass
 class ServiceConfig:
- """서비스 설정 구성"""
+ """Service configuration settings"""
  name: str
  url: str
  timeout: int = 5
@@ -31,12 +31,12 @@ class ServiceConfig:
 
 class SecureConfigManager:
  """
- 환경 변수 기반 안전한 설정 관리
+ Secure configuration management based on environment variables
 
  보안 원칙:
  1. 모든 민감한 정보는 환경 변수에서만 조회
  2. 기본값은 개발 환경에서만 허용
- 3. 운영 환경에서는 모든 필수 환경 변수 검증
+ 3. 운영 환경에서는 모든 Required environment variable validation
  4. 설정 변경 시 서비스 재시작 없이 반영
  """
 
@@ -44,13 +44,13 @@ class SecureConfigManager:
  self.environment = os.getenv("ENVIRONMENT", "development")
  self.is_production = self.environment.lower() in ["production", "prod"]
 
- # 필수 환경 변수 검증
+ # Required environment variable validation
  self._validate_required_env_vars()
 
- logger.info(f"🔧 보안 설정 관리자 초기화 완료 - 환경: {self.environment}")
+ logger.info(f"🔧 Security configuration manager initialization complete - 환경: {self.environment}")
 
  def _validate_required_env_vars(self):
- """필수 환경 변수 검증"""
+ """Required environment variable validation"""
  required_vars = [
  'USER_SERVICE_URL',
  'OMS_SERVICE_URL'
@@ -71,7 +71,7 @@ class SecureConfigManager:
  logger.error(f"❌ 설정 검증 실패: {error_msg}")
  raise ValueError(error_msg)
 
- logger.info(f"✅ 필수 환경 변수 검증 완료: {len(required_vars)}개")
+ logger.info(f"✅ Required environment variable validation 완료: {len(required_vars)}개")
 
  @property
  def jwt_config(self) -> JWTConfig:
@@ -137,17 +137,20 @@ class SecureConfigManager:
  'rate_limit_enabled': os.getenv('RATE_LIMIT_ENABLED', 'true').lower() == 'true',
  'rate_limit_per_minute': int(os.getenv('RATE_LIMIT_PER_MINUTE', '60')),
  'secure_headers_enabled': os.getenv('SECURE_HEADERS_ENABLED', 'true').lower() == 'true',
+
+
  'https_only': os.getenv('HTTPS_ONLY', 'false').lower() == 'true'
  }
 
  def _parse_cors_origins(self) -> List[str]:
  """CORS origins 파싱"""
- cors_str = os.getenv('CORS_ORIGINS', '["http://localhost:3000", "http://localhost:8080"]')
+ cors_str = os.getenv('CORS_ORIGINS', '["http://localhost:3000",
+     "http://localhost:8080"]')
  try:
  import json
  return json.loads(cors_str)
  except json.JSONDecodeError:
- # Fallback: 콤마로 구분된 문자열
+ # Fallback: 콤마로 구minutes된 문자열
  return [origin.strip() for origin in cors_str.split(',')]
 
  @property
@@ -176,8 +179,9 @@ class SecureConfigManager:
 
  def validate_jwks_connectivity(self) -> bool:
  """JWKS 엔드포인트 연결성 검증"""
- import httpx
  import asyncio
+
+ import httpx
 
  async def check_jwks():
  try:

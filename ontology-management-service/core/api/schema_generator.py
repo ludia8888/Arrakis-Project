@@ -8,20 +8,24 @@ IMPORTANT: OMS only generates schema metadata. Actual resolvers and runtime
 implementations are handled by external services (Object Set Service, etc.)
 """
 
-from typing import Dict, List, Optional, Any, Union
-from datetime import datetime
-from pydantic import BaseModel, Field
 import json
+from datetime import datetime
 from textwrap import dedent
+from typing import Any, Dict, List, Optional, Union
 
+from arrakis_common import get_logger
+from core.graph.metadata_generator import graph_metadata_generator
 from models.domain import (
- ObjectType, LinkType, Property,
- Cardinality, Directionality, Status
+    Cardinality,
+    Directionality,
+    LinkType,
+    ObjectType,
+    Property,
+    Status,
 )
 from models.semantic_types import semantic_type_registry
 from models.struct_types import struct_type_registry
-from core.graph.metadata_generator import graph_metadata_generator
-from arrakis_common import get_logger
+from pydantic import BaseModel, Field
 
 logger = get_logger(__name__)
 
@@ -64,7 +68,7 @@ class GraphQLSchemaGenerator:
  """
  # Start with type definition
  sdl = f"type {object_type.name} {{\n"
- sdl += f" id: ID!\n"
+ sdl += " id: ID!\n"
 
  # Add properties
  for prop in object_type.properties:
@@ -352,7 +356,8 @@ type ObjectMetadata {
  sdl += f" {obj_type.name.lower()}(id: ID!): {obj_type.name}\n"
 
  # List query with pagination
- sdl += f" {obj_type.name.lower()}s(first: Int, after: String, filter: {obj_type.name}Filter): {obj_type.name}Connection!\n"
+ sdl += f" {obj_type.name.lower()}s(first: Int, after: String,
+     filter: {obj_type.name}Filter): {obj_type.name}Connection!\n"
 
  sdl += "}\n\n"
 
@@ -371,7 +376,8 @@ type ObjectMetadata {
  for obj_type in object_types:
  if obj_type.status == Status.ACTIVE:
  sdl += f" create{obj_type.name}(input: {obj_type.name}CreateInput!): {obj_type.name}!\n"
- sdl += f" update{obj_type.name}(id: ID!, input: {obj_type.name}UpdateInput!): {obj_type.name}!\n"
+ sdl += f" update{obj_type.name}(id: ID!,
+     input: {obj_type.name}UpdateInput!): {obj_type.name}!\n"
  sdl += f" delete{obj_type.name}(id: ID!): Boolean!\n"
 
  sdl += "}\n\n"
@@ -412,7 +418,7 @@ type ObjectMetadata {
 
  def _generate_connection_type(self, object_type: ObjectType) -> str:
  """Generate connection type for pagination"""
- sdl = f"""type {object_type.name}Connection {{
+ sdl = """type {object_type.name}Connection {{
  edges: [{object_type.name}Edge!]!
  pageInfo: PageInfo!
  totalCount: Int!
@@ -655,7 +661,7 @@ class OpenAPISchemaGenerator:
  # Check if it's a struct type
  if struct_type_registry.exists(data_type_id):
  struct_type = struct_type_registry.get(data_type_id)
- return {"$ref": f"#/components/schemas/{struct_type.name}"}
+ return {"$re": f"#/components/schemas/{struct_type.name}"}
 
  return mapping.get(data_type_id, {"type": "string"})
 
@@ -710,10 +716,10 @@ class OpenAPISchemaGenerator:
  "operationId": f"list{object_type.name}s",
  "tags": [object_type.name],
  "parameters": [
- {"$ref": "#/components/parameters/limit"},
- {"$ref": "#/components/parameters/offset"},
- {"$ref": "#/components/parameters/sort"},
- {"$ref": "#/components/parameters/filter"}
+ {"$re": "#/components/parameters/limit"},
+ {"$re": "#/components/parameters/offset"},
+ {"$re": "#/components/parameters/sort"},
+ {"$re": "#/components/parameters/filter"}
  ],
  "responses": {
  "200": {
@@ -725,7 +731,7 @@ class OpenAPISchemaGenerator:
  "properties": {
  "data": {
  "type": "array",
- "items": {"$ref": f"#/components/schemas/{object_type.name}"}
+ "items": {"$re": f"#/components/schemas/{object_type.name}"}
  },
  "meta": {
  "type": "object",
@@ -753,7 +759,7 @@ class OpenAPISchemaGenerator:
  "required": True,
  "content": {
  "application/json": {
- "schema": {"$ref": f"#/components/schemas/{object_type.name}Create"}
+ "schema": {"$re": f"#/components/schemas/{object_type.name}Create"}
  }
  }
  },
@@ -762,7 +768,7 @@ class OpenAPISchemaGenerator:
  "description": "Created",
  "content": {
  "application/json": {
- "schema": {"$ref": f"#/components/schemas/{object_type.name}"}
+ "schema": {"$re": f"#/components/schemas/{object_type.name}"}
  }
  }
  }
@@ -782,14 +788,14 @@ class OpenAPISchemaGenerator:
  "required": True,
  "schema": {"type": "string", "format": "uuid"}
  },
- {"$ref": "#/components/parameters/expand"}
+ {"$re": "#/components/parameters/expand"}
  ],
  "responses": {
  "200": {
  "description": "Success",
  "content": {
  "application/json": {
- "schema": {"$ref": f"#/components/schemas/{object_type.name}"}
+ "schema": {"$re": f"#/components/schemas/{object_type.name}"}
  }
  }
  },
@@ -815,7 +821,7 @@ class OpenAPISchemaGenerator:
  "required": True,
  "content": {
  "application/json": {
- "schema": {"$ref": f"#/components/schemas/{object_type.name}Update"}
+ "schema": {"$re": f"#/components/schemas/{object_type.name}Update"}
  }
  }
  },
@@ -824,7 +830,7 @@ class OpenAPISchemaGenerator:
  "description": "Success",
  "content": {
  "application/json": {
- "schema": {"$ref": f"#/components/schemas/{object_type.name}"}
+ "schema": {"$re": f"#/components/schemas/{object_type.name}"}
  }
  }
  },
@@ -867,8 +873,8 @@ class OpenAPISchemaGenerator:
  "operationId": f"get{object_type.name}{link_type.name}",
  "tags": [object_type.name],
  "parameters": [
- {"$ref": "#/components/parameters/limit"},
- {"$ref": "#/components/parameters/offset"}
+ {"$re": "#/components/parameters/limit"},
+ {"$re": "#/components/parameters/offset"}
  ],
  "responses": {
  "200": {
@@ -877,7 +883,7 @@ class OpenAPISchemaGenerator:
  "application/json": {
  "schema": {
  "type": "array",
- "items": {"$ref": f"#/components/schemas/{link_type.toTypeId}"}
+ "items": {"$re": f"#/components/schemas/{link_type.toTypeId}"}
  }
  }
  }
@@ -921,7 +927,7 @@ class OpenAPISchemaGenerator:
  "description": "Success",
  "content": {
  "application/json": {
- "schema": {"$ref": f"#/components/schemas/{link_type.toTypeId}"}
+ "schema": {"$re": f"#/components/schemas/{link_type.toTypeId}"}
  }
  }
  },

@@ -49,11 +49,11 @@ sequenceDiagram
     User->>OMS: POST /api/v1/schemas
     OMS->>OMS: Validate & Create Schema
     OMS->>NATS: Publish ontology.schema.created
-    
+
     NATS->>DK: Notify schema creation
     NATS->>ES: Notify for embedding generation
     NATS->>AS: Log schema creation event
-    
+
     DK->>DK: Update schema cache
     ES->>ES: Generate schema embeddings
     AS->>AS: Record audit trail
@@ -70,7 +70,7 @@ sequenceDiagram
       "const": "1.0"
     },
     "type": {
-      "type": "string", 
+      "type": "string",
       "const": "ontology.schema.created"
     },
     "source": {
@@ -174,7 +174,7 @@ sequenceDiagram
 2. **Validation Setup**: Configure validation rules for the new schema
 3. **Index Creation**: Create necessary database indexes
 
-### For Embedding Service  
+### For Embedding Service
 1. **Schema Analysis**: Analyze schema structure for embedding generation
 2. **Vector Creation**: Generate embeddings for schema elements
 3. **Similarity Index**: Update schema similarity indexes
@@ -204,5 +204,5 @@ Key metrics to track:
 ## Related Events
 
 - [`ontology.schema.updated`](../ontology-schema-updated/) - Schema modification events
-- [`ontology.schema.deleted`](../ontology-schema-deleted/) - Schema deletion events  
+- [`ontology.schema.deleted`](../ontology-schema-deleted/) - Schema deletion events
 - [`terminus.commit.created`](../terminus-commit-created/) - Related data changes

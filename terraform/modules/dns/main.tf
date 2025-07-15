@@ -9,19 +9,19 @@ data "aws_region" "current" {}
 locals {
   account_id = data.aws_caller_identity.current.account_id
   region     = data.aws_region.current.name
-  
+
   # Extract domain components
   domain_parts = split(".", var.domain_name)
   root_domain  = length(local.domain_parts) > 2 ? join(".", slice(local.domain_parts, 1, length(local.domain_parts))) : var.domain_name
   subdomain    = length(local.domain_parts) > 2 ? local.domain_parts[0] : null
-  
+
   # DNS configuration
   ttl_config = {
     short  = 300   # 5 minutes
     medium = 3600  # 1 hour
     long   = 86400 # 24 hours
   }
-  
+
   # Health check configuration
   health_check_config = {
     type                            = "HTTPS"
@@ -36,7 +36,7 @@ locals {
 # Route53 Hosted Zone
 resource "aws_route53_zone" "main" {
   count = var.create_hosted_zone ? 1 : 0
-  
+
   name    = var.domain_name
   comment = "Hosted zone for ${var.project_name} ${var.environment} environment"
 
@@ -51,7 +51,7 @@ resource "aws_route53_zone" "main" {
 # Data source for existing hosted zone
 data "aws_route53_zone" "existing" {
   count = var.create_hosted_zone ? 0 : 1
-  
+
   name         = var.domain_name
   private_zone = false
 }
@@ -109,7 +109,7 @@ resource "aws_acm_certificate_validation" "main" {
 # Main domain A record (apex domain)
 resource "aws_route53_record" "main" {
   count = var.load_balancer_dns_name != "" ? 1 : 0
-  
+
   zone_id = local.hosted_zone_id
   name    = var.domain_name
   type    = "A"
@@ -140,7 +140,7 @@ resource "aws_route53_record" "main" {
 # WWW subdomain redirect
 resource "aws_route53_record" "www" {
   count = var.create_www_redirect && var.load_balancer_dns_name != "" ? 1 : 0
-  
+
   zone_id = local.hosted_zone_id
   name    = "www.${var.domain_name}"
   type    = "A"
@@ -155,7 +155,7 @@ resource "aws_route53_record" "www" {
 # Subdomain records
 resource "aws_route53_record" "subdomains" {
   for_each = var.subdomains
-  
+
   zone_id = local.hosted_zone_id
   name    = "${each.key}.${var.domain_name}"
   type    = each.value.type
@@ -194,7 +194,7 @@ resource "aws_route53_record" "subdomains" {
 # Health checks for main domain
 resource "aws_route53_health_check" "main" {
   count = var.enable_health_checks && var.load_balancer_dns_name != "" ? 1 : 0
-  
+
   fqdn                            = var.domain_name
   port                            = var.health_check_port
   type                            = local.health_check_config.type
@@ -213,10 +213,10 @@ resource "aws_route53_health_check" "main" {
 # Health checks for subdomains
 resource "aws_route53_health_check" "subdomains" {
   for_each = var.enable_health_checks ? {
-    for k, v in var.subdomains : k => v 
+    for k, v in var.subdomains : k => v
     if lookup(v, "health_check", true) && lookup(v, "alias", false)
   } : {}
-  
+
   fqdn                            = "${each.key}.${var.domain_name}"
   port                            = var.health_check_port
   type                            = local.health_check_config.type
@@ -235,7 +235,7 @@ resource "aws_route53_health_check" "subdomains" {
 # Failover records for disaster recovery
 resource "aws_route53_record" "failover_main" {
   count = var.enable_failover && var.failover_load_balancer_dns_name != "" ? 1 : 0
-  
+
   zone_id = local.hosted_zone_id
   name    = var.domain_name
   type    = "A"
@@ -255,7 +255,7 @@ resource "aws_route53_record" "failover_main" {
 
 resource "aws_route53_record" "failover_subdomains" {
   for_each = var.enable_failover && var.failover_load_balancer_dns_name != "" ? var.subdomains : {}
-  
+
   zone_id = local.hosted_zone_id
   name    = "${each.key}.${var.domain_name}"
   type    = each.value.type
@@ -282,7 +282,7 @@ resource "aws_route53_record" "failover_subdomains" {
 # MX records for email
 resource "aws_route53_record" "mx" {
   count = length(var.mx_records) > 0 ? 1 : 0
-  
+
   zone_id = local.hosted_zone_id
   name    = var.domain_name
   type    = "MX"
@@ -293,7 +293,7 @@ resource "aws_route53_record" "mx" {
 # TXT records for domain verification and security
 resource "aws_route53_record" "txt" {
   for_each = var.txt_records
-  
+
   zone_id = local.hosted_zone_id
   name    = each.key == "@" ? var.domain_name : "${each.key}.${var.domain_name}"
   type    = "TXT"
@@ -304,7 +304,7 @@ resource "aws_route53_record" "txt" {
 # SPF record for email security
 resource "aws_route53_record" "spf" {
   count = var.spf_record != "" ? 1 : 0
-  
+
   zone_id = local.hosted_zone_id
   name    = var.domain_name
   type    = "TXT"
@@ -315,7 +315,7 @@ resource "aws_route53_record" "spf" {
 # DMARC record for email security
 resource "aws_route53_record" "dmarc" {
   count = var.dmarc_record != "" ? 1 : 0
-  
+
   zone_id = local.hosted_zone_id
   name    = "_dmarc.${var.domain_name}"
   type    = "TXT"
@@ -326,7 +326,7 @@ resource "aws_route53_record" "dmarc" {
 # DKIM records for email authentication
 resource "aws_route53_record" "dkim" {
   for_each = var.dkim_records
-  
+
   zone_id = local.hosted_zone_id
   name    = "${each.key}._domainkey.${var.domain_name}"
   type    = "TXT"
@@ -337,7 +337,7 @@ resource "aws_route53_record" "dkim" {
 # CAA records for certificate authority authorization
 resource "aws_route53_record" "caa" {
   count = length(var.caa_records) > 0 ? 1 : 0
-  
+
   zone_id = local.hosted_zone_id
   name    = var.domain_name
   type    = "CAA"
@@ -348,7 +348,7 @@ resource "aws_route53_record" "caa" {
 # CNAME records for external services
 resource "aws_route53_record" "cname" {
   for_each = var.cname_records
-  
+
   zone_id = local.hosted_zone_id
   name    = "${each.key}.${var.domain_name}"
   type    = "CNAME"
@@ -359,7 +359,7 @@ resource "aws_route53_record" "cname" {
 # NS records for subdomain delegation
 resource "aws_route53_record" "ns" {
   for_each = var.ns_records
-  
+
   zone_id = local.hosted_zone_id
   name    = "${each.key}.${var.domain_name}"
   type    = "NS"
@@ -370,7 +370,7 @@ resource "aws_route53_record" "ns" {
 # CloudWatch alarms for health checks
 resource "aws_cloudwatch_metric_alarm" "health_check_main" {
   count = var.enable_health_checks && var.enable_health_check_alarms && var.load_balancer_dns_name != "" ? 1 : 0
-  
+
   alarm_name          = "${var.project_name}-${var.environment}-main-domain-health"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = "2"
@@ -394,10 +394,10 @@ resource "aws_cloudwatch_metric_alarm" "health_check_main" {
 
 resource "aws_cloudwatch_metric_alarm" "health_check_subdomains" {
   for_each = var.enable_health_checks && var.enable_health_check_alarms ? {
-    for k, v in var.subdomains : k => v 
+    for k, v in var.subdomains : k => v
     if lookup(v, "health_check", true) && lookup(v, "alias", false)
   } : {}
-  
+
   alarm_name          = "${var.project_name}-${var.environment}-${each.key}-domain-health"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = "2"
@@ -422,7 +422,7 @@ resource "aws_cloudwatch_metric_alarm" "health_check_subdomains" {
 # Route53 Resolver for private DNS
 resource "aws_route53_resolver_endpoint" "inbound" {
   count = var.enable_private_dns ? 1 : 0
-  
+
   name      = "${var.project_name}-${var.environment}-resolver-inbound"
   direction = "INBOUND"
 
@@ -443,7 +443,7 @@ resource "aws_route53_resolver_endpoint" "inbound" {
 
 resource "aws_route53_resolver_endpoint" "outbound" {
   count = var.enable_private_dns ? 1 : 0
-  
+
   name      = "${var.project_name}-${var.environment}-resolver-outbound"
   direction = "OUTBOUND"
 
@@ -465,7 +465,7 @@ resource "aws_route53_resolver_endpoint" "outbound" {
 # Route53 Resolver rules for private DNS
 resource "aws_route53_resolver_rule" "private" {
   for_each = var.enable_private_dns ? var.private_dns_rules : {}
-  
+
   domain_name          = each.value.domain_name
   name                 = "${var.project_name}-${var.environment}-${each.key}-rule"
   rule_type            = each.value.rule_type
@@ -488,7 +488,7 @@ resource "aws_route53_resolver_rule" "private" {
 # Associate resolver rules with VPC
 resource "aws_route53_resolver_rule_association" "private" {
   for_each = var.enable_private_dns && var.vpc_id != "" ? var.private_dns_rules : {}
-  
+
   resolver_rule_id = aws_route53_resolver_rule.private[each.key].id
   vpc_id           = var.vpc_id
 }
@@ -496,7 +496,7 @@ resource "aws_route53_resolver_rule_association" "private" {
 # Private hosted zone for internal services
 resource "aws_route53_zone" "private" {
   count = var.enable_private_dns && var.private_domain_name != "" ? 1 : 0
-  
+
   name    = var.private_domain_name
   comment = "Private hosted zone for ${var.project_name} ${var.environment} internal services"
 
@@ -513,7 +513,7 @@ resource "aws_route53_zone" "private" {
 # Internal service records
 resource "aws_route53_record" "internal_services" {
   for_each = var.enable_private_dns && var.private_domain_name != "" ? var.internal_service_records : {}
-  
+
   zone_id = aws_route53_zone.private[0].zone_id
   name    = "${each.key}.${var.private_domain_name}"
   type    = each.value.type
@@ -524,13 +524,13 @@ resource "aws_route53_record" "internal_services" {
 # CloudFormation stack for advanced Route53 features
 resource "aws_cloudformation_stack" "route53_advanced" {
   count = var.enable_advanced_features ? 1 : 0
-  
+
   name = "${var.project_name}-${var.environment}-route53-advanced"
-  
+
   template_body = jsonencode({
     AWSTemplateFormatVersion = "2010-09-09"
     Description = "Advanced Route53 features for ${var.project_name}"
-    
+
     Resources = {
       QueryLoggingConfig = {
         Type = "AWS::Route53::QueryLoggingConfig"
@@ -540,7 +540,7 @@ resource "aws_cloudformation_stack" "route53_advanced" {
         }
       }
     }
-    
+
     Outputs = {
       QueryLoggingConfigId = {
         Value = { Ref = "QueryLoggingConfig" }
@@ -558,7 +558,7 @@ resource "aws_cloudformation_stack" "route53_advanced" {
 # CloudWatch log group for Route53 query logging
 resource "aws_cloudwatch_log_group" "route53_queries" {
   count = var.enable_query_logging ? 1 : 0
-  
+
   name              = "/aws/route53/${var.domain_name}"
   retention_in_days = var.query_log_retention_days
 

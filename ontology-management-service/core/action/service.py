@@ -3,17 +3,21 @@ Action Metadata Service
 OMS 내부 ActionType 메타데이터 관리만 담당
 실제 실행은 Actions Service MSA에서 처리
 """
+import asyncio
 import logging
-import httpx
 import os
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
-import asyncio
 
-from database.clients.unified_http_client import UnifiedHTTPClient, create_basic_client, HTTPClientConfig
-from shared.cache.smart_cache import SmartCacheManager
-from database.clients.terminus_db import TerminusDBClient
+import httpx
 from core.action.metadata_service import ActionMetadataService
+from database.clients.terminus_db import TerminusDBClient
+from database.clients.unified_http_client import (
+    HTTPClientConfig,
+    UnifiedHTTPClient,
+    create_basic_client,
+)
+from shared.cache.smart_cache import SmartCacheManager
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +39,8 @@ class ActionService:
  self.cache = SmartCacheManager(tdb_client)
  self.redis = redis_client
  self.event_publisher = event_publisher
- self.actions_service_url = actions_service_url or os.getenv("ACTIONS_SERVICE_URL", "http://actions-service:8009")
+ self.actions_service_url = actions_service_url or os.getenv("ACTIONS_SERVICE_URL",
+     "http://actions-service:8009")
 
  # 메타데이터 서비스 초기화 (기존 방식 유지)
  self.metadata_service = ActionMetadataService(tdb_client, redis_client)
@@ -58,7 +63,8 @@ class ActionService:
  action_type = await self.metadata_service.get_action_type(action_type_id)
  return action_type.model_dump(mode = "json") if action_type else None
 
- async def update_action_type(self, action_type_id: str, updates: Dict[str, Any]) -> bool:
+ async def update_action_type(self, action_type_id: str, updates: Dict[str,
+     Any]) -> bool:
  """ActionType 메타데이터 업데이트"""
  updated = await self.metadata_service.update_action_type(action_type_id, updates)
  return updated is not None
@@ -67,13 +73,15 @@ class ActionService:
  """ActionType 메타데이터 삭제"""
  return await self.metadata_service.delete_action_type(action_type_id)
 
- async def list_action_types(self, filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+ async def list_action_types(self, filters: Optional[Dict[str,
+     Any]] = None) -> List[Dict[str, Any]]:
  """ActionType 목록 조회"""
  kwargs = filters if filters else {}
  action_types = await self.metadata_service.list_action_types(**kwargs)
  return [action.model_dump(mode = "json") for action in action_types]
 
- async def validate_action_schema(self, action_definition: Dict[str, Any]) -> Dict[str, Any]:
+ async def validate_action_schema(self, action_definition: Dict[str, Any]) -> Dict[str,
+     Any]:
  """ActionType 스키마 검증"""
  action_type_id = action_definition.get("id")
  parameters = action_definition.get("parameters", {})

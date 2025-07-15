@@ -2,8 +2,10 @@
 TerminusPort Adapter - Connects UnifiedDatabaseClient to TerminusPort protocol.
 """
 from typing import Any, Dict, List, Optional
+
 from core.validation.ports import TerminusPort
 from database.clients.unified_database_client import UnifiedDatabaseClient
+
 
 class TerminusPortAdapter(TerminusPort):
  """
@@ -22,23 +24,30 @@ class TerminusPortAdapter(TerminusPort):
  return await self._terminus_client.query(db_name = db, query = sparql)
  return []
 
- async def get_document(self, doc_id: str, db: str = "oms", branch: str = "main") -> Optional[Dict[str, Any]]:
+ async def get_document(self, doc_id: str, db: str = "oms",
+     branch: str = "main") -> Optional[Dict[str, Any]]:
  """Get a document using the low-level TerminusDB client."""
  if self._terminus_client and hasattr(self._terminus_client, 'get_document'):
  # Assuming the low-level client has this method.
  return await self._terminus_client.get_document(db_name = db, doc_id = doc_id)
  return None
 
- async def insert_document(self, document: Dict[str, Any], db: str = "oms", branch: str = "main", author: Optional[str] = None, message: Optional[str] = None) -> str:
+ async def insert_document(self, document: Dict[str, Any], db: str = "oms",
+     branch: str = "main", author: Optional[str] = None,
+     message: Optional[str] = None) -> str:
  """Insert a document using the low-level TerminusDB client."""
  if self._terminus_client and hasattr(self._terminus_client, 'insert_document'):
- return await self._terminus_client.insert_document(db_name = db, document = document, author = author, commit_msg = message)
+ return await self._terminus_client.insert_document(db_name = db, document = document,
+     author = author, commit_msg = message)
  return ""
 
- async def update_document(self, document: Dict[str, Any], db: str = "oms", branch: str = "main", author: Optional[str] = None, message: Optional[str] = None) -> bool:
+ async def update_document(self, document: Dict[str, Any], db: str = "oms",
+     branch: str = "main", author: Optional[str] = None,
+     message: Optional[str] = None) -> bool:
  """Update a document using the low-level TerminusDB client."""
  if self._terminus_client and hasattr(self._terminus_client, 'update_document'):
- return await self._terminus_client.update_document(db_name = db, document = document, author = author, commit_msg = message)
+ return await self._terminus_client.update_document(db_name = db, document = document,
+     author = author, commit_msg = message)
  return False
 
  async def health_check(self) -> bool:

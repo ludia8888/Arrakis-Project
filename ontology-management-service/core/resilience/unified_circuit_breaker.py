@@ -4,13 +4,14 @@ Consolidates all circuit breaker implementations with configurable behavior
 """
 
 import asyncio
-import time
 import logging
-from enum import Enum
-from typing import Optional, Callable, Any, Dict, List, Union, Set
-from dataclasses import dataclass, field
+import time
 from collections import deque
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Set, Union
+
 import redis.asyncio as redis
 
 logger = logging.getLogger(__name__)
@@ -205,7 +206,8 @@ class UnifiedCircuitBreaker:
  self._half_open_calls += 1
 
  # Execute the function
- result = await func(*args, **kwargs) if asyncio.iscoroutinefunction(func) else func(*args, **kwargs)
+ result = await func(*args,
+     **kwargs) if asyncio.iscoroutinefunction(func) else func(*args, **kwargs)
 
  # Record success
  response_time = time.time() - start_time
@@ -424,7 +426,8 @@ def circuit_breaker(name: str = None, config: CircuitBreakerConfig = None):
 _circuit_breaker_registry: Dict[str, UnifiedCircuitBreaker] = {}
 
 
-def get_circuit_breaker(name: str, config: CircuitBreakerConfig = None) -> UnifiedCircuitBreaker:
+def get_circuit_breaker(name: str,
+    config: CircuitBreakerConfig = None) -> UnifiedCircuitBreaker:
  """Get or create a circuit breaker from registry"""
  if name not in _circuit_breaker_registry:
  _circuit_breaker_registry[name] = UnifiedCircuitBreaker(name, config)

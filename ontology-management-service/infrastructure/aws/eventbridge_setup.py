@@ -4,7 +4,7 @@ EventBridge 리소스 생성 및 IAM 권한 설정
 """
 import json
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 import boto3
 from botocore.exceptions import ClientError
@@ -338,7 +338,8 @@ class EventBridgeInfrastructureManager:
  'dashboard_name': dashboard_name
  }
 
- def _should_add_target_to_rule(self, rule_name: str, target_config: Dict[str, Any]) -> bool:
+ def _should_add_target_to_rule(self, rule_name: str, target_config: Dict[str,
+     Any]) -> bool:
  """Rule에 타겟을 추가할지 결정"""
  # 특정 이벤트 타입에만 타겟을 추가하는 로직
  return target_config.get('apply_to_all', False) or \
@@ -456,10 +457,13 @@ if __name__ == "__main__":
  import argparse
 
  parser = argparse.ArgumentParser(description = 'Setup OMS EventBridge Infrastructure')
- parser.add_argument('--event-bus-name', default = 'oms-events', help = 'Event bus name')
+ parser.add_argument('--event-bus-name', default = 'oms-events',
+     help = 'Event bus name')
  parser.add_argument('--aws-region', default = 'us-east-1', help = 'AWS region')
- parser.add_argument('--no-iam-role', action = 'store_true', help = 'Skip IAM role creation')
- parser.add_argument('--no-dashboard', action = 'store_true', help = 'Skip dashboard creation')
+ parser.add_argument('--no-iam-role', action = 'store_true',
+     help = 'Skip IAM role creation')
+ parser.add_argument('--no-dashboard', action = 'store_true',
+     help = 'Skip dashboard creation')
 
  args = parser.parse_args()
 

@@ -19,12 +19,17 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
+from arrakis_common import get_logger, log_operation_end, log_operation_start
 from database.clients.terminus_db import TerminusDBClient
 from shared.events import EventPublisher
-from arrakis_common import get_logger, log_operation_start, log_operation_end
+
 from .models import (
- AuditEvent, ChangeDetail, ChangeOperation,
- ResourceType, RevertRequest, RevertResult
+    AuditEvent,
+    ChangeDetail,
+    ChangeOperation,
+    ResourceType,
+    RevertRequest,
+    RevertResult,
 )
 
 logger = get_logger(__name__)
@@ -225,7 +230,11 @@ class HistoryEventPublisher:
  service = "oms",
  event_type = event_type,
  operation = ChangeOperation(operation) if operation in ChangeOperation.__members__.values() else ChangeOperation.UPDATE,
+
+
  resource_type = ResourceType(resource_type) if resource_type in ResourceType.__members__.values() else ResourceType.UNKNOWN,
+
+
  resource_id = resource_id,
  author = user_context.get('user_id'),
  author_email = user_context.get('email'),

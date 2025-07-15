@@ -2,10 +2,11 @@
 Redis health check implementation
 """
 import asyncio
-from typing import Optional, Dict, Any
-from .base import HealthCheck
-from ..models import HealthCheckResult, HealthStatus
+from typing import Any, Dict, Optional
+
 from ...common.redis_utils import RedisClient, RedisConnectionPool
+from ..models import HealthCheckResult, HealthStatus
+from .base import HealthCheck
 
 
 class RedisHealthCheck(HealthCheck):

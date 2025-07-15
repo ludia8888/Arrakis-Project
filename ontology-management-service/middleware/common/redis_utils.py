@@ -32,11 +32,12 @@ If you're using redis.asyncio directly, please migrate to either:
 import asyncio
 import json
 import logging
-from typing import Any, Dict, Optional, Union, Callable
+from datetime import timedelta
 from functools import wraps
+from typing import Any, Callable, Dict, Optional, Union
+
 import redis.asyncio as redis
 from redis.asyncio.connection import ConnectionPool
-from datetime import timedelta
 
 logger = logging.getLogger(__name__)
 

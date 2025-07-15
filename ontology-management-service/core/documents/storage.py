@@ -2,16 +2,22 @@
 Document Storage for Unfoldable Documents
 Provides persistent storage and retrieval for documents with unfoldable content
 """
-from typing import Dict, Any, List, Optional, Tuple
-from dataclasses import dataclass, asdict
-from datetime import datetime
-import json
 import hashlib
+import json
 import uuid
+from dataclasses import asdict, dataclass
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
 
-from .unfoldable import UnfoldableDocument, UnfoldableProcessor, UnfoldContext, UnfoldLevel
-from .metadata_frames import MetadataFrameParser
 from arrakis_common import get_logger
+
+from .metadata_frames import MetadataFrameParser
+from .unfoldable import (
+    UnfoldableDocument,
+    UnfoldableProcessor,
+    UnfoldContext,
+    UnfoldLevel,
+)
 
 logger = get_logger(__name__)
 
@@ -389,6 +395,8 @@ class DocumentStorage:
  "total_unfoldable_fields": total_unfoldable_fields,
  "average_size_bytes": total_size // total_docs if total_docs > 0 else 0,
  "average_unfoldable_fields": total_unfoldable_fields // total_docs if total_docs > 0 else 0,
+
+
  "tag_statistics": tag_counts,
  "storage_efficiency": {
  "compression_ratio": 0.8, # Placeholder for compression stats

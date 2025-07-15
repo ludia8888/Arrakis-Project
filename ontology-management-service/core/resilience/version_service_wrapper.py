@@ -14,8 +14,8 @@ from typing import Any, Callable, Coroutine, Dict, Optional, Tuple, TypeVar
 # Production circuit breaker implementation - required for resilience
 import pybreaker
 import structlog
-from bootstrap.config import get_config
 from arrakis_common import get_logger
+from bootstrap.config import get_config
 from core.auth_utils import UserContext
 from core.versioning.version_service import VersionTrackingService, get_version_service
 from models.etag import CacheValidation, DeltaRequest, DeltaResponse, ResourceVersion
@@ -68,7 +68,8 @@ cache_memory_usage_bytes = Gauge(
 T = TypeVar("T")
 
 
-def circuit_breaker(func: Callable[..., Coroutine[Any, Any, T]]) -> Callable[..., Coroutine[Any, Any, T]]: # type: ignore
+def circuit_breaker(func: Callable[..., Coroutine[Any, Any, T]]) -> Callable[...,
+    Coroutine[Any, Any, T]]: # type: ignore
  """No-op circuit breaker decorator (fallback).
 
  실제 회로 차단 로직은 `ResilientVersionService` 내부에서 pybreaker 인스턴스를
@@ -246,7 +247,7 @@ class ResilientVersionService:
  cache_memory_usage_bytes.set(estimated_size)
 
  async def _execute_with_retry(self, func: Callable, *args, **kwargs) -> Any:
- """Execute function with retry logic and exponential backoff"""
+ """Execute function with retry logic and exponential backof"""
  last_exception = None
 
  for attempt in range(self.max_retries):

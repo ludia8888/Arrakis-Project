@@ -9,22 +9,23 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from core.validation.models import (
- BreakingChange,
- ImpactEstimate,
- MigrationOptions,
- MigrationPlan,
- MigrationStep,
- RuleExecutionResult,
- Severity,
- ValidationContext,
- ValidationRequest,
- ValidationResult,
- ValidationWarning,
-)
-from core.validation.ports import CachePort, TerminusPort, EventPort, ValidationContext as PortContext
-from core.validation.rule_registry import RuleRegistry, load_rules
 from core.validation.interfaces import BreakingChangeRule
+from core.validation.models import (
+    BreakingChange,
+    ImpactEstimate,
+    MigrationOptions,
+    MigrationPlan,
+    MigrationStep,
+    RuleExecutionResult,
+    Severity,
+    ValidationContext,
+    ValidationRequest,
+    ValidationResult,
+    ValidationWarning,
+)
+from core.validation.ports import CachePort, EventPort, TerminusPort
+from core.validation.ports import ValidationContext as PortContext
+from core.validation.rule_registry import RuleRegistry, load_rules
 
 logger = logging.getLogger(__name__)
 
@@ -122,7 +123,8 @@ class ValidationService:
  validation_id = validation_id,
  source_branch = request.source_branch,
  target_branch = request.target_branch,
- is_valid = len([bc for bc in breaking_changes if bc.severity in [Severity.CRITICAL, Severity.HIGH]]) == 0,
+ is_valid = len([bc for bc in breaking_changes if bc.severity in [Severity.CRITICAL,
+     Severity.HIGH]]) == 0,
  breaking_changes = breaking_changes,
  warnings = warnings if request.include_warnings else [],
  impact_analysis = impact_analysis,
@@ -136,7 +138,8 @@ class ValidationService:
  await self._publish_validation_event(result)
 
  logger.info(f"Validation {validation_id} completed in {execution_time:.2f}s")
- logger.info(f"Found {len(breaking_changes)} breaking changes, {len(warnings)} warnings")
+ logger.info(f"Found {len(breaking_changes)} breaking changes,
+     {len(warnings)} warnings")
 
  return result
 
@@ -144,7 +147,8 @@ class ValidationService:
  logger.error(f"Validation {validation_id} failed: {e}")
  raise
 
- async def _build_validation_context(self, request: ValidationRequest) -> ValidationContext:
+ async def _build_validation_context(self,
+     request: ValidationRequest) -> ValidationContext:
  """Port를 사용한 검증 컨텍스트 구성"""
 
  # 스키마 조회 (Port 인터페이스 사용)
@@ -305,6 +309,8 @@ class ValidationService:
  return {
  "total_breaking_changes": len(breaking_changes),
  "critical_changes": len([bc for bc in breaking_changes if bc.severity == Severity.CRITICAL]),
+
+
  "estimated_migration_hours": len(breaking_changes) * 2
  }
 

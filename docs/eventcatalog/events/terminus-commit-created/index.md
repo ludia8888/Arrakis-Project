@@ -54,12 +54,12 @@ sequenceDiagram
     DK->>TDB: Execute transaction
     TDB->>DK: Return commit info
     DK->>NATS: Publish terminus.commit.created
-    
+
     NATS->>OMS: Notify data changes
     NATS->>ES: Update embeddings
     NATS->>AS: Log data change
     NATS->>EG: Route to webhooks
-    
+
     parallel
         OMS->>OMS: Update schema stats
     and
@@ -113,7 +113,7 @@ sequenceDiagram
           "description": "Unique commit identifier"
         },
         "database_id": {
-          "type": "string", 
+          "type": "string",
           "description": "Target database identifier"
         },
         "branch": {
@@ -142,7 +142,7 @@ sequenceDiagram
               "description": "Number of triples inserted"
             },
             "deletions": {
-              "type": "integer", 
+              "type": "integer",
               "description": "Number of triples deleted"
             },
             "document_changes": {
@@ -152,7 +152,7 @@ sequenceDiagram
                 "type": "object",
                 "properties": {
                   "document_id": { "type": "string" },
-                  "operation": { 
+                  "operation": {
                     "type": "string",
                     "enum": ["create", "update", "delete"]
                   },
@@ -194,7 +194,7 @@ sequenceDiagram
 {
   "specversion": "1.0",
   "type": "terminus.commit.created",
-  "source": "data-kernel-service", 
+  "source": "data-kernel-service",
   "subject": "commit/knowledge-base/abc123def456",
   "id": "7f9c8e7d-4b2a-4d8f-9e1c-3a5b7c9d1e2f",
   "time": "2024-01-15T14:23:45Z",
@@ -217,7 +217,7 @@ sequenceDiagram
         },
         {
           "document_id": "category-electronics",
-          "operation": "update", 
+          "operation": "update",
           "document_type": "Category"
         }
       ]

@@ -2,21 +2,28 @@
 Branch Lock Management API
 Administrative endpoints for managing branch locks and schema freeze
 """
-from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
-from pydantic import BaseModel, Field
+from typing import Any, Dict, List, Optional
 
+from arrakis_common import get_logger
 from core.auth_utils import UserContext
-from middleware.auth_middleware import get_current_user
-from core.branch.lock_manager import get_lock_manager, LockConflictError, InvalidStateTransitionError
-from models.branch_state import (
- BranchState, BranchLock, BranchStateInfo,
- LockType, LockScope
+from core.branch.lock_manager import (
+    InvalidStateTransitionError,
+    LockConflictError,
+    get_lock_manager,
 )
 from core.iam.dependencies import require_scope
 from core.iam.iam_integration import IAMScope
-from arrakis_common import get_logger
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from middleware.auth_middleware import get_current_user
+from models.branch_state import (
+    BranchLock,
+    BranchState,
+    BranchStateInfo,
+    LockScope,
+    LockType,
+)
+from pydantic import BaseModel, Field
 
 logger = get_logger(__name__)
 router = APIRouter(prefix = "/branch-locks", tags = ["Branch Lock Management"])
@@ -59,32 +66,41 @@ class ForceUnlockRequest(BaseModel):
 
 class StartIndexingRequest(BaseModel):
  """Request to start indexing (Foundry-style)"""
- resource_types: Optional[List[str]] = Field(None, description = "Specific resource types to index")
- force_branch_lock: bool = Field(False, description = "Force full branch lock (legacy mode)")
+ resource_types: Optional[List[str]] = Field(None,
+     description = "Specific resource types to index")
+ force_branch_lock: bool = Field(False,
+     description = "Force full branch lock (legacy mode)")
  reason: str = Field("Data indexing in progress", description = "Reason for indexing")
 
 
 class IndexingResponse(BaseModel):
  """Response after starting indexing (Foundry-style)"""
  lock_ids: List[str] = Field(..., description = "List of acquired lock IDs")
- locked_resource_types: List[str] = Field(..., description = "Resource types that were locked")
- lock_scope: str = Field(..., description = "Scope of locking (branch or resource_type)")
+ locked_resource_types: List[str] = Field(...,
+     description = "Resource types that were locked")
+ lock_scope: str = Field(...,
+     description = "Scope of locking (branch or resource_type)")
  message: str = Field(..., description = "Success message")
  branch_state: str = Field(..., description = "Current branch state")
- other_resources_available: bool = Field(..., description = "Whether other resources can still be edited")
+ other_resources_available: bool = Field(...,
+     description = "Whether other resources can still be edited")
 
 
 class CompleteIndexingRequest(BaseModel):
  """Request to complete indexing (Foundry-style)"""
- resource_types: Optional[List[str]] = Field(None, description = "Specific resource types that completed indexing")
+ resource_types: Optional[List[str]] = Field(None,
+     description = "Specific resource types that completed indexing")
  reason: str = Field("Indexing completed", description = "Reason for completion")
 
 
 class HeartbeatRequest(BaseModel):
  """Request to send a heartbeat for a lock"""
- service_name: str = Field(..., description = "Name of the service sending the heartbeat")
- status: str = Field("healthy", description = "Status of the service (healthy, warning, error)")
- progress_info: Optional[Dict[str, Any]] = Field(None, description = "Optional progress information")
+ service_name: str = Field(...,
+     description = "Name of the service sending the heartbeat")
+ status: str = Field("healthy", description = "Status of the service (healthy, warning,
+     error)")
+ progress_info: Optional[Dict[str, Any]] = Field(None,
+     description = "Optional progress information")
 
 
 class HeartbeatResponse(BaseModel):
@@ -117,7 +133,8 @@ class ExtendTTLRequest(BaseModel):
 
 # Administrative Endpoints
 
-@router.get("/status/{branch_name}", dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
+@router.get("/status/{branch_name}",
+    dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def get_branch_status(
  branch_name: str,
  req: Request,
@@ -162,7 +179,8 @@ async def list_active_locks(
  return await lock_manager.list_active_locks(branch_name)
 
 
-@router.get("/locks/{lock_id}", dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
+@router.get("/locks/{lock_id}",
+    dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def get_lock_status(
  lock_id: str,
  req: Request,
@@ -181,7 +199,8 @@ async def get_lock_status(
  return lock
 
 
-@router.post("/acquire", dependencies = [Depends(require_scope([IAMScope.BRANCHES_WRITE, IAMScope.SYSTEM_ADMIN]))])
+@router.post("/acquire", dependencies = [Depends(require_scope([IAMScope.BRANCHES_WRITE,
+    IAMScope.SYSTEM_ADMIN]))])
 async def acquire_lock(
  request: LockRequest,
  req: Request,
@@ -231,7 +250,8 @@ async def acquire_lock(
  )
 
 
-@router.delete("/locks/{lock_id}", dependencies = [Depends(require_scope([IAMScope.BRANCHES_WRITE]))])
+@router.delete("/locks/{lock_id}",
+    dependencies = [Depends(require_scope([IAMScope.BRANCHES_WRITE]))])
 async def release_lock(
  lock_id: str,
  req: Request,
@@ -266,7 +286,8 @@ async def release_lock(
  )
 
 
-@router.post("/force-unlock/{branch_name}", dependencies = [Depends(require_scope([IAMScope.SYSTEM_ADMIN]))]) # Only admins can force unlock
+@router.post("/force-unlock/{branch_name}",
+    dependencies = [Depends(require_scope([IAMScope.SYSTEM_ADMIN]))]) # Only admins can force unlock
 async def force_unlock_branch(
  branch_name: str,
  request: ForceUnlockRequest,
@@ -305,7 +326,9 @@ async def force_unlock_branch(
 
 # Service Integration Endpoints (for Funnel Service, etc.)
 
-@router.post("/indexing/{branch_name}/start", dependencies = [Depends(require_scope([IAMScope.BRANCHES_WRITE, IAMScope.SERVICE_ACCOUNT]))])
+@router.post("/indexing/{branch_name}/start",
+    dependencies = [Depends(require_scope([IAMScope.BRANCHES_WRITE,
+    IAMScope.SERVICE_ACCOUNT]))])
 async def start_indexing(
  branch_name: str,
  request: StartIndexingRequest,
@@ -369,7 +392,10 @@ async def start_indexing(
  locked_resource_types = locked_resource_types,
  lock_scope = lock_scope,
  message = f"Indexing started for branch {branch_name}" +
- (f" (resource types: {', '.join(locked_resource_types)})" if lock_scope == "resource_type" else " (full branch)"),
+ (f" (resource types: {',
+     '.join(locked_resource_types)})" if lock_scope == "resource_type" else " (full branch)"),
+
+
  branch_state = branch_state.current_state.value,
  other_resources_available = other_resources_available
  )
@@ -381,7 +407,9 @@ async def start_indexing(
  )
 
 
-@router.post("/indexing/{branch_name}/complete", dependencies = [Depends(require_scope([IAMScope.BRANCHES_WRITE, IAMScope.SERVICE_ACCOUNT]))])
+@router.post("/indexing/{branch_name}/complete",
+    dependencies = [Depends(require_scope([IAMScope.BRANCHES_WRITE,
+    IAMScope.SERVICE_ACCOUNT]))])
 async def complete_indexing(
  branch_name: str,
  request: CompleteIndexingRequest,
@@ -452,7 +480,8 @@ async def complete_indexing(
 
 # Utility Endpoints
 
-@router.post("/cleanup-expired", dependencies = [Depends(require_scope([IAMScope.SYSTEM_ADMIN]))])
+@router.post("/cleanup-expired",
+    dependencies = [Depends(require_scope([IAMScope.SYSTEM_ADMIN]))])
 async def cleanup_expired_locks(
  req: Request,
  user: UserContext = Depends(get_current_user),
@@ -472,7 +501,8 @@ async def cleanup_expired_locks(
 
 # Dashboard/Monitoring Endpoints
 
-@router.get("/dashboard", dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
+@router.get("/dashboard",
+    dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def get_dashboard_data(
  req: Request,
  user: UserContext = Depends(get_current_user),
@@ -503,7 +533,8 @@ async def get_dashboard_data(
 
 # TTL & Heartbeat Endpoints (Priority 4 Feature)
 
-@router.post("/locks/{lock_id}/heartbeat", dependencies = [Depends(require_scope([IAMScope.BRANCHES_WRITE]))])
+@router.post("/locks/{lock_id}/heartbeat",
+    dependencies = [Depends(require_scope([IAMScope.BRANCHES_WRITE]))])
 async def send_lock_heartbeat(
  lock_id: str,
  request: HeartbeatRequest,
@@ -552,7 +583,8 @@ async def send_lock_heartbeat(
  )
 
 
-@router.get("/locks/{lock_id}/health", dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
+@router.get("/locks/{lock_id}/health",
+    dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def get_lock_health(
  lock_id: str,
  req: Request,
@@ -571,7 +603,8 @@ async def get_lock_health(
  return LockHealthResponse(**health_info)
 
 
-@router.post("/locks/{lock_id}/extend-ttl", dependencies = [Depends(require_scope([IAMScope.BRANCHES_WRITE]))])
+@router.post("/locks/{lock_id}/extend-ttl",
+    dependencies = [Depends(require_scope([IAMScope.BRANCHES_WRITE]))])
 async def extend_lock_ttl(
  lock_id: str,
  request: ExtendTTLRequest,
@@ -623,7 +656,8 @@ async def extend_lock_ttl(
  )
 
 
-@router.post("/cleanup-heartbeat-expired", dependencies = [Depends(require_scope([IAMScope.SYSTEM_ADMIN]))])
+@router.post("/cleanup-heartbeat-expired",
+    dependencies = [Depends(require_scope([IAMScope.SYSTEM_ADMIN]))])
 async def cleanup_heartbeat_expired_locks(
  req: Request,
  user: UserContext = Depends(get_current_user),
@@ -641,7 +675,8 @@ async def cleanup_heartbeat_expired_locks(
  return {"message": "Heartbeat expired locks cleanup completed"}
 
 
-@router.get("/locks/health-summary", dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
+@router.get("/locks/health-summary",
+    dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def get_locks_health_summary(
  req: Request,
  user: UserContext = Depends(get_current_user),

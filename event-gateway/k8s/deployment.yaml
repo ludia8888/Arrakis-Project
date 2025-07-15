@@ -58,28 +58,34 @@ data:
   DEDUPLICATION_WINDOW_MINUTES: "5"
 
 ---
-apiVersion: v1
-kind: Secret
-metadata:
-  name: event-gateway-secrets
-  namespace: event-gateway
-type: Opaque
-stringData:
-  DATABASE_URL: "postgresql://event_gateway:password@postgres-rds.cluster-xxx.us-east-1.rds.amazonaws.com:5432/event_gateway_db"
-  REDIS_URL: "redis://redis-cluster.xxx.cache.amazonaws.com:6379/4"
-  NATS_URL: "nats://nats-cluster.event-gateway.svc.cluster.local:4222"
-  NATS_CLUSTER_ID: "arrakis-nats-streaming"
-  KAFKA_BROKERS: "kafka-broker-1.kafka.svc.cluster.local:9092,kafka-broker-2.kafka.svc.cluster.local:9092,kafka-broker-3.kafka.svc.cluster.local:9092"
-  KAFKA_SASL_USERNAME: "event-gateway"
-  KAFKA_SASL_PASSWORD: "your-kafka-password"
-  S3_BUCKET: "arrakis-event-archive"
-  S3_ACCESS_KEY: "your-s3-access-key"
-  S3_SECRET_KEY: "your-s3-secret-key"
-  ENCRYPTION_KEY: "your-encryption-key-base64"
-  JWT_PUBLIC_KEY: |
-    -----BEGIN PUBLIC KEY-----
-    your-rsa-public-key
-    -----END PUBLIC KEY-----
+# WARNING: This Secret template should NOT be applied directly to production!
+# Create secrets using kubectl or external secret management systems:
+#
+# kubectl create secret generic event-gateway-secrets \
+#   --namespace=event-gateway \
+#   --from-literal=DATABASE_URL="${DATABASE_URL}" \
+#   --from-literal=REDIS_URL="${REDIS_URL}" \
+#   --from-literal=NATS_URL="${NATS_URL}" \
+#   --from-literal=NATS_CLUSTER_ID="${NATS_CLUSTER_ID}" \
+#   --from-literal=KAFKA_BROKERS="${KAFKA_BROKERS}" \
+#   --from-literal=KAFKA_SASL_USERNAME="${KAFKA_SASL_USERNAME}" \
+#   --from-literal=KAFKA_SASL_PASSWORD="${KAFKA_SASL_PASSWORD}" \
+#   --from-literal=S3_BUCKET="${S3_BUCKET}" \
+#   --from-literal=S3_ACCESS_KEY="${S3_ACCESS_KEY}" \
+#   --from-literal=S3_SECRET_KEY="${S3_SECRET_KEY}" \
+#   --from-literal=ENCRYPTION_KEY="${ENCRYPTION_KEY}" \
+#   --from-file=JWT_PUBLIC_KEY=/path/to/jwt-public.pem
+#
+# SECURITY NOTE: Event gateway handles sensitive message routing and should use
+# external secret management systems (AWS Secrets Manager, HashiCorp Vault, etc.)
+#
+# apiVersion: v1
+# kind: Secret
+# metadata:
+#   name: event-gateway-secrets
+#   namespace: event-gateway
+# type: Opaque
+# # Data should be provided by external secret management system
 
 ---
 apiVersion: apps/v1

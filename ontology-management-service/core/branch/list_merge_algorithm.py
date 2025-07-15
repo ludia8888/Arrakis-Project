@@ -4,10 +4,10 @@ LCS 기반 리스트 병합 알고리즘
 순서가 중요한 리스트의 3-way merge를 지원합니다.
 """
 
-from typing import List, Dict, Any, Optional, Tuple, TypeVar, Callable
+import logging
 from dataclasses import dataclass
 from enum import Enum
-import logging
+from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar
 
 logger = logging.getLogger(__name__)
 

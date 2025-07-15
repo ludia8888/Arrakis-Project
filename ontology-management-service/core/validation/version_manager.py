@@ -3,11 +3,11 @@ Version Management for JSON Files
 JSON 파일 버전 관리 및 호환성 검사
 """
 import json
-from typing import Dict, List, Optional, Any, Tuple
-from pathlib import Path
-from enum import Enum
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 from arrakis_common import get_logger
 
@@ -151,7 +151,8 @@ class VersionManager:
  ("1.0.0", "1.1.0"): self._migrate_1_0_to_1_1
  }
 
- def add_version_metadata(self, data: Dict, schema_type: str = "naming_convention") -> Dict:
+ def add_version_metadata(self, data: Dict,
+     schema_type: str = "naming_convention") -> Dict:
  """
  JSON 데이터에 버전 메타데이터 추가
 
@@ -192,7 +193,8 @@ class VersionManager:
 
  return result
 
- def check_compatibility(self, file_data: Dict) -> Tuple[VersionCompatibility, Optional[str]]:
+ def check_compatibility(self, file_data: Dict) -> Tuple[VersionCompatibility,
+     Optional[str]]:
  """
  파일 버전 호환성 확인
 
@@ -215,23 +217,28 @@ class VersionManager:
 
  # 최소 지원 버전보다 낮음
  if file_version < self.MINIMUM_SUPPORTED_VERSION:
- return VersionCompatibility.INCOMPATIBLE, f"File version {file_version} is below minimum supported version {self.MINIMUM_SUPPORTED_VERSION}"
+ return VersionCompatibility.INCOMPATIBLE,
+     f"File version {file_version} is below minimum supported version {self.MINIMUM_SUPPORTED_VERSION}"
 
  # 현재 버전보다 높음 (미래 버전)
  if file_version > current_version:
  # Minor 버전 차이는 하위 호환 가능
  if file_version.major == current_version.major and file_version.minor - current_version.minor <= 1:
- return VersionCompatibility.BACKWARD_COMPATIBLE, f"File version {file_version} is newer but backward compatible"
+ return VersionCompatibility.BACKWARD_COMPATIBLE,
+     f"File version {file_version} is newer but backward compatible"
  else:
- return VersionCompatibility.INCOMPATIBLE, f"File version {file_version} is too new (current: {current_version})"
+ return VersionCompatibility.INCOMPATIBLE,
+     f"File version {file_version} is too new (current: {current_version})"
 
  # 현재 버전보다 낮음 (구 버전)
  if file_version < current_version:
  # Major 버전이 같으면 마이그레이션 가능
  if file_version.major == current_version.major:
- return VersionCompatibility.MIGRATION_REQUIRED, f"File version {file_version} requires migration to {current_version}"
+ return VersionCompatibility.MIGRATION_REQUIRED,
+     f"File version {file_version} requires migration to {current_version}"
  else:
- return VersionCompatibility.INCOMPATIBLE, f"File version {file_version} has incompatible major version"
+ return VersionCompatibility.INCOMPATIBLE,
+     f"File version {file_version} has incompatible major version"
 
  return VersionCompatibility.COMPATIBLE, "Version check completed"
 
@@ -473,7 +480,8 @@ def migrate_file_if_needed(data: Dict) -> Tuple[Dict, bool, List[str]]:
  if compatibility == VersionCompatibility.MIGRATION_REQUIRED:
  migrated_data, migrations = manager.migrate_file(data)
  return migrated_data, True, migrations
- elif compatibility in [VersionCompatibility.COMPATIBLE, VersionCompatibility.BACKWARD_COMPATIBLE]:
+ elif compatibility in [VersionCompatibility.COMPATIBLE,
+     VersionCompatibility.BACKWARD_COMPATIBLE]:
  # 호환 가능하지만 메타데이터 업데이트
  metadata = manager.get_version_info(data)
  if metadata:

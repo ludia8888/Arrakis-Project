@@ -2,9 +2,10 @@
 Database Optimizations for Time Travel Queries
 Index creation and query optimization strategies
 """
-from typing import List, Dict, Any
-from shared.database.sqlite_connector import SQLiteConnector
+from typing import Any, Dict, List
+
 from arrakis_common import get_logger
+from shared.database.sqlite_connector import SQLiteConnector
 
 logger = get_logger(__name__)
 
@@ -195,7 +196,8 @@ class TimeTravelDBOptimizer:
  except Exception as e:
  logger.error(f"Failed to create view: {e}")
 
- async def get_query_plan(self, query: str, params: Dict[str, Any]) -> List[Dict[str, Any]]:
+ async def get_query_plan(self, query: str, params: Dict[str, Any]) -> List[Dict[str,
+     Any]]:
  """
  Get query execution plan for optimization
  """
@@ -235,7 +237,7 @@ class TimeTravelDBOptimizer:
  if size['count'] > 1000000:
  suggestions.append(
  f"Table {table} has {size['count']} rows - "
- f"consider partitioning or archiving old data"
+ "consider partitioning or archiving old data"
  )
 
  # Check for missing statistics

@@ -2,10 +2,11 @@
 Time Travel Query Models
 Models for temporal queries and point-in-time data access
 """
-from typing import Optional, List, Dict, Any, Union
 from datetime import datetime
-from pydantic import BaseModel, Field, field_validator
 from enum import Enum
+from typing import Any, Dict, List, Optional, Union
+
+from pydantic import BaseModel, Field, field_validator
 
 
 class TemporalOperator(str, Enum):
@@ -25,7 +26,8 @@ class TemporalReference(BaseModel):
  timestamp: Optional[datetime] = Field(None, description = "Specific timestamp")
  version: Optional[int] = Field(None, description = "Specific version number")
  commit_hash: Optional[str] = Field(None, description = "Specific commit hash")
- relative_time: Optional[str] = Field(None, description = "Relative time like '-1h', '-7d'")
+ relative_time: Optional[str] = Field(None, description = "Relative time like '-1h',
+     '-7d'")
 
  @field_validator('relative_time')
  @classmethod
@@ -73,8 +75,10 @@ class TemporalQuery(BaseModel):
  operator: TemporalOperator = Field(..., description = "Temporal operator")
 
  # Time references
- point_in_time: Optional[TemporalReference] = Field(None, description = "Single point in time")
- start_time: Optional[TemporalReference] = Field(None, description = "Start of time range")
+ point_in_time: Optional[TemporalReference] = Field(None,
+     description = "Single point in time")
+ start_time: Optional[TemporalReference] = Field(None,
+     description = "Start of time range")
  end_time: Optional[TemporalReference] = Field(None, description = "End of time range")
 
  # Query options
@@ -85,7 +89,8 @@ class TemporalQuery(BaseModel):
  @classmethod
  def validate_point_in_time(cls, v, values):
  operator = values.get('operator')
- if operator in [TemporalOperator.AS_OF, TemporalOperator.BEFORE, TemporalOperator.AFTER]:
+ if operator in [TemporalOperator.AS_OF, TemporalOperator.BEFORE,
+     TemporalOperator.AFTER]:
  if not v:
  raise ValueError(f"point_in_time required for {operator} operator")
  return v
@@ -127,7 +132,8 @@ class TemporalJoinQuery(BaseModel):
  join_type: str = Field("inner", description = "Join type: inner, left, right, full")
 
  # Temporal alignment
- temporal_alignment: str = Field("same_time", description = "How to align time: same_time, latest, earliest")
+ temporal_alignment: str = Field("same_time",
+     description = "How to align time: same_time, latest, earliest")
 
 
 class TemporalResourceVersion(BaseModel):

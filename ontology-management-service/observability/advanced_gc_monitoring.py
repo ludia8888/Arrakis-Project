@@ -1,5 +1,5 @@
 """
-실전급 Garbage Collection 및 메모리 모니터링
+Production-grade Garbage Collection and memory monitoring
 gc.get_stats(), tracemalloc, objgraph, psutil 통합 구현
 """
 import asyncio
@@ -20,14 +20,14 @@ from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 import objgraph
 import psutil
 from prometheus_client import (
- REGISTRY,
- CollectorRegistry,
- Counter,
- Gauge,
- Histogram,
- Info,
- Metric,
- Summary,
+    REGISTRY,
+    CollectorRegistry,
+    Counter,
+    Gauge,
+    Histogram,
+    Info,
+    Metric,
+    Summary,
 )
 
 logger = logging.getLogger(__name__)
@@ -80,7 +80,7 @@ class AdvancedGCMonitor:
  "python_gc_collections_total", "Total garbage collections", ["generation"]
  )
 
- # GC 수집 시간
+ # GC 수집 hours
  self.gc_collection_time_seconds = Histogram(
  "python_gc_collection_time_seconds",
  "Time spent in garbage collection",
@@ -175,7 +175,7 @@ class AdvancedGCMonitor:
  logger.info("tracemalloc started for memory leak detection")
 
  def _gc_callback(self, phase: str, info: Dict):
- """GC 콜백 - 실시간 GC 이벤트 처리"""
+ """GC 콜백 - 실hours GC 이벤트 처리"""
  try:
  generation = info.get("generation", -1)
  if generation >= 0:
@@ -207,7 +207,7 @@ class AdvancedGCMonitor:
  logger.error(f"Error in GC callback: {e}")
 
  def collect_gc_stats(self):
- """실시간 GC 통계 수집"""
+ """실hours GC 통계 수집"""
  try:
  # gc.get_stats() 사용
  stats = gc.get_stats()
@@ -216,7 +216,7 @@ class AdvancedGCMonitor:
  if i < 3: # 세대 0, 1, 2
  gen_stat = self.gen_stats[i]
 
- # 이전 값과 비교하여 증분 계산
+ # 이전 값과 비교하여 증minutes 계산
  prev_collections = self.previous_stats.get(f"gen{i}_collections", 0)
  prev_collected = self.previous_stats.get(f"gen{i}_collected", 0)
  prev_uncollectable = self.previous_stats.get(
@@ -227,7 +227,7 @@ class AdvancedGCMonitor:
  current_collected = stat.get("collected", 0)
  current_uncollectable = stat.get("uncollectable", 0)
 
- # 증분 계산
+ # 증minutes 계산
  if current_collections > prev_collections:
  collections_delta = current_collections - prev_collections
  self.gc_collections_total.labels(
@@ -449,12 +449,12 @@ class AdvancedGCMonitor:
  """메모리 최적화 권장사항 생성"""
  recommendations = []
 
- # GC 성능 분석
+ # GC 성능 minutes석
  for gen, stats in report.get("gc_stats", {}).items():
  avg_time = stats.get("avg_collection_time", 0)
  if avg_time > 0.1: # 100ms 이상
  recommendations.append(
- f"{gen}: GC 시간이 길어짐 ({avg_time:.3f}s). 객체 생성 패턴 검토 필요"
+ f"{gen}: GC hours이 길어짐 ({avg_time:.3f}s). Create object 패턴 검토 필요"
  )
 
  uncollectable = stats.get("uncollectable", 0)
@@ -463,7 +463,7 @@ class AdvancedGCMonitor:
  f"{gen}: 수집 불가능한 객체 발견 ({uncollectable}개). 순환 참조 확인 필요"
  )
 
- # 메모리 사용량 분석
+ # 메모리 사용량 minutes석
  memory = report.get("process_memory", {})
  memory_percent = memory.get("percent", 0)
  if memory_percent > 80:
@@ -546,7 +546,7 @@ class GCCustomCollector:
 
  def collect(self):
  """Prometheus 메트릭 수집"""
- # 실시간 데이터 갱신
+ # 실hours 데이터 갱신
  self.gc_monitor.collect_gc_stats()
  self.gc_monitor.collect_process_memory_stats()
  self.gc_monitor.collect_tracemalloc_stats()

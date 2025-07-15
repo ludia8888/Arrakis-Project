@@ -2,19 +2,17 @@
 Version Tracking API Routes
 Endpoints for version history and delta synchronization
 """
-from typing import Optional, List, Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, status, Header, Query, Request
-from pydantic import BaseModel, Field
+from typing import Any, Dict, List, Optional
 
+from arrakis_common import get_logger
 from core.auth_utils import UserContext
-from middleware.auth_middleware import get_current_user
-from core.versioning.version_service import get_version_service
-from models.etag import (
- DeltaRequest, CacheValidation, VersionInfo, ResourceVersion
-)
 from core.iam.dependencies import require_scope
 from core.iam.iam_integration import IAMScope
-from arrakis_common import get_logger
+from core.versioning.version_service import get_version_service
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
+from middleware.auth_middleware import get_current_user
+from models.etag import CacheValidation, DeltaRequest, ResourceVersion, VersionInfo
+from pydantic import BaseModel, Field
 
 logger = get_logger(__name__)
 router = APIRouter(prefix = "/versions", tags = ["Version Tracking"])
@@ -56,7 +54,8 @@ class BulkValidationRequest(BaseModel):
 
 # Version History Endpoints
 
-@router.get("/history/{resource_type}/{resource_id}", dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
+@router.get("/history/{resource_type}/{resource_id}",
+    dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def get_version_history(
  resource_type: str,
  resource_id: str,
@@ -91,7 +90,8 @@ async def get_version_history(
  )
 
 
-@router.get("/version/{resource_type}/{resource_id}/{version}", dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
+@router.get("/version/{resource_type}/{resource_id}/{version}",
+    dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def get_specific_version(
  resource_type: str,
  resource_id: str,
@@ -122,7 +122,8 @@ async def get_specific_version(
 
 # Delta Sync Endpoints
 
-@router.post("/delta/{resource_type}/{resource_id}", dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
+@router.post("/delta/{resource_type}/{resource_id}",
+    dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def get_resource_delta(
  resource_type: str,
  resource_id: str,
@@ -197,7 +198,8 @@ async def bulk_sync(
 
 # Cache Validation Endpoints
 
-@router.post("/validate-cache", dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
+@router.post("/validate-cache",
+    dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def validate_cache(
  validation: CacheValidation,
  req: Request,
@@ -212,7 +214,8 @@ async def validate_cache(
  return result
 
 
-@router.post("/validate", dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
+@router.post("/validate",
+    dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def validate_single_etag(
  req: Request,
  resource_type: str = Query(..., description = "Resource type"),
@@ -244,7 +247,8 @@ async def validate_single_etag(
 
 # Version Summary Endpoints
 
-@router.get("/summary/{branch}", dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
+@router.get("/summary/{branch}",
+    dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def get_branch_version_summary(
  branch: str,
  req: Request,
@@ -261,7 +265,8 @@ async def get_branch_version_summary(
  return summary
 
 
-@router.post("/compare/{branch1}/{branch2}", dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
+@router.post("/compare/{branch1}/{branch2}",
+    dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def compare_branches(
  branch1: str,
  branch2: str,
@@ -303,7 +308,7 @@ async def compare_branches(
  "resource_type": resource_type,
  "branch1_version": info1["max_version"],
  "branch2_version": info2["max_version"],
- "version_diff": info1["max_version"] - info2["max_version"]
+ "version_dif": info1["max_version"] - info2["max_version"]
  })
 
  return comparison
@@ -311,7 +316,8 @@ async def compare_branches(
 
 # Conflict Resolution Endpoints
 
-@router.post("/conflicts/detect", dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
+@router.post("/conflicts/detect",
+    dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def detect_conflicts(
  resource_type: str,
  resource_id: str,

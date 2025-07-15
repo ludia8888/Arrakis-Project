@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check if core modules can be imported (syntax check)"""
-import sys
 import os
+import sys
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

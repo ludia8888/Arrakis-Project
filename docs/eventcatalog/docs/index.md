@@ -7,7 +7,7 @@ Welcome to the Arrakis Platform Event Catalog! This documentation provides compr
 The Arrakis platform uses **NATS** as the primary message broker for async communication between microservices. Our event architecture follows CloudEvents specification and implements several key patterns:
 
 - **Event Sourcing** - Domain events capture state changes
-- **Pub/Sub Messaging** - Loose coupling between services  
+- **Pub/Sub Messaging** - Loose coupling between services
 - **Event Streaming** - Real-time data flows
 - **Webhook Integration** - External system notifications
 
@@ -26,14 +26,14 @@ The Arrakis platform uses **NATS** as the primary message broker for async commu
 - **Producer**: Data Kernel Service
 - **Consumers**: OMS, Audit Service
 
-### Audit Events  
+### Audit Events
 - **Stream**: `audit.events.*`
 - **Purpose**: Security and compliance tracking
 - **Producer**: All services
 - **Consumers**: Audit Service, External SIEM
 
 ### Job Management Events
-- **Stream**: `scheduler.jobs.*` 
+- **Stream**: `scheduler.jobs.*`
 - **Purpose**: Job lifecycle and status updates
 - **Producer**: Scheduler Service
 - **Consumers**: OMS, Monitoring
@@ -54,7 +54,7 @@ graph TD
     C --> E[Audit Service]
     C --> F[Event Gateway]
     F --> G[External Webhooks]
-    
+
     subgraph "Event Streams"
         H[ontology.schema.updated]
         I[terminus.commit.created]
@@ -74,7 +74,7 @@ All events in the Arrakis platform follow these standards:
 
 ### Naming Conventions
 - **Pattern**: `domain.entity.action`
-- **Examples**: 
+- **Examples**:
   - `ontology.schema.created`
   - `terminus.document.updated`
   - `audit.user.authenticated`
@@ -109,7 +109,7 @@ async def handle_schema_event(msg):
     event = json.loads(msg.data)
     schema_id = event["data"]["schema_id"]
     # Process the event
-    
+
 await nats_client.subscribe("ontology.schema.*", handle_schema_event)
 ```
 

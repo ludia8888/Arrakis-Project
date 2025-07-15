@@ -20,7 +20,7 @@ export interface ClientConfig {
 export class OMSEventClient {
   private publisher: EventPublisher;
   private subscriber: EventSubscriber;
-  
+
   constructor(
     publisher: EventPublisher,
     subscriber: EventSubscriber
@@ -28,12 +28,12 @@ export class OMSEventClient {
     this.publisher = publisher;
     this.subscriber = subscriber;
   }
-  
+
   static async connect(config: ClientConfig = {}): Promise<OMSEventClient> {
     // Factory method to create client with appropriate adapters
     const natsUrl = config.natsUrl || 'nats://nats.oms.company.com:4222';
     const wsUrl = config.websocketUrl || 'ws://localhost:8080';
-    
+
     // Implementation would depend on the actual transport libraries
     // This is a placeholder for the interface
     throw new Error('Please implement transport-specific adapters');
@@ -504,7 +504,7 @@ export class OMSEventClient {
   async publisheventbridgesystemmaintenance(payload: SystemmaintenanceEventBridgePayload): Promise<PublishResult> {
     return this.publisher.publish('eventbridge/system/maintenance', payload);
   }
-  
+
   /**
    * Close all connections and cleanup resources
    */

@@ -6,12 +6,12 @@ Runs all test suites across all phases to ensure complete functionality.
 """
 
 import asyncio
-import sys
 import os
-from pathlib import Path
 import subprocess
+import sys
 import time
 from datetime import datetime
+from pathlib import Path
 from typing import Dict, List, Tuple
 
 # Add project root to path
@@ -182,10 +182,10 @@ class TestRunner:
 
  try:
  # Import necessary modules
+ from core.api.schema_generator import graphql_generator, openapi_generator
+ from models.domain import Cardinality, LinkType, ObjectType, Property
  from models.semantic_types import semantic_type_registry
  from models.struct_types import struct_type_registry
- from core.api.schema_generator import graphql_generator, openapi_generator
- from models.domain import ObjectType, Property, LinkType, Cardinality
 
  # Create test schema
  user_type = ObjectType(

@@ -10,10 +10,10 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Set
 
 from core.validation.models import (
- BreakingChange,
- DataImpact,
- Severity,
- ValidationContext,
+    BreakingChange,
+    DataImpact,
+    Severity,
+    ValidationContext,
 )
 from core.validation.rules.base import BreakingChangeRule
 
@@ -151,7 +151,7 @@ class DataImpactAnalyzer(BreakingChangeRule):
  object_type_name = self._get_resource_name(old_schema)
 
  # 전체 레코드 수 조회
- total_count_query = f"""
+ total_count_query = """
  SELECT (COUNT(?instance) AS ?total)
  WHERE {{
  ?instance a <{object_type_name}> .
@@ -159,7 +159,7 @@ class DataImpactAnalyzer(BreakingChangeRule):
  """
 
  # 속성별 사용 빈도 분석
- property_usage_query = f"""
+ property_usage_query = """
  SELECT ?property (COUNT(?instance) AS ?usage_count)
  WHERE {{
  ?instance a <{object_type_name}> .
@@ -173,8 +173,10 @@ class DataImpactAnalyzer(BreakingChangeRule):
  try:
  # 병렬 쿼리 실행
  total_result, usage_result = await asyncio.gather(
- context.terminus_client.query(total_count_query, db = "oms", branch = context.source_branch),
- context.terminus_client.query(property_usage_query, db = "oms", branch = context.source_branch)
+ context.terminus_client.query(total_count_query, db = "oms",
+     branch = context.source_branch),
+ context.terminus_client.query(property_usage_query, db = "oms",
+     branch = context.source_branch)
  )
 
  total_objects = int(total_result[0]["total"]) if total_result else 0
@@ -219,7 +221,7 @@ class DataImpactAnalyzer(BreakingChangeRule):
  object_type_name = self._get_resource_name(old_schema)
 
  # Foundry Ontology의 관계 분석 쿼리
- relationship_query = f"""
+ relationship_query = """
  SELECT ?rel_type ?target_type ?relationship_count
  WHERE {{
  {{
@@ -325,7 +327,8 @@ class DataImpactAnalyzer(BreakingChangeRule):
  "compatibility_score": max(0, compatibility_score),
  "compliance_issues": compliance_issues,
  "foundry_version_compatibility": "2024.1", # 현재 지원 버전
- "summary": f"Foundry compatibility: {max(0, compatibility_score)}% ({len(compliance_issues)} issues)"
+ "summary": f"Foundry compatibility: {max(0,
+     compatibility_score)}% ({len(compliance_issues)} issues)"
  }
 
  async def _analyze_performance_implications(
@@ -514,7 +517,8 @@ class DataImpactAnalyzer(BreakingChangeRule):
  return indexed
 
  async def _predict_query_performance_impact(
- self, old_schema: Dict[str, Any], new_schema: Dict[str, Any], context: ValidationContext
+ self, old_schema: Dict[str, Any], new_schema: Dict[str, Any],
+     context: ValidationContext
  ) -> str:
  """쿼리 성능 영향 예측"""
 
@@ -596,7 +600,8 @@ class DataImpactAnalyzer(BreakingChangeRule):
  return "No data impact detected"
 
  impact_ratio = (impact.affected_objects / impact.total_objects) * 100
- return f"Impact: {impact.affected_objects:,} of {impact.total_objects:,} objects ({impact_ratio:.1f}%) affected"
+ return f"Impact: {impact.affected_objects:,} of {impact.total_objects:,
+     } objects ({impact_ratio:.1f}%) affected"
 
  def _create_data_impact_summary(self, impact: ImpactAnalysisResult) -> DataImpact:
  """DataImpact 객체 생성"""
@@ -605,7 +610,8 @@ class DataImpactAnalyzer(BreakingChangeRule):
  affected_records = impact.affected_objects,
  impact_percentage=(impact.affected_objects / max(1, impact.total_objects)) * 100,
  estimated_downtime_minutes = max(5, impact.affected_objects // 10000),
- complexity_score = min(10, len(impact.relationship_impacts) + len(impact.data_quality_risks)),
+ complexity_score = min(10,
+     len(impact.relationship_impacts) + len(impact.data_quality_risks)),
  migration_risks = impact.data_quality_risks
  )
 

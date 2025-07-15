@@ -1,12 +1,12 @@
 """
 Health monitoring component
 """
+import logging
 import time
 from datetime import datetime
-from typing import Dict, List, Optional, Any
-import logging
+from typing import Any, Dict, List, Optional
 
-from .models import HealthCheckResult, HealthStatus, ComponentHealth
+from .models import ComponentHealth, HealthCheckResult, HealthStatus
 
 logger = logging.getLogger(__name__)
 

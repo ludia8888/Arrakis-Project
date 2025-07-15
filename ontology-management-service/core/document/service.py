@@ -8,8 +8,8 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
-from database.clients.unified_database_client import UnifiedDatabaseClient
 from core.interfaces.document import DocumentServiceProtocol
+from database.clients.unified_database_client import UnifiedDatabaseClient
 from shared.models.domain import Document, DocumentCreate, DocumentUpdate
 
 logger = logging.getLogger(__name__)
@@ -127,7 +127,7 @@ class DocumentService(DocumentServiceProtocol):
 
  # Store document metadata locally as fallback
  # This ensures document tracking even without schema validation
- logger.warning(f"Storing document metadata locally due to schema bypass")
+ logger.warning("Storing document metadata locally due to schema bypass")
 
  # Document 객체 생성
  document = Document(
@@ -201,9 +201,11 @@ class DocumentService(DocumentServiceProtocol):
  tags = doc_json.get("tags", []),
  status = doc_json.get("status", "draft"),
  created_by = doc_json.get("created_by", "system"),
- created_at = datetime.fromisoformat(doc_json.get("created_at", datetime.utcnow().isoformat())),
+ created_at = datetime.fromisoformat(doc_json.get("created_at",
+     datetime.utcnow().isoformat())),
  modified_by = doc_json.get("modified_by", "system"),
- modified_at = datetime.fromisoformat(doc_json.get("modified_at", datetime.utcnow().isoformat())),
+ modified_at = datetime.fromisoformat(doc_json.get("modified_at",
+     datetime.utcnow().isoformat())),
  version = doc_json.get("version", 1)
  )
 
@@ -415,9 +417,11 @@ class DocumentService(DocumentServiceProtocol):
  tags = doc_json.get("tags", []),
  status = doc_json.get("status", "draft"),
  created_by = doc_json.get("created_by", "system"),
- created_at = datetime.fromisoformat(doc_json.get("created_at", datetime.utcnow().isoformat())),
+ created_at = datetime.fromisoformat(doc_json.get("created_at",
+     datetime.utcnow().isoformat())),
  modified_by = doc_json.get("modified_by", "system"),
- modified_at = datetime.fromisoformat(doc_json.get("modified_at", datetime.utcnow().isoformat())),
+ modified_at = datetime.fromisoformat(doc_json.get("modified_at",
+     datetime.utcnow().isoformat())),
  version = doc_json.get("version", 1)
  )
  documents.append(document)
@@ -515,9 +519,11 @@ class DocumentService(DocumentServiceProtocol):
  tags = doc_json.get("tags", []),
  status = doc_json.get("status", "draft"),
  created_by = doc_json.get("created_by", "system"),
- created_at = datetime.fromisoformat(doc_json.get("created_at", datetime.utcnow().isoformat())),
+ created_at = datetime.fromisoformat(doc_json.get("created_at",
+     datetime.utcnow().isoformat())),
  modified_by = doc_json.get("modified_by", "system"),
- modified_at = datetime.fromisoformat(doc_json.get("modified_at", datetime.utcnow().isoformat())),
+ modified_at = datetime.fromisoformat(doc_json.get("modified_at",
+     datetime.utcnow().isoformat())),
  version = doc_json.get("version", 1)
  )
  documents.append(document)

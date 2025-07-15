@@ -3,19 +3,19 @@
 
 pipeline {
     agent any
-    
+
     options {
         buildDiscarder(logRotator(numToKeepStr: '10'))
         timeout(time: 30, unit: 'MINUTES')
         timestamps()
     }
-    
+
     environment {
         PYTHON_VERSION = '3.11'
         VENV_DIR = "${WORKSPACE}/venv"
         PATH = "${VENV_DIR}/bin:${PATH}"
     }
-    
+
     stages {
         stage('Setup') {
             steps {
@@ -28,24 +28,24 @@ pipeline {
                 '''
             }
         }
-        
+
         stage('Naming Convention Validation') {
             steps {
                 echo 'Validating naming conventions...'
                 sh '''
                     . ${VENV_DIR}/bin/activate
-                    
+
                     # Run validation on all files
                     python -m core.validation.ci_integration . \
                         --format junit \
                         --output naming-convention-report.xml \
                         --fail-on-error || true
-                    
+
                     # Also generate text report for console
                     python -m core.validation.ci_integration . \
                         --format text \
                         --verbose
-                    
+
                     # Generate JSON report for further processing
                     python -m core.validation.ci_integration . \
                         --format json \
@@ -56,16 +56,16 @@ pipeline {
                 always {
                     junit 'naming-convention-report.xml'
                     archiveArtifacts artifacts: 'naming-convention-report.*', fingerprint: true
-                    
+
                     // Parse JSON report and create summary
                     script {
                         if (fileExists('naming-convention-report.json')) {
                             def report = readJSON file: 'naming-convention-report.json'
                             def summary = report.summary
-                            
+
                             if (summary.invalid > 0) {
                                 unstable("Found ${summary.invalid} naming convention violations")
-                                
+
                                 // Add badge to build
                                 addBadge(
                                     icon: 'warning.gif',
@@ -77,7 +77,7 @@ pipeline {
                                     text: 'Naming: OK'
                                 )
                             }
-                            
+
                             // Create summary for build description
                             currentBuild.description = "Naming: ${summary.valid}/${summary.total_entities} valid"
                         }
@@ -85,7 +85,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Code Quality') {
             parallel {
                 stage('Linting') {
@@ -94,11 +94,11 @@ pipeline {
                         sh '''
                             . ${VENV_DIR}/bin/activate
                             pip install flake8 black isort
-                            
+
                             # Check code formatting
                             black --check core/ || true
                             isort --check-only core/ || true
-                            
+
                             # Run flake8
                             flake8 core/ \
                                 --max-line-length=100 \
@@ -116,14 +116,14 @@ pipeline {
                         }
                     }
                 }
-                
+
                 stage('Type Checking') {
                     steps {
                         echo 'Running type checker...'
                         sh '''
                             . ${VENV_DIR}/bin/activate
                             pip install mypy types-all
-                            
+
                             mypy core/ \
                                 --ignore-missing-imports \
                                 --junit-xml mypy-report.xml || true
@@ -135,19 +135,19 @@ pipeline {
                         }
                     }
                 }
-                
+
                 stage('Security Scan') {
                     steps {
                         echo 'Running security scans...'
                         sh '''
                             . ${VENV_DIR}/bin/activate
                             pip install bandit safety
-                            
+
                             # Run bandit
                             bandit -r core/ \
                                 -f json \
                                 -o bandit-report.json || true
-                            
+
                             # Check dependencies
                             safety check \
                                 --json \
@@ -157,7 +157,7 @@ pipeline {
                     post {
                         always {
                             archiveArtifacts artifacts: '*-report.json', fingerprint: true
-                            
+
                             // Publish security warnings
                             script {
                                 if (fileExists('bandit-report.json')) {
@@ -172,14 +172,14 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Test') {
             steps {
                 echo 'Running tests...'
                 sh '''
                     . ${VENV_DIR}/bin/activate
                     pip install pytest pytest-cov pytest-html
-                    
+
                     # Run tests with coverage
                     pytest core/validation/tests/ \
                         -v \
@@ -210,7 +210,7 @@ pipeline {
                         reportFiles: 'test-report.html',
                         reportName: 'Test Report'
                     ])
-                    
+
                     // Publish coverage
                     publishCoverage(
                         adapters: [coberturaAdapter('coverage.xml')],
@@ -219,7 +219,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Build') {
             when {
                 anyOf {
@@ -232,11 +232,11 @@ pipeline {
                 echo 'Building application...'
                 sh '''
                     . ${VENV_DIR}/bin/activate
-                    
+
                     # Build wheel
                     pip install wheel
                     python setup.py bdist_wheel
-                    
+
                     # Build Docker image if Dockerfile exists
                     if [ -f Dockerfile ]; then
                         docker build -t oms:${BUILD_NUMBER} .
@@ -249,7 +249,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Deploy') {
             when {
                 tag pattern: "v\\d+\\.\\d+\\.\\d+", comparator: "REGEXP"
@@ -260,7 +260,7 @@ pipeline {
             }
         }
     }
-    
+
     post {
         always {
             cleanWs()
@@ -286,9 +286,9 @@ def validateChangedFiles() {
         script: "git diff --name-only HEAD~1",
         returnStdout: true
     ).trim().split('\n')
-    
+
     def pythonFiles = changedFiles.findAll { it.endsWith('.py') }
-    
+
     if (pythonFiles) {
         sh """
             . ${VENV_DIR}/bin/activate

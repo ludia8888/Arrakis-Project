@@ -53,15 +53,15 @@ module "nats" {
   # Cluster Configuration
   cluster_size    = 3
   jetstream_enabled = true
-  
+
   # Security
   auth_enabled = true
   tls_enabled  = true
-  
+
   # Storage
   storage_class = "gp3"
   storage_size  = "20Gi"
-  
+
   # Resources
   resources = {
     requests = {
@@ -203,29 +203,29 @@ module "nats_production" {
 
   project_name = "arrakis"
   environment  = "production"
-  
+
   cluster_endpoint       = var.eks_cluster_endpoint
   cluster_ca_certificate = var.eks_cluster_ca_cert
   cluster_auth_token     = var.eks_cluster_token
 
   # Production cluster
   cluster_size = 5
-  
+
   # High-performance storage
   storage_class = "gp3"
   storage_size  = "100Gi"
-  
+
   # JetStream configuration
   jetstream_enabled     = true
   jetstream_max_memory  = "4Gi"
   jetstream_max_storage = "100Gi"
-  
+
   # Security hardening
   auth_enabled            = true
   tls_enabled             = true
   enable_network_policy   = true
   enable_audit_logging    = true
-  
+
   # Resource allocation
   resources = {
     requests = {
@@ -237,17 +237,17 @@ module "nats_production" {
       memory = "4Gi"
     }
   }
-  
+
   # Auto scaling
   enable_autoscaling = true
   min_replicas      = 3
   max_replicas      = 10
-  
+
   # Backup and DR
   enable_backup          = true
   backup_schedule        = "0 2 * * *"
   enable_disaster_recovery = true
-  
+
   tags = {
     Environment = "production"
     Project     = "arrakis"
@@ -264,26 +264,26 @@ module "nats_development" {
 
   project_name = "arrakis"
   environment  = "development"
-  
+
   cluster_endpoint       = var.eks_cluster_endpoint
   cluster_ca_certificate = var.eks_cluster_ca_cert
   cluster_auth_token     = var.eks_cluster_token
 
   # Minimal cluster for development
   cluster_size = 1
-  
+
   # Basic storage
   storage_size = "10Gi"
-  
+
   # Reduced security for easier development
   auth_enabled          = false
   tls_enabled           = false
   enable_network_policy = false
-  
+
   # Allow external access for testing
   enable_external_access = true
   service_type          = "LoadBalancer"
-  
+
   # Minimal resources
   resources = {
     requests = {
@@ -306,24 +306,24 @@ module "nats_gateway" {
 
   project_name = "arrakis"
   environment  = "production"
-  
+
   cluster_endpoint       = var.eks_cluster_endpoint
   cluster_ca_certificate = var.eks_cluster_ca_cert
   cluster_auth_token     = var.eks_cluster_token
 
   # Gateway configuration
   cluster_size = 3
-  
+
   # Enable all protocols
   websocket_enabled = true
   mqtt_enabled      = true
   leafnode_enabled  = true
   gateway_enabled   = true
-  
+
   # External access for clients
   enable_external_access = true
   service_type          = "LoadBalancer"
-  
+
   # Security with external access
   auth_enabled = true
   tls_enabled  = true

@@ -15,11 +15,11 @@ from core.schema.conflict_resolver import ConflictResolver
 
 # Import real merge engine and related models
 from core.versioning.merge_engine import (
- ConflictSeverity,
- ConflictType,
- MergeConflict,
- MergeEngine,
- MergeResult,
+    ConflictSeverity,
+    ConflictType,
+    MergeConflict,
+    MergeEngine,
+    MergeResult,
 )
 from models.domain import Cardinality
 

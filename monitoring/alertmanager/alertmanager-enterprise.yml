@@ -1,35 +1,35 @@
 global:
   # Global configuration
-  smtp_smarthost: 'localhost:587'
-  smtp_from: 'alerts@arrakis-project.com'
-  smtp_hello: 'alertmanager.arrakis-project.com'
-  
+  smtp_smarthost: "localhost:587"
+  smtp_from: "alerts@arrakis-project.com"
+  smtp_hello: "alertmanager.arrakis-project.com"
+
   # Slack configuration (replace with actual webhook URL)
   # slack_api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
-  
+
   # PagerDuty configuration (replace with actual integration key)
-  pagerduty_url: 'https://events.pagerduty.com/v2/enqueue'
+  pagerduty_url: "https://events.pagerduty.com/v2/enqueue"
 
 # Email templates
 templates:
-  - '/etc/alertmanager/templates/*.tmpl'
+  - "/etc/alertmanager/templates/*.tmpl"
 
 # Routing tree
 route:
   # Default settings
-  group_by: ['alertname', 'severity', 'component']
+  group_by: ["alertname", "severity", "component"]
   group_wait: 30s
   group_interval: 5m
   repeat_interval: 4h
-  receiver: 'default-receiver'
-  
+  receiver: "default-receiver"
+
   routes:
     # ==========================================
     # Critical Alerts - Immediate Response
     # ==========================================
     - match:
         severity: critical
-      group_by: ['alertname', 'service', 'component']
+      group_by: ["alertname", "service", "component"]
       group_wait: 10s
       group_interval: 1m
       repeat_interval: 30m
@@ -37,70 +37,70 @@ route:
         # Circuit Breaker Critical
         - match:
             component: circuit_breaker
-          receiver: 'platform-team-critical'
+          receiver: "platform-team-critical"
           continue: true
         - match:
             component: circuit_breaker
-          receiver: 'slack-critical'
+          receiver: "slack-critical"
           continue: true
         - match:
             component: circuit_breaker
-          receiver: 'pagerduty-critical'
-        
+          receiver: "pagerduty-critical"
+
         # Security Critical
         - match:
             component: security
-          receiver: 'security-team-critical'
+          receiver: "security-team-critical"
           continue: true
         - match:
             component: security
-          receiver: 'slack-security'
+          receiver: "slack-security"
           continue: true
         - match:
             component: security
-          receiver: 'pagerduty-security'
-        
+          receiver: "pagerduty-security"
+
         # System Critical
         - match:
             component: system
-          receiver: 'infrastructure-team-critical'
+          receiver: "infrastructure-team-critical"
           continue: true
         - match:
             component: system
-          receiver: 'slack-infrastructure'
+          receiver: "slack-infrastructure"
           continue: true
         - match:
             component: system
-          receiver: 'pagerduty-infrastructure'
-        
+          receiver: "pagerduty-infrastructure"
+
         # Service Down - Highest Priority
         - match:
             alertname: ServiceDown
-          receiver: 'platform-team-critical'
+          receiver: "platform-team-critical"
           continue: true
         - match:
             alertname: ServiceDown
-          receiver: 'slack-critical'
+          receiver: "slack-critical"
           continue: true
         - match:
             alertname: ServiceDown
-          receiver: 'pagerduty-critical'
-        
+          receiver: "pagerduty-critical"
+
         # Memory Leak - Critical
         - match:
             alertname: MemoryLeakSuspected
-          receiver: 'platform-team-critical'
+          receiver: "platform-team-critical"
           continue: true
         - match:
             alertname: MemoryLeakSuspected
-          receiver: 'slack-critical'
-    
+          receiver: "slack-critical"
+
     # ==========================================
     # Warning Alerts - Standard Response
     # ==========================================
     - match:
         severity: warning
-      group_by: ['alertname', 'component']
+      group_by: ["alertname", "component"]
       group_wait: 1m
       group_interval: 5m
       repeat_interval: 2h
@@ -108,99 +108,99 @@ route:
         # Performance Warnings
         - match:
             component: performance
-          receiver: 'platform-team-warning'
+          receiver: "platform-team-warning"
           continue: true
         - match:
             component: performance
-          receiver: 'slack-performance'
-        
+          receiver: "slack-performance"
+
         # Garbage Collection Warnings
         - match:
             component: garbage_collection
-          receiver: 'platform-team-warning'
+          receiver: "platform-team-warning"
           continue: true
         - match:
             component: garbage_collection
-          receiver: 'slack-performance'
-        
+          receiver: "slack-performance"
+
         # Cache Performance
         - match_re:
-            component: '.*cache.*'
-          receiver: 'platform-team-warning'
+            component: ".*cache.*"
+          receiver: "platform-team-warning"
           continue: true
         - match_re:
-            component: '.*cache.*'
-          receiver: 'slack-performance'
-        
+            component: ".*cache.*"
+          receiver: "slack-performance"
+
         # Database Warnings
         - match:
             component: database
-          receiver: 'platform-team-warning'
+          receiver: "platform-team-warning"
           continue: true
         - match:
             component: database
-          receiver: 'slack-database'
-        
+          receiver: "slack-database"
+
         # Security Warnings
         - match:
             component: authentication
-          receiver: 'security-team-warning'
+          receiver: "security-team-warning"
           continue: true
         - match:
             component: authorization
-          receiver: 'security-team-warning'
+          receiver: "security-team-warning"
           continue: true
         - match_re:
-            component: '(authentication|authorization)'
-          receiver: 'slack-security'
-    
+            component: "(authentication|authorization)"
+          receiver: "slack-security"
+
     # ==========================================
     # Info Alerts - Informational
     # ==========================================
     - match:
         severity: info
-      group_by: ['alertname']
+      group_by: ["alertname"]
       group_wait: 5m
       group_interval: 30m
       repeat_interval: 24h
-      receiver: 'slack-info'
-    
+      receiver: "slack-info"
+
     # ==========================================
     # Business Logic Alerts
     # ==========================================
     - match_re:
-        component: '(schema_validation|document_processing|audit)'
-      receiver: 'platform-team-business'
+        component: "(schema_validation|document_processing|audit)"
+      receiver: "platform-team-business"
       continue: true
     - match_re:
-        component: '(schema_validation|document_processing|audit)'
-      receiver: 'slack-business'
-    
+        component: "(schema_validation|document_processing|audit)"
+      receiver: "slack-business"
+
     # ==========================================
     # Infrastructure Alerts
     # ==========================================
     - match:
         team: infrastructure
-      receiver: 'infrastructure-team-warning'
+      receiver: "infrastructure-team-warning"
       continue: true
     - match:
         team: infrastructure
-      receiver: 'slack-infrastructure'
+      receiver: "slack-infrastructure"
 
 # Receivers configuration
 receivers:
   # ==========================================
   # Default Receiver
   # ==========================================
-  - name: 'default-receiver'
+  - name: "default-receiver"
     email_configs:
-      - to: 'platform-team@arrakis-project.com'
-        subject: '[ALERT] {{ .GroupLabels.alertname }}'
+      - to: "platform-team@arrakis-project.com"
+        subject: "[ALERT] {{ .GroupLabels.alertname }}"
         body: |
           Alert: {{ .GroupLabels.alertname }}
           Severity: {{ .CommonLabels.severity }}
           Component: {{ .CommonLabels.component }}
-          
+
           {{ range .Alerts }}
           - {{ .Annotations.summary }}
           {{ end }}
@@ -224,17 +224,17 @@ receivers:
   # ==========================================
   # Critical Alert Receivers
   # ==========================================
-  - name: 'platform-team-critical'
+  - name: "platform-team-critical"
     email_configs:
-      - to: 'platform-oncall@arrakis-project.com'
-        subject: '🚨 CRITICAL: {{ .GroupLabels.alertname }}'
+      - to: "platform-oncall@arrakis-project.com"
+        subject: "🚨 CRITICAL: {{ .GroupLabels.alertname }}"
         body: |
           CRITICAL ALERT - Immediate Action Required
-          
+
           Alert: {{ .GroupLabels.alertname }}
           Service: {{ .CommonLabels.service }}
           Component: {{ .CommonLabels.component }}
-          
+
           {{ range .Alerts }}
           Summary: {{ .Annotations.summary }}
           Description: {{ .Annotations.description }}
@@ -244,7 +244,7 @@ receivers:
           {{ if .Annotations.dashboard_url }}
           Dashboard: {{ .Annotations.dashboard_url }}
           {{ end }}
-          
+
           Time: {{ .StartsAt.Format "2006-01-02 15:04:05 UTC" }}
           {{ end }}
         html: |
@@ -252,7 +252,7 @@ receivers:
           <h2>{{ .GroupLabels.alertname }}</h2>
           <p><strong>Service:</strong> {{ .CommonLabels.service }}</p>
           <p><strong>Component:</strong> {{ .CommonLabels.component }}</p>
-          
+
           {{ range .Alerts }}
           <div style="border: 2px solid red; padding: 10px; margin: 10px 0;">
             <h3>{{ .Annotations.summary }}</h3>
@@ -267,37 +267,37 @@ receivers:
           </div>
           {{ end }}
 
-  - name: 'security-team-critical'
+  - name: "security-team-critical"
     email_configs:
-      - to: 'security-team@arrakis-project.com,ciso@arrakis-project.com'
-        subject: '🔒 SECURITY CRITICAL: {{ .GroupLabels.alertname }}'
+      - to: "security-team@arrakis-project.com,ciso@arrakis-project.com"
+        subject: "🔒 SECURITY CRITICAL: {{ .GroupLabels.alertname }}"
         body: |
           CRITICAL SECURITY ALERT
-          
+
           This is a critical security event requiring immediate investigation.
-          
+
           Alert: {{ .GroupLabels.alertname }}
           Event Type: {{ .CommonLabels.event_type }}
-          
+
           {{ range .Alerts }}
           Summary: {{ .Annotations.summary }}
           Description: {{ .Annotations.description }}
           Time: {{ .StartsAt.Format "2006-01-02 15:04:05 UTC" }}
           {{ end }}
-          
+
           Please investigate immediately and follow security incident response procedures.
 
-  - name: 'infrastructure-team-critical'
+  - name: "infrastructure-team-critical"
     email_configs:
-      - to: 'infrastructure-team@arrakis-project.com,sre-oncall@arrakis-project.com'
-        subject: '⚠️ INFRASTRUCTURE CRITICAL: {{ .GroupLabels.alertname }}'
+      - to: "infrastructure-team@arrakis-project.com,sre-oncall@arrakis-project.com"
+        subject: "⚠️ INFRASTRUCTURE CRITICAL: {{ .GroupLabels.alertname }}"
         body: |
           CRITICAL INFRASTRUCTURE ALERT
-          
+
           System resources are at critical levels requiring immediate attention.
-          
+
           Alert: {{ .GroupLabels.alertname }}
-          
+
           {{ range .Alerts }}
           Summary: {{ .Annotations.summary }}
           Description: {{ .Annotations.description }}
@@ -307,59 +307,59 @@ receivers:
   # ==========================================
   # Warning Alert Receivers
   # ==========================================
-  - name: 'platform-team-warning'
+  - name: "platform-team-warning"
     email_configs:
-      - to: 'platform-team@arrakis-project.com'
-        subject: '⚠️ WARNING: {{ .GroupLabels.alertname }}'
+      - to: "platform-team@arrakis-project.com"
+        subject: "⚠️ WARNING: {{ .GroupLabels.alertname }}"
         body: |
           Warning Alert - Attention Required
-          
+
           Alert: {{ .GroupLabels.alertname }}
           Component: {{ .CommonLabels.component }}
-          
+
           {{ range .Alerts }}
           Summary: {{ .Annotations.summary }}
           Description: {{ .Annotations.description }}
           {{ end }}
 
-  - name: 'security-team-warning'
+  - name: "security-team-warning"
     email_configs:
-      - to: 'security-team@arrakis-project.com'
-        subject: '🔒 SECURITY WARNING: {{ .GroupLabels.alertname }}'
+      - to: "security-team@arrakis-project.com"
+        subject: "🔒 SECURITY WARNING: {{ .GroupLabels.alertname }}"
         body: |
           Security Warning Alert
-          
+
           Alert: {{ .GroupLabels.alertname }}
-          
+
           {{ range .Alerts }}
           Summary: {{ .Annotations.summary }}
           Description: {{ .Annotations.description }}
           {{ end }}
 
-  - name: 'infrastructure-team-warning'
+  - name: "infrastructure-team-warning"
     email_configs:
-      - to: 'infrastructure-team@arrakis-project.com'
-        subject: '⚙️ INFRASTRUCTURE WARNING: {{ .GroupLabels.alertname }}'
+      - to: "infrastructure-team@arrakis-project.com"
+        subject: "⚙️ INFRASTRUCTURE WARNING: {{ .GroupLabels.alertname }}"
         body: |
           Infrastructure Warning Alert
-          
+
           Alert: {{ .GroupLabels.alertname }}
-          
+
           {{ range .Alerts }}
           Summary: {{ .Annotations.summary }}
           Description: {{ .Annotations.description }}
           {{ end }}
 
-  - name: 'platform-team-business'
+  - name: "platform-team-business"
     email_configs:
-      - to: 'platform-team@arrakis-project.com,product-team@arrakis-project.com'
-        subject: '📋 BUSINESS LOGIC: {{ .GroupLabels.alertname }}'
+      - to: "platform-team@arrakis-project.com,product-team@arrakis-project.com"
+        subject: "📋 BUSINESS LOGIC: {{ .GroupLabels.alertname }}"
         body: |
           Business Logic Alert
-          
+
           Alert: {{ .GroupLabels.alertname }}
           Component: {{ .CommonLabels.component }}
-          
+
           {{ range .Alerts }}
           Summary: {{ .Annotations.summary }}
           Description: {{ .Annotations.description }}
@@ -368,159 +368,159 @@ receivers:
   # ==========================================
   # Slack Receivers
   # ==========================================
-  - name: 'slack-critical'
+  - name: "slack-critical"
     # Uncomment and configure when Slack webhook is available
     # slack_configs:
     #   - api_url: 'YOUR_SLACK_WEBHOOK_URL'
-        channel: '#alerts-critical'
-        username: 'AlertManager'
-        icon_emoji: ':rotating_light:'
-        title: '🚨 CRITICAL ALERT'
-        text: |
-          *Alert:* {{ .GroupLabels.alertname }}
-          *Severity:* {{ .CommonLabels.severity }}
-          *Service:* {{ .CommonLabels.service }}
-          *Component:* {{ .CommonLabels.component }}
-          
-          {{ range .Alerts }}
-          *Summary:* {{ .Annotations.summary }}
-          *Description:* {{ .Annotations.description }}
-          {{ if .Annotations.runbook_url }}
-          *Runbook:* <{{ .Annotations.runbook_url }}|📖 View Runbook>
-          {{ end }}
-          {{ if .Annotations.dashboard_url }}
-          *Dashboard:* <{{ .Annotations.dashboard_url }}|📊 View Dashboard>
-          {{ end }}
-          {{ end }}
-        color: 'danger'
+    #     channel: '#alerts-critical'
+    #     username: 'AlertManager'
+    #     icon_emoji: ':rotating_light:'
+    #     title: '🚨 CRITICAL ALERT'
+    #     text: |
+    #       *Alert:* {{ .GroupLabels.alertname }}
+    #       *Severity:* {{ .CommonLabels.severity }}
+    #       *Service:* {{ .CommonLabels.service }}
+    #       *Component:* {{ .CommonLabels.component }}
+    #
+    #       {{ range .Alerts }}
+    #       *Summary:* {{ .Annotations.summary }}
+    #       *Description:* {{ .Annotations.description }}
+    #       {{ if .Annotations.runbook_url }}
+    #       *Runbook:* <{{ .Annotations.runbook_url }}|📖 View Runbook>
+    #       {{ end }}
+    #       {{ if .Annotations.dashboard_url }}
+    #       *Dashboard:* <{{ .Annotations.dashboard_url }}|📊 View Dashboard>
+    #       {{ end }}
+    #       {{ end }}
+    #     color: 'danger'
 
-  - name: 'slack-security'
+  - name: "slack-security"
     slack_configs:
-      - api_url: '{{ .slack_api_url }}'
-        channel: '#security-alerts'
-        username: 'SecurityAlert'
-        icon_emoji: ':lock:'
-        title: '🔒 SECURITY ALERT'
+      - api_url: "{{ .slack_api_url }}"
+        channel: "#security-alerts"
+        username: "SecurityAlert"
+        icon_emoji: ":lock:"
+        title: "🔒 SECURITY ALERT"
         text: |
           *Security Event:* {{ .GroupLabels.alertname }}
           *Severity:* {{ .CommonLabels.severity }}
-          
+
           {{ range .Alerts }}
           *Summary:* {{ .Annotations.summary }}
           *Description:* {{ .Annotations.description }}
           {{ end }}
-        color: 'warning'
+        color: "warning"
 
-  - name: 'slack-infrastructure'
+  - name: "slack-infrastructure"
     slack_configs:
-      - api_url: '{{ .slack_api_url }}'
-        channel: '#infrastructure-alerts'
-        username: 'InfraAlert'
-        icon_emoji: ':gear:'
-        title: '⚙️ INFRASTRUCTURE ALERT'
+      - api_url: "{{ .slack_api_url }}"
+        channel: "#infrastructure-alerts"
+        username: "InfraAlert"
+        icon_emoji: ":gear:"
+        title: "⚙️ INFRASTRUCTURE ALERT"
         text: |
           *Infrastructure Alert:* {{ .GroupLabels.alertname }}
           *Severity:* {{ .CommonLabels.severity }}
-          
+
           {{ range .Alerts }}
           *Summary:* {{ .Annotations.summary }}
           *Description:* {{ .Annotations.description }}
           {{ end }}
 
-  - name: 'slack-performance'
+  - name: "slack-performance"
     slack_configs:
-      - api_url: '{{ .slack_api_url }}'
-        channel: '#performance-alerts'
-        username: 'PerfAlert'
-        icon_emoji: ':chart_with_upwards_trend:'
-        title: '📈 PERFORMANCE ALERT'
+      - api_url: "{{ .slack_api_url }}"
+        channel: "#performance-alerts"
+        username: "PerfAlert"
+        icon_emoji: ":chart_with_upwards_trend:"
+        title: "📈 PERFORMANCE ALERT"
         text: |
           *Performance Alert:* {{ .GroupLabels.alertname }}
           *Component:* {{ .CommonLabels.component }}
-          
+
           {{ range .Alerts }}
           *Summary:* {{ .Annotations.summary }}
           {{ end }}
-        color: 'warning'
+        color: "warning"
 
-  - name: 'slack-database'
+  - name: "slack-database"
     slack_configs:
-      - api_url: '{{ .slack_api_url }}'
-        channel: '#database-alerts'
-        username: 'DatabaseAlert'
-        icon_emoji: ':file_cabinet:'
-        title: '🗄️ DATABASE ALERT'
+      - api_url: "{{ .slack_api_url }}"
+        channel: "#database-alerts"
+        username: "DatabaseAlert"
+        icon_emoji: ":file_cabinet:"
+        title: "🗄️ DATABASE ALERT"
         text: |
           *Database Alert:* {{ .GroupLabels.alertname }}
           *Database:* {{ .CommonLabels.database }}
-          
+
           {{ range .Alerts }}
           *Summary:* {{ .Annotations.summary }}
           {{ end }}
 
-  - name: 'slack-business'
+  - name: "slack-business"
     slack_configs:
-      - api_url: '{{ .slack_api_url }}'
-        channel: '#business-alerts'
-        username: 'BusinessAlert'
-        icon_emoji: ':briefcase:'
-        title: '💼 BUSINESS LOGIC ALERT'
+      - api_url: "{{ .slack_api_url }}"
+        channel: "#business-alerts"
+        username: "BusinessAlert"
+        icon_emoji: ":briefcase:"
+        title: "💼 BUSINESS LOGIC ALERT"
         text: |
           *Business Alert:* {{ .GroupLabels.alertname }}
           *Component:* {{ .CommonLabels.component }}
-          
+
           {{ range .Alerts }}
           *Summary:* {{ .Annotations.summary }}
           {{ end }}
 
-  - name: 'slack-info'
+  - name: "slack-info"
     slack_configs:
-      - api_url: '{{ .slack_api_url }}'
-        channel: '#alerts-info'
-        username: 'InfoAlert'
-        icon_emoji: ':information_source:'
-        title: 'ℹ️ INFO ALERT'
+      - api_url: "{{ .slack_api_url }}"
+        channel: "#alerts-info"
+        username: "InfoAlert"
+        icon_emoji: ":information_source:"
+        title: "ℹ️ INFO ALERT"
         text: |
           *Info:* {{ .GroupLabels.alertname }}
-          
+
           {{ range .Alerts }}
           *Summary:* {{ .Annotations.summary }}
           {{ end }}
-        color: 'good'
+        color: "good"
 
   # ==========================================
   # PagerDuty Receivers
   # ==========================================
-  - name: 'pagerduty-critical'
+  - name: "pagerduty-critical"
     pagerduty_configs:
-      - routing_key: 'YOUR_PAGERDUTY_ROUTING_KEY_CRITICAL'
-        description: '{{ .GroupLabels.alertname }}: {{ .CommonLabels.service }}'
-        severity: 'critical'
+      - routing_key: "YOUR_PAGERDUTY_ROUTING_KEY_CRITICAL"
+        description: "{{ .GroupLabels.alertname }}: {{ .CommonLabels.service }}"
+        severity: "critical"
         details:
-          alertname: '{{ .GroupLabels.alertname }}'
-          service: '{{ .CommonLabels.service }}'
-          component: '{{ .CommonLabels.component }}'
-          summary: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
-          description: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+          alertname: "{{ .GroupLabels.alertname }}"
+          service: "{{ .CommonLabels.service }}"
+          component: "{{ .CommonLabels.component }}"
+          summary: "{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}"
+          description: "{{ range .Alerts }}{{ .Annotations.description }}{{ end }}"
 
-  - name: 'pagerduty-security'
+  - name: "pagerduty-security"
     pagerduty_configs:
-      - routing_key: 'YOUR_PAGERDUTY_ROUTING_KEY_SECURITY'
-        description: 'Security Alert: {{ .GroupLabels.alertname }}'
-        severity: 'critical'
+      - routing_key: "YOUR_PAGERDUTY_ROUTING_KEY_SECURITY"
+        description: "Security Alert: {{ .GroupLabels.alertname }}"
+        severity: "critical"
         details:
-          alertname: '{{ .GroupLabels.alertname }}'
-          event_type: '{{ .CommonLabels.event_type }}'
-          summary: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+          alertname: "{{ .GroupLabels.alertname }}"
+          event_type: "{{ .CommonLabels.event_type }}"
+          summary: "{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}"
 
-  - name: 'pagerduty-infrastructure'
+  - name: "pagerduty-infrastructure"
     pagerduty_configs:
-      - routing_key: 'YOUR_PAGERDUTY_ROUTING_KEY_INFRASTRUCTURE'
-        description: 'Infrastructure Alert: {{ .GroupLabels.alertname }}'
-        severity: 'critical'
+      - routing_key: "YOUR_PAGERDUTY_ROUTING_KEY_INFRASTRUCTURE"
+        description: "Infrastructure Alert: {{ .GroupLabels.alertname }}"
+        severity: "critical"
         details:
-          alertname: '{{ .GroupLabels.alertname }}'
-          summary: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+          alertname: "{{ .GroupLabels.alertname }}"
+          summary: "{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}"
 
 # Inhibition rules
 inhibit_rules:
@@ -528,33 +528,33 @@ inhibit_rules:
   - source_match:
       alertname: ServiceDown
     target_match_re:
-      service: '.*'
-    equal: ['service', 'instance']
+      service: ".*"
+    equal: ["service", "instance"]
 
   # Critical alerts inhibit warning alerts for the same component
   - source_match:
       severity: critical
     target_match:
       severity: warning
-    equal: ['component', 'service']
+    equal: ["component", "service"]
 
   # Circuit breaker open inhibits high failure rate alerts
   - source_match:
       alertname: CircuitBreakerOpen
     target_match:
       alertname: CircuitBreakerHighFailureRate
-    equal: ['service', 'circuit_name']
+    equal: ["service", "circuit_name"]
 
   # Critical memory usage inhibits warning memory alerts
   - source_match:
       alertname: CriticalMemoryUsage
     target_match:
       alertname: HighMemoryUsage
-    equal: ['instance']
+    equal: ["instance"]
 
   # Critical CPU usage inhibits warning CPU alerts
   - source_match:
       alertname: CriticalCPUUsage
     target_match:
       alertname: HighCPUUsage
-    equal: ['instance']
+    equal: ["instance"]

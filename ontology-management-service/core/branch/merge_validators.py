@@ -289,6 +289,8 @@ class StateTransitionValidator(MergeValidator):
  ValidationError(
  field = "status",
  message = f"Invalid state transition: {base_status} -> {merged_status}. Allowed from: {allowed_from}",
+
+
  severity = "error",
  context={"from": base_status, "to": merged_status},
  )

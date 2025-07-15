@@ -1,6 +1,7 @@
 """Validation service protocol"""
 
-from typing import Protocol, Dict, Any, List
+from typing import Any, Dict, List, Protocol
+
 
 class ValidationServiceProtocol(Protocol):
  """Protocol for validation service implementations"""
@@ -9,7 +10,8 @@ class ValidationServiceProtocol(Protocol):
  """Validate data against a schema"""
  ...
 
- async def validate_schema_definition(self, schema_def: Dict[str, Any]) -> Dict[str, Any]:
+ async def validate_schema_definition(self, schema_def: Dict[str, Any]) -> Dict[str,
+     Any]:
  """Validate schema definition format"""
  ...
 

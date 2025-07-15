@@ -2,32 +2,36 @@
 Graph Analysis Service - Domain service for advanced graph operations.
 Separated from presentation layer for better testability and reusability.
 """
-from typing import List, Dict, Any, Optional, Set, Tuple, AsyncGenerator
-from dataclasses import dataclass, field
-from enum import Enum
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
-from collections import defaultdict, deque
 import hashlib
 import json
+from collections import defaultdict, deque
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass, field
 from datetime import datetime
+from enum import Enum
+from typing import Any, AsyncGenerator, Dict, List, Optional, Set, Tuple
 
 import networkx as nx
-from cachetools import TTLCache
-
-from core.graph.repositories import IGraphRepository, SubgraphData, GraphNode, GraphEdge
-from shared.cache.smart_cache import SmartCache
-from core.resilience.unified_circuit_breaker import circuit_breaker
-from core.events.unified_publisher import UnifiedEventPublisher
-from prometheus_client import Counter, Histogram, Gauge
-from infra.tracing.jaeger_adapter import trace_graph_operation, trace_path_analysis, get_tracing_manager
 from arrakis_common import get_logger
+from cachetools import TTLCache
+from core.events.unified_publisher import UnifiedEventPublisher
+from core.graph.repositories import GraphEdge, GraphNode, IGraphRepository, SubgraphData
+from core.resilience.unified_circuit_breaker import circuit_breaker
+from infra.tracing.jaeger_adapter import (
+    get_tracing_manager,
+    trace_graph_operation,
+    trace_path_analysis,
+)
+from prometheus_client import Counter, Gauge, Histogram
+from shared.cache.smart_cache import SmartCache
 
 logger = get_logger(__name__)
 
 # Metrics
 path_query_counter = Counter("graph_path_queries_total", "Total path queries executed")
-path_query_duration = Histogram("graph_path_query_duration_seconds", "Path query execution time")
+path_query_duration = Histogram("graph_path_query_duration_seconds",
+    "Path query execution time")
 cache_hit_counter = Counter("graph_cache_hits_total", "Graph cache hits")
 cache_miss_counter = Counter("graph_cache_misses_total", "Graph cache misses")
 active_graph_size = Gauge("graph_nodes_active", "Number of nodes in active graphs")
@@ -134,7 +138,8 @@ class NetworkXGraphBuilder:
  """
 
  @staticmethod
- def build_graph(subgraph_data: SubgraphData, direction: TraversalDirection) -> nx.Graph:
+ def build_graph(subgraph_data: SubgraphData,
+     direction: TraversalDirection) -> nx.Graph:
  """Build NetworkX graph with proper direction handling."""
 
  # Choose graph type based on direction
@@ -171,7 +176,8 @@ class NetworkXGraphBuilder:
  return graph
 
  @staticmethod
- def get_neighbors(graph: nx.Graph, node: str, direction: TraversalDirection) -> List[str]:
+ def get_neighbors(graph: nx.Graph, node: str,
+     direction: TraversalDirection) -> List[str]:
  """Get neighbors with direction awareness."""
  if isinstance(graph, nx.DiGraph):
  if direction == TraversalDirection.BACKWARD:
@@ -495,7 +501,8 @@ class GraphAnalysisService:
  "nodes": graph.number_of_nodes(),
  "edges": graph.number_of_edges(),
  "density": nx.density(graph),
- "is_connected": nx.is_connected(graph) if not isinstance(graph, nx.DiGraph) else nx.is_weakly_connected(graph)
+ "is_connected": nx.is_connected(graph) if not isinstance(graph,
+     nx.DiGraph) else nx.is_weakly_connected(graph)
  },
  "analysis_timestamp": datetime.utcnow().isoformat()
  }
@@ -560,8 +567,14 @@ class GraphAnalysisService:
  subgraph_data = await self.graph_repository.get_subgraph(
  list(all_nodes),
  node_type_filters = query.constraints.allowed_node_types if query.constraints else None,
+
+
  edge_type_filters = query.constraints.allowed_edge_types if query.constraints else None,
+
+
  forbidden_node_types = query.constraints.forbidden_node_types if query.constraints else None,
+
+
  forbidden_edge_types = query.constraints.forbidden_edge_types if query.constraints else None
  )
  else:
@@ -574,7 +587,8 @@ class GraphAnalysisService:
 
  return self.graph_builder.build_graph(subgraph_data, query.direction)
 
- async def _execute_path_strategy(self, graph: nx.Graph, query: DeepLinkingQuery) -> List[GraphPath]:
+ async def _execute_path_strategy(self, graph: nx.Graph,
+     query: DeepLinkingQuery) -> List[GraphPath]:
  """Execute path finding strategy with thread pool optimization."""
 
  if query.strategy == PathStrategy.SHORTEST_PATH:
@@ -590,7 +604,8 @@ class GraphAnalysisService:
  else:
  raise ValueError(f"Unsupported path strategy: {query.strategy}")
 
- async def _find_shortest_paths_async(self, graph: nx.Graph, query: DeepLinkingQuery) -> List[GraphPath]:
+ async def _find_shortest_paths_async(self, graph: nx.Graph,
+     query: DeepLinkingQuery) -> List[GraphPath]:
  """Find shortest paths using thread pool."""
 
  def find_paths():
@@ -603,7 +618,8 @@ class GraphAnalysisService:
  else:
  # Find shortest paths to all reachable nodes
  lengths = nx.single_source_shortest_path_length(
- graph, query.source_node_id, cutoff = query.constraints.max_depth if query.constraints else 5
+ graph, query.source_node_id,
+     cutoff = query.constraints.max_depth if query.constraints else 5
  )
  paths = []
  for target, length in sorted(lengths.items(), key = lambda x: x[1]):
@@ -631,7 +647,8 @@ class GraphAnalysisService:
 
  return graph_paths
 
- async def _find_k_shortest_paths_async(self, graph: nx.Graph, query: DeepLinkingQuery) -> List[GraphPath]:
+ async def _find_k_shortest_paths_async(self, graph: nx.Graph,
+     query: DeepLinkingQuery) -> List[GraphPath]:
  """Find K shortest paths using Yen's algorithm."""
 
  def find_k_paths():
@@ -673,7 +690,8 @@ class GraphAnalysisService:
 
  return graph_paths
 
- async def _find_constrained_paths_async(self, graph: nx.Graph, query: DeepLinkingQuery) -> List[GraphPath]:
+ async def _find_constrained_paths_async(self, graph: nx.Graph,
+     query: DeepLinkingQuery) -> List[GraphPath]:
  """Find paths with constraints using optimized search."""
 
  if not query.target_node_id:
@@ -731,7 +749,8 @@ class GraphAnalysisService:
 
  return graph_paths[:query.max_paths]
 
- async def _convert_to_graph_path(self, graph: nx.Graph, path: List[str], query: DeepLinkingQuery) -> GraphPath:
+ async def _convert_to_graph_path(self, graph: nx.Graph, path: List[str],
+     query: DeepLinkingQuery) -> GraphPath:
  """Convert NetworkX path to GraphPath with comprehensive metadata."""
  nodes = []
  edges = []
@@ -784,7 +803,8 @@ class GraphAnalysisService:
  metadata = metadata
  )
 
- def _validate_path(self, path: GraphPath, constraints: Optional[PathConstraint]) -> bool:
+ def _validate_path(self, path: GraphPath,
+     constraints: Optional[PathConstraint]) -> bool:
  """Validate complete path against constraints."""
  if not constraints:
  return True
@@ -792,7 +812,8 @@ class GraphAnalysisService:
  validator = PathValidator(constraints)
  return validator.is_valid_path(path)
 
- async def _optimize_paths(self, paths: List[GraphPath], query: DeepLinkingQuery) -> List[GraphPath]:
+ async def _optimize_paths(self, paths: List[GraphPath],
+     query: DeepLinkingQuery) -> List[GraphPath]:
  """Apply advanced path optimization strategies."""
  if not paths:
  return paths
@@ -818,7 +839,8 @@ class GraphAnalysisService:
 
  return unique_paths[:query.max_paths]
 
- def _calculate_relevance_score(self, path: GraphPath, query: DeepLinkingQuery) -> float:
+ def _calculate_relevance_score(self, path: GraphPath,
+     query: DeepLinkingQuery) -> float:
  """Calculate path relevance score."""
  score = 0.0
 
@@ -852,7 +874,8 @@ class GraphAnalysisService:
  hash_object = hashlib.sha256(key_string.encode())
  return f"path:{hash_object.hexdigest()[:16]}"
 
- def _serialize_constraints(self, constraints: Optional[PathConstraint]) -> Dict[str, Any]:
+ def _serialize_constraints(self, constraints: Optional[PathConstraint]) -> Dict[str,
+     Any]:
  """Serialize constraints for cache key generation."""
  if not constraints:
  return {}
@@ -868,7 +891,8 @@ class GraphAnalysisService:
  "min_weight": constraints.min_weight
  }
 
- async def _publish_path_query_event(self, query: DeepLinkingQuery, paths: List[GraphPath], start_time: datetime):
+ async def _publish_path_query_event(self, query: DeepLinkingQuery,
+     paths: List[GraphPath], start_time: datetime):
  """Publish analytics event for path query."""
  if not self.event_publisher:
  return
@@ -902,7 +926,8 @@ class GraphAnalysisService:
  logger.warning(f"Failed to publish path query event: {e}")
 
  # Additional helper methods for centrality, community detection, etc.
- async def _calculate_centrality_async(self, graph: nx.Graph, centrality_type: str, normalize: bool) -> Dict[str, float]:
+ async def _calculate_centrality_async(self, graph: nx.Graph, centrality_type: str,
+     normalize: bool) -> Dict[str, float]:
  """Calculate centrality measures in thread pool."""
 
  def calculate():
@@ -924,7 +949,8 @@ class GraphAnalysisService:
  loop = asyncio.get_event_loop()
  return await loop.run_in_executor(_cpu_thread_pool, calculate)
 
- async def _detect_communities_async(self, graph: nx.Graph, algorithm: str, resolution: float) -> Dict[str, Set[str]]:
+ async def _detect_communities_async(self, graph: nx.Graph, algorithm: str,
+     resolution: float) -> Dict[str, Set[str]]:
  """Detect communities in thread pool."""
 
  def detect():
@@ -949,7 +975,8 @@ class GraphAnalysisService:
  loop = asyncio.get_event_loop()
  return await loop.run_in_executor(_cpu_thread_pool, detect)
 
- def _calculate_modularity(self, graph: nx.Graph, communities: Dict[str, Set[str]]) -> float:
+ def _calculate_modularity(self, graph: nx.Graph, communities: Dict[str,
+     Set[str]]) -> float:
  """Calculate modularity score for community structure."""
  try:
  # Convert communities to list of sets for NetworkX

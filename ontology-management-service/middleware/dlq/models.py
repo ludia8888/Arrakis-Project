@@ -4,7 +4,7 @@ Dead Letter Queue data models
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Dict, Any, Optional, List
+from typing import Any, Dict, List, Optional
 
 
 class MessageStatus(Enum):
@@ -20,8 +20,8 @@ class MessageStatus(Enum):
 
 class RetryStrategy(Enum):
  """Retry strategies for failed messages"""
- EXPONENTIAL_BACKOFF = "exponential_backoff"
- LINEAR_BACKOFF = "linear_backoff"
+ EXPONENTIAL_BACKOFF = "exponential_backof"
+ LINEAR_BACKOFF = "linear_backof"
  FIXED_DELAY = "fixed_delay"
  IMMEDIATE = "immediate"
  CUSTOM = "custom"

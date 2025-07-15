@@ -1,11 +1,12 @@
 """
 FastAPI-compatible Rate Limiting Middleware
 """
-from typing import Optional
-from fastapi import Request, Response
-from starlette.middleware.base import BaseHTTPMiddleware
-from fastapi.responses import JSONResponse
 import logging
+from typing import Optional
+
+from fastapi import Request, Response
+from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from .coordinator import RateLimitCoordinator
 from .models import RateLimitConfig, RateLimitKey, RateLimitScope

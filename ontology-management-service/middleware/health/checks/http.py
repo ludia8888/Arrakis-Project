@@ -2,10 +2,12 @@
 HTTP endpoint health check implementation
 """
 import asyncio
-from typing import Optional, Dict, Any, List
+from typing import Any, Dict, List, Optional
+
 from database.clients.unified_http_client import create_basic_client
-from .base import HealthCheck
+
 from ..models import HealthCheckResult, HealthStatus
+from .base import HealthCheck
 
 
 class HttpHealthCheck(HealthCheck):
@@ -48,7 +50,8 @@ class HttpHealthCheck(HealthCheck):
 
  # Parse response if JSON expected
  response_data = None
- if self.expected_response and response.headers.get('content-type', '').startswith('application/json'):
+ if self.expected_response and response.headers.get('content-type',
+     '').startswith('application/json'):
  try:
  response_data = response.json()
  except Exception as e:
@@ -94,7 +97,7 @@ class HttpHealthCheck(HealthCheck):
 
  return self.create_result(
  status = HealthStatus.HEALTHY,
- message = f"HTTP endpoint responsive",
+ message = "HTTP endpoint responsive",
  details = request_info
  )
 
@@ -139,6 +142,7 @@ class HttpHealthCheck(HealthCheck):
  nested_errors = self._validate_response(actual[key], expected_value)
  errors.extend(f"{key}.{error}" for error in nested_errors)
  elif actual.get(key) != expected_value:
- errors.append(f"Value mismatch for {key}: expected {expected_value}, got {actual.get(key)}")
+ errors.append(f"Value mismatch for {key}: expected {expected_value},
+     got {actual.get(key)}")
 
  return errors

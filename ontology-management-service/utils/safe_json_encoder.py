@@ -2,12 +2,12 @@
 Safe JSON encoder that handles circular references and special values
 """
 import json
-from typing import Any, Set, Optional
-from datetime import datetime, date
-from decimal import Decimal
-from uuid import UUID
-from enum import Enum
 import math
+from datetime import date, datetime
+from decimal import Decimal
+from enum import Enum
+from typing import Any, Optional, Set
+from uuid import UUID
 
 
 class CircularReferenceError(ValueError):
@@ -15,7 +15,8 @@ class CircularReferenceError(ValueError):
  pass
 
 
-def safe_dict_conversion(obj: Any, _seen: Optional[Set[int]] = None, max_depth: int = 100) -> Any:
+def safe_dict_conversion(obj: Any, _seen: Optional[Set[int]] = None,
+    max_depth: int = 100) -> Any:
  """
  Safely convert objects to JSON-serializable format with circular reference detection
 

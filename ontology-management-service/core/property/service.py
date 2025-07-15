@@ -245,7 +245,8 @@ class PropertyService(PropertyServiceProtocol):
  if property_data.get("name"):
  if not re.match(r"^[a-zA-Z][a-zA-Z0-9_]*$", property_data["name"]):
  errors.append(
- "Property name must start with a letter and contain only letters, numbers, and underscores"
+ "Property name must start with a letter and contain only letters, numbers,
+     and underscores"
  )
 
  # Validate data type

@@ -1,8 +1,8 @@
 """
 Branch Service Interface
 """
-from typing import Protocol, Optional, Dict, Any, List
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Protocol
 
 from models.branch_state import BranchState, BranchStateInfo
 

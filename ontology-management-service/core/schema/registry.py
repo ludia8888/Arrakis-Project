@@ -3,8 +3,10 @@ Schema Registry for OMS
 Provides centralized schema management
 """
 
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
+
 from models.semantic_types import SemanticType
+
 
 class SchemaRegistry:
  """Central registry for schema components"""

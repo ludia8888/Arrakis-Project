@@ -76,7 +76,8 @@ class EnterpriseTracer:
  )
 
  logger.info(
- f"Configuring Jaeger: host={jaeger_host}, port={jaeger_port}, collector={collector_endpoint}"
+ f"Configuring Jaeger: host={jaeger_host}, port={jaeger_port},
+     collector={collector_endpoint}"
  )
 
  jaeger_exporter = JaegerExporter(

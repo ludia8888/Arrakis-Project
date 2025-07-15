@@ -5,19 +5,16 @@ Implements Phase 5 requirements: GraphQL and OpenAPI schema generation
 with automatic link field generation.
 """
 
-from typing import Dict, Any, Optional, Annotated
-from fastapi import APIRouter, Depends, HTTPException, Query, Path
-from pydantic import BaseModel, Field
+from typing import Annotated, Any, Dict, Optional
 
-from bootstrap.dependencies import get_schema_service
-from core.interfaces import SchemaServiceProtocol
-from core.api.schema_generator import (
- graphql_generator,
- openapi_generator
-)
-from core.schema.registry import schema_registry
-from middleware.auth_middleware import get_current_user
 from arrakis_common import get_logger
+from bootstrap.dependencies import get_schema_service
+from core.api.schema_generator import graphql_generator, openapi_generator
+from core.interfaces import SchemaServiceProtocol
+from core.schema.registry import schema_registry
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from middleware.auth_middleware import get_current_user
+from pydantic import BaseModel, Field
 
 logger = get_logger(__name__)
 router = APIRouter(prefix = "/schema-generation", tags = ["Schema Generation"])
@@ -131,6 +128,8 @@ async def generate_graphql_schema(
  format = "graphql",
  schema = sdl,
  metadata = graphql_generator.export_schema_metadata() if request.export_metadata else None,
+
+
  generated_at = datetime.utcnow().isoformat(),
  object_types_included = [t.id for t in object_types],
  link_types_included = [lt.id for lt in relevant_link_types]

@@ -2,7 +2,8 @@
 Base discovery provider interface
 """
 from abc import ABC, abstractmethod
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
+
 from ..models import ServiceInstance, ServiceRegistration
 
 
@@ -25,7 +26,8 @@ class DiscoveryProvider(ABC):
  pass
 
  @abstractmethod
- async def get_instance(self, service_name: str, instance_id: str) -> Optional[ServiceInstance]:
+ async def get_instance(self, service_name: str,
+     instance_id: str) -> Optional[ServiceInstance]:
  """Get specific service instance"""
  pass
 

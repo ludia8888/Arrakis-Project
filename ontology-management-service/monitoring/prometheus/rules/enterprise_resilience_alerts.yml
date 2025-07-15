@@ -18,11 +18,11 @@ groups:
           description: |
             Circuit breaker {{ $labels.circuit_name }} in service {{ $labels.service }} has opened.
             This indicates a high failure rate and requests are being rejected.
-            
+
             Current state: {{ $value }}
             Service: {{ $labels.service }}
             Circuit: {{ $labels.circuit_name }}
-            
+
             Immediate action required to restore service functionality.
           runbook_url: "https://docs.company.com/runbooks/circuit-breaker-open"
           dashboard_url: "http://grafana:3000/d/enterprise-resilience"
@@ -40,7 +40,7 @@ groups:
           description: |
             Circuit breaker {{ $labels.circuit_name }} is experiencing high failure rate.
             Current failure rate: {{ $value | humanizePercentage }}
-            
+
             This may lead to circuit breaker opening if not addressed.
           runbook_url: "https://docs.company.com/runbooks/high-failure-rate"
 
@@ -76,7 +76,7 @@ groups:
           description: |
             E-Tag cache hit rate for {{ $labels.resource_type }} is {{ $value | humanizePercentage }}.
             This is below the recommended 70% threshold.
-            
+
             Poor cache performance may impact system responsiveness.
           runbook_url: "https://docs.company.com/runbooks/cache-performance"
 
@@ -92,7 +92,7 @@ groups:
           description: |
             Redis cache error rate is {{ $value | humanizePercentage }}.
             This indicates connectivity or performance issues with Redis.
-            
+
             Operation: {{ $labels.operation }}
             Error rate: {{ $value | humanizePercentage }}
 
@@ -125,7 +125,7 @@ groups:
           description: |
             Queue size for {{ $labels.service }} {{ $labels.queue_type }} is {{ $value }}.
             This indicates high load and potential performance degradation.
-            
+
             Consider scaling or investigating the root cause.
 
       - alert: BackpressureQueueFull
@@ -141,7 +141,7 @@ groups:
           description: |
             Queue for {{ $labels.service }} {{ $labels.queue_type }} is at or near capacity ({{ $value }}).
             New requests are likely being rejected.
-            
+
             Immediate scaling or load reduction required.
 
       - alert: BackpressureHighRejectionRate
@@ -176,7 +176,7 @@ groups:
           description: |
             Garbage collection for generation {{ $labels.generation }} is occurring {{ $value }} times/sec.
             This may indicate memory pressure or inefficient memory usage.
-            
+
             Consider memory optimization or heap tuning.
 
       - alert: GCLongDuration
@@ -204,7 +204,7 @@ groups:
           description: |
             Dictionary object count has increased by {{ $value }} in the last 30 minutes.
             This may indicate a memory leak.
-            
+
             Investigation and possible restart may be required.
 
       - alert: HighUncollectableObjects

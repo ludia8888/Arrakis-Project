@@ -20,57 +20,57 @@ logger = logging.getLogger(__name__)
 
 
 class SchemaService(SchemaServiceProtocol):
- """
- 스키마 관리 서비스 - 브랜치 기반 워크플로우.
+    """
+    스키마 관리 서비스 - 브랜치 기반 워크플로우.
 
- 스키마 변경은 다음과 같은 프로세스를 따릅니다:
- 1. 스키마 변경을 위한 브랜치 생성 (schema-change/XXXX)
- 2. 브랜치에서 스키마 변경사항 작성
- 3. PR(Pull Request)을 통한 리뷰 및 승인
- 4. main 브랜치로 병합
- """
+    스키마 변경은 다음과 같은 프로세스를 따릅니다:
+    1. 스키마 변경을 위한 브랜치 생성 (schema-change/XXXX)
+    2. 브랜치에서 스키마 변경사항 작성
+    3. PR(Pull Request)을 통한 리뷰 및 승인
+    4. main 브랜치로 병합
+    """
 
- def __init__(
- self,
- repository: SchemaRepository,
- branch_service: "BranchService", # 브랜치 관리를 위한 서비스
- event_publisher: Optional[Any] = None,
- ):
- """
- 서비스 초기화.
+    def __init__(
+        self,
+        repository: SchemaRepository,
+        branch_service: "BranchService",  # 브랜치 관리를 위한 서비스
+        event_publisher: Optional[Any] = None,
+    ):
+        """
+        서비스 초기화.
 
- Args:
- repository (SchemaRepository): 데이터 접근을 담당하는 리포지토리
- branch_service (BranchService): 브랜치 관리 서비스
- event_publisher (Optional[Any]): 이벤트 발행을 위한 퍼블리셔
- """
- self.repository = repository
- self.branch_service = branch_service
- self.event_publisher = event_publisher
- # Production audit service integration
- import os
+        Args:
+            repository (SchemaRepository): 데이터 접근을 담당하는 리포지토리
+            branch_service (BranchService): 브랜치 관리 서비스
+            event_publisher (Optional[Any]): 이벤트 발행을 위한 퍼블리셔
+        """
+        self.repository = repository
+        self.branch_service = branch_service
+        self.event_publisher = event_publisher
+        # Production audit service integration
+        import os
 
- self.audit_service_url = os.getenv(
- "AUDIT_SERVICE_URL", "http://audit-service:8001"
- )
+        self.audit_service_url = os.getenv(
+            "AUDIT_SERVICE_URL", "http://audit-service:8001"
+        )
 
- async def list_object_types(self, branch: str = "main") -> List[Dict[str, Any]]:
- """모든 ObjectType의 목록을 조회합니다."""
- try:
- return await self.repository.list_all_object_types(branch)
- except Exception as e:
- logger.error(f"Error listing object types: {e}")
- # 서비스 계층에서는 비즈니스 요구사항에 따라 빈 리스트를 반환하거나
- # 예외를 다시 발생시킬 수 있습니다.
- return []
+    async def list_object_types(self, branch: str = "main") -> List[Dict[str, Any]]:
+        """모든 ObjectType의 목록을 조회합니다."""
+        try:
+            return await self.repository.list_all_object_types(branch)
+        except Exception as e:
+            logger.error(f"Error listing object types: {e}")
+            # 서비스 계층에서는 비즈니스 요구사항에 따라 빈 리스트를 반환하거나
+            # 예외를 다시 발생시킬 수 있습니다.
+            return []
 
- async def create_object_type(
- self,
- branch: str,
- data: ObjectTypeCreate,
- use_branch_workflow: bool = True,
- created_by: Optional[str] = None,
- ) -> ObjectType:
+    async def create_object_type(
+        self,
+        branch: str,
+        data: ObjectTypeCreate,
+        use_branch_workflow: bool = True,
+        created_by: Optional[str] = None,
+    ) -> ObjectType:
  """
  새로운 ObjectType을 생성합니다.
 
@@ -129,6 +129,8 @@ class SchemaService(SchemaServiceProtocol):
  target_branch = "main",
  title = f"Create new schema: {data.name}",
  description = f"New schema creation by {get_author()}\n\n{data.description or 'No description'}",
+
+
  created_by = get_author(),
  )
 
@@ -234,7 +236,7 @@ class SchemaService(SchemaServiceProtocol):
  "version": result.version_hash,
  "created_by": result.created_by,
  "created_at": result.created_at.isoformat(),
- "schema_def": schema_def,
+ "schema_de": schema_def,
  }
 
  except Exception as e:
@@ -363,7 +365,7 @@ class SchemaService(SchemaServiceProtocol):
  )
 
  if not success:
- raise Exception(f"Failed to mark schema for deletion")
+ raise Exception("Failed to mark schema for deletion")
 
  # 3. 변경사항 커밋
  await self.branch_service.commit_changes(
@@ -701,7 +703,7 @@ class SchemaService(SchemaServiceProtocol):
  "@value"
  ),
  "schema_id": schema_id,
- "schema_ref": binding.get("Schema", {}).get("@id"),
+ "schema_re": binding.get("Schema", {}).get("@id"),
  }
  versions.append(version_info)
 
@@ -723,6 +725,8 @@ class SchemaService(SchemaServiceProtocol):
  "updated_at": schema.get("updated_at"),
  "created_by": schema.get("created_by"),
  "description": f"Version {schema.get('version', 1)} of {schema.get('name', schema_id)}",
+
+
  "changes": schema.get("change_summary", "Current version"),
  "schema_id": schema_id,
  }

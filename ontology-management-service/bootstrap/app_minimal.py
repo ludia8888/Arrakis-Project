@@ -1,13 +1,13 @@
 """미들웨어 없는 최소한의 app factory - 문제 격리용"""
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 import logging
-from bootstrap.config import get_config
-from bootstrap.dependencies import init_container
 
 # Router imports
 from api.v1 import health_routes
+from bootstrap.config import get_config
+from bootstrap.dependencies import init_container
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 logger = logging.getLogger(__name__)
 

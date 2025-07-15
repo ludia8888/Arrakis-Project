@@ -7,20 +7,30 @@ Separate read and write models with event-driven projections
 
 import asyncio
 import json
-from abc import ABC, abstractmethod
-from dataclasses import dataclass, asdict
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Set, Union
-from enum import Enum
 import logging
+from abc import ABC, abstractmethod
+from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
+from enum import Enum
+from typing import Any, Dict, List, Optional, Set, Union
+
+import asyncpg
 import redis.asyncio as redis
-from sqlalchemy import create_engine, Column, String, Integer, DateTime, Text, Boolean, JSON
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Column,
+    DateTime,
+    Integer,
+    String,
+    Text,
+    create_engine,
+)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-import asyncpg
 
-from .immutable_event_store import ImmutableEvent, EventType
 from .event_sourcing import EventHandler
+from .immutable_event_store import EventType, ImmutableEvent
 
 logger = logging.getLogger(__name__)
 
@@ -130,7 +140,8 @@ class ReadModelProjection(ABC):
  """Process event and update checkpoint"""
  if await self.can_handle_event(event):
  await self.project_event(event)
- await self.checkpoint_manager.save_checkpoint(self.name, event.metadata.aggregate_version)
+ await self.checkpoint_manager.save_checkpoint(self.name,
+     event.metadata.aggregate_version)
 
 # SQL-based Read Model Manager
 
@@ -139,7 +150,8 @@ class SQLReadModelManager:
 
  def __init__(self, database_url: str):
  self.engine = create_engine(database_url)
- self.SessionLocal = sessionmaker(autocommit = False, autoflush = False, bind = self.engine)
+ self.SessionLocal = sessionmaker(autocommit = False, autoflush = False,
+     bind = self.engine)
 
  async def initialize(self):
  """Initialize database tables"""
@@ -154,7 +166,8 @@ class SQLReadModelManager:
 class SchemaReadModelProjection(ReadModelProjection):
  """Schema read model projection"""
 
- def __init__(self, checkpoint_manager: ProjectionCheckpoint, sql_manager: SQLReadModelManager):
+ def __init__(self, checkpoint_manager: ProjectionCheckpoint,
+     sql_manager: SQLReadModelManager):
  super().__init__("schema_read_model", checkpoint_manager)
  self.sql_manager = sql_manager
  self.supported_events = {
@@ -308,7 +321,8 @@ class RedisMaterializedView:
 class SchemaListView(ReadModelProjection):
  """Materialized view for schema listings"""
 
- def __init__(self, checkpoint_manager: ProjectionCheckpoint, redis_client: redis.Redis):
+ def __init__(self, checkpoint_manager: ProjectionCheckpoint,
+     redis_client: redis.Redis):
  super().__init__("schema_list_view", checkpoint_manager)
  self.view = RedisMaterializedView(redis_client, "schema_list")
  self.supported_events = {
@@ -344,7 +358,8 @@ class SchemaListView(ReadModelProjection):
 
  # Add to indexes
  await self.view.add_to_set("all_schemas", event.metadata.aggregate_id)
- await self.view.add_to_set(f"by_user:{payload.get('created_by', 'unknown')}", event.metadata.aggregate_id)
+ await self.view.add_to_set(f"by_user:{payload.get('created_by', 'unknown')}",
+     event.metadata.aggregate_id)
 
  async def _handle_schema_updated(self, event: ImmutableEvent):
  """Handle schema updated for list view"""

@@ -20,7 +20,7 @@ def analyze_critical_issues():
  print("=" * 80)
 
  stats = results["statistics"]
- print(f"📊 ANALYSIS SUMMARY:")
+ print("📊 ANALYSIS SUMMARY:")
  print(f" • Files analyzed: {stats['total_files_analyzed']}")
  print(f" • Unused imports: {stats['total_unused_imports']}")
  print(f" • Commented imports: {stats['total_commented_imports']}")

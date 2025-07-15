@@ -8,11 +8,11 @@ import os
 from typing import Any, Dict, List, Optional
 
 from core.branch.models import (
- BranchDiff,
- Conflict,
- ConflictType,
- DiffEntry,
- ThreeWayDiff,
+    BranchDiff,
+    Conflict,
+    ConflictType,
+    DiffEntry,
+    ThreeWayDiff,
 )
 from database.clients.terminus_db import TerminusDBClient
 
@@ -221,7 +221,8 @@ class DiffEngine:
  }
 
  logger.info(
- f"Retrieved schema for branch {branch}: {len(schema['objectTypes'])} object types, {len(schema['linkTypes'])} link types"
+ f"Retrieved schema for branch {branch}: {len(schema['objectTypes'])} object types,
+     {len(schema['linkTypes'])} link types"
  )
 
  except Exception as e:
@@ -372,7 +373,8 @@ class DiffEngine:
  }
 
  logger.info(
- f"Retrieved schema for commit {commit_hash}: {len(schema['objectTypes'])} object types, {len(schema['linkTypes'])} link types"
+ f"Retrieved schema for commit {commit_hash}: {len(schema['objectTypes'])} object types,
+     {len(schema['linkTypes'])} link types"
  )
 
  except Exception as e:
@@ -827,6 +829,8 @@ class DiffEngine:
  target_value = target_entry.new_value,
  path = source_entry.path,
  description = f"Both branches added {source_entry.resource_name} with different values",
+
+
  )
 
  return None

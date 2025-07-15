@@ -2,11 +2,12 @@
 Branch State Management
 Defines branch states and lock mechanisms for data integrity
 """
-from enum import Enum
-from typing import Optional, Dict, Any, List
 from datetime import datetime, timezone
-from pydantic import BaseModel, Field
+from enum import Enum
+from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
+
+from pydantic import BaseModel, Field
 
 
 class BranchState(str, Enum):
@@ -54,8 +55,10 @@ class BranchLock(BaseModel):
  lock_scope: LockScope = Field(..., description = "Scope of the lock")
 
  # Optional resource targeting
- resource_type: Optional[str] = Field(None, description = "Specific resource type if scoped")
- resource_id: Optional[str] = Field(None, description = "Specific resource ID if scoped")
+ resource_type: Optional[str] = Field(None,
+     description = "Specific resource type if scoped")
+ resource_id: Optional[str] = Field(None,
+     description = "Specific resource ID if scoped")
 
  # Lock metadata
  locked_by: str = Field(..., description = "User or service that created the lock")
@@ -70,9 +73,12 @@ class BranchLock(BaseModel):
 
  # TTL & Heartbeat support
  heartbeat_interval: int = Field(60, description = "Heartbeat interval in seconds")
- last_heartbeat: Optional[datetime] = Field(None, description = "Last heartbeat timestamp")
- heartbeat_source: Optional[str] = Field(None, description = "Service/process sending heartbeats")
- auto_release_enabled: bool = Field(True, description = "Whether lock can be auto-released on expiry")
+ last_heartbeat: Optional[datetime] = Field(None,
+     description = "Last heartbeat timestamp")
+ heartbeat_source: Optional[str] = Field(None,
+     description = "Service/process sending heartbeats")
+ auto_release_enabled: bool = Field(True,
+     description = "Whether lock can be auto-released on expiry")
 
  # Additional context
  metadata: Dict[str, Any] = Field(default_factory = dict)
@@ -124,7 +130,8 @@ class BranchStateInfo(BaseModel):
  self.indexing_completed_at is not None
  )
 
- def can_perform_action(self, action: str, resource_type: Optional[str] = None) -> tuple[bool, str]:
+ def can_perform_action(self, action: str,
+     resource_type: Optional[str] = None) -> tuple[bool, str]:
  """
  Check if a specific action can be performed on the branch
 
@@ -183,7 +190,9 @@ class BranchStateTransition(BaseModel):
  transitioned_at: datetime = Field(default_factory = lambda: datetime.now(timezone.utc))
  transitioned_by: str
  reason: str
- trigger: str # What triggered the transition (indexing_start, indexing_complete, manual, etc.)
+ trigger: str # What triggered the transition (indexing_start, indexing_complete, manual,
+
+     etc.)
  metadata: Dict[str, Any] = Field(default_factory = dict)
 
 
@@ -193,15 +202,19 @@ class HeartbeatRecord(BaseModel):
  branch_name: str
  service_name: str
  heartbeat_at: datetime = Field(default_factory = lambda: datetime.now(timezone.utc))
- status: str = Field(default = "healthy", description = "Status of the service (healthy, warning, error)")
- progress_info: Optional[Dict[str, Any]] = Field(None, description = "Progress information if available")
+ status: str = Field(default = "healthy", description = "Status of the service (healthy,
+     warning, error)")
+ progress_info: Optional[Dict[str, Any]] = Field(None,
+     description = "Progress information if available")
  metadata: Dict[str, Any] = Field(default_factory = dict)
 
 
 # State transition rules
 VALID_STATE_TRANSITIONS = {
- BranchState.ACTIVE: [BranchState.LOCKED_FOR_WRITE, BranchState.ARCHIVED, BranchState.ERROR],
- BranchState.LOCKED_FOR_WRITE: [BranchState.READY, BranchState.ACTIVE, BranchState.ERROR],
+ BranchState.ACTIVE: [BranchState.LOCKED_FOR_WRITE, BranchState.ARCHIVED,
+     BranchState.ERROR],
+ BranchState.LOCKED_FOR_WRITE: [BranchState.READY, BranchState.ACTIVE,
+     BranchState.ERROR],
  BranchState.READY: [BranchState.ACTIVE, BranchState.ARCHIVED],
  BranchState.ARCHIVED: [], # Terminal state
  BranchState.ERROR: [BranchState.ACTIVE, BranchState.LOCKED_FOR_WRITE] # Manual recovery

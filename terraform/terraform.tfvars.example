@@ -43,7 +43,7 @@ node_groups = {
     }
     taints = []
   }
-  
+
   compute_intensive = {
     instance_types             = ["t3.large"]
     min_capacity               = 1
@@ -60,7 +60,7 @@ node_groups = {
       effect = "NO_SCHEDULE"
     }]
   }
-  
+
   monitoring = {
     instance_types             = ["t3.small"]
     min_capacity               = 1
@@ -94,7 +94,7 @@ database_instances = {
     multi_az           = true
     deletion_protection = true
   }
-  
+
   user_db = {
     engine_version      = "16.1"
     instance_class      = "db.t3.small"
@@ -104,7 +104,7 @@ database_instances = {
     multi_az           = true
     deletion_protection = true
   }
-  
+
   audit_db = {
     engine_version      = "16.1"
     instance_class      = "db.t3.small"
@@ -114,7 +114,7 @@ database_instances = {
     multi_az           = true
     deletion_protection = true
   }
-  
+
   scheduler_db = {
     engine_version      = "16.1"
     instance_class      = "db.t3.small"
@@ -204,42 +204,42 @@ service_resources = {
     cpu_limit      = "1000m"
     memory_limit   = "2Gi"
   }
-  
+
   user_service = {
     cpu_request    = "250m"
     memory_request = "512Mi"
     cpu_limit      = "500m"
     memory_limit   = "1Gi"
   }
-  
+
   audit_service = {
     cpu_request    = "250m"
     memory_request = "512Mi"
     cpu_limit      = "500m"
     memory_limit   = "1Gi"
   }
-  
+
   data_kernel_service = {
     cpu_request    = "500m"
     memory_request = "1Gi"
     cpu_limit      = "1000m"
     memory_limit   = "2Gi"
   }
-  
+
   embedding_service = {
     cpu_request    = "1000m"
     memory_request = "2Gi"
     cpu_limit      = "2000m"
     memory_limit   = "4Gi"
   }
-  
+
   scheduler_service = {
     cpu_request    = "250m"
     memory_request = "512Mi"
     cpu_limit      = "500m"
     memory_limit   = "1Gi"
   }
-  
+
   event_gateway = {
     cpu_request    = "250m"
     memory_request = "512Mi"

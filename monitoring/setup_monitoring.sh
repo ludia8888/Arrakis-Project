@@ -20,7 +20,7 @@ datasources:
     url: http://prometheus:9090
     isDefault: true
     editable: true
-  
+
   - name: Jaeger
     type: jaeger
     access: proxy

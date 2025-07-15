@@ -2,20 +2,23 @@
 Service discovery coordinator - Facade for discovery components
 """
 import asyncio
-from typing import Dict, List, Optional, Any
-from datetime import datetime
 import logging
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from .models import (
- ServiceInstance, ServiceRegistration, ServiceStatus,
- LoadBalancerStrategy, ServiceDiscoveryConfig
-)
-from .providers.base import DiscoveryProvider
-from .providers.redis import RedisDiscoveryProvider
-from .providers.dns import DnsDiscoveryProvider
+from ..common.metrics import MetricsCollector
 from .balancer import LoadBalancer
 from .health import HealthChecker
-from ..common.metrics import MetricsCollector
+from .models import (
+    LoadBalancerStrategy,
+    ServiceDiscoveryConfig,
+    ServiceInstance,
+    ServiceRegistration,
+    ServiceStatus,
+)
+from .providers.base import DiscoveryProvider
+from .providers.dns import DnsDiscoveryProvider
+from .providers.redis import RedisDiscoveryProvider
 
 logger = logging.getLogger(__name__)
 

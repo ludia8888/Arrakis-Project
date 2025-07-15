@@ -2,17 +2,27 @@
 Graph Analysis Service Provider for dependency injection.
 Provides singleton graph analysis service with all required dependencies.
 """
-from typing import Optional
 import asyncio
-from .base import SingletonProvider
-from ...services.graph_analysis import GraphAnalysisService
-from ...core.graph.repositories import TerminusGraphRepository, CachedGraphRepository, IGraphRepository
-from ...database.clients.terminus_db import TerminusDBClient
-from ...shared.cache.smart_cache import SmartCache, create_graph_cache, create_path_cache
-from ...core.events.unified_publisher import UnifiedEventPublisher
-from ...config.redis_config import get_redis_client
-from ...infra.tracing.jaeger_adapter import get_tracing_manager
+from typing import Optional
+
 from arrakis_common import get_logger
+
+from ...config.redis_config import get_redis_client
+from ...core.events.unified_publisher import UnifiedEventPublisher
+from ...core.graph.repositories import (
+    CachedGraphRepository,
+    IGraphRepository,
+    TerminusGraphRepository,
+)
+from ...database.clients.terminus_db import TerminusDBClient
+from ...infra.tracing.jaeger_adapter import get_tracing_manager
+from ...services.graph_analysis import GraphAnalysisService
+from ...shared.cache.smart_cache import (
+    SmartCache,
+    create_graph_cache,
+    create_path_cache,
+)
+from .base import SingletonProvider
 
 logger = get_logger(__name__)
 
@@ -20,7 +30,8 @@ logger = get_logger(__name__)
 class GraphRepositoryProvider(SingletonProvider[IGraphRepository]):
  """Provider for graph repository with caching."""
 
- def __init__(self, terminus_client: TerminusDBClient, cache_manager: Optional[SmartCache] = None):
+ def __init__(self, terminus_client: TerminusDBClient,
+     cache_manager: Optional[SmartCache] = None):
  super().__init__()
  self.terminus_client = terminus_client
  self.cache_manager = cache_manager

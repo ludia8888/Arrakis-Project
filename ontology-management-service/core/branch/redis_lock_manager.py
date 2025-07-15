@@ -11,16 +11,16 @@ import json
 import uuid
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import IntEnum
-from typing import Optional, Dict, List, Set, Any, AsyncContextManager, AsyncIterator
+from typing import Any, AsyncContextManager, AsyncIterator, Dict, List, Optional, Set
 
 import redis.asyncio as redis
-from redis.exceptions import RedisError, LockError as RedisLockError
-
-from models.branch_state import LockType, LockScope
-from core.branch.lock_manager import LockConflictError
 from arrakis_common import get_logger
+from core.branch.lock_manager import LockConflictError
+from models.branch_state import LockScope, LockType
+from redis.exceptions import LockError as RedisLockError
+from redis.exceptions import RedisError
 
 logger = get_logger(__name__)
 
@@ -111,7 +111,7 @@ class RedisLockManager:
  raise LockHierarchyViolationError(
  f"Cannot acquire {new_lock_scope.value} lock while holding "
  f"{LockScope(held_lock.lock_scope).value} lock. "
- f"This would violate lock hierarchy and risk deadlock."
+ "This would violate lock hierarchy and risk deadlock."
  )
 
  @asynccontextmanager
@@ -177,7 +177,7 @@ class RedisLockManager:
  if not acquired:
  raise LockConflictError(
  f"Failed to acquire {lock_type.value} lock on {resource_id} "
- f"within timeout"
+ "within timeout"
  )
 
  # 4. 컨텍스트에 잠금 추가

@@ -2,13 +2,13 @@
 Issue Tracking Models
 Links all changes to issue IDs for complete traceability
 """
-from enum import Enum
-from typing import Optional, List, Dict, Any
-from datetime import datetime, timezone
-from pydantic import BaseModel, Field, field_validator
 import re
+from datetime import datetime, timezone
+from enum import Enum
+from typing import Any, Dict, List, Optional
 
 from models.domain import BaseModel as DomainBaseModel
+from pydantic import BaseModel, Field, field_validator
 
 
 class IssueProvider(str, Enum):
@@ -109,8 +109,10 @@ class IssueRequirement(BaseModel):
 
  # Global settings
  enabled: bool = Field(True, description = "Whether issue linking is required")
- enforce_for_production: bool = Field(True, description = "Strictly enforce for production branches")
- allow_emergency_override: bool = Field(True, description = "Allow emergency overrides with justification")
+ enforce_for_production: bool = Field(True,
+     description = "Strictly enforce for production branches")
+ allow_emergency_override: bool = Field(True,
+     description = "Allow emergency overrides with justification")
 
  # Branch-specific rules
  exempt_branches: List[str] = Field(
@@ -119,9 +121,12 @@ class IssueRequirement(BaseModel):
  )
 
  # Operation-specific rules
- require_for_schema_changes: bool = Field(True, description = "Require for schema modifications")
- require_for_deletions: bool = Field(True, description = "Require for deletion operations")
- require_for_acl_changes: bool = Field(True, description = "Require for ACL modifications")
+ require_for_schema_changes: bool = Field(True,
+     description = "Require for schema modifications")
+ require_for_deletions: bool = Field(True,
+     description = "Require for deletion operations")
+ require_for_acl_changes: bool = Field(True,
+     description = "Require for ACL modifications")
  require_for_merges: bool = Field(True, description = "Require for branch merges")
 
  # Issue type requirements
@@ -131,27 +136,34 @@ class IssueRequirement(BaseModel):
  )
 
  # Validation settings
- validate_issue_status: bool = Field(True, description = "Validate that issue is in appropriate status")
+ validate_issue_status: bool = Field(True,
+     description = "Validate that issue is in appropriate status")
  allowed_statuses: List[IssueStatus] = Field(
  default_factory = lambda: [IssueStatus.IN_PROGRESS, IssueStatus.IN_REVIEW],
  description = "Allowed issue statuses for changes"
  )
 
  # Additional validation
- validate_assignee: bool = Field(False, description = "Validate that user is assigned to the issue")
- require_issue_description: bool = Field(True, description = "Require issue to have description")
- minimum_issue_age_hours: int = Field(0, description = "Minimum age of issue before changes allowed")
+ validate_assignee: bool = Field(False,
+     description = "Validate that user is assigned to the issue")
+ require_issue_description: bool = Field(True,
+     description = "Require issue to have description")
+ minimum_issue_age_hours: int = Field(0,
+     description = "Minimum age of issue before changes allowed")
 
 
 class ChangeIssueLink(BaseModel):
  """Links a change to one or more issues"""
 
- change_id: str = Field(..., description = "ID of the change (commit hash, operation ID, etc.)")
- change_type: str = Field(..., description = "Type of change (schema, acl, branch, etc.)")
+ change_id: str = Field(..., description = "ID of the change (commit hash, operation ID,
+     etc.)")
+ change_type: str = Field(..., description = "Type of change (schema, acl, branch,
+     etc.)")
  branch_name: str = Field(..., description = "Branch where change occurred")
 
  # Primary issue (required)
- primary_issue: IssueReference = Field(..., description = "Primary issue this change addresses")
+ primary_issue: IssueReference = Field(...,
+     description = "Primary issue this change addresses")
 
  # Related issues (optional)
  related_issues: List[IssueReference] = Field(
@@ -160,16 +172,20 @@ class ChangeIssueLink(BaseModel):
  )
 
  # Override information (if emergency)
- emergency_override: bool = Field(False, description = "Whether this was an emergency override")
- override_justification: Optional[str] = Field(None, description = "Justification for override")
- override_approver: Optional[str] = Field(None, description = "Who approved the override")
+ emergency_override: bool = Field(False,
+     description = "Whether this was an emergency override")
+ override_justification: Optional[str] = Field(None,
+     description = "Justification for override")
+ override_approver: Optional[str] = Field(None,
+     description = "Who approved the override")
 
  # Metadata
  linked_by: str = Field(..., description = "User who linked the issue")
  linked_at: datetime = Field(default_factory = lambda: datetime.now(timezone.utc))
 
  # Validation context
- validation_result: Optional[Dict[str, Any]] = Field(None, description = "Issue validation results")
+ validation_result: Optional[Dict[str, Any]] = Field(None,
+     description = "Issue validation results")
 
  def get_all_issues(self) -> List[IssueReference]:
  """Get all linked issues"""
@@ -180,7 +196,8 @@ class IssueValidationResult(BaseModel):
  """Result of issue validation"""
 
  valid: bool = Field(..., description = "Whether the issue reference is valid")
- issue_ref: Optional[IssueReference] = Field(None, description = "Validated issue reference")
+ issue_ref: Optional[IssueReference] = Field(None,
+     description = "Validated issue reference")
 
  # Validation details
  exists: bool = Field(False, description = "Whether issue exists in tracking system")
@@ -191,17 +208,21 @@ class IssueValidationResult(BaseModel):
 
  # Error information
  error_message: Optional[str] = Field(None, description = "Validation error message")
- validation_warnings: List[str] = Field(default_factory = list, description = "Non-blocking warnings")
+ validation_warnings: List[str] = Field(default_factory = list,
+     description = "Non-blocking warnings")
 
  # Additional metadata from issue tracker
- issue_metadata: Optional[Dict[str, Any]] = Field(None, description = "Additional issue metadata")
+ issue_metadata: Optional[Dict[str, Any]] = Field(None,
+     description = "Additional issue metadata")
 
 
 class BulkIssueValidationRequest(BaseModel):
  """Request to validate multiple issue references"""
 
- issue_refs: List[IssueReference] = Field(..., description = "Issue references to validate")
- context: Dict[str, Any] = Field(default_factory = dict, description = "Validation context")
+ issue_refs: List[IssueReference] = Field(...,
+     description = "Issue references to validate")
+ context: Dict[str, Any] = Field(default_factory = dict,
+     description = "Validation context")
 
  # Validation options
  check_status: bool = Field(True, description = "Check issue status")
@@ -232,13 +253,15 @@ class IssueTrackingConfig(BaseModel):
 
  # Integration settings
  cache_ttl_seconds: int = Field(300, description = "Cache TTL for issue metadata")
- validation_timeout_seconds: int = Field(10, description = "Timeout for issue validation")
+ validation_timeout_seconds: int = Field(10,
+     description = "Timeout for issue validation")
  batch_validation_size: int = Field(10, description = "Batch size for bulk validation")
 
  # UI/UX settings
  show_issue_links_in_ui: bool = Field(True, description = "Show issue links in UI")
  allow_manual_linking: bool = Field(True, description = "Allow manual issue linking")
- suggest_related_issues: bool = Field(True, description = "Suggest related issues based on context")
+ suggest_related_issues: bool = Field(True,
+     description = "Suggest related issues based on context")
 
 
 # Helper functions
@@ -262,7 +285,8 @@ def parse_issue_reference(text: str) -> Optional[IssueReference]:
 
  # JIRA pattern (generic A-Z prefix)
  jira_match = re.match(r'^([A-Z]+)-(\d+)$', text)
- if jira_match and jira_match.group(1) not in ['ENG', 'PM', 'BUG', 'TASK', 'OMS', 'GH', 'GL']:
+ if jira_match and jira_match.group(1) not in ['ENG', 'PM', 'BUG', 'TASK', 'OMS', 'GH',
+     'GL']:
  return IssueReference(
  provider = IssueProvider.JIRA,
  issue_id = text
@@ -318,9 +342,11 @@ def extract_issue_references(text: str) -> List[IssueReference]:
  # JIRA style: PROJ-123
  (r'\b([A-Z]+-\d+)\b', lambda m: parse_issue_reference(m.group(1))),
  # GitHub style: #123
- (r'(?:^|\s)#(\d+)\b', lambda m: IssueReference(provider = IssueProvider.GITHUB, issue_id = m.group(1))),
+ (r'(?:^|\s)#(\d+)\b', lambda m: IssueReference(provider = IssueProvider.GITHUB,
+     issue_id = m.group(1))),
  # GitLab style: !123
- (r'(?:^|\s)!(\d+)\b', lambda m: IssueReference(provider = IssueProvider.GITLAB, issue_id = m.group(1))),
+ (r'(?:^|\s)!(\d+)\b', lambda m: IssueReference(provider = IssueProvider.GITLAB,
+     issue_id = m.group(1))),
  # Explicit formats: GH-123, GL-123
  (r'\b(GH-\d+)\b', lambda m: parse_issue_reference(m.group(1))),
  (r'\b(GL-\d+)\b', lambda m: parse_issue_reference(m.group(1))),

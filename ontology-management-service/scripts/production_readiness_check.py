@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Production Readiness Check Script
-프로덕션 배포 전 모든 체크리스트 항목 검증
+Verify all checklist items before production deployment
 """
 import json
 import os

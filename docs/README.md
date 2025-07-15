@@ -37,7 +37,7 @@ Event-driven architecture documentation:
 ## 📈 Monitoring & Observability
 
 - **Prometheus**: Metrics collection and monitoring
-- **Grafana**: Visualization and dashboards  
+- **Grafana**: Visualization and dashboards
 - **Jaeger**: Distributed tracing
 - **AlertManager**: Alert routing and management
 

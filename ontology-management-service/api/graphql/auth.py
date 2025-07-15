@@ -35,18 +35,20 @@ Related modules:
 - middleware/auth_middleware.py: REST API authentication
 - api/gateway/auth.py: DEPRECATED gateway auth
 """
-import os
-from typing import Optional, Dict, Any
-from datetime import datetime, timezone
 import asyncio
-import redis.asyncio as redis
-from fastapi import Depends, HTTPException, status, Request, WebSocket
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+import os
+from datetime import datetime, timezone
+from typing import Any, Dict, Optional
 
-from core.auth_utils import UserContext
-from middleware.auth_middleware import get_current_user
-from shared.user_service_client import validate_jwt_token_via_user_service as validate_jwt_token
+import redis.asyncio as redis
 from arrakis_common import get_logger
+from core.auth_utils import UserContext
+from fastapi import Depends, HTTPException, Request, WebSocket, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from middleware.auth_middleware import get_current_user
+from shared.user_service_client import (
+    validate_jwt_token_via_user_service as validate_jwt_token,
+)
 
 logger = get_logger(__name__)
 

@@ -47,21 +47,21 @@ limits_config:
 
 # Scrape configuration for self-profiling
 scrape_configs:
-  - job_name: 'pyroscope-self'
+  - job_name: "pyroscope-self"
     scrape_interval: 10s
     static_configs:
-      - targets: ['localhost:4040']
+      - targets: ["localhost:4040"]
         labels:
-          service_name: 'pyroscope'
-          
+          service_name: "pyroscope"
+
   # Profile OMS service if it exports pprof endpoints
-  - job_name: 'oms-service'
+  - job_name: "oms-service"
     scrape_interval: 15s
     static_configs:
-      - targets: ['oms:8000']
+      - targets: ["oms:8000"]
         labels:
-          service_name: 'oms'
-          namespace: 'production'
+          service_name: "oms"
+          namespace: "production"
 
 # Multi-tenancy (disabled for single-tenant setup)
 multi_tenancy_enabled: false

@@ -12,8 +12,8 @@ from core.iam.iam_integration import IAMScope
 from fastapi import APIRouter, Depends, HTTPException
 from middleware.auth_middleware import get_current_user
 from middleware.circuit_breaker_global import (
- GlobalCircuitState,
- get_global_circuit_breaker,
+    GlobalCircuitState,
+    get_global_circuit_breaker,
 )
 
 logger = logging.getLogger(__name__)

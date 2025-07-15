@@ -4,6 +4,7 @@ Document Service Protocol
 """
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
+
 from shared.models.domain import Document, DocumentCreate, DocumentUpdate
 
 

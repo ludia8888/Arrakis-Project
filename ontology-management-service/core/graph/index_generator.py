@@ -7,12 +7,12 @@ Generates automatic graph indexes for link types to optimize traversal performan
 
 import hashlib
 import json
-from typing import Dict, List, Optional, Set, Tuple, Any
 from datetime import datetime
-from pydantic import BaseModel, Field
+from typing import Any, Dict, List, Optional, Set, Tuple
 
-from models.domain import LinkType, ObjectType
 from arrakis_common import get_logger
+from models.domain import LinkType, ObjectType
+from pydantic import BaseModel, Field
 
 logger = get_logger(__name__)
 
@@ -21,7 +21,8 @@ class GraphIndex(BaseModel):
  """Represents a graph index for optimized traversal"""
  index_id: str = Field(..., description = "Unique index identifier")
  link_type_id: str = Field(..., description = "Link type this index belongs to")
- index_type: str = Field(..., description = "Type of index (src_dst, dst_src, composite)")
+ index_type: str = Field(..., description = "Type of index (src_dst, dst_src,
+     composite)")
  key_pattern: str = Field(..., description = "Key pattern for the index")
  metadata: Dict[str, Any] = Field(default_factory = dict)
  created_at: datetime = Field(default_factory = datetime.utcnow)

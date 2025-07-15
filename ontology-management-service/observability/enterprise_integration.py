@@ -1,27 +1,28 @@
 """
 Enterprise Observability Integration
-기존 리질리언스 대시보드를 Prometheus/Grafana/Jaeger 스택으로 완전 통합
+Fully integrate existing resilience dashboard with Prometheus/Grafana/Jaeger stack
 """
 import asyncio
 import logging
-from typing import Dict, Any, Optional
-from fastapi import FastAPI
 from contextlib import asynccontextmanager
+from typing import Any, Dict, Optional
+
+from fastapi import FastAPI
 
 from .enterprise_metrics import (
- EnterpriseMetricsRegistry,
- EnterpriseMetricsCollector,
- get_metrics_registry,
- get_metrics_collector,
- start_metrics_collection,
- metrics_endpoint
+    EnterpriseMetricsCollector,
+    EnterpriseMetricsRegistry,
+    get_metrics_collector,
+    get_metrics_registry,
+    metrics_endpoint,
+    start_metrics_collection,
 )
 from .enterprise_tracing import (
- initialize_enterprise_tracing,
- setup_auto_instrumentation,
- TracingConfig,
- get_resilience_tracing,
- get_business_tracing
+    TracingConfig,
+    get_business_tracing,
+    get_resilience_tracing,
+    initialize_enterprise_tracing,
+    setup_auto_instrumentation,
 )
 
 logger = logging.getLogger(__name__)
@@ -38,19 +39,19 @@ class EnterpriseObservabilityManager:
  self._initialized = False
 
  async def initialize(self, app: FastAPI = None):
- """관찰성 시스템 초기화"""
+ """관찰성 시스템 seconds기화"""
  if self._initialized:
  return
 
  try:
  logger.info("Initializing Enterprise Observability Stack...")
 
- # 1. Metrics 초기화
+ # 1. Metrics seconds기화
  self.metrics_registry = get_metrics_registry()
  self.metrics_collector = get_metrics_collector()
  logger.info("✅ Enterprise metrics initialized")
 
- # 2. Tracing 초기화
+ # 2. Tracing seconds기화
  tracing_config = TracingConfig(
  service_name = "oms-enterprise",
  service_version = "2.0.0",
@@ -95,6 +96,8 @@ class EnterpriseObservabilityManager:
  FastAPIInstrumentor.instrument_app(
  app,
  tracer_provider = self.enterprise_tracer.get_tracer().trace.get_tracer_provider() if self.enterprise_tracer else None,
+
+
  excluded_urls = "/health,/metrics,/api/v1/health"
  )
  logger.info("✅ FastAPI instrumented for OpenTelemetry tracing")
@@ -180,6 +183,8 @@ class EnterpriseObservabilityManager:
  "circuit_breaker_state": self.metrics_registry.circuit_breaker_state,
  "circuit_breaker_calls": self.metrics_registry.circuit_breaker_calls_total,
  "circuit_breaker_transitions": self.metrics_registry.circuit_breaker_state_transitions_total,
+
+
  "circuit_breaker_failure_rate": self.metrics_registry.circuit_breaker_failure_rate,
 
  # Cache Metrics
@@ -220,7 +225,7 @@ class EnterpriseObservabilityManager:
 _observability_manager: Optional[EnterpriseObservabilityManager] = None
 
 async def initialize_enterprise_observability(app: FastAPI = None) -> EnterpriseObservabilityManager:
- """엔터프라이즈 관찰성 초기화"""
+ """엔터프라이즈 관찰성 seconds기화"""
  global _observability_manager
 
  if _observability_manager is None:
@@ -380,7 +385,7 @@ async def enterprise_observability_lifespan(app: FastAPI):
  """FastAPI 애플리케이션 라이프사이클에 관찰성 통합"""
  logger.info("🚀 Starting Enterprise Observability...")
 
- # 초기화
+ # seconds기화
  manager = await initialize_enterprise_observability(app)
 
  # 마이그레이션 정보 로깅

@@ -73,7 +73,7 @@ class PerformanceBenchmark:
  self.results[name] = result
  return result
  else:
- print(f" ❌ All iterations failed")
+ print(" ❌ All iterations failed")
  return {"name": name, "errors": iterations}
 
 

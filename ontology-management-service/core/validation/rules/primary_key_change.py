@@ -8,10 +8,10 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Set
 
 from core.validation.models import (
- BreakingChange,
- DataImpact,
- Severity,
- ValidationContext,
+    BreakingChange,
+    DataImpact,
+    Severity,
+    ValidationContext,
 )
 from core.validation.rules.base import BreakingChangeRule
 
@@ -88,7 +88,8 @@ class PrimaryKeyChangeRule(BreakingChangeRule):
  if hasattr(context, 'cache') and context.cache:
  cached_analysis = await context.cache.get(cache_key)
  if cached_analysis:
- return await self._create_breaking_change_from_cached(cached_analysis, old_schema, new_schema, context)
+ return await self._create_breaking_change_from_cached(cached_analysis, old_schema,
+     new_schema, context)
 
  # Primary Key 분석 수행
  pk_analysis = await self._analyze_primary_key_changes(old_schema, new_schema, context)
@@ -118,7 +119,8 @@ class PrimaryKeyChangeRule(BreakingChangeRule):
  # 변경사항 분석
  removed_keys = old_pk_fields - new_pk_fields
  added_keys = new_pk_fields - old_pk_fields
- modified_keys = self._find_modified_primary_keys(old_schema, new_schema, old_pk_fields & new_pk_fields)
+ modified_keys = self._find_modified_primary_keys(old_schema, new_schema,
+     old_pk_fields & new_pk_fields)
 
  # Composite Key 변경 분석
  composite_changes = await self._analyze_composite_key_changes(
@@ -293,7 +295,7 @@ class PrimaryKeyChangeRule(BreakingChangeRule):
 
  for pk_field in new_pk_fields:
  # 중복 값 존재 확인 쿼리
- duplicate_check_query = f"""
+ duplicate_check_query = """
  SELECT ?value (COUNT(?instance) AS ?count)
  WHERE {{
  ?instance a <{object_type_name}> .
@@ -338,7 +340,7 @@ class PrimaryKeyChangeRule(BreakingChangeRule):
 
  try:
  # Primary Key를 참조하는 LinkType들 조회
- referencing_links_query = f"""
+ referencing_links_query = """
  SELECT ?link_type ?source_type ?property_name
  WHERE {{
  ?link a LinkType .
@@ -364,6 +366,8 @@ class PrimaryKeyChangeRule(BreakingChangeRule):
  "type": "referential_integrity_violation",
  "severity": "CRITICAL",
  "description": f"Removed primary key '{removed_key}' is referenced by LinkType '{link_type}'",
+
+
  "affected_link": link_type,
  "source_object_type": source_type,
  "impact": "Foreign key constraints will be violated"
@@ -375,6 +379,8 @@ class PrimaryKeyChangeRule(BreakingChangeRule):
  "type": "referential_integrity_risk",
  "severity": "HIGH",
  "description": f"Modified primary key '{modified_key}' is referenced by LinkType '{link_type}'",
+
+
  "affected_link": link_type,
  "source_object_type": source_type,
  "impact": "Reference relationships may break"
@@ -452,7 +458,8 @@ class PrimaryKeyChangeRule(BreakingChangeRule):
  severity = self._determine_severity(analysis)
 
  # 데이터 영향도 분석
- data_impact = await self._calculate_data_impact(analysis, old_schema, new_schema, context)
+ data_impact = await self._calculate_data_impact(analysis, old_schema, new_schema,
+     context)
 
  # 변경 유형 결정
  change_type = self._determine_change_type(analysis)
@@ -531,7 +538,7 @@ class PrimaryKeyChangeRule(BreakingChangeRule):
  object_type_name = self._get_resource_name(old_schema)
 
  # 전체 레코드 수 조회
- count_query = f"""
+ count_query = """
  SELECT (COUNT(?instance) AS ?total)
  WHERE {{
  ?instance a <{object_type_name}> .
@@ -575,7 +582,8 @@ class PrimaryKeyChangeRule(BreakingChangeRule):
  migration_risks = [f"Impact calculation failed: {e}"]
  )
 
- def _calculate_migration_complexity(self, analysis: PrimaryKeyAnalysis, record_count: int) -> int:
+ def _calculate_migration_complexity(self, analysis: PrimaryKeyAnalysis,
+     record_count: int) -> int:
  """마이그레이션 복잡도 점수 (1-10)"""
 
  base_score = 5
@@ -667,7 +675,8 @@ class PrimaryKeyChangeRule(BreakingChangeRule):
  return f"Primary key fields modified: {', '.join(analysis.modified_keys)}"
 
  if analysis.composite_key_changes:
- change_types = [change.get("type", "unknown") for change in analysis.composite_key_changes]
+ change_types = [change.get("type",
+     "unknown") for change in analysis.composite_key_changes]
  return f"Composite primary key changes: {', '.join(change_types)}"
 
  return "Primary key constraints or structure changed"
@@ -734,5 +743,6 @@ class PrimaryKeyChangeRule(BreakingChangeRule):
  """캐시된 분석 결과로부터 Breaking Change 생성"""
 
  if self._has_breaking_changes(cached_analysis):
- return await self._create_breaking_change(cached_analysis, old_schema, new_schema, context)
+ return await self._create_breaking_change(cached_analysis, old_schema, new_schema,
+     context)
  return None

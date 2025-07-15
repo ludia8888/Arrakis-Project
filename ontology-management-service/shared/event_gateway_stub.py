@@ -1,11 +1,11 @@
 """Event Gateway service stub for gradual migration."""
 
-import os
-import logging
-from typing import Dict, List, Optional, Any, AsyncIterator
-from datetime import datetime
-import json
 import asyncio
+import json
+import logging
+import os
+from datetime import datetime
+from typing import Any, AsyncIterator, Dict, List, Optional
 
 from cloudevents.http import CloudEvent, from_dict, to_json
 
@@ -187,7 +187,8 @@ class EventGatewayStub:
  logger.info(f"Created local subscription: {subscription_id}")
  return subscription_id
 
- async def _stream_events_local(self, subscription_id: str) -> AsyncIterator[Dict[str, Any]]:
+ async def _stream_events_local(self, subscription_id: str) -> AsyncIterator[Dict[str,
+     Any]]:
  """Stream events locally."""
  if not hasattr(self, "_subscriptions"):
  return

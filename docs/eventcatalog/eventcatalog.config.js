@@ -27,7 +27,7 @@ module.exports = {
       slackDirectMessageUrl: 'https://yourcompany.slack.com/team/platform'
     },
     {
-      id: 'ml-team', 
+      id: 'ml-team',
       name: 'Machine Learning Team',
       role: 'Consumers',
       email: 'ml-team@arrakis.dev'

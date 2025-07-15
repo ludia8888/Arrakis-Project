@@ -1,13 +1,16 @@
 """Schema service provider"""
 from typing import Optional
 
-from core.schema.service_adapter import SchemaServiceAdapter
 from core.schema.repository import SchemaRepository
-from .base import Provider
+from core.schema.service_adapter import SchemaServiceAdapter
+
 # from .database import DatabaseProvider # No longer needed
 from database.clients.unified_database_client import UnifiedDatabaseClient
-from .event import EventProvider
+
+from .base import Provider
 from .branch import BranchProvider
+from .event import EventProvider
+
 
 class SchemaProvider(Provider[SchemaServiceAdapter]):
  """Provider for schema service instances"""

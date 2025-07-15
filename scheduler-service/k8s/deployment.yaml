@@ -53,22 +53,30 @@ data:
   DLQ_MAX_RETRIES: "5"
 
 ---
-apiVersion: v1
-kind: Secret
-metadata:
-  name: scheduler-service-secrets
-  namespace: scheduler-service
-type: Opaque
-stringData:
-  DATABASE_URL: "postgresql://scheduler_service:password@postgres-rds.cluster-xxx.us-east-1.rds.amazonaws.com:5432/scheduler_service_db"
-  REDIS_URL: "redis://redis-cluster.xxx.cache.amazonaws.com:6379/3"
-  NATS_URL: "nats://nats-cluster.scheduler-service.svc.cluster.local:4222"
-  TEMPORAL_HOST: "temporal-frontend.temporal.svc.cluster.local:7233"
-  TEMPORAL_NAMESPACE: "arrakis"
-  S3_BUCKET: "arrakis-scheduler-artifacts"
-  S3_ACCESS_KEY: "your-s3-access-key"
-  S3_SECRET_KEY: "your-s3-secret-key"
-  ENCRYPTION_KEY: "your-encryption-key-base64"
+# WARNING: This Secret template should NOT be applied directly to production!
+# Create secrets using kubectl or external secret management systems:
+#
+# kubectl create secret generic scheduler-service-secrets \
+#   --namespace=scheduler-service \
+#   --from-literal=DATABASE_URL="${DATABASE_URL}" \
+#   --from-literal=REDIS_URL="${REDIS_URL}" \
+#   --from-literal=NATS_URL="${NATS_URL}" \
+#   --from-literal=TEMPORAL_HOST="${TEMPORAL_HOST}" \
+#   --from-literal=TEMPORAL_NAMESPACE="${TEMPORAL_NAMESPACE}" \
+#   --from-literal=S3_BUCKET="${S3_BUCKET}" \
+#   --from-literal=S3_ACCESS_KEY="${S3_ACCESS_KEY}" \
+#   --from-literal=S3_SECRET_KEY="${S3_SECRET_KEY}" \
+#   --from-literal=ENCRYPTION_KEY="${ENCRYPTION_KEY}"
+#
+# Alternatively, use external secret management (AWS Secrets Manager, Vault, etc.)
+#
+# apiVersion: v1
+# kind: Secret
+# metadata:
+#   name: scheduler-service-secrets
+#   namespace: scheduler-service
+# type: Opaque
+# # Data should be provided by external secret management system
 
 ---
 apiVersion: apps/v1

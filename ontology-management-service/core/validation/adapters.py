@@ -2,10 +2,10 @@
 Port Adapters - 실제 구현체들을 Port 인터페이스에 맞게 연결
 순환 참조 해결의 핵심: 인프라 레이어의 구현체를 Core 레이어의 인터페이스에 맞춤
 """
-from typing import Any, Dict, List, Optional
 import logging
+from typing import Any, Dict, List, Optional
 
-from core.validation.ports import CachePort, TerminusPort, EventPort
+from core.validation.ports import CachePort, EventPort, TerminusPort
 
 logger = logging.getLogger(__name__)
 
@@ -19,8 +19,8 @@ class SmartCacheAdapter:
  def __init__(self, cache_manager = None):
  if cache_manager is None:
  # 런타임에만 import하여 순환 참조 방지
- from shared.cache.smart_cache import SmartCacheManager
  from database.clients.terminus_db import TerminusDBClient
+ from shared.cache.smart_cache import SmartCacheManager
  tdb = TerminusDBClient()
  self.cache = SmartCacheManager(tdb)
  else:
@@ -183,7 +183,7 @@ class EventPublisherAdapter:
  correlation_id = correlation_id
  )
  else:
- logger.warning(f"EventPublisher does not have publish method")
+ logger.warning("EventPublisher does not have publish method")
  except Exception as e:
  logger.error(f"Event publish error: {e}")
 

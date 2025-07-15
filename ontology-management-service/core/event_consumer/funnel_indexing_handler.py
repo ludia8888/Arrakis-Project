@@ -156,7 +156,7 @@ class FunnelIndexingEventHandler:
 
  logger.info(
  f"Successfully completed indexing for branch {branch_name}. "
- f"Branch state: LOCKED_FOR_WRITE -> READY"
+ "Branch state: LOCKED_FOR_WRITE -> READY"
  )
 
  # Generate audit log
@@ -189,7 +189,7 @@ class FunnelIndexingEventHandler:
 
  logger.error(
  f"Indexing failed for branch {branch_name}. "
- f"Branch state: LOCKED_FOR_WRITE -> ERROR"
+ "Branch state: LOCKED_FOR_WRITE -> ERROR"
  )
 
  # Generate audit log
@@ -563,7 +563,8 @@ class FunnelIndexingEventHandler:
  else:
  # Handle shadow build failure
  logger.error(
- f"Shadow index build failed: {shadow_index_id} - {data.get('error_message', 'Unknown error')}"
+ f"Shadow index build failed: {shadow_index_id} - {data.get('error_message',
+     'Unknown error')}"
  )
 
  # Create audit log for build failure
@@ -813,7 +814,7 @@ class FunnelIndexingEventHandler:
  # Create email content
  subject = f"OMS Shadow Index Build Failure: {alert_data['shadow_index_id']}"
 
- html_content = f"""
+ html_content = """
  <html>
  <body>
  <h2 > Shadow Index Build Failure Alert</h2>
@@ -822,7 +823,8 @@ class FunnelIndexingEventHandler:
  <p><strong > Error:</strong> {alert_data['error_message']}</p>
  <p><strong > Records Indexed:</strong> {alert_data.get('records_indexed', 'N/A')}</p>
  <p><strong > Build Progress:</strong> {alert_data.get('build_progress', 'N/A')}</p>
- <p><strong > Duration:</strong> {alert_data.get('indexing_duration', 'N/A')} seconds</p>
+ <p><strong > Duration:</strong> {alert_data.get('indexing_duration',
+     'N/A')} seconds</p>
  <p><strong > Timestamp:</strong> {alert_data['timestamp']}</p>
 
  <h3 > Next Steps:</h3>
@@ -836,7 +838,8 @@ class FunnelIndexingEventHandler:
 
  <h3 > Suggested Remediation:</h3>
  <ul>
- <li > Inspect build logs at progress point: {alert_data.get('build_progress', 'N/A')}</li>
+ <li > Inspect build logs at progress point: {alert_data.get('build_progress',
+     'N/A')}</li>
  <li > Verify shadow index storage capacity</li>
  <li > Check for data corruption in source branch</li>
  </ul>
@@ -1076,14 +1079,15 @@ class FunnelIndexingEventHandler:
  # Create email content
  subject = f"OMS Indexing Failure: {alert_data['branch_name']}"
 
- html_content = f"""
+ html_content = """
  <html>
  <body>
  <h2 > Indexing Failure Alert</h2>
  <p><strong > Branch:</strong> {alert_data['branch_name']}</p>
  <p><strong > Error:</strong> {alert_data['error_message']}</p>
  <p><strong > Records Indexed:</strong> {alert_data.get('records_indexed', 'N/A')}</p>
- <p><strong > Duration:</strong> {alert_data.get('indexing_duration', 'N/A')} seconds</p>
+ <p><strong > Duration:</strong> {alert_data.get('indexing_duration',
+     'N/A')} seconds</p>
  <p><strong > Timestamp:</strong> {alert_data['timestamp']}</p>
 
  <h3 > Next Steps:</h3>
@@ -1270,6 +1274,8 @@ class FunnelIndexingEventHandler:
  "color": "good",
  "title": f"Auto-Merge Successful: {notification_data['branch_name']}",
  "text": f"Branch {notification_data['branch_name']} has been automatically merged after successful indexing.",
+
+
  "fields": [
  {
  "title": "Branch",
@@ -1340,14 +1346,16 @@ class FunnelIndexingEventHandler:
  # Create email content
  subject = f"OMS Auto-Merge Success: {notification_data['branch_name']}"
 
- html_content = f"""
+ html_content = """
  <html>
  <body>
  <h2 > Auto-Merge Success Notification</h2>
  <p><strong > Branch:</strong> {notification_data['branch_name']}</p>
  <p><strong > Status:</strong> Successfully merged</p>
- <p><strong > Records Indexed:</strong> {notification_data.get('records_indexed', 'N/A')}</p>
- <p><strong > Duration:</strong> {notification_data.get('indexing_duration', 'N/A')} seconds</p>
+ <p><strong > Records Indexed:</strong> {notification_data.get('records_indexed',
+     'N/A')}</p>
+ <p><strong > Duration:</strong> {notification_data.get('indexing_duration',
+     'N/A')} seconds</p>
  <p><strong > Timestamp:</strong> {notification_data['timestamp']}</p>
 
  <p > The branch has been automatically merged after successful indexing and validation.</p>

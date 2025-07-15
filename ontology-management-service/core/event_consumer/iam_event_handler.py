@@ -4,11 +4,11 @@ Handles events from IAM service for role/permission synchronization
 """
 import asyncio
 import json
-from typing import Dict, Any, Optional, List
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from shared.events.cloudevents_enhanced import EnhancedCloudEvent
 from arrakis_common import get_logger
+from shared.events.cloudevents_enhanced import EnhancedCloudEvent
 
 logger = get_logger(__name__)
 

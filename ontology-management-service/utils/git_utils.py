@@ -46,7 +46,7 @@ def get_git_branch() -> str:
  """Get current git branch name"""
  try:
  result = subprocess.run(
- ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+ ["git", "rev-parse", "--abbrev-re", "HEAD"],
  capture_output = True,
  text = True,
  check = True,

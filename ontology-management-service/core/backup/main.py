@@ -11,9 +11,9 @@ from typing import Dict, List, Optional
 
 import httpx
 import redis.asyncio as redis
-from database.clients.unified_http_client import create_streaming_client
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
+from database.clients.unified_http_client import create_streaming_client
 from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from minio import Minio
@@ -24,10 +24,13 @@ logging.basicConfig(level = logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Prometheus metrics
-backup_operations = Counter('backup_operations_total', 'Total backup operations', ['type', 'status'])
-restore_operations = Counter('restore_operations_total', 'Total restore operations', ['status'])
+backup_operations = Counter('backup_operations_total', 'Total backup operations',
+    ['type', 'status'])
+restore_operations = Counter('restore_operations_total', 'Total restore operations',
+    ['status'])
 backup_size = Gauge('backup_size_bytes', 'Size of backups in bytes', ['type'])
-backup_duration = Histogram('backup_duration_seconds', 'Time taken for backup operations', ['type'])
+backup_duration = Histogram('backup_duration_seconds',
+    'Time taken for backup operations', ['type'])
 rpo_status = Gauge('rpo_status', 'RPO compliance (1 if met, 0 if not)')
 rto_status = Gauge('rto_status', 'RTO compliance (1 if met, 0 if not)')
 

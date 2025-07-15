@@ -2,11 +2,11 @@
 """
 Check references for ALL potentially unused files
 """
-import subprocess
 import json
-from pathlib import Path
-from concurrent.futures import ThreadPoolExecutor, as_completed
 import os
+import subprocess
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 
 # Load the analysis results
 with open('import_analysis.json', 'r') as f:
@@ -17,7 +17,8 @@ files_to_check = [
  f for f in analysis['categories'].get('other', [])
  if not f.endswith('__init__.py') and
  not f.startswith('test_') and
- not f in ['analyze_imports.py', 'trace_imports.py', 'check_references.py', 'check_all_references.py']
+ not f in ['analyze_imports.py', 'trace_imports.py', 'check_references.py',
+     'check_all_references.py']
 ]
 
 print(f"🔍 Checking references for {len(files_to_check)} files...")
@@ -162,13 +163,13 @@ with open('unused_files_final.json', 'w') as f:
  json.dump(final_results, f, indent = 2)
 
 # Print summary
-print(f"\n📊 Final Results:")
+print("\n📊 Final Results:")
 print(f"✅ Total files checked: {len(files_to_check)}")
 print(f"❌ Definitely unused: {len(results['definitely_unused'])}")
 print(f"⚠️ Possibly used: {len(results['possibly_used'])}")
 print(f"🚫 Errors: {len(results['errors'])}")
 
-print(f"\n📁 Unused files by category:")
+print("\n📁 Unused files by category:")
 for category, files in unused_categories.items():
  if files:
  print(f"\n{category.upper()} ({len(files)} files):")

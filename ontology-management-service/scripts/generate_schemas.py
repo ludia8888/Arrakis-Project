@@ -10,14 +10,14 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 # Add parent directory to path for imports
 sys.path.append(str(Path(__file__).parent.parent))
 
 from core.api.schema_generator import GraphQLSchemaGenerator, OpenAPISchemaGenerator
-from models.domain import ObjectType, LinkType, Property, Status
 from core.schema.registry import schema_registry
+from models.domain import LinkType, ObjectType, Property, Status
 
 
 def parse_args():
@@ -53,7 +53,8 @@ def parse_args():
  return parser.parse_args()
 
 
-async def load_schema_data(dry_run: bool = False) -> tuple[list[ObjectType], list[LinkType]]:
+async def load_schema_data(dry_run: bool = False) -> tuple[list[ObjectType],
+    list[LinkType]]:
  """Load schema data from registry or use test data"""
  if dry_run:
  # Use test data for dry run

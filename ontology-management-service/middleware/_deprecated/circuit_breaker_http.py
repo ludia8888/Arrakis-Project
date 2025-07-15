@@ -1,19 +1,19 @@
 """
-HTTP 서킷 브레이커 데코레이터
-HTTP 응답 코드를 기반으로 서킷 브레이커를 적용합니다.
+HTTP circuit breaker decorator
+Apply circuit breaker based on HTTP response codes.
 """
 import logging
 from functools import wraps
-from typing import Callable, Set, Optional
-from fastapi import HTTPException
+from typing import Callable, Optional, Set
 
+from fastapi import HTTPException
 from middleware.circuit_breaker import CircuitBreaker, CircuitConfig
 
 logger = logging.getLogger(__name__)
 
 
 class HTTPError(Exception):
- """HTTP 에러를 나타내는 예외"""
+ """Exception representing HTTP error"""
  def __init__(self, status_code: int, detail: str = None):
  self.status_code = status_code
  self.detail = detail
@@ -29,13 +29,13 @@ def http_circuit_breaker(
  **kwargs
 ) -> Callable:
  """
- HTTP 응답 코드를 고려하는 서킷 브레이커 데코레이터
+ Circuit breaker decorator that considers HTTP response codes
 
  Args:
  name: 서킷 브레이커 이름
  failure_threshold: 실패 임계값
  success_threshold: 성공 임계값
- timeout_seconds: 타임아웃 시간
+ timeout_seconds: 타임아웃 hours
  error_status_codes: 실패로 간주할 HTTP 상태 코드 (기본값: 4xx, 5xx)
  **kwargs: 추가 서킷 브레이커 설정
  """
@@ -57,7 +57,8 @@ def http_circuit_breaker(
 
  @wraps(func)
  async def wrapper(*args, **func_kwargs):
- logger.info(f"Circuit breaker {name}: Processing request, current state: {breaker.state}")
+ logger.info(f"Circuit breaker {name}: Processing request,
+     current state: {breaker.state}")
 
  async def protected_func(*args, **kwargs):
  try:

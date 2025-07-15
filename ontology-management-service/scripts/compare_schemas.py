@@ -8,7 +8,8 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Dict, Any, List, Tuple
+from typing import Any, Dict, List, Tuple
+
 from deepdiff import DeepDiff
 
 
@@ -340,8 +341,10 @@ def main():
  compare_perf = json.load(f)
 
  results['performance'] = {
- 'graphql_ms': compare_perf.get('results', {}).get('graphql', {}).get('generation_time_ms', 0),
- 'openapi_ms': compare_perf.get('results', {}).get('openapi', {}).get('generation_time_ms', 0)
+ 'graphql_ms': compare_perf.get('results', {}).get('graphql',
+     {}).get('generation_time_ms', 0),
+ 'openapi_ms': compare_perf.get('results', {}).get('openapi',
+     {}).get('generation_time_ms', 0)
  }
 
  # Output results

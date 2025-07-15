@@ -9,7 +9,7 @@ data "aws_region" "current" {}
 locals {
   account_id = data.aws_caller_identity.current.account_id
   region     = data.aws_region.current.name
-  
+
   # Backup configuration based on environment
   backup_config = {
     development = {
@@ -34,9 +34,9 @@ locals {
       backup_vault_lock_enabled = true
     }
   }
-  
+
   config = local.backup_config[var.environment]
-  
+
   # Override with variable values if provided
   final_schedule = var.backup_schedule != "" ? var.backup_schedule : local.config.backup_schedule
   final_delete_after_days = var.delete_after_days != 0 ? var.delete_after_days : local.config.delete_after_days
@@ -273,7 +273,7 @@ resource "aws_backup_plan" "main" {
       for_each = local.config.cross_region_backup_enabled ? [1] : []
       content {
         destination_vault_arn = aws_backup_vault.cross_region[0].arn
-        
+
         lifecycle {
           delete_after = local.final_delete_after_days
           cold_storage_after = local.final_cold_storage_days
@@ -302,7 +302,7 @@ resource "aws_backup_plan" "main" {
       for_each = local.config.cross_region_backup_enabled ? [1] : []
       content {
         destination_vault_arn = aws_backup_vault.cross_region[0].arn
-        
+
         lifecycle {
           delete_after = var.long_term_retention_days
           cold_storage_after = var.weekly_cold_storage_days
@@ -331,7 +331,7 @@ resource "aws_backup_plan" "main" {
       for_each = local.config.cross_region_backup_enabled && var.environment == "production" ? [1] : []
       content {
         destination_vault_arn = aws_backup_vault.cross_region[0].arn
-        
+
         lifecycle {
           delete_after = var.archival_retention_days
           cold_storage_after = 30
@@ -435,7 +435,7 @@ resource "aws_sns_topic" "backup_notifications" {
   count = var.enable_backup_notifications ? 1 : 0
 
   name = "${var.project_name}-backup-notifications-${var.environment}"
-  
+
   kms_master_key_id = aws_kms_key.backup.arn
 
   tags = merge(var.tags, {
@@ -591,7 +591,7 @@ data "archive_file" "backup_validator" {
 
   type        = "zip"
   output_path = "backup_validator.zip"
-  
+
   source {
     content = templatefile("${path.module}/templates/backup_validator.py", {
       backup_vault_name = aws_backup_vault.main.name

@@ -2,15 +2,18 @@
 Schema Service Adapter - Placeholder for missing module
 """
 
-from typing import Dict, Any, List, Optional
-from .service import SchemaService
+from typing import Any, Dict, List, Optional
+
 from ..interfaces.schema import SchemaServiceProtocol
 from .repository import SchemaRepository
+from .service import SchemaService
+
 # Assuming BranchService is available for import
 # from ..branch.service import BranchService
 
 class SchemaServiceAdapter(SchemaServiceProtocol):
- def __init__(self, repository: SchemaRepository, branch_service: Any, event_service: Any):
+ def __init__(self, repository: SchemaRepository, branch_service: Any,
+     event_service: Any):
  self.service = SchemaService(
  repository = repository,
  branch_service = branch_service,

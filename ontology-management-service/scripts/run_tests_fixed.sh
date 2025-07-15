@@ -84,9 +84,9 @@ FAILED=0
 test_module() {
     local name=$1
     local module=$2
-    
+
     echo -n "Testing $name... "
-    
+
     if python -c "import $module" 2>/dev/null; then
         echo -e "${GREEN}✅ Module loads${NC}"
         ((PASSED++))
@@ -109,9 +109,9 @@ echo "3️⃣ API Endpoint Tests (requires running server)"
 check_endpoint() {
     local name=$1
     local url=$2
-    
+
     echo -n "Checking $name... "
-    
+
     if curl -s -o /dev/null -w "%{http_code}" "$url" | grep -q "200\|404"; then
         echo -e "${GREEN}✅ Endpoint responds${NC}"
     else

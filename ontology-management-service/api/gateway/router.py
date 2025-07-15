@@ -1,6 +1,6 @@
 """
-요청 라우팅
-서비스로 요청 전달
+Request routing
+Forward request to service
 """
 import asyncio
 import logging
@@ -9,20 +9,23 @@ from typing import Dict, List, Optional, Tuple
 from urllib.parse import urljoin
 
 import httpx
-
 from api.gateway.models import RequestContext, ServiceRoute
-from database.clients.unified_http_client import UnifiedHTTPClient, create_basic_client, HTTPClientConfig
+from database.clients.unified_http_client import (
+    HTTPClientConfig,
+    UnifiedHTTPClient,
+    create_basic_client,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class ServiceUnavailableError(Exception):
- """서비스 사용 불가 오류"""
+ """Service unavailable error"""
  pass
 
 
 class RequestRouter:
- """요청 라우터"""
+ """Request router"""
 
  def __init__(self, routes: List[ServiceRoute], circuit_breaker = None):
  self.routes = routes
@@ -31,7 +34,7 @@ class RequestRouter:
  self.http_client = create_basic_client(timeout = 30.0)
 
  def _build_route_map(self) -> Dict[str, ServiceRoute]:
- """라우트 맵 구성"""
+ """Configure route map"""
  route_map = {}
  for route in self.routes:
  route_map[route.path_pattern] = route
@@ -45,7 +48,7 @@ class RequestRouter:
  body: Optional[bytes],
  context: RequestContext
  ) -> Tuple[int, Dict[str, str], bytes]:
- """요청 라우팅"""
+ """Request routing"""
 
  # 매칭되는 라우트 찾기
  route = self._find_matching_route(method, path)
@@ -125,7 +128,8 @@ class RequestRouter:
 
  return urljoin(route.service_url, service_path)
 
- def _prepare_headers(self, headers: Dict[str, str], context: RequestContext) -> Dict[str, str]:
+ def _prepare_headers(self, headers: Dict[str, str],
+     context: RequestContext) -> Dict[str, str]:
  """전달할 헤더 준비"""
 
  # 기본 헤더 복사

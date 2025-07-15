@@ -15,19 +15,22 @@ See: core/branch/redis_lock_manager.py for the recommended implementation.
 """
 import asyncio
 import hashlib
-from typing import Optional, Dict, List, Set, Any, AsyncContextManager
-from datetime import datetime, timezone, timedelta
-from contextlib import asynccontextmanager
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text
 import json
+from contextlib import asynccontextmanager
+from datetime import datetime, timedelta, timezone
+from typing import Any, AsyncContextManager, Dict, List, Optional, Set
 
-from models.branch_state import (
- BranchState, BranchLock, BranchStateInfo,
- LockType, LockScope
-)
-from core.branch.lock_manager import BranchLockManager, LockConflictError
 from arrakis_common import get_logger
+from core.branch.lock_manager import BranchLockManager, LockConflictError
+from models.branch_state import (
+    BranchLock,
+    BranchState,
+    BranchStateInfo,
+    LockScope,
+    LockType,
+)
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = get_logger(__name__)
 

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Fix import issues by setting up proper Python path"""
-import sys
 import os
+import sys
+
 
 def setup_python_path():
  """Add the project root to Python path"""

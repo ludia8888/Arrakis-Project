@@ -2,17 +2,17 @@
 Schema Freeze Middleware
 Enforces branch locks and prevents write operations during indexing
 """
-from typing import Callable, Optional, Dict, Any, List
 from datetime import datetime, timezone
-from fastapi import Request, HTTPException, status
+from typing import Any, Callable, Dict, List, Optional
+
+from arrakis_common import get_logger
+from core.auth import UserContext
+from core.branch.lock_manager import LockConflictError, get_lock_manager
+from fastapi import HTTPException, Request, status
 from fastapi.responses import JSONResponse
+from models.branch_state import BranchState
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
-
-from core.auth import UserContext
-from core.branch.lock_manager import get_lock_manager, LockConflictError
-from models.branch_state import BranchState
-from arrakis_common import get_logger
 
 logger = get_logger(__name__)
 
@@ -127,7 +127,7 @@ class SchemaFreezeMiddleware(BaseHTTPMiddleware):
  # is locked to protect data integrity. We block the write operation
  # instead of letting it pass through (Fail-Open).
  logger.critical(
- f"CRITICAL: Schema freeze check failed due to an unexpected error. "
+ "CRITICAL: Schema freeze check failed due to an unexpected error. "
  f"Blocking write operation to ensure data integrity. Error: {e}",
  exc_info = True
  )
@@ -176,7 +176,8 @@ class SchemaFreezeMiddleware(BaseHTTPMiddleware):
 
  return None
 
- def _extract_resource_info(self, request: Request) -> tuple[Optional[str], Optional[str]]:
+ def _extract_resource_info(self, request: Request) -> tuple[Optional[str],
+     Optional[str]]:
  """
  ENTERPRISE UPGRADE: Extract resource type and ID from the request.
  The ID is now reliably extracted from path parameters.
@@ -232,7 +233,8 @@ class SchemaFreezeMiddleware(BaseHTTPMiddleware):
  logger.error(f"Error estimating retry time: {e}")
  return None
 
- async def _get_detailed_lock_info(self, branch_name: str, resource_type: Optional[str]) -> Dict[str, Any]:
+ async def _get_detailed_lock_info(self, branch_name: str,
+     resource_type: Optional[str]) -> Dict[str, Any]:
  """
  Get detailed information about current locks for better UX
  """
@@ -290,7 +292,8 @@ class SchemaFreezeMiddleware(BaseHTTPMiddleware):
  logger.error(f"Error getting detailed lock info: {e}")
  return {"scope": "unknown", "other_resources_available": True}
 
- def _create_user_friendly_message(self, branch_name: str, resource_type: Optional[str], lock_info: Dict[str, Any]) -> str:
+ def _create_user_friendly_message(self, branch_name: str, resource_type: Optional[str],
+     lock_info: Dict[str, Any]) -> str:
  """
  Create a user-friendly message explaining the lock situation
  """
@@ -317,7 +320,8 @@ class SchemaFreezeMiddleware(BaseHTTPMiddleware):
 
  return message
 
- def _suggest_alternatives(self, resource_type: Optional[str], lock_info: Dict[str, Any]) -> List[str]:
+ def _suggest_alternatives(self, resource_type: Optional[str], lock_info: Dict[str,
+     Any]) -> List[str]:
  """
  Suggest alternative actions the user can take
  """

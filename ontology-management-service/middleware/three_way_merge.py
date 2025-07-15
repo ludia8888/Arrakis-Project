@@ -13,18 +13,29 @@ Features:
 """
 
 import asyncio
+import copy
+import difflib
+import hashlib
 import json
+import logging
 import time
 from abc import ABC, abstractmethod
+from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional, Any, Callable, Set, Tuple, Union, TypeVar, Generic
-import difflib
-import copy
-import hashlib
-import logging
-from collections import defaultdict
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -77,8 +88,10 @@ class Change:
  return False
 
  # One deletes, other modifies
- if (self.change_type == ChangeType.DELETE and other.change_type in [ChangeType.MODIFY, ChangeType.ADD]) or \
- (other.change_type == ChangeType.DELETE and self.change_type in [ChangeType.MODIFY, ChangeType.ADD]):
+ if (self.change_type == ChangeType.DELETE and other.change_type in [ChangeType.MODIFY,
+     ChangeType.ADD]) or \
+ (other.change_type == ChangeType.DELETE and self.change_type in [ChangeType.MODIFY,
+     ChangeType.ADD]):
  return True
 
  # Both modify or add with different values
@@ -349,7 +362,8 @@ class ConflictResolver:
  """Resolve modify-modify conflicts."""
  # Try to merge if both are dicts
  if isinstance(conflict.ours_value, dict) and isinstance(conflict.theirs_value, dict):
- merged = copy.deepcopy(conflict.base_value) if isinstance(conflict.base_value, dict) else {}
+ merged = copy.deepcopy(conflict.base_value) if isinstance(conflict.base_value,
+     dict) else {}
  merged.update(conflict.ours_value)
  merged.update(conflict.theirs_value)
  return merged
@@ -610,9 +624,11 @@ class JsonMerger(SemanticMerger):
  self.add_semantic_rule(self._merge_arrays_semantically)
  self.add_semantic_rule(self._merge_objects_semantically)
 
- def _merge_arrays_semantically(self, base: Any, ours: Any, theirs: Any) -> Optional[Any]:
+ def _merge_arrays_semantically(self, base: Any, ours: Any,
+     theirs: Any) -> Optional[Any]:
  """Merge arrays with semantic understanding."""
- if not (isinstance(base, list) and isinstance(ours, list) and isinstance(theirs, list)):
+ if not (isinstance(base, list) and isinstance(ours, list) and isinstance(theirs,
+     list)):
  return None
 
  # If arrays contain objects with IDs, merge by ID
@@ -646,9 +662,11 @@ class JsonMerger(SemanticMerger):
 
  return None
 
- def _merge_objects_semantically(self, base: Any, ours: Any, theirs: Any) -> Optional[Any]:
+ def _merge_objects_semantically(self, base: Any, ours: Any,
+     theirs: Any) -> Optional[Any]:
  """Merge objects with semantic understanding."""
- if not (isinstance(base, dict) and isinstance(ours, dict) and isinstance(theirs, dict)):
+ if not (isinstance(base, dict) and isinstance(ours, dict) and isinstance(theirs,
+     dict)):
  return None
 
  # Special handling for certain object types
@@ -690,7 +708,6 @@ class JsonMerger(SemanticMerger):
 
 
 import uuid
-
 
 # Middleware implementation
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -746,8 +763,10 @@ class ThreeWayMergeMiddleware(BaseHTTPMiddleware):
 
  # Add merge metadata to response if applicable
  if hasattr(request.state, "merge_result"):
- response.headers["X-Merge-Status"] = request.state.merge_result.get("status", "unknown")
- response.headers["X-Merge-Conflicts"] = str(request.state.merge_result.get("conflicts", 0))
+ response.headers["X-Merge-Status"] = request.state.merge_result.get("status",
+     "unknown")
+ response.headers["X-Merge-Conflicts"] = str(request.state.merge_result.get("conflicts",
+     0))
 
  return response
 

@@ -2,10 +2,10 @@
 Unfoldable Documents Support
 Implements @unfoldable annotation for selective loading of nested content
 """
-from typing import Dict, Any, List, Optional, Set, Union, Tuple
+import json
 from dataclasses import dataclass, field
 from enum import Enum
-import json
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from arrakis_common import get_logger
 

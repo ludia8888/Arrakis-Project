@@ -1,20 +1,20 @@
 """Property management routes"""
 
-from typing import Dict, Any, List, Optional
+import logging
 from datetime import datetime
-from fastapi import APIRouter, HTTPException, Depends, Query, Path, Body, Request
-from dependency_injector.wiring import inject, Provide
+from typing import Any, Dict, List, Optional
 
 from bootstrap.dependencies import Container
-from middleware.auth_middleware import get_current_user
 from core.auth_utils import UserContext
-from middleware.etag_middleware import enable_etag
 from core.iam.dependencies import require_scope
 from core.iam.iam_integration import IAMScope
 from core.interfaces.property import PropertyServiceProtocol
+from dependency_injector.wiring import Provide, inject
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, Request
+from middleware.auth_middleware import get_current_user
+from middleware.etag_middleware import enable_etag
 from models.domain import PropertyCreate, PropertyUpdate
 from models.exceptions import ResourceNotFoundError, ValidationError
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,8 @@ router = APIRouter(
 async def list_properties(
  request: Request,
  branch: Optional[str] = Query("main", description = "Branch to filter properties"),
- object_type: Optional[str] = Query(None, description = "Object type to filter properties"),
+ object_type: Optional[str] = Query(None,
+     description = "Object type to filter properties"),
  skip: int = Query(0, ge = 0, description = "Number of items to skip"),
  limit: int = Query(100, ge = 1, le = 1000, description = "Number of items to return"),
  current_user: UserContext = Depends(get_current_user),

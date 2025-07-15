@@ -15,10 +15,10 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Query
 # For testing, this can be overridden with dependency injection
 from middleware.auth_middleware import get_current_user
 from models.semantic_types import (
- SemanticType,
- SemanticTypeCategory,
- ValidationRule,
- semantic_type_registry,
+    SemanticType,
+    SemanticTypeCategory,
+    ValidationRule,
+    semantic_type_registry,
 )
 from pydantic import BaseModel, Field
 
@@ -280,7 +280,9 @@ async def delete_semantic_type(
  ]
  raise HTTPException(
  status_code = 409,
- detail = f"Cannot delete semantic type '{semantic_type_id}' as it is used by properties: {', '.join(property_names)}",
+ detail = f"Cannot delete semantic type '{semantic_type_id}' as it is used by properties: {',
+
+     '.join(property_names)}",
  )
 
  # Also check if any struct types use this semantic type in their fields
@@ -296,7 +298,9 @@ async def delete_semantic_type(
  if dependent_structs:
  raise HTTPException(
  status_code = 409,
- detail = f"Cannot delete semantic type '{semantic_type_id}' as it is referenced by struct types: {', '.join(dependent_structs)}",
+ detail = f"Cannot delete semantic type '{semantic_type_id}' as it is referenced by struct types: {',
+
+     '.join(dependent_structs)}",
  )
 
  except HTTPException:

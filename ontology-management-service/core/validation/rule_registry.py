@@ -2,16 +2,16 @@
 Dynamic Rule Loading System
 플러그인 방식의 동적 규칙 로딩으로 순환 참조 해결
 """
-import importlib
-import pkgutil
-import logging
 import functools
-from typing import List, Type, Optional, Dict, Any
-from pathlib import Path
+import importlib
+import logging
+import pkgutil
 from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Type
 
-from core.validation.ports import CachePort, TerminusPort, EventPort
 from core.validation.interfaces import BreakingChangeRule
+from core.validation.ports import CachePort, EventPort, TerminusPort
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,8 @@ class RuleRegistry:
  self._rules: Dict[str, BreakingChangeRule] = {}
  self._rule_classes: Dict[str, Type[BreakingChangeRule]] = {}
 
- def load_rules_from_package(self, package_name: str = "core.validation.rules") -> List[BreakingChangeRule]:
+ def load_rules_from_package(self,
+     package_name: str = "core.validation.rules") -> List[BreakingChangeRule]:
  """
  패키지에서 모든 규칙을 동적으로 로드
  서비스가 규칙을 직접 import하지 않으므로 순환 참조 방지
@@ -107,7 +108,8 @@ class RuleRegistry:
 
  return rules
 
- def _create_rule_instance(self, rule_class: Type[BreakingChangeRule]) -> Optional[BreakingChangeRule]:
+ def _create_rule_instance(self,
+     rule_class: Type[BreakingChangeRule]) -> Optional[BreakingChangeRule]:
  """
  규칙 인스턴스 생성 - 생성자 시그니처에 따라 적절한 의존성 주입
  """

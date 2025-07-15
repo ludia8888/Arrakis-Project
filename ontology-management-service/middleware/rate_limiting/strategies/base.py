@@ -3,7 +3,8 @@ Base rate limiting strategy interface
 """
 from abc import ABC, abstractmethod
 from typing import Optional
-from ..models import RateLimitConfig, RateLimitResult, RateLimitState, RateLimitKey
+
+from ..models import RateLimitConfig, RateLimitKey, RateLimitResult, RateLimitState
 
 
 class RateLimitStrategy(ABC):

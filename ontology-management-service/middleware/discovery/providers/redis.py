@@ -2,14 +2,14 @@
 Redis-based service discovery provider
 """
 import json
-import uuid
-from typing import List, Optional, Dict, Any
-from datetime import datetime, timedelta
 import logging
+import uuid
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
-from .base import DiscoveryProvider
-from ..models import ServiceInstance, ServiceRegistration, ServiceStatus
 from ...common.redis_utils import RedisClient, RedisKeyPatterns
+from ..models import ServiceInstance, ServiceRegistration, ServiceStatus
+from .base import DiscoveryProvider
 
 logger = logging.getLogger(__name__)
 
@@ -251,7 +251,7 @@ class RedisDiscoveryProvider(DiscoveryProvider):
  removed_count += 1
 
  self.logger.info(
- f"Cleaned up expired instance: "
+ "Cleaned up expired instance: "
  f"{service_name}/{instance_id}"
  )
 

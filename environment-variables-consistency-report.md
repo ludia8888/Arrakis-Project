@@ -146,7 +146,7 @@ oms:
     - SECURITY_ENCRYPTION_KEY=${ENCRYPTION_KEY:-your-32-char-encryption-key-here}
     - DB_TERMINUS_PASSWORD=${TERMINUSDB_ADMIN_PASS:-changeme-admin-pass}
     - DB_POSTGRES_PASSWORD=arrakis_password
-    
+
     # Fix database URL for async
     - DATABASE_URL=postgresql+asyncpg://arrakis_user:arrakis_password@postgres:5432/oms_db
 

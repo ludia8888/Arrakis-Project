@@ -1,18 +1,17 @@
-import os
 import logging
+import os
 from contextlib import asynccontextmanager
-from typing import Dict, Any
+from typing import Any, Dict
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-
-from middleware.auth_middleware import AuthMiddleware
-from core.iam.scope_rbac_middleware import ScopeRBACMiddleware
 from core.audit.audit_middleware import AuditMiddleware
+from core.iam.scope_rbac_middleware import ScopeRBACMiddleware
 from core.observability.middleware import RequestTracingMiddleware
 from data_kernel.api.router import router
 from data_kernel.service.terminus_service import get_service
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from middleware.auth_middleware import AuthMiddleware
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
 # Configure logging
 logging.basicConfig(level = os.getenv("LOG_LEVEL", "INFO"))
@@ -34,7 +33,7 @@ async def lifespan(app: FastAPI):
  # Shutdown
  logger.info("Shutting down Data-Kernel Gateway...")
  if service:
- await service.close()
+         await service.close()
  logger.info("Cleanup completed")
 
 

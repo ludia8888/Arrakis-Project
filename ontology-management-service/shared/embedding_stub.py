@@ -29,14 +29,14 @@ if embedding_service_path not in sys.path:
 import cohere
 import openai
 from embeddings.providers import (
- BaseEmbeddingProvider,
- EmbeddingAPIError,
- EmbeddingBatchSizeError,
- EmbeddingConfig,
- EmbeddingProvider,
- EmbeddingProviderError,
- EmbeddingProviderFactory,
- EmbeddingTokenLimitError,
+    BaseEmbeddingProvider,
+    EmbeddingAPIError,
+    EmbeddingBatchSizeError,
+    EmbeddingConfig,
+    EmbeddingProvider,
+    EmbeddingProviderError,
+    EmbeddingProviderFactory,
+    EmbeddingTokenLimitError,
 )
 from embeddings.service import VectorEmbeddingService
 

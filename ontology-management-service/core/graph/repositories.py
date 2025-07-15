@@ -2,17 +2,18 @@
 Graph data repository layer for efficient TerminusDB graph queries.
 Handles batch operations, query optimization, and data transformation.
 """
-from typing import List, Dict, Any, Optional, Set, Tuple
-from abc import ABC, abstractmethod
 import asyncio
 import hashlib
 import json
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Set, Tuple
+
+from arrakis_common import get_logger
 
 from ..database.clients.terminus_db import TerminusDBClient
 from ..resilience.unified_circuit_breaker import circuit_breaker
-from arrakis_common import get_logger
 
 logger = get_logger(__name__)
 
@@ -266,7 +267,8 @@ class IGraphRepository(ABC):
  pass
 
  @abstractmethod
- async def get_node_neighborhood(self, node_id: str, max_hops: int = 2, **filters) -> SubgraphData:
+ async def get_node_neighborhood(self, node_id: str, max_hops: int = 2,
+     **filters) -> SubgraphData:
  """Get neighborhood of a specific node."""
  pass
 
@@ -350,7 +352,8 @@ class TerminusGraphRepository(IGraphRepository):
  }
  }
 
- logger.info(f"Subgraph query completed: {len(nodes)} nodes, {len(edges)} edges in {query_time:.3f}s")
+ logger.info(f"Subgraph query completed: {len(nodes)} nodes,
+     {len(edges)} edges in {query_time:.3f}s")
 
  return SubgraphData(nodes = nodes, edges = edges, metadata = metadata)
 
@@ -597,7 +600,8 @@ class CachedGraphRepository(IGraphRepository):
 
  # Cache the result
  await self.cache.set(cache_key, {
- "nodes": [{"id": n.id, "type": n.type, "properties": n.properties} for n in result.nodes],
+ "nodes": [{"id": n.id, "type": n.type,
+     "properties": n.properties} for n in result.nodes],
  "edges": [{"source_id": e.source_id, "target_id": e.target_id,
  "edge_type": e.edge_type, "properties": e.properties, "weight": e.weight}
  for e in result.edges],
@@ -607,9 +611,11 @@ class CachedGraphRepository(IGraphRepository):
  logger.debug(f"Cached subgraph result: {cache_key}")
  return result
 
- async def get_node_neighborhood(self, node_id: str, max_hops: int = 2, **filters) -> SubgraphData:
+ async def get_node_neighborhood(self, node_id: str, max_hops: int = 2,
+     **filters) -> SubgraphData:
  """Get node neighborhood with caching."""
- cache_key = self._generate_cache_key("neighborhood", [node_id], {"max_hops": max_hops, **filters})
+ cache_key = self._generate_cache_key("neighborhood", [node_id], {"max_hops": max_hops,
+     **filters})
 
  cached_result = await self.cache.get(cache_key)
  if cached_result:
@@ -618,7 +624,8 @@ class CachedGraphRepository(IGraphRepository):
  result = await self.base_repository.get_node_neighborhood(node_id, max_hops, **filters)
 
  await self.cache.set(cache_key, {
- "nodes": [{"id": n.id, "type": n.type, "properties": n.properties} for n in result.nodes],
+ "nodes": [{"id": n.id, "type": n.type,
+     "properties": n.properties} for n in result.nodes],
  "edges": [{"source_id": e.source_id, "target_id": e.target_id,
  "edge_type": e.edge_type, "properties": e.properties, "weight": e.weight}
  for e in result.edges],
@@ -638,7 +645,8 @@ class CachedGraphRepository(IGraphRepository):
  if cached_result:
  return cached_result
 
- result = await self.base_repository.discover_connections(source_nodes, target_nodes, max_depth)
+ result = await self.base_repository.discover_connections(source_nodes, target_nodes,
+     max_depth)
 
  await self.cache.set(cache_key, result, ttl = self.cache_ttl)
  return result

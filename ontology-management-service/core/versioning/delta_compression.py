@@ -2,16 +2,16 @@
 Enhanced Delta Compression for Version Storage
 Improves storage efficiency with advanced delta encoding algorithms
 """
-from typing import Dict, Any, List, Optional, Tuple
+import base64
 import json
 import zlib
-import base64
+from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
-from collections import defaultdict
+from typing import Any, Dict, List, Optional, Tuple
 
-from models.etag import create_json_patch
 from arrakis_common import get_logger
+from models.etag import create_json_patch
 
 logger = get_logger(__name__)
 
@@ -20,7 +20,7 @@ class DeltaType(Enum):
  """Types of delta encoding"""
  FULL = "full"
  JSON_PATCH = "json_patch"
- BINARY_DIFF = "binary_diff"
+ BINARY_DIFF = "binary_dif"
  CHAIN_DELTA = "chain_delta"
  COMPRESSED_PATCH = "compressed_patch"
 

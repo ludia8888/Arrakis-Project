@@ -27,7 +27,7 @@
         },
         {
           "name": "instance",
-          "type": "query", 
+          "type": "query",
           "query": "label_values(up, instance)",
           "refresh": 1,
           "includeAll": true,
@@ -185,7 +185,7 @@
       {
         "id": 20,
         "title": "💾 Caching Performance",
-        "type": "row", 
+        "type": "row",
         "collapsed": false,
         "gridPos": {"h": 1, "w": 24, "x": 0, "y": 10}
       },
@@ -242,7 +242,7 @@
       },
       {
         "id": 30,
-        "title": "🔄 Backpressure & Queue Management", 
+        "title": "🔄 Backpressure & Queue Management",
         "type": "row",
         "collapsed": false,
         "gridPos": {"h": 1, "w": 24, "x": 0, "y": 15}
@@ -312,7 +312,7 @@
         "id": 40,
         "title": "🗑️ Garbage Collection & Memory Management",
         "type": "row",
-        "collapsed": false, 
+        "collapsed": false,
         "gridPos": {"h": 1, "w": 24, "x": 0, "y": 20}
       },
       {
@@ -357,7 +357,7 @@
             "legendFormat": "RSS Memory"
           },
           {
-            "expr": "process_memory_vms_bytes", 
+            "expr": "process_memory_vms_bytes",
             "legendFormat": "Virtual Memory"
           },
           {
@@ -473,7 +473,7 @@
       {
         "id": 61,
         "title": "Authentication Success/Failure Rate",
-        "type": "graph", 
+        "type": "graph",
         "targets": [
           {
             "expr": "rate(auth_attempts_total{result=\"success\"}[5m])",
@@ -525,7 +525,7 @@
           "for": "1m",
           "frequency": "10s",
           "handler": 1,
-          "name": "Security Event Alert", 
+          "name": "Security Event Alert",
           "noDataState": "no_data",
           "message": "Security events detected"
         },
@@ -650,7 +650,7 @@
         },
         {
           "name": "Circuit Breaker Events",
-          "datasource": "prometheus", 
+          "datasource": "prometheus",
           "enable": true,
           "expr": "increase(circuit_breaker_state_transitions_total[1m]) > 0",
           "iconColor": "red",

@@ -4,28 +4,28 @@
 -- Table to store change-issue links
 CREATE TABLE IF NOT EXISTS change_issue_links (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    
+
     -- Change information
     change_id TEXT NOT NULL,
     change_type TEXT NOT NULL, -- schema, acl, branch, merge, deletion
     branch_name TEXT NOT NULL,
-    
+
     -- Primary issue (required)
     primary_issue_provider TEXT NOT NULL,
     primary_issue_id TEXT NOT NULL,
-    
+
     -- Emergency override information
     emergency_override BOOLEAN DEFAULT FALSE,
     override_justification TEXT,
     override_approver TEXT,
-    
+
     -- Metadata
     linked_by TEXT NOT NULL,
     linked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
+
     -- Validation results (JSON)
     validation_result TEXT,
-    
+
     -- Indexes
     INDEX idx_change_id (change_id),
     INDEX idx_issue_id (primary_issue_id),
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS change_related_issues (
     link_id INTEGER NOT NULL,
     issue_provider TEXT NOT NULL,
     issue_id TEXT NOT NULL,
-    
+
     FOREIGN KEY (link_id) REFERENCES change_issue_links(id) ON DELETE CASCADE,
     INDEX idx_link_id (link_id),
     INDEX idx_issue (issue_provider, issue_id)
@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS issue_metadata_cache (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     issue_provider TEXT NOT NULL,
     issue_id TEXT NOT NULL,
-    
+
     -- Issue details
     title TEXT,
     status TEXT,
@@ -58,14 +58,14 @@ CREATE TABLE IF NOT EXISTS issue_metadata_cache (
     priority TEXT,
     assignee TEXT,
     issue_url TEXT,
-    
+
     -- Metadata (JSON)
     metadata TEXT,
-    
+
     -- Cache management
     cached_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     expires_at TIMESTAMP,
-    
+
     UNIQUE(issue_provider, issue_id),
     INDEX idx_expires_at (expires_at)
 );
@@ -73,30 +73,30 @@ CREATE TABLE IF NOT EXISTS issue_metadata_cache (
 -- Table for issue requirement overrides
 CREATE TABLE IF NOT EXISTS issue_requirement_overrides (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    
+
     -- Override context
     branch_pattern TEXT,
     operation_type TEXT,
     user_pattern TEXT,
-    
+
     -- Override settings
     requirement_enabled BOOLEAN DEFAULT TRUE,
     allow_types TEXT, -- JSON array of allowed issue types
     require_status_check BOOLEAN DEFAULT TRUE,
-    
+
     -- Metadata
     created_by TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     expires_at TIMESTAMP,
     reason TEXT,
-    
+
     INDEX idx_branch_pattern (branch_pattern),
     INDEX idx_expires_at (expires_at)
 );
 
 -- View for issue tracking compliance
 CREATE VIEW IF NOT EXISTS issue_tracking_compliance AS
-SELECT 
+SELECT
     DATE(linked_at) as date,
     change_type,
     branch_name,
@@ -109,7 +109,7 @@ GROUP BY DATE(linked_at), change_type, branch_name;
 
 -- View for user issue activity
 CREATE VIEW IF NOT EXISTS user_issue_activity AS
-SELECT 
+SELECT
     linked_by as user,
     COUNT(*) as total_changes,
     COUNT(DISTINCT primary_issue_id) as unique_issues,

@@ -1,7 +1,7 @@
 """Base provider interface for dependency injection"""
 
 from abc import ABC, abstractmethod
-from typing import Any, TypeVar, Generic
+from typing import Any, Generic, TypeVar
 
 T = TypeVar('T')
 

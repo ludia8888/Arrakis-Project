@@ -45,7 +45,7 @@ check_command() {
 # Function to check if services are running
 check_services() {
     log_info "Checking if Arrakis services are running..."
-    
+
     local services=(
         "localhost:8000"  # OMS
         "localhost:8010"  # User Service
@@ -55,7 +55,7 @@ check_services() {
         "localhost:8002"  # Scheduler Service
         "localhost:8003"  # Event Gateway
     )
-    
+
     local running_services=0
     for service in "${services[@]}"; do
         if curl -s --connect-timeout 5 "http://$service/health" > /dev/null 2>&1; then
@@ -65,7 +65,7 @@ check_services() {
             log_warning "✗ Service at $service is not responding"
         fi
     done
-    
+
     log_info "Found $running_services running services out of ${#services[@]}"
     return 0
 }
@@ -73,10 +73,10 @@ check_services() {
 # Function to extract OpenAPI specs
 extract_openapi_specs() {
     log_info "Extracting OpenAPI specifications..."
-    
+
     # Create output directory
     mkdir -p "$OPENAPI_DIR"
-    
+
     # Run the extraction script
     if python3 "$SCRIPT_DIR/extract_openapi_specs.py" --output-dir "$OPENAPI_DIR"; then
         log_success "OpenAPI specifications extracted successfully"
@@ -88,16 +88,16 @@ extract_openapi_specs() {
 # Function to validate OpenAPI specs
 validate_specs() {
     log_info "Validating OpenAPI specifications..."
-    
+
     if check_command "redocly"; then
         cd "$PROJECT_ROOT"
-        
+
         # Lint all API specifications
         for spec_file in "$OPENAPI_DIR"/*.openapi.yaml; do
             if [ -f "$spec_file" ]; then
                 local service_name=$(basename "$spec_file" .openapi.yaml)
                 log_info "Validating $service_name..."
-                
+
                 if redocly lint "$spec_file"; then
                     log_success "✓ $service_name OpenAPI spec is valid"
                 else
@@ -113,25 +113,25 @@ validate_specs() {
 # Function to build Redocly documentation
 build_redocly_docs() {
     log_info "Building Redocly documentation..."
-    
+
     if check_command "redocly"; then
         cd "$PROJECT_ROOT"
-        
+
         # Build multi-API documentation
         local output_dir="$DOCS_DIR/build"
         mkdir -p "$output_dir"
-        
+
         # Build each API separately
         for spec_file in "$OPENAPI_DIR"/*.openapi.yaml; do
             if [ -f "$spec_file" ]; then
                 local service_name=$(basename "$spec_file" .openapi.yaml)
                 log_info "Building documentation for $service_name..."
-                
+
                 redocly build-docs "$spec_file" \
                     --output "$output_dir/$service_name.html" \
                     --theme.openapi.theme custom \
                     --theme.openapi.hideDownloadButton false
-                
+
                 if [ $? -eq 0 ]; then
                     log_success "✓ Built documentation for $service_name"
                 else
@@ -139,10 +139,10 @@ build_redocly_docs() {
                 fi
             fi
         done
-        
+
         # Create index page
         create_index_page "$output_dir"
-        
+
         log_success "Redocly documentation built in $output_dir"
     else
         log_warning "Redocly CLI not found. Install with: npm install -g @redocly/cli"
@@ -153,9 +153,9 @@ build_redocly_docs() {
 create_index_page() {
     local output_dir="$1"
     local index_file="$output_dir/index.html"
-    
+
     log_info "Creating documentation index page..."
-    
+
     cat > "$index_file" << 'EOF'
 <!DOCTYPE html>
 <html lang="en">
@@ -256,60 +256,60 @@ create_index_page() {
             <h1>🏜️ Arrakis Platform</h1>
             <p>Comprehensive API Documentation</p>
         </div>
-        
+
         <div class="platform-info">
             <h2>About Arrakis</h2>
             <p>
-                Arrakis is an enterprise-grade microservices platform for ontology management, 
-                data processing, and knowledge graph operations. This documentation provides 
+                Arrakis is an enterprise-grade microservices platform for ontology management,
+                data processing, and knowledge graph operations. This documentation provides
                 comprehensive API references for all platform services.
             </p>
         </div>
-        
+
         <div class="services-grid">
             <div class="service-card">
                 <h3>🎯 Ontology Management Service</h3>
                 <p>Core service for managing ontologies, schemas, and data models. Includes REST, GraphQL, and WebSocket APIs.</p>
                 <a href="ontology-management-service.html">View Documentation</a>
             </div>
-            
+
             <div class="service-card">
                 <h3>👤 User Service</h3>
                 <p>Authentication, authorization, and user profile management with JWT-based security.</p>
                 <a href="user-service.html">View Documentation</a>
             </div>
-            
+
             <div class="service-card">
                 <h3>📋 Audit Service</h3>
                 <p>Comprehensive audit logging, compliance tracking, and security event monitoring.</p>
                 <a href="audit-service.html">View Documentation</a>
             </div>
-            
+
             <div class="service-card">
                 <h3>⚡ Data Kernel Service</h3>
                 <p>High-performance data processing core with TerminusDB graph database integration.</p>
                 <a href="data-kernel-service.html">View Documentation</a>
             </div>
-            
+
             <div class="service-card">
                 <h3>🧠 Embedding Service</h3>
                 <p>Machine learning service for vector embeddings, similarity search, and NLP operations.</p>
                 <a href="embedding-service.html">View Documentation</a>
             </div>
-            
+
             <div class="service-card">
                 <h3>⏰ Scheduler Service</h3>
                 <p>Distributed job scheduling, cron management, and workflow orchestration.</p>
                 <a href="scheduler-service.html">View Documentation</a>
             </div>
-            
+
             <div class="service-card">
                 <h3>🔄 Event Gateway</h3>
                 <p>Event streaming, webhook management, and pub/sub messaging with NATS integration.</p>
                 <a href="event-gateway.html">View Documentation</a>
             </div>
         </div>
-        
+
         <div class="footer">
             <p>Generated automatically from OpenAPI specifications</p>
             <p>© 2024 Arrakis Platform. All rights reserved.</p>
@@ -318,14 +318,14 @@ create_index_page() {
 </body>
 </html>
 EOF
-    
+
     log_success "Created documentation index page: $index_file"
 }
 
 # Function to upload to SwaggerHub
 upload_to_swaggerhub() {
     log_info "Uploading APIs to SwaggerHub..."
-    
+
     if [ -z "$SWAGGERHUB_API_KEY" ]; then
         log_warning "SWAGGERHUB_API_KEY not set. Skipping SwaggerHub upload."
         log_info "To upload to SwaggerHub, set SWAGGERHUB_API_KEY and run:"
@@ -333,7 +333,7 @@ upload_to_swaggerhub() {
         log_info "  $SCRIPT_DIR/upload_to_swaggerhub.sh"
         return 0
     fi
-    
+
     # Check if upload script exists
     local upload_script="$DOCS_DIR/upload_to_swaggerhub.sh"
     if [ -f "$upload_script" ]; then
@@ -347,7 +347,7 @@ upload_to_swaggerhub() {
 # Function to generate additional documentation assets
 generate_additional_assets() {
     log_info "Generating additional documentation assets..."
-    
+
     # Create a comprehensive README for the docs
     cat > "$DOCS_DIR/README.md" << 'EOF'
 # Arrakis Platform API Documentation
@@ -444,7 +444,7 @@ When adding new endpoints:
 - Document error responses
 - Tag operations appropriately
 EOF
-    
+
     log_success "Generated documentation README"
 }
 
@@ -452,35 +452,35 @@ EOF
 main() {
     log_info "🏜️  Starting Arrakis Platform API Documentation Build"
     echo "=================================================="
-    
+
     # Create docs directory structure
     mkdir -p "$DOCS_DIR"
     mkdir -p "$OPENAPI_DIR"
     mkdir -p "$DOCS_DIR/build"
-    
+
     # Check if services are running (optional)
     check_services
-    
+
     # Extract OpenAPI specifications
     extract_openapi_specs
-    
+
     # Validate specifications
     validate_specs
-    
+
     # Build documentation
     build_redocly_docs
-    
+
     # Generate additional assets
     generate_additional_assets
-    
+
     # Upload to SwaggerHub (if configured)
     # upload_to_swaggerhub
-    
+
     echo "=================================================="
     log_success "🎉 API Documentation build completed!"
     log_info "📖 Documentation available at: $DOCS_DIR/build/index.html"
     log_info "🔍 OpenAPI specs available in: $OPENAPI_DIR"
-    
+
     # Show next steps
     echo ""
     log_info "Next steps:"

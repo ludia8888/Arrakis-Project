@@ -68,10 +68,10 @@ OPTIONS:
 EXAMPLES:
     # Full migration
     $0 -s "postgresql://user:pass@localhost:5432/oms_db" -k "api-key-123"
-    
+
     # Dry run
     $0 -s "postgresql://user:pass@localhost:5432/oms_db" -k "api-key-123" --dry-run
-    
+
     # Date range migration
     $0 -s "postgresql://user:pass@localhost:5432/oms_db" -k "api-key-123" \
        --start-date 2025-01-01 --end-date 2025-07-06
@@ -207,7 +207,7 @@ if [[ "$DRY_RUN" == "false" ]]; then
     print_warning "IMPORTANT: This migration will transfer audit data to audit-service."
     print_warning "Ensure you have a backup of your audit tables before proceeding."
     print_warning ""
-    
+
     read -p "Do you have a backup of audit tables? (y/N): " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
@@ -263,16 +263,16 @@ if [[ "$DRY_RUN" == "false" ]]; then
     print_info ""
     print_info "Step 4: Schema cleanup"
     print_info "======================"
-    
+
     print_warning "This step will DROP audit tables from the source database."
     print_warning "This action is IRREVERSIBLE!"
     print_warning ""
-    
+
     read -p "Proceed with schema cleanup? (y/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         print_info "Running schema cleanup..."
-        
+
         if psql "$SOURCE_DB_URL" -f "$SCRIPT_DIR/001_drop_audit_tables.sql"; then
             print_success "Schema cleanup completed"
         else
@@ -298,22 +298,22 @@ ENV_FILE="$OMS_ROOT/.env"
 if [[ -f "$ENV_FILE" ]]; then
     # Backup current .env
     cp "$ENV_FILE" "$ENV_FILE.backup.$(date +%Y%m%d_%H%M%S)"
-    
+
     # Update audit service settings
     sed -i.bak 's/USE_AUDIT_SERVICE=false/USE_AUDIT_SERVICE=true/' "$ENV_FILE"
-    
+
     if grep -q "AUDIT_SERVICE_URL=" "$ENV_FILE"; then
         sed -i.bak "s|AUDIT_SERVICE_URL=.*|AUDIT_SERVICE_URL=$AUDIT_SERVICE_URL|" "$ENV_FILE"
     else
         echo "AUDIT_SERVICE_URL=$AUDIT_SERVICE_URL" >> "$ENV_FILE"
     fi
-    
+
     if grep -q "AUDIT_SERVICE_API_KEY=" "$ENV_FILE"; then
         sed -i.bak "s|AUDIT_SERVICE_API_KEY=.*|AUDIT_SERVICE_API_KEY=$API_KEY|" "$ENV_FILE"
     else
         echo "AUDIT_SERVICE_API_KEY=$API_KEY" >> "$ENV_FILE"
     fi
-    
+
     print_success "Environment configuration updated"
 else
     print_warning ".env file not found. Please update configuration manually."

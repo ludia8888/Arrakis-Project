@@ -3,7 +3,8 @@ Validation Service Ports (Interfaces)
 의존성 역전을 위한 Port 인터페이스 정의
 순환 참조 해결을 위한 핵심 추상화 계층
 """
-from typing import Protocol, Any, Dict, List, Optional, runtime_checkable
+from typing import Any, Dict, List, Optional, Protocol, runtime_checkable
+
 
 @runtime_checkable
 class CachePort(Protocol):

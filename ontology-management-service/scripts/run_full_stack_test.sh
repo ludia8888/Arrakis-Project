@@ -118,7 +118,7 @@ check_service() {
     local url=$2
     local max_retries=30
     local retry=0
-    
+
     while [ $retry -lt $max_retries ]; do
         if curl -s -f "$url" > /dev/null 2>&1; then
             echo -e "  ${GREEN}✅ $name is ready${NC}"
@@ -128,7 +128,7 @@ check_service() {
         echo -e "  ${YELLOW}⏸️  $name not ready (attempt $retry/$max_retries)${NC}"
         sleep 2
     done
-    
+
     echo -e "  ${RED}❌ $name failed to start${NC}"
     return 1
 }
@@ -237,10 +237,10 @@ echo "  - Clean up: docker-compose down -v"
 if [ $TEST_EXIT_CODE -eq 0 ]; then
     echo -e "\n${GREEN}✅ Services are still running for manual testing.${NC}"
     echo -e "${YELLOW}Press Ctrl+C to stop all services.${NC}"
-    
+
     # Remove the trap so services stay running
     trap - EXIT
-    
+
     # Wait for user input
     read -n 1 -s -r -p ""
 fi

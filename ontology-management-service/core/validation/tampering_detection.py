@@ -16,8 +16,8 @@ from arrakis_common.utils.security import hash_data
 from core.validation.events import EventSeverity, TamperingEvent, TamperingType
 from core.validation.naming_convention import NamingConvention
 from core.validation.policy_signing import (
- SignedNamingPolicy,
- get_policy_signing_manager,
+    SignedNamingPolicy,
+    get_policy_signing_manager,
 )
 from infra.siem.port import ISiemPort
 from pydantic import BaseModel, ConfigDict, Field
@@ -388,7 +388,7 @@ class PolicyIntegrityChecker:
  {
  "previous_mtime": previous.file_mtime,
  "current_mtime": current.file_mtime,
- "time_diff": time_diff,
+ "time_dif": time_diff,
  },
  previous,
  current,

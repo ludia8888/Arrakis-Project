@@ -34,7 +34,7 @@ This service publishes the following events:
 
 ### Schema Lifecycle Events
 - [`ontology.schema.created`](../../events/ontology-schema-created/) - New schema creation
-- [`ontology.schema.updated`](../../events/ontology-schema-updated/) - Schema modifications  
+- [`ontology.schema.updated`](../../events/ontology-schema-updated/) - Schema modifications
 - [`ontology.schema.deleted`](../../events/ontology-schema-deleted/) - Schema removal
 - [`ontology.schema.validated`](../../events/ontology-schema-validated/) - Schema validation results
 
@@ -54,7 +54,7 @@ This service consumes the following events:
   - **Handler**: `handle_terminus_commit`
   - **Processing**: Asynchronous with retry logic
 
-### User Management Events  
+### User Management Events
 - [`user.authenticated`](../../events/user-authenticated/) - User authentication
   - **Purpose**: Track schema access and usage patterns
   - **Handler**: `handle_user_auth`
@@ -81,11 +81,11 @@ sequenceDiagram
     User->>OMS: POST /api/v1/schemas
     OMS->>OMS: Validate schema
     OMS->>NATS: ontology.schema.created
-    
+
     NATS->>DK: Schema update notification
     NATS->>ES: Generate embeddings
     NATS->>AS: Audit log entry
-    
+
     DK-->>OMS: Schema cached
     ES-->>OMS: Embeddings ready
     AS-->>OMS: Audit recorded
@@ -102,10 +102,10 @@ sequenceDiagram
     TDB->>DK: Data commit
     DK->>NATS: terminus.commit.created
     NATS->>OMS: Process data changes
-    
+
     OMS->>OMS: Validate against schemas
     OMS->>OMS: Update statistics
-    
+
     alt Schema violation detected
         OMS->>NATS: ontology.violation.detected
     else Data consistent
@@ -120,13 +120,13 @@ sequenceDiagram
 async def handle_schema_events(event: CloudEvent):
     """Handle incoming schema-related events"""
     event_type = event.get_type()
-    
+
     handlers = {
         'terminus.commit.created': handle_terminus_commit,
         'user.authenticated': handle_user_auth,
         'scheduler.job.completed': handle_job_completion
     }
-    
+
     handler = handlers.get(event_type)
     if handler:
         await handler(event)
@@ -137,10 +137,10 @@ async def handle_terminus_commit(event: CloudEvent):
     """Process TerminusDB commit events"""
     commit_data = event.data
     database_id = commit_data['database_id']
-    
+
     # Update schema statistics
     await update_schema_stats(database_id, commit_data['changes'])
-    
+
     # Validate data consistency
     violations = await validate_data_consistency(commit_data)
     if violations:
@@ -151,14 +151,14 @@ async def handle_terminus_commit(event: CloudEvent):
 ```python
 async def publish_schema_event(schema_id: str, event_type: str, data: dict):
     """Publish schema lifecycle events"""
-    
+
     event = CloudEvent({
         'type': f'ontology.schema.{event_type}',
         'source': 'ontology-management-service',
         'subject': f'schema/{schema_id}',
         'data': data
     })
-    
+
     await nats_client.publish(event.get_type(), event)
 ```
 
@@ -166,7 +166,7 @@ async def publish_schema_event(schema_id: str, event_type: str, data: dict):
 
 ### Published Events
 - **ontology.schema.*** - Schema lifecycle events
-- **ontology.model.*** - Data model events  
+- **ontology.model.*** - Data model events
 - **ontology.branch.*** - Branch management events
 - **ontology.violation.*** - Data consistency violations
 
@@ -194,7 +194,7 @@ nats:
       - "terminus.commit.*"
       - "user.authenticated"
       - "scheduler.job.completed"
-  
+
   retry_policy:
     max_attempts: 3
     backoff: "exponential"
@@ -211,7 +211,7 @@ event_routing:
     - "ontology.model.*"
   branch_events:
     - "ontology.branch.*"
-  
+
   filters:
     critical_schemas:
       - "core.*"

@@ -4,14 +4,16 @@ Unified rate limiting utilities for all services.
 Provides consistent rate limiting implementations with multiple backends.
 """
 
+from .algorithms import SlidingWindowAlgorithm, TokenBucketAlgorithm
+from .backends import Backend, InMemoryBackend, RedisBackend
 from .core import RateLimiter, RateLimitExceeded
 from .middleware import (
-    RateLimitMiddleware,
     FastAPIRateLimitMiddleware,
-    rate_limit_decorator
+    RateLimitMiddleware,
+    rate_limit_decorator,
 )
-from .backends import RedisBackend, InMemoryBackend, Backend
-from .algorithms import SlidingWindowAlgorithm, TokenBucketAlgorithm, FixedWindowAlgorithm
+
+    FixedWindowAlgorithm
 
 __version__ = "1.0.0"
 __all__ = [

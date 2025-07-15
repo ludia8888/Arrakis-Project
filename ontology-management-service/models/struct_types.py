@@ -70,7 +70,8 @@ class StructType(BaseModel):
  )
 
  # Metadata
- tags: List[str] = Field(default_factory = list, description = "Tags for categorization")
+ tags: List[str] = Field(default_factory = list,
+     description = "Tags for categorization")
 
  # Audit fields
  created_at: datetime = Field(default_factory = datetime.utcnow)
@@ -233,7 +234,7 @@ class StructType(BaseModel):
  import re
 
  if not re.match(rule_value, value):
- errors.append(f"Value does not match required pattern")
+ errors.append("Value does not match required pattern")
 
  elif rule_name == "min_value" and isinstance(value, (int, float)):
  if value < rule_value:

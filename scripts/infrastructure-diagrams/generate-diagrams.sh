@@ -57,65 +57,65 @@ trap cleanup EXIT
 # Check dependencies
 check_dependencies() {
     info "Checking dependencies..."
-    
+
     local deps=("terraform" "dot" "python3" "pip3")
     local missing_deps=()
-    
+
     for dep in "${deps[@]}"; do
         if ! command -v "$dep" &> /dev/null; then
             missing_deps+=("$dep")
         fi
     done
-    
+
     if [[ ${#missing_deps[@]} -gt 0 ]]; then
         error "Missing dependencies: ${missing_deps[*]}"
         error "Please install missing dependencies before running this script"
         return 1
     fi
-    
+
     success "All dependencies found"
 }
 
 # Install inframap if not present
 install_inframap() {
     info "Checking inframap installation..."
-    
+
     if ! command -v inframap &> /dev/null; then
         info "Installing inframap..."
-        
+
         local os_type=""
         case "$(uname -s)" in
             Darwin*) os_type="darwin" ;;
             Linux*)  os_type="linux" ;;
             *)       error "Unsupported OS: $(uname -s)"; return 1 ;;
         esac
-        
+
         local arch_type=""
         case "$(uname -m)" in
             x86_64) arch_type="amd64" ;;
             arm64)  arch_type="arm64" ;;
             *)      error "Unsupported architecture: $(uname -m)"; return 1 ;;
         esac
-        
+
         local inframap_version="v0.6.7"
         local download_url="https://github.com/cycloidio/inframap/releases/download/${inframap_version}/inframap-${os_type}-${arch_type}.tar.gz"
-        
+
         info "Downloading inframap from: ${download_url}"
-        
+
         local temp_dir=$(mktemp -d)
         pushd "${temp_dir}" > /dev/null
-        
+
         curl -sL "${download_url}" | tar xz
         sudo mv inframap /usr/local/bin/
-        
+
         popd > /dev/null
         rm -rf "${temp_dir}"
-        
+
         success "Inframap installed successfully"
     else
         success "Inframap already installed"
     fi
-    
+
     # Verify installation
     local version=$(inframap version 2>/dev/null || echo "unknown")
     info "Inframap version: ${version}"
@@ -124,7 +124,7 @@ install_inframap() {
 # Install Python dependencies for additional diagram generation
 install_python_deps() {
     info "Installing Python dependencies for diagram generation..."
-    
+
     cat > "${SCRIPT_DIR}/requirements.txt" << 'EOF'
 diagrams==0.23.3
 boto3==1.34.34
@@ -136,7 +136,7 @@ jinja2==3.1.3
 pyyaml==6.0.1
 requests==2.31.0
 EOF
-    
+
     python3 -m pip install --quiet -r "${SCRIPT_DIR}/requirements.txt"
     success "Python dependencies installed"
 }
@@ -144,7 +144,7 @@ EOF
 # Create directories
 create_directories() {
     info "Creating directory structure..."
-    
+
     local dirs=(
         "${DOCS_DIR}"
         "${DIAGRAMS_DIR}"
@@ -155,88 +155,88 @@ create_directories() {
         "${DIAGRAMS_DIR}/monitoring"
         "${DIAGRAMS_DIR}/services"
     )
-    
+
     for dir in "${dirs[@]}"; do
         mkdir -p "$dir"
     done
-    
+
     success "Directory structure created"
 }
 
 # Generate Terraform state diagrams using inframap
 generate_terraform_diagrams() {
     info "Generating Terraform infrastructure diagrams..."
-    
+
     if [[ ! -d "${TERRAFORM_DIR}" ]]; then
         error "Terraform directory not found: ${TERRAFORM_DIR}"
         return 1
     fi
-    
+
     pushd "${TERRAFORM_DIR}" > /dev/null
-    
+
     # Initialize Terraform if needed
     if [[ ! -d ".terraform" ]]; then
         info "Initializing Terraform..."
         terraform init -backend=false
     fi
-    
+
     # Generate plan for diagram
     info "Generating Terraform plan..."
     terraform plan -out=inframap.tfplan > /dev/null 2>&1 || {
         warn "Terraform plan failed, using configuration files instead"
     }
-    
+
     # Generate infrastructure diagram from plan
     if [[ -f "inframap.tfplan" ]]; then
         info "Generating infrastructure diagram from Terraform plan..."
         inframap generate --tfplan inframap.tfplan --output "${DIAGRAMS_DIR}/infrastructure/terraform-plan.dot"
-        
+
         # Convert to PNG and SVG
         dot -Tpng "${DIAGRAMS_DIR}/infrastructure/terraform-plan.dot" -o "${DIAGRAMS_DIR}/infrastructure/terraform-plan.png"
         dot -Tsvg "${DIAGRAMS_DIR}/infrastructure/terraform-plan.dot" -o "${DIAGRAMS_DIR}/infrastructure/terraform-plan.svg"
-        
+
         # Cleanup
         rm -f inframap.tfplan
     fi
-    
+
     # Generate diagrams from Terraform configuration
     info "Generating diagrams from Terraform configuration..."
-    
+
     local modules=("networking" "eks" "rds" "elasticache" "nats" "monitoring" "security" "backup" "dns")
-    
+
     for module in "${modules[@]}"; do
         if [[ -d "modules/${module}" ]]; then
             info "Processing module: ${module}"
-            
+
             pushd "modules/${module}" > /dev/null
-            
+
             # Generate module diagram
             inframap generate --raw --output "${DIAGRAMS_DIR}/infrastructure/${module}.dot" . || {
                 warn "Failed to generate diagram for module: ${module}"
                 continue
             }
-            
+
             # Convert to multiple formats
             if [[ -f "${DIAGRAMS_DIR}/infrastructure/${module}.dot" ]]; then
                 dot -Tpng "${DIAGRAMS_DIR}/infrastructure/${module}.dot" -o "${DIAGRAMS_DIR}/infrastructure/${module}.png"
                 dot -Tsvg "${DIAGRAMS_DIR}/infrastructure/${module}.dot" -o "${DIAGRAMS_DIR}/infrastructure/${module}.svg"
-                
+
                 success "Generated diagram for module: ${module}"
             fi
-            
+
             popd > /dev/null
         fi
     done
-    
+
     popd > /dev/null
-    
+
     success "Terraform diagrams generated"
 }
 
 # Generate custom architecture diagrams using Python
 generate_architecture_diagrams() {
     info "Generating custom architecture diagrams..."
-    
+
     cat > "${SCRIPT_DIR}/generate_architecture.py" << 'EOF'
 #!/usr/bin/env python3
 """
@@ -262,33 +262,33 @@ from diagrams.generic.blank import Blank
 
 def create_overall_architecture():
     """Create overall platform architecture diagram"""
-    with Diagram("Arrakis Platform - Overall Architecture", 
+    with Diagram("Arrakis Platform - Overall Architecture",
                  filename="../docs/diagrams/architecture/overall-architecture",
                  show=False, direction="TB"):
-        
+
         # External users and services
         users = Blank("Users")
-        
+
         with Cluster("AWS Cloud"):
             # DNS and CDN
             with Cluster("Edge Services"):
                 dns = Route53("Route53")
                 cdn = CloudFront("CloudFront")
                 alb = ALB("Application Load Balancer")
-            
+
             # Network layer
             with Cluster("Networking"):
                 vpc = VPC("VPC")
-            
+
             # Compute layer
             with Cluster("Compute"):
                 eks = EKS("EKS Cluster")
-                
+
                 with Cluster("Node Groups"):
                     general_nodes = EC2("General Workloads")
                     compute_nodes = EC2("Compute Intensive")
                     monitoring_nodes = EC2("Monitoring")
-            
+
             # Data layer
             with Cluster("Data Services"):
                 with Cluster("Databases"):
@@ -296,32 +296,32 @@ def create_overall_architecture():
                     user_db = RDS("User Database")
                     audit_db = RDS("Audit Database")
                     scheduler_db = RDS("Scheduler Database")
-                
+
                 with Cluster("Cache"):
                     redis = ElastiCache("Redis Cluster")
-                
+
                 with Cluster("Message Broker"):
                     nats = Nats("NATS JetStream")
-            
+
             # Security layer
             with Cluster("Security Services"):
                 iam = IAM("IAM/IRSA")
                 kms = KMS("KMS Encryption")
                 guardduty = GuardDuty("GuardDuty")
                 security_hub = SecurityHub("Security Hub")
-            
+
             # Monitoring layer
             with Cluster("Monitoring & Observability"):
                 prometheus = Prometheus("Prometheus")
                 grafana = Grafana("Grafana")
                 jaeger = Jaeger("Jaeger")
                 cloudwatch = CloudWatch("CloudWatch")
-            
+
             # Backup and recovery
             with Cluster("Backup & Recovery"):
                 backup_service = Backup("AWS Backup")
                 s3_backup = S3("Backup Storage")
-        
+
         # Connections
         users >> dns >> alb >> eks
         eks >> [oms_db, user_db, audit_db, scheduler_db]
@@ -336,40 +336,40 @@ def create_overall_architecture():
 def create_microservices_architecture():
     """Create microservices architecture diagram"""
     with Diagram("Arrakis Platform - Microservices Architecture",
-                 filename="../docs/diagrams/architecture/microservices-architecture", 
+                 filename="../docs/diagrams/architecture/microservices-architecture",
                  show=False, direction="TB"):
-        
+
         # API Gateway
         api_gateway = ALB("API Gateway")
-        
+
         with Cluster("Microservices"):
             # Core services
             with Cluster("Core Services"):
                 oms = Blank("Ontology Management\nService")
                 user_svc = Blank("User Service")
                 audit_svc = Blank("Audit Service")
-            
+
             # Data services
             with Cluster("Data Services"):
                 data_kernel = Blank("Data Kernel\nService")
                 embedding_svc = Blank("Embedding\nService")
-            
+
             # Infrastructure services
             with Cluster("Infrastructure Services"):
                 scheduler_svc = Blank("Scheduler\nService")
                 event_gateway = Blank("Event Gateway")
-        
+
         # Data layer
         with Cluster("Data Layer"):
             databases = RDS("PostgreSQL\nDatabases")
             cache = ElastiCache("Redis Cache")
             message_broker = Nats("NATS JetStream")
-        
+
         # External integrations
         with Cluster("External Systems"):
             external_apis = Blank("External APIs")
             webhooks = Blank("Webhooks")
-        
+
         # Connections
         api_gateway >> [oms, user_svc, audit_svc, data_kernel, embedding_svc, scheduler_svc]
         [oms, user_svc, audit_svc, scheduler_svc] >> databases
@@ -383,38 +383,38 @@ def create_security_architecture():
     with Diagram("Arrakis Platform - Security Architecture",
                  filename="../docs/diagrams/security/security-architecture",
                  show=False, direction="TB"):
-        
+
         with Cluster("Security Layers"):
             # Network security
             with Cluster("Network Security"):
                 vpc_security = VPC("VPC Security Groups")
                 waf = Blank("AWS WAF")
                 nacl = Blank("Network ACLs")
-            
+
             # Identity and access
             with Cluster("Identity & Access Management"):
                 iam_roles = IAM("IAM Roles")
                 irsa = Blank("IRSA for Services")
                 service_accounts = Blank("K8s Service Accounts")
-            
+
             # Data protection
             with Cluster("Data Protection"):
                 kms_encryption = KMS("KMS Encryption")
                 secrets_manager = Blank("Secrets Manager")
                 backup_encryption = Blank("Backup Encryption")
-            
+
             # Threat detection
             with Cluster("Threat Detection"):
                 guardduty_detect = GuardDuty("GuardDuty")
                 security_hub_central = SecurityHub("Security Hub")
                 config_compliance = Blank("AWS Config")
-            
+
             # Audit and compliance
             with Cluster("Audit & Compliance"):
                 cloudtrail = Blank("CloudTrail")
                 audit_logs = Blank("Audit Logging")
                 compliance_reports = Blank("Compliance Reports")
-        
+
         # Security data flow
         irsa >> service_accounts
         service_accounts >> kms_encryption
@@ -426,38 +426,38 @@ def create_network_architecture():
     with Diagram("Arrakis Platform - Network Architecture",
                  filename="../docs/diagrams/network/network-architecture",
                  show=False, direction="TB"):
-        
+
         # Internet and edge
         internet = Blank("Internet")
-        
+
         with Cluster("AWS Region"):
             # DNS and load balancing
             route53 = Route53("Route53")
             alb_public = ALB("Public ALB")
-            
+
             with Cluster("VPC (10.0.0.0/16)"):
                 # Public subnets
                 with Cluster("Public Subnets"):
                     public_1a = Blank("Public-1A\n10.0.1.0/24")
                     public_1b = Blank("Public-1B\n10.0.2.0/24")
                     public_1c = Blank("Public-1C\n10.0.3.0/24")
-                
+
                 # Private subnets
                 with Cluster("Private Subnets"):
                     private_1a = Blank("Private-1A\n10.0.10.0/24")
                     private_1b = Blank("Private-1B\n10.0.11.0/24")
                     private_1c = Blank("Private-1C\n10.0.12.0/24")
-                
+
                 # Database subnets
                 with Cluster("Database Subnets"):
                     db_1a = Blank("DB-1A\n10.0.20.0/24")
                     db_1b = Blank("DB-1B\n10.0.21.0/24")
                     db_1c = Blank("DB-1C\n10.0.22.0/24")
-                
+
                 # Network components
                 nat_gateway = Blank("NAT Gateway")
                 igw = Blank("Internet Gateway")
-        
+
         # Connections
         internet >> route53 >> alb_public
         alb_public >> [public_1a, public_1b, public_1c]
@@ -468,38 +468,38 @@ def create_monitoring_architecture():
     with Diagram("Arrakis Platform - Monitoring Architecture",
                  filename="../docs/diagrams/monitoring/monitoring-architecture",
                  show=False, direction="TB"):
-        
+
         with Cluster("Data Collection"):
             # Metrics collection
             with Cluster("Metrics"):
                 prometheus_server = Prometheus("Prometheus")
                 node_exporters = Blank("Node Exporters")
                 app_metrics = Blank("Application Metrics")
-            
+
             # Logs collection
             with Cluster("Logs"):
                 cloudwatch_logs = CloudWatch("CloudWatch Logs")
                 fluent_bit = Blank("Fluent Bit")
                 app_logs = Blank("Application Logs")
-            
+
             # Traces collection
             with Cluster("Traces"):
                 jaeger_collector = Jaeger("Jaeger")
                 otel_collector = Blank("OpenTelemetry\nCollector")
                 app_traces = Blank("Application Traces")
-        
+
         with Cluster("Visualization & Alerting"):
             # Dashboards
             grafana_dash = Grafana("Grafana")
             cloudwatch_dash = CloudWatch("CloudWatch\nDashboards")
-            
+
             # Alerting
             alert_manager = Blank("AlertManager")
             sns_alerts = SNS("SNS Alerts")
-            
+
             # Analysis
             jaeger_ui = Blank("Jaeger UI")
-        
+
         # Data flow
         [node_exporters, app_metrics] >> prometheus_server >> grafana_dash
         [fluent_bit, app_logs] >> cloudwatch_logs >> cloudwatch_dash
@@ -509,25 +509,25 @@ def create_monitoring_architecture():
 def main():
     """Generate all architecture diagrams"""
     print("Generating architecture diagrams...")
-    
+
     try:
         create_overall_architecture()
         print("✓ Overall architecture diagram generated")
-        
+
         create_microservices_architecture()
         print("✓ Microservices architecture diagram generated")
-        
+
         create_security_architecture()
         print("✓ Security architecture diagram generated")
-        
+
         create_network_architecture()
         print("✓ Network architecture diagram generated")
-        
+
         create_monitoring_architecture()
         print("✓ Monitoring architecture diagram generated")
-        
+
         print("\nAll architecture diagrams generated successfully!")
-        
+
     except Exception as e:
         print(f"Error generating diagrams: {e}")
         sys.exit(1)
@@ -535,17 +535,17 @@ def main():
 if __name__ == "__main__":
     main()
 EOF
-    
+
     # Run the Python script
     python3 "${SCRIPT_DIR}/generate_architecture.py"
-    
+
     success "Architecture diagrams generated"
 }
 
 # Generate diagram index and documentation
 generate_diagram_documentation() {
     info "Generating diagram documentation..."
-    
+
     cat > "${DIAGRAMS_DIR}/README.md" << 'EOF'
 # Infrastructure Diagrams
 
@@ -558,13 +558,13 @@ This directory contains automatically generated infrastructure diagrams for the 
 - **Description**: Complete overview of the Arrakis platform architecture
 - **Components**: All major AWS services, microservices, and data flow
 
-### Microservices Architecture  
+### Microservices Architecture
 - **File**: `architecture/microservices-architecture.png`
 - **Description**: Detailed view of the microservices architecture
 - **Components**: All 7 microservices and their interactions
 
 ### Security Architecture
-- **File**: `security/security-architecture.png` 
+- **File**: `security/security-architecture.png`
 - **Description**: Security controls and compliance architecture
 - **Components**: IAM, encryption, monitoring, and threat detection
 
@@ -589,7 +589,7 @@ This directory contains automatically generated infrastructure diagrams for the 
 Individual diagrams for each Terraform module:
 
 - `infrastructure/networking.png` - VPC and networking components
-- `infrastructure/eks.png` - Kubernetes cluster infrastructure  
+- `infrastructure/eks.png` - Kubernetes cluster infrastructure
 - `infrastructure/rds.png` - Database infrastructure
 - `infrastructure/elasticache.png` - Redis cache infrastructure
 - `infrastructure/security.png` - Security services and IAM
@@ -637,18 +637,18 @@ These diagrams are automatically embedded in:
 ## Tools Used
 
 - **InfraMap**: Terraform state visualization
-- **Diagrams**: Python-based architecture diagrams  
+- **Diagrams**: Python-based architecture diagrams
 - **GraphViz**: DOT file rendering
 - **GitHub Actions**: Automated generation
 EOF
-    
+
     success "Diagram documentation generated"
 }
 
 # Create diagram index HTML
 create_diagram_index() {
     info "Creating diagram index page..."
-    
+
     cat > "${DIAGRAMS_DIR}/index.html" << 'EOF'
 <!DOCTYPE html>
 <html lang="en">
@@ -888,7 +888,7 @@ create_diagram_index() {
 </body>
 </html>
 EOF
-    
+
     success "Diagram index page created"
 }
 
@@ -896,10 +896,10 @@ EOF
 main() {
     info "Starting infrastructure diagram generation..."
     info "Project root: ${PROJECT_ROOT}"
-    
+
     # Create log file
     touch "${LOG_FILE}"
-    
+
     # Execute all steps
     check_dependencies
     install_inframap
@@ -909,7 +909,7 @@ main() {
     generate_architecture_diagrams
     generate_diagram_documentation
     create_diagram_index
-    
+
     success "Infrastructure diagram generation completed successfully!"
     info "Diagrams available at: ${DIAGRAMS_DIR}"
     info "View index page: ${DIAGRAMS_DIR}/index.html"

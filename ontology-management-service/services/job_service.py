@@ -8,26 +8,26 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 import structlog
+from arrakis_common import get_logger
 
 # SQLite support removed - PostgreSQL-only architecture
 from bootstrap.config import get_config
-from arrakis_common import get_logger
 from database.clients.postgres_client_secure import PostgresClientSecure
 from database.clients.terminus_db import TerminusDBClient
 from database.clients.unified_database_client import (
- DatabaseBackend,
- UnifiedDatabaseClient,
+    DatabaseBackend,
+    UnifiedDatabaseClient,
 )
 from models.job import (
- Job,
- JobFilter,
- JobMetadata,
- JobPriority,
- JobProgress,
- JobStats,
- JobStatus,
- JobType,
- JobUpdate,
+    Job,
+    JobFilter,
+    JobMetadata,
+    JobPriority,
+    JobProgress,
+    JobStats,
+    JobStatus,
+    JobType,
+    JobUpdate,
 )
 
 logger = get_logger(__name__)

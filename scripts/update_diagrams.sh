@@ -36,7 +36,7 @@ check_python() {
         log_error "Python 3 is required but not installed"
         exit 1
     fi
-    
+
     # Check for required Python packages
     if ! python3 -c "import yaml" &> /dev/null; then
         log_warning "PyYAML not installed. Installing..."
@@ -47,12 +47,12 @@ check_python() {
 # Generate diagrams
 generate_diagrams() {
     log_info "🎨 Generating architecture diagrams..."
-    
+
     cd "$PROJECT_ROOT"
-    
+
     # Create output directory
     mkdir -p docs/diagrams
-    
+
     # Run the diagram generator
     if python3 scripts/generate_architecture_diagrams.py \
         --project-root . \
@@ -67,7 +67,7 @@ generate_diagrams() {
 # Validate generated diagrams
 validate_diagrams() {
     log_info "🔍 Validating generated diagrams..."
-    
+
     # Check if all expected files exist
     expected_files=(
         "docs/diagrams/README.md"
@@ -77,7 +77,7 @@ validate_diagrams() {
         "docs/diagrams/technology-stack.md"
         "docs/diagrams/metadata.json"
     )
-    
+
     all_files_exist=true
     for file in "${expected_files[@]}"; do
         if [ ! -f "$file" ]; then
@@ -87,12 +87,12 @@ validate_diagrams() {
             log_success "✅ Found: $file"
         fi
     done
-    
+
     if [ "$all_files_exist" = false ]; then
         log_error "❌ Some expected files are missing"
         exit 1
     fi
-    
+
     # Check for valid Mermaid syntax
     mermaid_found=false
     for md_file in docs/diagrams/*.md; do
@@ -101,18 +101,18 @@ validate_diagrams() {
             log_success "✅ Mermaid diagram found in $(basename "$md_file")"
         fi
     done
-    
+
     if [ "$mermaid_found" = false ]; then
         log_warning "⚠️  No Mermaid diagrams found in generated files"
     fi
-    
+
     log_success "✅ Diagram validation completed"
 }
 
 # Show diagram summary
 show_summary() {
     log_info "📊 Diagram Summary:"
-    
+
     if [ -f "docs/diagrams/metadata.json" ]; then
         services_count=$(python3 -c "
 import json
@@ -123,7 +123,7 @@ try:
 except:
     print('0')
 ")
-        
+
         dependencies_count=$(python3 -c "
 import json
 try:
@@ -133,14 +133,14 @@ try:
 except:
     print('0')
 ")
-        
+
         echo "  📈 Services analyzed: $services_count"
         echo "  🔗 Dependencies mapped: $dependencies_count"
     fi
-    
+
     echo "  📋 Diagrams generated: 4"
     echo "  📁 Output directory: docs/diagrams/"
-    
+
     log_info "🔗 Available diagrams:"
     for md_file in docs/diagrams/*.md; do
         if [ -f "$md_file" ] && [ "$(basename "$md_file")" != "README.md" ]; then
@@ -161,7 +161,7 @@ check_changes() {
             git diff --name-only docs/diagrams/ 2>/dev/null | while read -r file; do
                 echo "  - $file"
             done
-            
+
             log_info "💡 To commit changes, run:"
             echo "  git add docs/diagrams/"
             echo "  git commit -m \"📊 Update architecture diagrams\""
@@ -173,22 +173,22 @@ check_changes() {
 main() {
     log_info "🏜️  Arrakis Architecture Diagram Updater"
     echo "=================================="
-    
+
     # Check prerequisites
     check_python
-    
+
     # Generate diagrams
     generate_diagrams
-    
+
     # Validate output
     validate_diagrams
-    
+
     # Show summary
     show_summary
-    
+
     # Check for Git changes
     check_changes
-    
+
     echo "=================================="
     log_success "🎉 Diagram update completed successfully!"
 }

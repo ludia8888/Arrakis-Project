@@ -296,7 +296,7 @@ deletion_protection = true
    ```bash
    # Check IAM permissions
    aws sts get-caller-identity
-   
+
    # Verify subnet configuration
    terraform plan -target=module.networking
    ```
@@ -305,7 +305,7 @@ deletion_protection = true
    ```bash
    # Check security groups
    aws ec2 describe-security-groups --group-ids sg-xxxxxx
-   
+
    # Test database connectivity
    kubectl run -i --tty --rm debug --image=postgres:16 --restart=Never -- psql -h <endpoint> -U <username>
    ```
@@ -314,7 +314,7 @@ deletion_protection = true
    ```bash
    # Check node readiness
    kubectl get nodes
-   
+
    # Verify resource quotas
    kubectl describe resourcequota
    ```
@@ -346,7 +346,7 @@ terraform import aws_instance.example i-1234567890abcdef0
      push:
        branches: [main]
        paths: ['terraform/**']
-   
+
    jobs:
      deploy:
        runs-on: ubuntu-latest

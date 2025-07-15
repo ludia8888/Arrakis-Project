@@ -2,21 +2,25 @@
 Validation Logging System
 검증 결과 이력 추적 및 감사 로깅 시스템
 """
-import json
-import uuid
-from datetime import datetime, timezone, timedelta
-from typing import Dict, List, Optional, Any, Union
-from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict
-from enum import Enum
-import threading
-from collections import defaultdict, deque
 import asyncio
+import json
+import threading
+import uuid
+from collections import defaultdict, deque
+from datetime import datetime, timedelta, timezone
+from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
 
-from core.validation.naming_convention import EntityType, NamingValidationResult, ValidationIssue
-from core.validation.events import ValidationLogEntry as EventValidationLogEntry
-from infra.siem.port import ISiemPort
 from arrakis_common import get_logger
+from core.validation.events import ValidationLogEntry as EventValidationLogEntry
+from core.validation.naming_convention import (
+    EntityType,
+    NamingValidationResult,
+    ValidationIssue,
+)
+from infra.siem.port import ISiemPort
+from pydantic import BaseModel, ConfigDict, Field
 
 logger = get_logger(__name__)
 
@@ -103,7 +107,8 @@ class ValidationLogEntry(BaseModel):
  error_message = str(self.issues[0]) if self.issues else None,
  execution_time_ms = self.validation_time_ms or 0.0,
  affected_objects = [self.entity_name],
- created_at = datetime.fromisoformat(self.timestamp.replace('Z', '+00:00')) if 'Z' in self.timestamp else datetime.fromisoformat(self.timestamp),
+ created_at = datetime.fromisoformat(self.timestamp.replace('Z',
+     '+00:00')) if 'Z' in self.timestamp else datetime.fromisoformat(self.timestamp),
  user_id = self.user_id,
  correlation_id = self.session_id,
  metadata = self.metadata
@@ -263,7 +268,8 @@ class ValidationLogger:
  issues_data = []
  for issue in result.issues:
  issue_dict = issue.model_dump() if hasattr(issue, 'model_dump') else {
- 'entity_type': str(issue.entity_type) if hasattr(issue, 'entity_type') else str(entity_type),
+ 'entity_type': str(issue.entity_type) if hasattr(issue,
+     'entity_type') else str(entity_type),
  'entity_name': issue.entity_name if hasattr(issue, 'entity_name') else entity_name,
  'rule_violated': issue.rule_violated if hasattr(issue, 'rule_violated') else 'unknown',
  'severity': issue.severity if hasattr(issue, 'severity') else 'warning',

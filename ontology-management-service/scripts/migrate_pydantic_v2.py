@@ -7,6 +7,7 @@ import re
 from pathlib import Path
 from typing import List, Tuple
 
+
 def find_files_with_config_class(directory: str = ".") -> List[Path]:
  """Find all Python files containing 'class Config:'"""
  files = []
@@ -102,7 +103,8 @@ def migrate_file(filepath: Path) -> bool:
  if 'from pydantic import' in content:
  content = re.sub(
  r'(from pydantic import .*?)(\n)',
- lambda m: m.group(1) + (', ConfigDict' if ', ConfigDict' not in m.group(1) else '') + m.group(2),
+ lambda m: m.group(1) + (', ConfigDict' if ',
+     ConfigDict' not in m.group(1) else '') + m.group(2),
  content,
  count = 1
  )

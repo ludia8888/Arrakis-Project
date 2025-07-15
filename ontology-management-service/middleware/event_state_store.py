@@ -13,21 +13,33 @@ Features:
 """
 
 import asyncio
+import base64
+import hashlib
 import json
+import logging
+import pickle
 import time
+import uuid
+import zlib
 from abc import ABC, abstractmethod
+from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Dict, List, Optional, Any, Callable, Set, Tuple, Type, TypeVar, Generic
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    TypeVar,
+)
+
 import redis.asyncio as redis
-from collections import defaultdict
-import logging
-import uuid
-import hashlib
-import pickle
-import zlib
-import base64
 
 logger = logging.getLogger(__name__)
 
@@ -148,7 +160,8 @@ class Aggregate(ABC, Generic[T]):
  """Restore from snapshot."""
  pass
 
- def raise_event(self, event_type: str, data: Dict[str, Any], metadata: Optional[Dict[str, Any]] = None):
+ def raise_event(self, event_type: str, data: Dict[str, Any],
+     metadata: Optional[Dict[str, Any]] = None):
  """Raise a new event."""
  event = Event(
  id = str(uuid.uuid4()),
@@ -713,10 +726,11 @@ class OrderAggregate(Aggregate[Dict[str, Any]]):
  self.raise_event('OrderDelivered', {})
 
 
+import logging
+
 # Middleware implementation
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
-import logging
 
 logger = logging.getLogger(__name__)
 

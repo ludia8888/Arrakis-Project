@@ -5,7 +5,7 @@ Action Service 도메인 모델
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ActionType(BaseModel):

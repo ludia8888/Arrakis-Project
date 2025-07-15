@@ -1,19 +1,20 @@
 """
 Event sink implementations for commit hook pipeline
 """
-import os
+import asyncio
 import json
 import logging
-import asyncio
-from typing import Dict, Any, Optional
+import os
 from datetime import datetime
+from typing import Any, Dict, Optional
 
-from .base import BaseSink, DiffContext
+from core.event_publisher.nats_backend import NATSBackend
 
 # Import existing event publishers
 from core.event_publisher.unified_publisher import UnifiedPublisher
-from core.event_publisher.nats_backend import NATSBackend
-from shared.audit_client import get_audit_client, AuditEvent
+from shared.audit_client import AuditEvent, get_audit_client
+
+from .base import BaseSink, DiffContext
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +88,7 @@ class NATSSink(BaseSink):
  "message": context.meta.commit_msg,
  "trace_id": context.meta.trace_id,
  "timestamp": datetime.utcnow().isoformat(),
- "diff": context.diff,
+ "dif": context.diff,
  "affected_types": context.affected_types or [],
  "affected_ids": context.affected_ids or []
  }

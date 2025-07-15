@@ -3,15 +3,19 @@ User Service Client
 Handles JWT token validation and user information retrieval
 """
 import os
-import httpx
-from typing import Optional, Dict, Any, List
 from datetime import datetime, timedelta, timezone
-import jwt
-from fastapi import HTTPException, status
+from typing import Any, Dict, List, Optional
 
-from core.auth_utils import UserContext
+import httpx
+import jwt
 from arrakis_common import get_logger
-from database.clients.unified_http_client import UnifiedHTTPClient, create_basic_client, HTTPClientConfig
+from core.auth_utils import UserContext
+from database.clients.unified_http_client import (
+    HTTPClientConfig,
+    UnifiedHTTPClient,
+    create_basic_client,
+)
+from fastapi import HTTPException, status
 
 logger = get_logger(__name__)
 
@@ -49,7 +53,8 @@ class UserServiceClient:
  self.jwt_algorithm = "HS256" # Fallback algorithm
 
  # JWT 검증 모드: local(로컬), remote(원격), jwks(JWKS)
- self.validation_mode = os.getenv("JWT_VALIDATION_MODE", "jwks" if self.use_jwks else "local")
+ self.validation_mode = os.getenv("JWT_VALIDATION_MODE",
+     "jwks" if self.use_jwks else "local")
 
  # Initialize HTTP client
  http_config = HTTPClientConfig(
@@ -242,9 +247,10 @@ class UserServiceClient:
  raise UserServiceError(f"No matching key found for kid {kid}")
 
  # RSA 공개 키 구성
- from cryptography.hazmat.primitives.asymmetric import rsa
- from cryptography.hazmat.primitives import serialization
  import base64
+
+ from cryptography.hazmat.primitives import serialization
+ from cryptography.hazmat.primitives.asymmetric import rsa
 
  n = base64.urlsafe_b64decode(matching_key['n'] + '==')
  e = base64.urlsafe_b64decode(matching_key['e'] + '==')

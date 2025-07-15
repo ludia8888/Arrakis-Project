@@ -26,7 +26,7 @@ output "cluster_endpoint" {
 output "cluster_endpoints" {
   description = "List of all NATS cluster endpoints"
   value = [
-    for i in range(var.cluster_size) : 
+    for i in range(var.cluster_size) :
     "nats://nats-${i}.nats.${kubernetes_namespace.nats.metadata[0].name}.svc.cluster.local:4222"
   ]
 }
@@ -167,7 +167,7 @@ output "statefulset_name" {
 output "pod_names" {
   description = "List of NATS pod names"
   value = [
-    for i in range(var.cluster_size) : 
+    for i in range(var.cluster_size) :
     "nats-${i}"
   ]
 }
@@ -212,7 +212,7 @@ output "connection_info" {
   value = {
     cluster_endpoint = "nats://nats.${kubernetes_namespace.nats.metadata[0].name}.svc.cluster.local:4222"
     urls = [
-      for i in range(var.cluster_size) : 
+      for i in range(var.cluster_size) :
       "nats://nats-${i}.nats.${kubernetes_namespace.nats.metadata[0].name}.svc.cluster.local:4222"
     ]
     websocket_url = var.websocket_enabled ? "ws://nats.${kubernetes_namespace.nats.metadata[0].name}.svc.cluster.local:8080" : null
@@ -230,7 +230,7 @@ output "connection_info" {
 output "health_check_urls" {
   description = "Health check URLs for NATS"
   value = {
-    for i in range(var.cluster_size) : 
+    for i in range(var.cluster_size) :
     "nats-${i}" => "http://nats-${i}.nats.${kubernetes_namespace.nats.metadata[0].name}.svc.cluster.local:8222/healthz"
   }
 }
@@ -239,7 +239,7 @@ output "health_check_urls" {
 output "jetstream_health_check_urls" {
   description = "JetStream health check URLs"
   value = var.jetstream_enabled ? {
-    for i in range(var.cluster_size) : 
+    for i in range(var.cluster_size) :
     "nats-${i}" => "http://nats-${i}.nats.${kubernetes_namespace.nats.metadata[0].name}.svc.cluster.local:8222/healthz?js-enabled-only=true"
   } : {}
 }

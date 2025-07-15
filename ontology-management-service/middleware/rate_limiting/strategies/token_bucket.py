@@ -3,10 +3,9 @@ Token bucket rate limiting strategy
 """
 from datetime import datetime, timedelta
 from typing import Optional
+
+from ..models import RateLimitConfig, RateLimitKey, RateLimitResult, RateLimitState
 from .base import RateLimitStrategy
-from ..models import (
- RateLimitConfig, RateLimitResult, RateLimitState, RateLimitKey
-)
 
 
 class TokenBucketStrategy(RateLimitStrategy):

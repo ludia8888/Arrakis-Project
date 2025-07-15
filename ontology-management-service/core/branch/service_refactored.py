@@ -15,13 +15,13 @@ from core.branch.conflict_resolver import ConflictResolver
 from core.branch.diff_engine import DiffEngine
 from core.branch.merge_strategies import MergeStrategyImplementor
 from core.branch.models import (
- BranchDiff,
- ChangeProposal,
- DiffEntry,
- MergeResult,
- MergeStrategy,
- ProposalStatus,
- ProposalUpdate,
+    BranchDiff,
+    ChangeProposal,
+    DiffEntry,
+    MergeResult,
+    MergeStrategy,
+    ProposalStatus,
+    ProposalUpdate,
 )
 from database.clients.terminus_db import TerminusDBClient
 from database.clients.unified_database_client import UnifiedDatabaseClient
@@ -52,7 +52,8 @@ class BranchService:
  db_client: Unified database client (injected)
  event_gateway: Event publisher (injected)
  diff_engine: Diff calculation engine (optional, will be created if not provided)
- conflict_resolver: Conflict resolution engine (optional, will be created if not provided)
+ conflict_resolver: Conflict resolution engine (optional,
+     will be created if not provided)
  """
  self.db_client = db_client
  self.event_publisher = event_gateway
@@ -109,7 +110,7 @@ class BranchService:
  self.tdb = db_client.terminus_client
  logger.info(f"🔗 TerminusDB client 연결됨: {self.tdb_endpoint}")
  else:
- logger.warning(f"⚠️ UnifiedDatabaseClient에 terminus_client가 없음")
+ logger.warning("⚠️ UnifiedDatabaseClient에 terminus_client가 없음")
  # Fallback: 직접 생성하지 않고 에러 처리로 위임
  logger.info("🔄 TerminusDB 연결은 런타임에 재시도됩니다")
 
@@ -124,7 +125,8 @@ class BranchService:
  self.merge_strategy_implementor = MergeStrategyImplementor(self.merger)
 
  logger.info(
- f"BranchService initialized with db_client={type(db_client).__name__}, event_gateway={type(event_gateway).__name__ if event_gateway else 'None'}"
+ f"BranchService initialized with db_client={type(db_client).__name__},
+     event_gateway={type(event_gateway).__name__ if event_gateway else 'None'}"
  )
 
  async def create_branch(

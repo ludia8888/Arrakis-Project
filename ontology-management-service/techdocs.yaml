@@ -12,19 +12,19 @@ spec:
   owner: platform-team
 
 techdocs:
-  builder: 'local'
+  builder: "local"
   generator:
-    runIn: 'local'
+    runIn: "local"
   publisher:
-    type: 'local'
-    
+    type: "local"
+
 build:
   dependencies:
     - python: ">=3.9"
     - postgresql: ">=13"
     - redis: ">=6.2"
     - terminusdb: "latest"
-    
+
 documentation:
   structure:
     - name: Overview

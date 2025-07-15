@@ -13,18 +13,19 @@ Features:
 """
 
 import asyncio
+import functools
+import inspect
+import logging
 import time
+import traceback
 from abc import ABC, abstractmethod
+from collections import OrderedDict, defaultdict
+from contextvars import ContextVar
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional, Any, Callable, Set, Tuple, Type, TypeVar, Union
-from contextvars import ContextVar
-import inspect
-import logging
-import traceback
-from collections import defaultdict, OrderedDict
-import functools
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Type, TypeVar, Union
+
 from fastapi import Request, Response
 
 logger = logging.getLogger(__name__)
@@ -32,8 +33,10 @@ logger = logging.getLogger(__name__)
 T = TypeVar('T')
 
 # Context variables for middleware
-middleware_context: ContextVar[Dict[str, Any]] = ContextVar('middleware_context', default={})
-component_context: ContextVar[Dict[str, Any]] = ContextVar('component_context', default={})
+middleware_context: ContextVar[Dict[str, Any]] = ContextVar('middleware_context',
+    default={})
+component_context: ContextVar[Dict[str, Any]] = ContextVar('component_context',
+    default={})
 
 
 class MiddlewarePhase(Enum):
@@ -252,6 +255,8 @@ class LoggingMiddleware(Middleware):
  logger.log(
  self.log_level,
  f"[{context.component_name}] {context.phase.value} completed in {context.elapsed_time:.3f}s",
+
+
  extra={
  'component': context.component_name,
  'phase': context.phase.value,
@@ -583,7 +588,8 @@ class ComponentManager:
  self.middleware_pipeline.add_middleware(MetricsMiddleware())
  self.middleware_pipeline.add_middleware(TracingMiddleware())
 
- def register_component(self, component: Component, dependencies: Optional[List[str]] = None):
+ def register_component(self, component: Component,
+     dependencies: Optional[List[str]] = None):
  """Register a component."""
  self.components[component.name] = component
  component.set_middleware_pipeline(self.middleware_pipeline)
@@ -592,7 +598,8 @@ class ComponentManager:
  self.dependency_graph[component.name].update(dependencies)
  component.info.dependencies.update(dependencies)
 
- def add_middleware(self, middleware: Middleware, phases: Optional[List[MiddlewarePhase]] = None):
+ def add_middleware(self, middleware: Middleware,
+     phases: Optional[List[MiddlewarePhase]] = None):
  """Add middleware to all components."""
  self.middleware_pipeline.add_middleware(middleware, phases)
 

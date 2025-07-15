@@ -2,19 +2,19 @@
 Document CRUD API Routes
 문서 생성, 조회, 수정, 삭제를 위한 REST 엔드포인트
 """
-from typing import Optional, List, Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, status, Request, Query
-from pydantic import BaseModel
+from typing import Any, Dict, List, Optional
 
+from arrakis_common import get_logger
+from bootstrap.dependencies import get_db_client, get_event_gateway
 from core.auth_utils import UserContext
-from middleware.auth_middleware import get_current_user
+from core.document.service import DocumentService
 from core.iam.dependencies import require_scope
 from core.iam.iam_integration import IAMScope
-from core.document.service import DocumentService
-from shared.models.domain import Document, DocumentCreate, DocumentUpdate
-from bootstrap.dependencies import get_db_client, get_event_gateway
-from arrakis_common import get_logger
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from middleware.auth_middleware import get_current_user
 from middleware.etag_middleware import enable_etag
+from pydantic import BaseModel
+from shared.models.domain import Document, DocumentCreate, DocumentUpdate
 
 logger = get_logger(__name__)
 router = APIRouter(prefix = "/documents/crud", tags = ["Document CRUD"])

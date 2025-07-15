@@ -5,8 +5,8 @@ Temporary solution to fix DI framework conflicts
 import os
 from typing import Optional
 
-from bootstrap.config import get_config
 from arrakis_common import get_logger
+from bootstrap.config import get_config
 from database.clients.postgres_client_secure import PostgresClientSecure
 
 # SQLite client removed - PostgreSQL-only architecture
@@ -41,7 +41,8 @@ async def get_unified_db_client() -> UnifiedDatabaseClient:
  terminus_config = config.terminusdb
 
  logger.debug(
- f"Creating TerminusDB client: endpoint={terminus_config.endpoint}, user={terminus_config.user}"
+ f"Creating TerminusDB client: endpoint={terminus_config.endpoint},
+     user={terminus_config.user}"
  )
 
  try:

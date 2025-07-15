@@ -1,6 +1,6 @@
 """
 Enterprise-Grade Comprehensive Metrics Collection
-완전한 Prometheus 기반 엔터프라이즈 메트릭 시스템
+Complete Prometheus-based enterprise metrics system
 """
 import asyncio
 import gc
@@ -17,17 +17,17 @@ import psutil
 from fastapi import Request, Response
 from fastapi.responses import PlainTextResponse
 from prometheus_client import (
- CONTENT_TYPE_LATEST,
- REGISTRY,
- CollectorRegistry,
- Counter,
- Enum,
- Gauge,
- Histogram,
- Info,
- Summary,
- generate_latest,
- start_http_server,
+    CONTENT_TYPE_LATEST,
+    REGISTRY,
+    CollectorRegistry,
+    Counter,
+    Enum,
+    Gauge,
+    Histogram,
+    Info,
+    Summary,
+    generate_latest,
+    start_http_server,
 )
 
 logger = logging.getLogger(__name__)
@@ -38,14 +38,14 @@ logger = logging.getLogger(__name__)
 
 
 class EnterpriseMetricsRegistry:
- """엔터프라이즈급 메트릭 레지스트리"""
+ """Enterprise-grade metrics registry"""
 
  def __init__(self):
  self.registry = CollectorRegistry()
  self._initialize_all_metrics()
 
  def _initialize_all_metrics(self):
- """모든 엔터프라이즈 메트릭 초기화"""
+ """Initialize all enterprise metrics"""
  self._init_system_metrics()
  self._init_application_metrics()
  self._init_resilience_metrics()
@@ -59,7 +59,7 @@ class EnterpriseMetricsRegistry:
  # =============================================================================
 
  def _init_system_metrics(self):
- """시스템 레벨 메트릭"""
+ """System level metrics"""
 
  # CPU Metrics
  self.cpu_usage_percent = Gauge(
@@ -139,7 +139,7 @@ class EnterpriseMetricsRegistry:
  # =============================================================================
 
  def _init_garbage_collection_metrics(self):
- """가비지 컬렉션 및 메모리 관리 메트릭"""
+ """Garbage collection and memory management metrics"""
 
  # GC Collection Metrics
  self.gc_collections_total = Counter(
@@ -217,7 +217,7 @@ class EnterpriseMetricsRegistry:
  # =============================================================================
 
  def _init_application_metrics(self):
- """애플리케이션 성능 메트릭"""
+ """Application performance metrics"""
 
  # HTTP Request Metrics
  self.http_requests_total = Counter(
@@ -319,7 +319,7 @@ class EnterpriseMetricsRegistry:
  # =============================================================================
 
  def _init_resilience_metrics(self):
- """리질리언스 메커니즘 통합 메트릭"""
+ """Resilience mechanism integrated metrics"""
 
  # Global Circuit Breaker Metrics
  self.circuit_breaker_state = Enum(
@@ -445,7 +445,7 @@ class EnterpriseMetricsRegistry:
  # =============================================================================
 
  def _init_business_metrics(self):
- """비즈니스 도메인 메트릭"""
+ """Business domain metrics"""
 
  # Schema Operations
  self.schema_operations_total = Counter(
@@ -515,7 +515,7 @@ class EnterpriseMetricsRegistry:
  # =============================================================================
 
  def _init_security_metrics(self):
- """보안 및 컴플라이언스 메트릭"""
+ """Security and compliance metrics"""
 
  # Authentication Metrics
  self.auth_attempts_total = Counter(
@@ -581,7 +581,7 @@ class EnterpriseMetricsRegistry:
  # =============================================================================
 
  def _init_performance_metrics(self):
- """성능 및 최적화 메트릭"""
+ """Performance and optimization metrics"""
 
  # Database Performance
  self.database_query_duration_seconds = Histogram(
@@ -662,7 +662,7 @@ class EnterpriseMetricsRegistry:
 
 
 class EnterpriseMetricsCollector:
- """엔터프라이즈급 메트릭 수집기"""
+ """Enterprise-grade metrics collector"""
 
  def __init__(self, registry: EnterpriseMetricsRegistry):
  self.registry = registry
@@ -671,7 +671,7 @@ class EnterpriseMetricsCollector:
  self._last_collection_time = time.time()
 
  async def collect_all_metrics(self):
- """모든 메트릭 수집"""
+ """Collect all metrics"""
  await asyncio.gather(
  self.collect_system_metrics(),
  self.collect_gc_metrics(),
@@ -680,7 +680,7 @@ class EnterpriseMetricsCollector:
  )
 
  async def collect_system_metrics(self):
- """시스템 메트릭 수집"""
+ """Collect system metrics"""
  try:
  # CPU Metrics
  cpu_percent = psutil.cpu_percent(interval = None, percpu = True)
@@ -767,18 +767,18 @@ class EnterpriseMetricsCollector:
  logger.error(f"Failed to collect system metrics: {e}")
 
  async def collect_gc_metrics(self):
- """가비지 컬렉션 메트릭 수집"""
+ """Collect garbage collection metrics"""
  try:
  import gc
 
- # GC 통계
+ # GC statistics
  stats = gc.get_stats()
  for generation, stat in enumerate(stats):
  collections = stat.get("collections", 0)
  collected = stat.get("collected", 0)
  uncollectable = stat.get("uncollectable", 0)
 
- # 이전 값과 비교하여 증분만 추가
+ # Add only increments compared to previous value
  prev_collections = self._gc_stats.get(f"gen{generation}_collections", 0)
  if collections > prev_collections:
  self.registry.gc_collections_total.labels(
@@ -803,7 +803,7 @@ class EnterpriseMetricsCollector:
  self._gc_stats[f"gen{generation}_collected"] = collected
  self._gc_stats[f"gen{generation}_uncollectable"] = uncollectable
 
- # 객체 수 추적
+ # Track object count
  import sys
 
  object_counts = {}
@@ -811,13 +811,13 @@ class EnterpriseMetricsCollector:
  obj_type = type(obj).__name__
  object_counts[obj_type] = object_counts.get(obj_type, 0) + 1
 
- # 상위 10개 객체 타입만 추적
+ # Track only top 10 object types
  for obj_type, count in sorted(
  object_counts.items(), key = lambda x: x[1], reverse = True
  )[:10]:
  self.registry.memory_objects_count.labels(type = obj_type).set(count)
 
- # 프로세스 메모리 정보
+ # Process memory information
  memory_info = self._process.memory_info()
  self.registry.memory_rss_bytes.set(memory_info.rss)
  self.registry.memory_vms_bytes.set(memory_info.vms)
@@ -826,7 +826,7 @@ class EnterpriseMetricsCollector:
  logger.error(f"Failed to collect GC metrics: {e}")
 
  async def collect_application_metrics(self):
- """애플리케이션 메트릭 수집"""
+ """Collect application metrics"""
  try:
  # Process metrics
  self.registry.process_cpu_seconds_total._value._value = (
@@ -834,7 +834,7 @@ class EnterpriseMetricsCollector:
  )
  self.registry.process_open_fds.set(self._process.num_fds())
 
- # 시스템 최대 FD 수 (Linux/Unix 기준)
+ # System max FD count (Linux/Unix based)
  import resource
 
  max_fds = resource.getrlimit(resource.RLIMIT_NOFILE)[0]
@@ -842,7 +842,7 @@ class EnterpriseMetricsCollector:
 
  self.registry.process_threads.set(self._process.num_threads())
 
- # AsyncIO 태스크 수집
+ # AsyncIO task collection
  try:
  loop = asyncio.get_running_loop()
  tasks = asyncio.all_tasks(loop)
@@ -880,28 +880,28 @@ metrics_collector = EnterpriseMetricsCollector(enterprise_metrics)
 
 
 def get_metrics_registry() -> EnterpriseMetricsRegistry:
- """메트릭 레지스트리 반환"""
+ """Return metrics registry"""
  return enterprise_metrics
 
 
 def get_metrics_collector() -> EnterpriseMetricsCollector:
- """메트릭 수집기 반환"""
+ """Return metrics collector"""
  return metrics_collector
 
 
 async def start_metrics_collection():
- """메트릭 수집 시작"""
+ """Start metrics collection"""
 
  async def collect_periodically():
  while True:
  try:
  await metrics_collector.collect_all_metrics()
- await asyncio.sleep(15) # 15초마다 수집
+ await asyncio.sleep(15) # Collect every 15 seconds
  except Exception as e:
  logger.error(f"Metrics collection error: {e}")
  await asyncio.sleep(5)
 
- # 백그라운드 태스크로 실행
+ # Run as background task
  asyncio.create_task(collect_periodically())
 
 
@@ -911,15 +911,15 @@ async def start_metrics_collection():
 
 
 async def metrics_endpoint() -> Response:
- """Prometheus 메트릭 엔드포인트"""
+ """Prometheus metrics endpoint"""
  return PlainTextResponse(
  generate_latest(enterprise_metrics.registry), media_type = CONTENT_TYPE_LATEST
  )
 
 
-# 메트릭 수집 데코레이터
+# Metrics collection decorator
 def track_request_metrics(endpoint: str):
- """HTTP 요청 메트릭 추적 데코레이터"""
+ """HTTP request metrics tracking decorator"""
 
  def decorator(func):
  @wraps(func)
@@ -928,7 +928,7 @@ def track_request_metrics(endpoint: str):
  method = kwargs.get("request", args[0] if args else None)
  method_str = getattr(method, "method", "UNKNOWN") if method else "UNKNOWN"
 
- # 진행 중인 요청 증가
+ # Increment in-progress requests
  enterprise_metrics.http_requests_in_progress.labels(
  method = method_str, endpoint = endpoint, service = "oms"
  ).inc()
@@ -937,7 +937,7 @@ def track_request_metrics(endpoint: str):
  result = await func(*args, **kwargs)
  status_code = getattr(result, "status_code", 200)
 
- # 성공 메트릭 기록
+ # Record success metrics
  enterprise_metrics.http_requests_total.labels(
  method = method_str,
  endpoint = endpoint,
@@ -948,7 +948,7 @@ def track_request_metrics(endpoint: str):
  return result
 
  except Exception as e:
- # 에러 메트릭 기록
+ # Record error metrics
  enterprise_metrics.http_requests_total.labels(
  method = method_str,
  endpoint = endpoint,
@@ -958,7 +958,7 @@ def track_request_metrics(endpoint: str):
  raise
 
  finally:
- # 요청 완료
+ # Request completed
  duration = time.time() - start_time
  enterprise_metrics.http_request_duration_seconds.labels(
  method = method_str, endpoint = endpoint, service = "oms"

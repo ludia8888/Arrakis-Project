@@ -383,7 +383,7 @@ SYSTEM_FUNCTION_TYPES = {
 
  # Date/Time functions
  "date_diff": {
- "name": "date_diff",
+ "name": "date_di",
  "display_name": "Date Difference",
  "description": "Calculate difference between two dates",
  "category": FunctionCategory.TEMPORAL,
@@ -774,7 +774,8 @@ class FunctionTypeRegistry:
  """Get all function types in a category"""
  return [t for t in self._types.values() if t.category == category]
 
- def validate_invocation(self, function_type_id: str, inputs: Dict[str, Any]) -> List[str]:
+ def validate_invocation(self, function_type_id: str, inputs: Dict[str,
+     Any]) -> List[str]:
  """Validate function invocation"""
  func_type = self.get(function_type_id)
  if not func_type:
@@ -803,7 +804,8 @@ def search_function_types(query: str) -> List[FunctionType]:
  return function_type_registry.search(query)
 
 
-def validate_function_invocation(function_type_id: str, inputs: Dict[str, Any]) -> List[str]:
+def validate_function_invocation(function_type_id: str, inputs: Dict[str,
+    Any]) -> List[str]:
  """Validate function invocation"""
  return function_type_registry.validate_invocation(function_type_id, inputs)
 

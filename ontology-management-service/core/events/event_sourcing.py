@@ -6,15 +6,15 @@ Full Event Sourcing with Aggregate Root, Commands, and Handlers
 """
 
 import asyncio
+import logging
 import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Type, TypeVar, Generic, Union
 from enum import Enum
-import logging
+from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
-from .immutable_event_store import ImmutableEventStore, ImmutableEvent, EventType
+from .immutable_event_store import EventType, ImmutableEvent, ImmutableEventStore
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +47,8 @@ class CommandResponse:
 class Command(ABC):
  """Base command class"""
 
- def __init__(self, aggregate_id: str, correlation_id: str, user_id: Optional[str] = None):
+ def __init__(self, aggregate_id: str, correlation_id: str,
+     user_id: Optional[str] = None):
  self.aggregate_id = aggregate_id
  self.correlation_id = correlation_id
  self.user_id = user_id
@@ -61,7 +62,8 @@ class Command(ABC):
 class DomainEvent(ABC):
  """Base domain event class"""
 
- def __init__(self, aggregate_id: str, correlation_id: str, user_id: Optional[str] = None):
+ def __init__(self, aggregate_id: str, correlation_id: str,
+     user_id: Optional[str] = None):
  self.aggregate_id = aggregate_id
  self.correlation_id = correlation_id
  self.user_id = user_id
@@ -249,7 +251,8 @@ class SchemaUpdatedEvent(DomainEvent):
 class SchemaDeletedEvent(DomainEvent):
  """Schema deleted event"""
 
- def __init__(self, aggregate_id: str, correlation_id: str, user_id: Optional[str] = None):
+ def __init__(self, aggregate_id: str, correlation_id: str,
+     user_id: Optional[str] = None):
  super().__init__(aggregate_id, correlation_id, user_id)
 
  def to_payload(self) -> Dict[str, Any]:
@@ -292,7 +295,8 @@ class SchemaAggregate(AggregateRoot):
 
  self.apply_event(event)
 
- def update_schema(self, changes: Dict[str, Any], correlation_id: str, user_id: Optional[str] = None):
+ def update_schema(self, changes: Dict[str, Any], correlation_id: str,
+     user_id: Optional[str] = None):
  """Update schema"""
  if self.is_deleted:
  raise ValueError("Cannot update deleted schema")

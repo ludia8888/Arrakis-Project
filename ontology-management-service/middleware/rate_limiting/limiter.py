@@ -1,12 +1,12 @@
 """
 Main rate limiter implementation
 """
-from typing import Dict, Optional, Any
+import asyncio
 import logging
 from functools import wraps
-import asyncio
+from typing import Any, Dict, Optional
 
-from .models import RateLimitConfig, RateLimitResult, RateLimitScope, RateLimitKey
+from .models import RateLimitConfig, RateLimitKey, RateLimitResult, RateLimitScope
 from .strategies.base import RateLimitStrategy
 
 logger = logging.getLogger(__name__)

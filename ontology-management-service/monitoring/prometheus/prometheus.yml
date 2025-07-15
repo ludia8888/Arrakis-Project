@@ -7,15 +7,15 @@ global:
   scrape_interval: 15s
   evaluation_interval: 15s
   external_labels:
-    monitor: 'arrakis-production'
-    environment: 'production'
+    monitor: "arrakis-production"
+    environment: "production"
 
 # Alertmanager 설정
 alerting:
   alertmanagers:
-  - static_configs:
-    - targets:
-      - host.docker.internal:9093  # Alertmanager
+    - static_configs:
+        - targets:
+            - host.docker.internal:9093 # Alertmanager
 
 # 알람 규칙 파일
 rule_files:
@@ -24,68 +24,68 @@ rule_files:
 # 스크랩 설정
 scrape_configs:
   # ========== CORE MSA SERVICES (현재 실행 중) ==========
-  - job_name: 'user-service'
+  - job_name: "user-service"
     static_configs:
-    - targets: ['host.docker.internal:8012']
-    metrics_path: '/metrics'
+      - targets: ["host.docker.internal:8012"]
+    metrics_path: "/metrics"
     scrape_interval: 5s
 
-  - job_name: 'oms-service'
+  - job_name: "oms-service"
     static_configs:
-    - targets: ['host.docker.internal:8010']
-    metrics_path: '/metrics'
+      - targets: ["host.docker.internal:8010"]
+    metrics_path: "/metrics"
     scrape_interval: 5s
 
-  - job_name: 'audit-service'
+  - job_name: "audit-service"
     static_configs:
-    - targets: ['host.docker.internal:8011']
-    metrics_path: '/metrics'
+      - targets: ["host.docker.internal:8011"]
+    metrics_path: "/metrics"
     scrape_interval: 5s
 
   # ========== EXPORTERS ==========
-  - job_name: 'node-exporter'
+  - job_name: "node-exporter"
     static_configs:
-    - targets: ['host.docker.internal:9100']
-    metrics_path: '/metrics'
+      - targets: ["host.docker.internal:9100"]
+    metrics_path: "/metrics"
     scrape_interval: 15s
 
-  - job_name: 'redis-exporter'
+  - job_name: "redis-exporter"
     static_configs:
-    - targets: ['host.docker.internal:9121']
-    metrics_path: '/metrics'
+      - targets: ["host.docker.internal:9121"]
+    metrics_path: "/metrics"
     scrape_interval: 15s
 
-  - job_name: 'postgres-exporter'
+  - job_name: "postgres-exporter"
     static_configs:
-    - targets: ['host.docker.internal:9187']
-    metrics_path: '/metrics'
+      - targets: ["host.docker.internal:9187"]
+    metrics_path: "/metrics"
     scrape_interval: 15s
 
   # ========== MONITORING INFRASTRUCTURE ==========
-  - job_name: 'prometheus'
+  - job_name: "prometheus"
     static_configs:
-    - targets: ['localhost:9090']
+      - targets: ["localhost:9090"]
 
-  - job_name: 'alertmanager'
+  - job_name: "alertmanager"
     static_configs:
-    - targets: ['host.docker.internal:9093']
+      - targets: ["host.docker.internal:9093"]
 
-  - job_name: 'grafana'
+  - job_name: "grafana"
     static_configs:
-    - targets: ['host.docker.internal:3000']
+      - targets: ["host.docker.internal:3000"]
 
   # ========== TRACING & PROFILING ==========
-  - job_name: 'jaeger'
+  - job_name: "jaeger"
     static_configs:
-    - targets: ['host.docker.internal:14269']
-    metrics_path: '/metrics'
+      - targets: ["host.docker.internal:14269"]
+    metrics_path: "/metrics"
     scrape_interval: 30s
 
   # ========== CUSTOM SERVICES ==========
-  - job_name: 'alerting-webhook'
+  - job_name: "alerting-webhook"
     static_configs:
-    - targets: ['host.docker.internal:8080']
-    metrics_path: '/health'
+      - targets: ["host.docker.internal:8080"]
+    metrics_path: "/health"
     scrape_interval: 30s
 
   # ========== FUTURE SERVICES (준비됨) ==========

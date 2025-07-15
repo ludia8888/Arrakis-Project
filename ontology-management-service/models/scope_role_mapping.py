@@ -2,9 +2,9 @@
 Scope-Role Mapping Tables and Documentation
 Clear definition of relationship between IAM Scopes and OMS Roles
 """
-from enum import Enum
-from typing import Dict, List, Set, Optional
 from dataclasses import dataclass
+from enum import Enum
+from typing import Dict, List, Optional, Set
 
 from models.permissions import Role
 from shared.iam_contracts import IAMScope
@@ -329,7 +329,8 @@ class ScopeRoleMatrix:
  return definition.required_scopes + definition.optional_scopes
 
  @classmethod
- def validate_role_scope_assignment(cls, role: Role, scopes: List[str]) -> tuple[bool, List[str]]:
+ def validate_role_scope_assignment(cls, role: Role, scopes: List[str]) -> tuple[bool,
+     List[str]]:
  """
  Validate if a role assignment is consistent with scopes
 
@@ -404,11 +405,16 @@ SCOPE_ROLE_SUMMARY_TABLE = """
 
 | Role | Scope Prefix | Example Scopes | Access Level |
 |------|-------------|----------------|--------------|
-| **admin** | `api:*:admin`, `api:system:*` | `api:ontologies:admin`, `api:system:admin` | Full system access |
-| **developer** | `api:*:write` | `api:schemas:write`, `api:ontologies:write`, `api:branches:write` | Create/modify resources |
-| **reviewer** | `api:*:read`, `api:proposals:approve` | `api:proposals:approve`, `api:audit:read` | Review and approve |
-| **viewer** | `api:*:read` | `api:ontologies:read`, `api:schemas:read` | Read-only access |
-| **service_account** | `api:service:*`, `api:webhook:*` | `api:service:account`, `api:webhook:execute` | Service integration |
+| **admin** | `api:*:admin`, `api:system:*` | `api:ontologies:admin`,
+    `api:system:admin` | Full system access |
+| **developer** | `api:*:write` | `api:schemas:write`, `api:ontologies:write`,
+    `api:branches:write` | Create/modify resources |
+| **reviewer** | `api:*:read`, `api:proposals:approve` | `api:proposals:approve`,
+    `api:audit:read` | Review and approve |
+| **viewer** | `api:*:read` | `api:ontologies:read`,
+    `api:schemas:read` | Read-only access |
+| **service_account** | `api:service:*`, `api:webhook:*` | `api:service:account`,
+    `api:webhook:execute` | Service integration |
 
 ## Scope Hierarchy
 
@@ -446,6 +452,8 @@ api:service:account
 {
  "sub": "dev-001",
  "scope": "api:ontologies:write api:schemas:read api:branches:write api:proposals:write",
+
+
  "roles": ["developer"]
 }
 ```

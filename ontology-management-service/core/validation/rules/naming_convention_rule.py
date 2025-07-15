@@ -3,17 +3,22 @@ Naming Convention Validation Rule
 Breaking Change 검증 시 명명 규칙 위반 감지
 """
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Optional, Tuple, Iterator
+from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 
-from core.validation.rules.base import BaseRule
+from arrakis_common import get_logger
 from core.validation.models import (
- BreakingChange, RuleExecutionResult, Severity,
- ValidationContext, ValidationWarning
+    BreakingChange,
+    RuleExecutionResult,
+    Severity,
+    ValidationContext,
+    ValidationWarning,
 )
 from core.validation.naming_convention import (
- EntityType, NamingConventionEngine, get_naming_engine
+    EntityType,
+    NamingConventionEngine,
+    get_naming_engine,
 )
-from arrakis_common import get_logger
+from core.validation.rules.base import BaseRule
 
 logger = get_logger(__name__)
 
@@ -25,7 +30,8 @@ class EntityConfig:
  resource_type: str # "ObjectType", "Property", "LinkType"
 
  # 스키마 접근 함수
- schema_accessor: Callable[[ValidationContext], Iterator[Tuple[str, Dict, Optional[str]]]]
+ schema_accessor: Callable[[ValidationContext], Iterator[Tuple[str, Dict,
+     Optional[str]]]]
 
  # ID 생성 함수 (entity_id, parent_id = None) -> change_id
  id_generator: Callable[[str, Optional[str]], str]
@@ -80,7 +86,8 @@ class NamingConventionRule(BaseRule):
  id_generator = lambda entity_id, parent_id: f"naming-{entity_id}",
  resource_id_generator = lambda entity_id, parent_id: entity_id,
  default_severity = Severity.MEDIUM,
- complexity_calculator = lambda changed, result: "low" if result.suggestions else "medium"
+ complexity_calculator = lambda changed,
+     result: "low" if result.suggestions else "medium"
  ),
 
  # Property 설정
@@ -110,7 +117,8 @@ class NamingConventionRule(BaseRule):
  )
  ]
 
- def _get_all_properties(self, context: ValidationContext) -> Iterator[Tuple[str, Dict, str]]:
+ def _get_all_properties(self, context: ValidationContext) -> Iterator[Tuple[str, Dict,
+     str]]:
  """모든 Property를 (prop_id, prop_data, obj_id) 형태로 반환"""
  for obj_id, obj_type in context.target_schemas.get("object_types", {}).items():
  for prop_id, prop in obj_type.get("properties", {}).items():
@@ -207,7 +215,8 @@ class NamingConventionRule(BaseRule):
 
  return None
 
- def _detect_name_change(self, source_entity: Optional[Dict], target_entity: Dict) -> bool:
+ def _detect_name_change(self, source_entity: Optional[Dict],
+     target_entity: Dict) -> bool:
  """이름 변경 감지"""
  if not source_entity:
  return False
@@ -293,7 +302,8 @@ class NamingConventionRule(BaseRule):
  details = details
  )
 
- def _format_description(self, name: str, source_entity: Optional[Dict], resource_type: str) -> str:
+ def _format_description(self, name: str, source_entity: Optional[Dict],
+     resource_type: str) -> str:
  """설명 메시지 포맷팅"""
  if source_entity:
  previous_name = source_entity.get("name", "unknown")
@@ -372,6 +382,8 @@ class NamingConventionRule(BaseRule):
  ValidationWarning(
  code = "reserved-word-conflict",
  message = f"Entity names conflict with reserved words: {', '.join(reserved_conflicts)}",
+
+
  severity = Severity.HIGH,
  details={
  "conflicts": list(reserved_conflicts)

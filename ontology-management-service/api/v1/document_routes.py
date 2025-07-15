@@ -2,22 +2,25 @@
 Document Processing API Routes
 REST endpoints for unfoldable documents and metadata frames
 """
-from typing import Optional, List, Dict, Any
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, status, Request
-from pydantic import BaseModel, Field
+from typing import Any, Dict, List, Optional
 
+from arrakis_common import get_logger
 from core.auth_utils import UserContext
-from middleware.auth_middleware import get_current_user
 from core.documents import (
- UnfoldLevel, UnfoldContext, UnfoldableDocument,
- UnfoldableProcessor, MetadataFrameParser,
- SchemaDocumentationGenerator
+    MetadataFrameParser,
+    SchemaDocumentationGenerator,
+    UnfoldableDocument,
+    UnfoldableProcessor,
+    UnfoldContext,
+    UnfoldLevel,
 )
 from core.documents.storage import get_document_storage
 from core.iam.dependencies import require_scope
 from core.iam.iam_integration import IAMScope
-from arrakis_common import get_logger
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from middleware.auth_middleware import get_current_user
+from pydantic import BaseModel, Field
 
 logger = get_logger(__name__)
 router = APIRouter(prefix = "/documents", tags = ["Documents"])
@@ -27,7 +30,8 @@ router = APIRouter(prefix = "/documents", tags = ["Documents"])
 
 class UnfoldContextRequest(BaseModel):
  """Request model for unfold context"""
- level: str = Field("COLLAPSED", description = "Unfold level: COLLAPSED, SHALLOW, DEEP, CUSTOM")
+ level: str = Field("COLLAPSED", description = "Unfold level: COLLAPSED, SHALLOW, DEEP,
+     CUSTOM")
  paths: Optional[List[str]] = Field(None, description = "Specific paths to unfold")
  max_depth: int = Field(10, ge = 1, le = 20)
  size_threshold: int = Field(10240, ge = 1024)
@@ -56,7 +60,8 @@ class PrepareUnfoldableRequest(BaseModel):
 
 class ParseMetadataRequest(BaseModel):
  """Request for parsing metadata frames"""
- markdown_content: str = Field(..., description = "Markdown content with metadata frames")
+ markdown_content: str = Field(...,
+     description = "Markdown content with metadata frames")
 
 
 class GenerateDocumentationRequest(BaseModel):
@@ -71,7 +76,8 @@ class StoreDocumentRequest(BaseModel):
  content: Dict[str, Any] = Field(..., description = "Document content")
  metadata: Optional[Dict[str, Any]] = Field(None, description = "Document metadata")
  tags: Optional[List[str]] = Field(None, description = "Document tags")
- auto_optimize: bool = Field(True, description = "Auto-optimize with unfoldable annotations")
+ auto_optimize: bool = Field(True,
+     description = "Auto-optimize with unfoldable annotations")
 
 
 class UpdateDocumentRequest(BaseModel):
@@ -79,7 +85,8 @@ class UpdateDocumentRequest(BaseModel):
  content: Optional[Dict[str, Any]] = Field(None, description = "Document content")
  metadata: Optional[Dict[str, Any]] = Field(None, description = "Document metadata")
  tags: Optional[List[str]] = Field(None, description = "Document tags")
- auto_optimize: bool = Field(True, description = "Auto-optimize with unfoldable annotations")
+ auto_optimize: bool = Field(True,
+     description = "Auto-optimize with unfoldable annotations")
 
 
 class DocumentSearchRequest(BaseModel):
@@ -93,31 +100,37 @@ class DocumentSearchRequest(BaseModel):
 class InjectMetadataRequest(BaseModel):
  """Request for injecting metadata frames into content"""
  markdown_content: str = Field(..., description = "Base markdown content")
- metadata_frames: List[Dict[str, Any]] = Field(..., description = "Metadata frames to inject")
+ metadata_frames: List[Dict[str, Any]] = Field(...,
+     description = "Metadata frames to inject")
 
 
 class ValidateMetadataRequest(BaseModel):
  """Request for validating metadata frames"""
- markdown_content: str = Field(..., description = "Markdown content with metadata frames")
+ markdown_content: str = Field(...,
+     description = "Markdown content with metadata frames")
  strict: bool = Field(False, description = "Enable strict validation")
 
 
 class ConvertMetadataRequest(BaseModel):
  """Request for converting metadata frame formats"""
- metadata_frames: List[Dict[str, Any]] = Field(..., description = "Metadata frames to convert")
+ metadata_frames: List[Dict[str, Any]] = Field(...,
+     description = "Metadata frames to convert")
  target_format: str = Field(..., description = "Target format: yaml, json")
 
 
 class ExportDocumentationRequest(BaseModel):
  """Request for exporting documentation in different formats"""
- schema_documentation: Dict[str, Any] = Field(..., description = "Schema documentation object")
- export_format: str = Field("markdown", description = "Export format: markdown, html, pdf")
+ schema_documentation: Dict[str, Any] = Field(...,
+     description = "Schema documentation object")
+ export_format: str = Field("markdown", description = "Export format: markdown, html,
+     pd")
  include_metadata: bool = Field(True, description = "Include metadata frames in export")
 
 
 # Endpoints
 
-@router.post("/unfold", dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
+@router.post("/unfold",
+    dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
 async def unfold_document(
  request: UnfoldDocumentRequest,
  req: Request,
@@ -163,7 +176,8 @@ async def unfold_document(
  )
 
 
-@router.post("/unfold-path", dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
+@router.post("/unfold-path",
+    dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
 async def unfold_path(
  request: UnfoldPathRequest,
  req: Request,
@@ -200,7 +214,8 @@ async def unfold_path(
  )
 
 
-@router.post("/prepare-unfoldable", dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_WRITE]))])
+@router.post("/prepare-unfoldable",
+    dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_WRITE]))])
 async def prepare_unfoldable(
  request: PrepareUnfoldableRequest,
  req: Request,
@@ -231,7 +246,8 @@ async def prepare_unfoldable(
  )
 
 
-@router.post("/extract-unfoldable", dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
+@router.post("/extract-unfoldable",
+    dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
 async def extract_unfoldable(
  content: Dict[str, Any],
  req: Request,
@@ -263,7 +279,8 @@ async def extract_unfoldable(
  )
 
 
-@router.post("/parse-metadata", dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
+@router.post("/parse-metadata",
+    dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
 async def parse_metadata_frames(
  request: ParseMetadataRequest,
  req: Request,
@@ -316,7 +333,8 @@ async def parse_metadata_frames(
  )
 
 
-@router.post("/generate-documentation", dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
+@router.post("/generate-documentation",
+    dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
 async def generate_documentation(
  request: GenerateDocumentationRequest,
  req: Request,
@@ -361,7 +379,8 @@ async def generate_documentation(
  )
 
 
-@router.get("/metadata-frame-types", dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
+@router.get("/metadata-frame-types",
+    dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
 async def get_metadata_frame_types(
  req: Request,
  user: UserContext = Depends(get_current_user)
@@ -384,7 +403,8 @@ async def get_metadata_frame_types(
  }
 
 
-@router.get("/unfold-levels", dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
+@router.get("/unfold-levels",
+    dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
 async def get_unfold_levels(
  req: Request,
  user: UserContext = Depends(get_current_user)
@@ -416,7 +436,8 @@ async def get_unfold_levels(
  }
 
 
-@router.post("/auto-mark-unfoldable", dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_WRITE]))])
+@router.post("/auto-mark-unfoldable",
+    dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_WRITE]))])
 async def auto_mark_unfoldable(
  content: Dict[str, Any],
  size_threshold: int = 10240,
@@ -467,7 +488,8 @@ async def auto_mark_unfoldable(
  )
 
 
-@router.post("/batch-unfold", dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
+@router.post("/batch-unfold",
+    dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
 async def batch_unfold_documents(
  documents: List[UnfoldDocumentRequest],
  parallel: bool = True,
@@ -487,7 +509,8 @@ async def batch_unfold_documents(
  start_time = time.time()
  results = []
 
- async def process_single_document(doc_request: UnfoldDocumentRequest) -> Dict[str, Any]:
+ async def process_single_document(doc_request: UnfoldDocumentRequest) -> Dict[str,
+     Any]:
  # Create unfold context
  unfold_level = UnfoldLevel[doc_request.context.level]
  context = UnfoldContext(
@@ -542,7 +565,8 @@ async def batch_unfold_documents(
  )
 
 
-@router.post("/analyze-document", dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
+@router.post("/analyze-document",
+    dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
 async def analyze_document_structure(
  content: Dict[str, Any],
  req: Request = None,
@@ -661,7 +685,8 @@ async def analyze_document_structure(
  )
 
 
-@router.post("/optimize-document", dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_WRITE]))])
+@router.post("/optimize-document",
+    dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_WRITE]))])
 async def optimize_document_for_performance(
  content: Dict[str, Any],
  target_size_kb: int = 100,
@@ -760,7 +785,8 @@ async def optimize_document_for_performance(
 
 # Document Storage Endpoints
 
-@router.post("/store", dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_WRITE]))])
+@router.post("/store",
+    dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_WRITE]))])
 async def store_document(
  request: StoreDocumentRequest,
  req: Request,
@@ -803,7 +829,8 @@ async def store_document(
  )
 
 
-@router.get("/store/{doc_id}", dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
+@router.get("/store/{doc_id}",
+    dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
 async def get_stored_document(
  doc_id: str,
  unfold_level: str = "COLLAPSED",
@@ -853,7 +880,8 @@ async def get_stored_document(
  )
 
 
-@router.put("/store/{doc_id}", dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_WRITE]))])
+@router.put("/store/{doc_id}",
+    dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_WRITE]))])
 async def update_stored_document(
  doc_id: str,
  request: UpdateDocumentRequest,
@@ -904,7 +932,8 @@ async def update_stored_document(
  )
 
 
-@router.delete("/store/{doc_id}", dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_WRITE]))])
+@router.delete("/store/{doc_id}",
+    dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_WRITE]))])
 async def delete_stored_document(
  doc_id: str,
  req: Request = None,
@@ -938,7 +967,8 @@ async def delete_stored_document(
  )
 
 
-@router.get("/store", dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
+@router.get("/store",
+    dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
 async def list_stored_documents(
  tags: Optional[str] = None,
  name_filter: Optional[str] = None,
@@ -972,7 +1002,8 @@ async def list_stored_documents(
  )
 
 
-@router.post("/search", dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
+@router.post("/search",
+    dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
 async def search_stored_documents(
  request: DocumentSearchRequest,
  req: Request = None,
@@ -1005,7 +1036,8 @@ async def search_stored_documents(
  )
 
 
-@router.get("/stats", dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
+@router.get("/stats",
+    dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
 async def get_storage_stats(
  req: Request = None,
  user: UserContext = Depends(get_current_user)
@@ -1030,7 +1062,8 @@ async def get_storage_stats(
  )
 
 
-@router.post("/inject-metadata", dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_WRITE]))])
+@router.post("/inject-metadata",
+    dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_WRITE]))])
 async def inject_metadata_frames(
  request: InjectMetadataRequest,
  req: Request,
@@ -1072,7 +1105,8 @@ async def inject_metadata_frames(
  )
 
 
-@router.post("/validate-metadata", dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
+@router.post("/validate-metadata",
+    dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
 async def validate_metadata_frames(
  request: ValidateMetadataRequest,
  req: Request,
@@ -1155,7 +1189,8 @@ async def validate_metadata_frames(
  )
 
 
-@router.post("/convert-metadata", dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
+@router.post("/convert-metadata",
+    dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
 async def convert_metadata_formats(
  request: ConvertMetadataRequest,
  req: Request,
@@ -1167,8 +1202,9 @@ async def convert_metadata_formats(
  Converts metadata frame content from one format to another
  """
  try:
- import yaml
  import json
+
+ import yaml
 
  converted_frames = []
  conversion_stats = {
@@ -1225,7 +1261,8 @@ async def convert_metadata_formats(
  )
 
 
-@router.post("/export-documentation", dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
+@router.post("/export-documentation",
+    dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
 async def export_documentation(
  request: ExportDocumentationRequest,
  req: Request,
@@ -1248,7 +1285,11 @@ async def export_documentation(
  version = doc_data.get("version", "1.0.0"),
  author = doc_data.get("author"),
  created_at = datetime.fromisoformat(doc_data["created_at"]) if "created_at" in doc_data else None,
+
+
  updated_at = datetime.fromisoformat(doc_data["updated_at"]) if "updated_at" in doc_data else None,
+
+
  tags = doc_data.get("tags", []),
  content = doc_data.get("content", "")
  )
@@ -1266,7 +1307,7 @@ async def export_documentation(
 
  elif request.export_format == "html":
  # Convert markdown to HTML (simplified)
- html_template = f"""<!DOCTYPE html>
+ html_template = """<!DOCTYPE html>
 <html>
 <head>
  <title>{doc.title}</title>
@@ -1284,7 +1325,9 @@ async def export_documentation(
  <p><strong > Version:</strong> {doc.version}</p>
  <p><strong > Description:</strong> {doc.description}</p>
  <div>
- {markdown_content.replace(chr(10), '<br > ').replace('```', '</code></pre><pre><code > ').replace('# ', '<h1 > ').replace('## ', '<h2 > ').replace('### ', '<h3 > ')}
+ {markdown_content.replace(chr(10), '<br > ').replace('```',
+     '</code></pre><pre><code > ').replace('# ', '<h1 > ').replace('## ',
+     '<h2 > ').replace('### ', '<h3 > ')}
  </div>
 </body>
 </html > """
@@ -1321,7 +1364,8 @@ async def export_documentation(
  )
 
 
-@router.get("/metadata-summary/{document_id}", dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
+@router.get("/metadata-summary/{document_id}",
+    dependencies = [Depends(require_scope([IAMScope.ONTOLOGIES_READ]))])
 async def get_document_metadata_summary(
  document_id: str,
  req: Request,

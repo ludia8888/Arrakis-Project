@@ -3,11 +3,11 @@ Common Logging Module for OMS
 Provides structured logging across all services
 """
 
-import logging
 import json
+import logging
 import os
-from typing import Optional, Dict, Any, Union
 from datetime import datetime
+from typing import Any, Dict, Optional, Union
 
 
 class JSONFormatter(logging.Formatter):
@@ -40,6 +40,8 @@ class StructuredFormatter(logging.Formatter):
  def __init__(self):
  super().__init__(
  fmt = '%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s',
+
+
  datefmt = '%Y-%m-%d %H:%M:%S'
  )
 

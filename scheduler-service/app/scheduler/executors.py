@@ -9,10 +9,10 @@ import httpx
 
 # Import configuration system for externalized settings - production only
 from config.service_config import (
- get_batch_size,
- get_service_url,
- get_timeout,
- service_config,
+    get_batch_size,
+    get_service_url,
+    get_timeout,
+    service_config,
 )
 
 logger = logging.getLogger(__name__)
@@ -670,7 +670,7 @@ class ReportGenerationExecutor(BaseExecutor):
  json={
  "type": "audit_compliance",
  "data": report_data,
- "format": "pdf",
+ "format": "pd",
  "recipients": recipients,
  },
  )
@@ -705,8 +705,8 @@ class ReportGenerationExecutor(BaseExecutor):
 
  # Query various security services
  services = [
- ("audit-service", f"http://audit-service:8000/api/v1/security/summary"),
- ("user-service", f"http://user-service:8000/api/v1/security/summary"),
+ ("audit-service", "http://audit-service:8000/api/v1/security/summary"),
+ ("user-service", "http://user-service:8000/api/v1/security/summary"),
  ]
 
  async with httpx.AsyncClient() as client:
@@ -857,7 +857,8 @@ class CleanupExecutor(BaseExecutor):
  dry_run = parameters.get("dry_run", False)
 
  logger.info(
- f"Running cleanup: {cleanup_type} (retention: {retention_days} days, dry_run: {dry_run})"
+ f"Running cleanup: {cleanup_type} (retention: {retention_days} days,
+     dry_run: {dry_run})"
  )
 
  try:

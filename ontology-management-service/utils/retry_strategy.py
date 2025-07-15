@@ -1,5 +1,6 @@
 """
-Production-grade retry strategy with exponential backoff, circuit breaker, and bulkhead patterns
+Production-grade retry strategy with exponential backoff, circuit breaker,
+    and bulkhead patterns
 Implements Palantir-style resilience patterns for critical operations
 """
 import asyncio
@@ -21,11 +22,15 @@ T = TypeVar('T')
 AsyncFunc = TypeVar('AsyncFunc', bound = Callable[..., Any])
 
 # Prometheus metrics
-retry_attempts = Counter('retry_attempts_total', 'Total retry attempts', ['operation', 'status'])
-retry_duration = Histogram('retry_duration_seconds', 'Time spent in retry logic', ['operation'])
-circuit_breaker_state = Gauge('circuit_breaker_state', 'Circuit breaker state (0 = closed, 1 = open, 2 = half-open)', ['operation'])
+retry_attempts = Counter('retry_attempts_total', 'Total retry attempts', ['operation',
+    'status'])
+retry_duration = Histogram('retry_duration_seconds', 'Time spent in retry logic',
+    ['operation'])
+circuit_breaker_state = Gauge('circuit_breaker_state',
+    'Circuit breaker state (0 = closed, 1 = open, 2 = half-open)', ['operation'])
 bulkhead_usage = Gauge('bulkhead_usage', 'Bulkhead resource usage', ['resource'])
-retry_budget_remaining = Gauge('retry_budget_remaining', 'Remaining retry budget percentage', ['operation'])
+retry_budget_remaining = Gauge('retry_budget_remaining',
+    'Remaining retry budget percentage', ['operation'])
 
 class RetryStrategy(Enum):
  """Retry strategies based on operation criticality"""
@@ -314,12 +319,14 @@ def with_retry(
 
 class RetryContext:
  """Context for retry execution"""
- def __init__(self, operation: str, config: RetryConfig, bulkhead_resource: Optional[str]):
+ def __init__(self, operation: str, config: RetryConfig,
+     bulkhead_resource: Optional[str]):
  self.operation = operation
  self.config = config
  self.circuit_breaker = get_circuit_breaker(operation, config)
  self.retry_budget = get_retry_budget(operation, config)
- self.bulkhead = get_bulkhead(bulkhead_resource, config.bulkhead_size) if bulkhead_resource and config.bulkhead_size else None
+ self.bulkhead = get_bulkhead(bulkhead_resource,
+     config.bulkhead_size) if bulkhead_resource and config.bulkhead_size else None
  self.start_time = time.time()
  self.last_exception = None
 
@@ -408,7 +415,8 @@ def _handle_success(context: RetryContext, attempt: int):
  logger.info(f"Operation {context.operation} succeeded after {attempt} attempts")
 
 
-async def _handle_failure(exception: Exception, context: RetryContext, attempt: int) -> bool:
+async def _handle_failure(exception: Exception, context: RetryContext,
+    attempt: int) -> bool:
  """Handle execution failure. Returns True if should retry."""
  context.last_exception = exception
 
@@ -462,12 +470,14 @@ DB_CRITICAL_CONFIG = RetryConfig(
 )
 
 # Example usage for TerminusDB operations
-@with_retry("terminusdb_read", config = DB_READ_CONFIG, bulkhead_resource = "terminusdb")
+@with_retry("terminusdb_read", config = DB_READ_CONFIG,
+    bulkhead_resource = "terminusdb")
 async def read_from_terminusdb(client, query: str):
  """Example read operation with retry"""
  return await client.query(query)
 
-@with_retry("terminusdb_write", config = DB_WRITE_CONFIG, bulkhead_resource = "terminusdb")
+@with_retry("terminusdb_write", config = DB_WRITE_CONFIG,
+    bulkhead_resource = "terminusdb")
 async def write_to_terminusdb(client, data: dict):
  """Example write operation with retry"""
  return await client.insert(data)

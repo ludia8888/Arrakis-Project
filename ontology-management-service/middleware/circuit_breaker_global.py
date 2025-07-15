@@ -524,6 +524,8 @@ class GlobalCircuitBreakerMiddleware(BaseHTTPMiddleware):
  raise HTTPException(
  status_code = 503,
  detail = f"Service {self.config.service_name} temporarily unavailable - global circuit breaker is {self.circuit_breaker.state.value}",
+
+
  )
 
  # 요청 처리

@@ -6,16 +6,21 @@ import asyncio
 import json
 import os
 import time
-from typing import Optional, Dict, Any, List, Callable, TypeVar, Generic
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
+from typing import Any, Callable, Dict, Generic, List, Optional, TypeVar
 
+from arrakis_common import get_logger
 from models.idempotency import (
- IdempotencyKey, EventProcessingRecord, EventEnvelope,
- ConsumerState, IdempotentResult, ConsumerCheckpoint,
- calculate_state_hash, is_event_expired
+    ConsumerCheckpoint,
+    ConsumerState,
+    EventEnvelope,
+    EventProcessingRecord,
+    IdempotencyKey,
+    IdempotentResult,
+    calculate_state_hash,
+    is_event_expired,
 )
 from shared.database.sqlite_connector import SQLiteConnector, get_sqlite_connector
-from arrakis_common import get_logger
 
 logger = get_logger(__name__)
 
@@ -130,7 +135,8 @@ class IdempotentConsumer(Generic[T]):
  expires_at TIMESTAMP
  )
  """,
- "CREATE INDEX IF NOT EXISTS idx_checkpoint_consumer ON checkpoints (consumer_id, created_at)",
+ "CREATE INDEX IF NOT EXISTS idx_checkpoint_consumer ON checkpoints (consumer_id,
+     created_at)",
  """
  CREATE TABLE IF NOT EXISTS replay_history (
  replay_id TEXT PRIMARY KEY,
@@ -244,9 +250,17 @@ class IdempotentConsumer(Generic[T]):
  output_commit_hash = output_hash,
  processing_duration_ms = processing_time,
  status = "success",
- side_effects = result.side_effects if hasattr(result, 'side_effects') else (result.get('side_effects', []) if isinstance(result, dict) else []),
- created_resources = result.created_resources if hasattr(result, 'created_resources') else (result.get('created_resources', []) if isinstance(result, dict) else []),
- updated_resources = result.updated_resources if hasattr(result, 'updated_resources') else (result.get('updated_resources', []) if isinstance(result, dict) else []),
+ side_effects = result.side_effects if hasattr(result,
+     'side_effects') else (result.get('side_effects', []) if isinstance(result,
+     dict) else []),
+ created_resources = result.created_resources if hasattr(result,
+     'created_resources') else (result.get('created_resources', []) if isinstance(result,
+
+     dict) else []),
+ updated_resources = result.updated_resources if hasattr(result,
+     'updated_resources') else (result.get('updated_resources', []) if isinstance(result,
+
+     dict) else []),
  idempotency_key = idempotency_key,
  is_duplicate = False
  )
@@ -278,7 +292,8 @@ class IdempotentConsumer(Generic[T]):
  was_duplicate = False,
  previous_commit_hash = input_hash,
  new_commit_hash = output_hash,
- result = result.result if hasattr(result, 'result') else (result.get('result') if isinstance(result, dict) else None),
+ result = result.result if hasattr(result,
+     'result') else (result.get('result') if isinstance(result, dict) else None),
  side_effects = record.side_effects,
  processing_time_ms = processing_time,
  processor_version = self.consumer_version
@@ -466,7 +481,8 @@ class IdempotentConsumer(Generic[T]):
  }
  )
 
- async def _get_processing_record(self, event_id: str) -> Optional[EventProcessingRecord]:
+ async def _get_processing_record(self,
+     event_id: str) -> Optional[EventProcessingRecord]:
  """Get processing record for an event"""
  row = await self._connector.fetch_one(
  "SELECT * FROM processing_records WHERE event_id = :event_id",
@@ -489,7 +505,11 @@ class IdempotentConsumer(Generic[T]):
  retry_count = row['retry_count'],
  side_effects = json.loads(row['side_effects']) if row['side_effects'] else [],
  created_resources = json.loads(row['created_resources']) if row['created_resources'] else [],
+
+
  updated_resources = json.loads(row['updated_resources']) if row['updated_resources'] else [],
+
+
  idempotency_key = row['idempotency_key'],
  is_duplicate = bool(row['is_duplicate'])
  )

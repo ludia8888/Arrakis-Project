@@ -8,33 +8,33 @@ from api.graphql.main import app as websocket_app
 from api.graphql.modular_main import graphql_app as modular_graphql_app
 
 # --- API Router Imports ---
-from api.v1 import auth_proxy_routes # Direct import
-from api.v1 import ( # audit_routes - REMOVED: Moved to separate Audit Service; resilience_dashboard_routes - REMOVED: Replaced with enterprise observability stack
- batch_routes,
- branch_lock_routes,
- branch_routes,
- circuit_breaker_routes,
- config_routes,
- document_crud_routes,
- document_routes,
- graph_health_routes,
- health_routes,
- idempotent_routes,
- issue_tracking_routes,
- job_progress_routes,
- organization_routes,
- property_routes,
- schema_routes,
- shadow_index_routes,
- system_routes,
- time_travel_routes,
- version_routes,
+from api.v1 import auth_proxy_routes  # Direct import
+from api.v1 import (  # audit_routes - REMOVED: Moved to separate Audit Service; resilience_dashboard_routes - REMOVED: Replaced with enterprise observability stack
+    batch_routes,
+    branch_lock_routes,
+    branch_routes,
+    circuit_breaker_routes,
+    config_routes,
+    document_crud_routes,
+    document_routes,
+    graph_health_routes,
+    health_routes,
+    idempotent_routes,
+    issue_tracking_routes,
+    job_progress_routes,
+    organization_routes,
+    property_routes,
+    schema_routes,
+    shadow_index_routes,
+    system_routes,
+    time_travel_routes,
+    version_routes,
 )
+from arrakis_common import get_logger
 from bootstrap.config import AppConfig, get_config
 from bootstrap.dependencies import init_container
-from arrakis_common import get_logger
 from core.auth_utils.database_context import (
- DatabaseContextMiddleware as CoreDatabaseContextMiddleware,
+    DatabaseContextMiddleware as CoreDatabaseContextMiddleware,
 )
 from core.iam.scope_rbac_middleware import ScopeRBACMiddleware
 from fastapi import FastAPI
@@ -72,16 +72,16 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
  app_config = config or get_config()
  container = init_container(app_config)
 
- @asynccontextmanager
- async def lifespan(app: FastAPI):
- """
- Enterprise Application lifespan with integrated observability.
- Handles startup and shutdown events with full monitoring stack.
- """
- logger.info("🚀 Enterprise Application lifespan: startup sequence initiated.")
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        """
+        Enterprise Application lifespan with integrated observability.
+        Handles startup and shutdown events with full monitoring stack.
+        """
+        logger.info("🚀 Enterprise Application lifespan: startup sequence initiated.")
 
- try:
- logger.info("Initializing container resources...")
+        try:
+            logger.info("Initializing container resources...")
  await container.init_resources()
  logger.info("Container resources initialized successfully.")
 
@@ -96,9 +96,9 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
 
  # Initialize Global Circuit Breaker
  from middleware.circuit_breaker_global import (
- GlobalCircuitBreaker,
- GlobalCircuitConfig,
- set_global_circuit_breaker,
+     GlobalCircuitBreaker,
+     GlobalCircuitConfig,
+     set_global_circuit_breaker,
  )
 
  circuit_config = GlobalCircuitConfig(
@@ -123,9 +123,7 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
 
  # Initialize Enterprise Observability Stack
  try:
- from observability.enterprise_integration import (
- initialize_enterprise_observability,
- )
+ from observability.enterprise_integration import initialize_enterprise_observability
 
  observability_manager = await initialize_enterprise_observability(app)
  app.state.observability_manager = observability_manager
@@ -146,9 +144,7 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
 
  # Initialize Advanced GC Monitoring
  try:
- from observability.advanced_gc_monitoring import (
- start_advanced_gc_monitoring,
- )
+ from observability.advanced_gc_monitoring import start_advanced_gc_monitoring
 
  gc_monitor = start_advanced_gc_monitoring(interval = 30)
  app.state.gc_monitor = gc_monitor
@@ -188,8 +184,8 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
  # Initialize Pyroscope Continuous Profiling
  try:
  from observability.pyroscope_integration import (
- PyroscopeConfig,
- setup_fastapi_profiling,
+     PyroscopeConfig,
+     setup_fastapi_profiling,
  )
 
  pyroscope_config = PyroscopeConfig(
@@ -357,8 +353,8 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
  logger.info("Adding Global Circuit Breaker Middleware...")
  try:
  from middleware.circuit_breaker_global import (
- GlobalCircuitBreakerMiddleware,
- GlobalCircuitConfig,
+     GlobalCircuitBreakerMiddleware,
+     GlobalCircuitConfig,
  )
 
  redis_client = getattr(app.state, "redis_client", None)

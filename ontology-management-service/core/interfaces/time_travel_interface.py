@@ -1,13 +1,16 @@
 """
 Time Travel Service Interface
 """
-from typing import Protocol, Optional, List, Dict, Any
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Protocol
 
 from core.time_travel.models import (
- TemporalQuery, TemporalQueryResult, TemporalSnapshot,
- TemporalComparisonQuery, TemporalComparisonResult,
- ResourceTimeline
+    ResourceTimeline,
+    TemporalComparisonQuery,
+    TemporalComparisonResult,
+    TemporalQuery,
+    TemporalQueryResult,
+    TemporalSnapshot,
 )
 
 

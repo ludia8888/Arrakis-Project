@@ -2,21 +2,23 @@
 Idempotent Consumer API Routes
 Endpoints for event processing and consumer management
 """
-from typing import List, Optional, Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
-from pydantic import BaseModel, Field
 from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
 
+from arrakis_common import get_logger
 from core.auth_utils import UserContext
-from middleware.auth_middleware import get_current_user
-from core.idempotent.schema_event_consumer import get_schema_consumer
-from models.idempotency import (
- EventEnvelope, IdempotentResult, EventReplayRequest,
- generate_event_id
-)
 from core.iam.dependencies import require_scope
 from core.iam.iam_integration import IAMScope
-from arrakis_common import get_logger
+from core.idempotent.schema_event_consumer import get_schema_consumer
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from middleware.auth_middleware import get_current_user
+from models.idempotency import (
+    EventEnvelope,
+    EventReplayRequest,
+    IdempotentResult,
+    generate_event_id,
+)
+from pydantic import BaseModel, Field
 from utils.git_utils import get_current_commit_hash
 
 logger = get_logger(__name__)
@@ -31,10 +33,12 @@ class ProcessEventRequest(BaseModel):
  payload: Dict[str, Any] = Field(..., description = "Event payload")
 
  # Optional fields
- event_id: Optional[str] = Field(None, description = "Event ID (generated if not provided)")
+ event_id: Optional[str] = Field(None,
+     description = "Event ID (generated if not provided)")
  correlation_id: Optional[str] = Field(None, description = "Correlation ID")
  causation_id: Optional[str] = Field(None, description = "ID of causing event")
- idempotency_token: Optional[str] = Field(None, description = "Client idempotency token")
+ idempotency_token: Optional[str] = Field(None,
+     description = "Client idempotency token")
 
 
 class ProcessBatchRequest(BaseModel):
@@ -67,7 +71,8 @@ class ReplayStatusResponse(BaseModel):
 
 # Event Processing Endpoints
 
-@router.post("/process", dependencies = [Depends(require_scope([IAMScope.SCHEMAS_WRITE]))])
+@router.post("/process",
+    dependencies = [Depends(require_scope([IAMScope.SCHEMAS_WRITE]))])
 async def process_event(
  request: ProcessEventRequest,
  req: Request,
@@ -113,7 +118,8 @@ async def process_event(
  }
 
 
-@router.post("/process-batch", dependencies = [Depends(require_scope([IAMScope.SCHEMAS_WRITE]))])
+@router.post("/process-batch",
+    dependencies = [Depends(require_scope([IAMScope.SCHEMAS_WRITE]))])
 async def process_batch(
  request: ProcessBatchRequest,
  req: Request,
@@ -173,7 +179,8 @@ async def process_batch(
 
 # Consumer Management Endpoints
 
-@router.get("/consumers/{consumer_id}/status", dependencies = [Depends(require_scope([IAMScope.SYSTEM_ADMIN]))])
+@router.get("/consumers/{consumer_id}/status",
+    dependencies = [Depends(require_scope([IAMScope.SYSTEM_ADMIN]))])
 async def get_consumer_status(
  consumer_id: str,
  req: Request,
@@ -200,7 +207,8 @@ async def get_consumer_status(
  )
 
 
-@router.get("/consumers/{consumer_id}/state", dependencies = [Depends(require_scope([IAMScope.SYSTEM_ADMIN]))])
+@router.get("/consumers/{consumer_id}/state",
+    dependencies = [Depends(require_scope([IAMScope.SYSTEM_ADMIN]))])
 async def get_consumer_state(
  consumer_id: str,
  req: Request,
@@ -224,7 +232,8 @@ async def get_consumer_state(
  }
 
 
-@router.post("/consumers/{consumer_id}/checkpoint", dependencies = [Depends(require_scope([IAMScope.SYSTEM_ADMIN]))])
+@router.post("/consumers/{consumer_id}/checkpoint",
+    dependencies = [Depends(require_scope([IAMScope.SYSTEM_ADMIN]))])
 async def create_checkpoint(
  consumer_id: str,
  req: Request,
@@ -251,7 +260,8 @@ async def create_checkpoint(
 
 # Event Replay Endpoints
 
-@router.post("/replay", dependencies = [Depends(require_scope([IAMScope.SYSTEM_ADMIN]))])
+@router.post("/replay",
+    dependencies = [Depends(require_scope([IAMScope.SYSTEM_ADMIN]))])
 async def start_replay(
  request: EventReplayRequest,
  req: Request,
@@ -282,7 +292,8 @@ async def start_replay(
  }
 
 
-@router.get("/replay/{replay_id}", dependencies = [Depends(require_scope([IAMScope.SYSTEM_ADMIN]))])
+@router.get("/replay/{replay_id}",
+    dependencies = [Depends(require_scope([IAMScope.SYSTEM_ADMIN]))])
 async def get_replay_status(
  replay_id: str,
  req: Request,
@@ -305,7 +316,8 @@ async def get_replay_status(
 
 # Testing Endpoints
 
-@router.post("/test/generate-events", dependencies = [Depends(require_scope([IAMScope.SYSTEM_ADMIN]))])
+@router.post("/test/generate-events",
+    dependencies = [Depends(require_scope([IAMScope.SYSTEM_ADMIN]))])
 async def generate_test_events(
  req: Request,
  event_type: str = Query(..., description = "Type of events to generate"),

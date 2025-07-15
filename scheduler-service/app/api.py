@@ -4,26 +4,35 @@ import logging
 from contextlib import asynccontextmanager
 from typing import List, Optional
 
-from fastapi import FastAPI, HTTPException, Depends, Query
+from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from prometheus_client import Counter, Histogram, generate_latest
 from fastapi.responses import PlainTextResponse
+from prometheus_client import Counter, Histogram, generate_latest
 
-from .scheduler.service import SchedulerService
 from .scheduler.models import (
- Job, JobExecution, CreateJobRequest, UpdateJobRequest,
- ListJobsRequest, RunJobRequest, JobHistoryRequest,
- JobStatus, ExecutionStatus
+    CreateJobRequest,
+    ExecutionStatus,
+    Job,
+    JobExecution,
+    JobHistoryRequest,
+    JobStatus,
+    ListJobsRequest,
+    RunJobRequest,
+    UpdateJobRequest,
 )
+from .scheduler.service import SchedulerService
 
 # Configure logging
 logging.basicConfig(level = logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Prometheus metrics
-job_created_counter = Counter("scheduler_jobs_created_total", "Total number of jobs created")
-job_executed_counter = Counter("scheduler_jobs_executed_total", "Total number of jobs executed", ["job_type", "status"])
-job_duration_histogram = Histogram("scheduler_job_duration_seconds", "Job execution duration", ["job_type"])
+job_created_counter = Counter("scheduler_jobs_created_total",
+    "Total number of jobs created")
+job_executed_counter = Counter("scheduler_jobs_executed_total",
+    "Total number of jobs executed", ["job_type", "status"])
+job_duration_histogram = Histogram("scheduler_job_duration_seconds",
+    "Job execution duration", ["job_type"])
 
 # Global scheduler service instance
 scheduler_service: Optional[SchedulerService] = None

@@ -12,12 +12,12 @@ service SchedulerService {
     rpc UpdateJob(UpdateJobRequest) returns (JobResponse);
     rpc DeleteJob(DeleteJobRequest) returns (DeleteJobResponse);
     rpc ListJobs(ListJobsRequest) returns (ListJobsResponse);
-    
+
     // Job execution
     rpc RunJob(RunJobRequest) returns (RunJobResponse);
     rpc GetJobStatus(GetJobStatusRequest) returns (JobStatusResponse);
     rpc GetJobHistory(GetJobHistoryRequest) returns (JobHistoryResponse);
-    
+
     // Scheduler control
     rpc PauseScheduler(PauseSchedulerRequest) returns (PauseSchedulerResponse);
     rpc ResumeScheduler(ResumeSchedulerRequest) returns (ResumeSchedulerResponse);
@@ -28,13 +28,13 @@ message Job {
     string id = 1;
     string name = 2;
     string description = 3;
-    
+
     oneof schedule {
         CronSchedule cron = 4;
         IntervalSchedule interval = 5;
         OneTimeSchedule one_time = 6;
     }
-    
+
     JobConfig config = 7;
     google.protobuf.Timestamp created_at = 8;
     google.protobuf.Timestamp updated_at = 9;

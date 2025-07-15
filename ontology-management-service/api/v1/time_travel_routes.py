@@ -2,21 +2,24 @@
 Time Travel API Routes
 REST endpoints for temporal queries and point-in-time data access
 """
-from typing import Optional, List, Dict, Any
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
-from pydantic import BaseModel, Field
+from typing import Any, Dict, List, Optional
 
+from arrakis_common import get_logger
 from core.auth_utils import UserContext
-from middleware.auth_middleware import get_current_user
-from core.time_travel import (
- TemporalOperator, TemporalReference, TemporalQuery,
- TemporalResourceQuery, TemporalComparisonQuery
-)
-from core.service_factory import ServiceFactory
 from core.iam.dependencies import require_scope
 from core.iam.iam_integration import IAMScope
-from arrakis_common import get_logger
+from core.service_factory import ServiceFactory
+from core.time_travel import (
+    TemporalComparisonQuery,
+    TemporalOperator,
+    TemporalQuery,
+    TemporalReference,
+    TemporalResourceQuery,
+)
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from middleware.auth_middleware import get_current_user
+from pydantic import BaseModel, Field
 
 logger = get_logger(__name__)
 router = APIRouter(prefix = "/time-travel", tags = ["Time Travel"])
@@ -29,7 +32,8 @@ class TemporalReferenceRequest(BaseModel):
  timestamp: Optional[datetime] = Field(None, description = "Specific timestamp")
  version: Optional[int] = Field(None, description = "Specific version number")
  commit_hash: Optional[str] = Field(None, description = "Specific commit hash")
- relative_time: Optional[str] = Field(None, description = "Relative time like '-1h', '-7d'")
+ relative_time: Optional[str] = Field(None, description = "Relative time like '-1h',
+     '-7d'")
 
 
 class AsOfQueryRequest(BaseModel):
@@ -67,7 +71,7 @@ class CompareStatesRequest(BaseModel):
 
 # Endpoints
 
-@router.post("/as-of", dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
+@router.post("/as-o", dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def query_as_of(
  request: AsOfQueryRequest,
  req: Request,
@@ -119,7 +123,8 @@ async def query_as_of(
  }
 
 
-@router.post("/between", dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
+@router.post("/between",
+    dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def query_between(
  request: BetweenQueryRequest,
  req: Request,
@@ -130,7 +135,8 @@ async def query_between(
 
  Examples:
  - Get changes in last week: {"start_time": {"relative_time": "-7d"}}
- - Get changes between versions: {"start_time": {"version": 5}, "end_time": {"version": 10}}
+ - Get changes between versions: {"start_time": {"version": 5},
+     "end_time": {"version": 10}}
  """
  service = await ServiceFactory.get_time_travel_service()
 
@@ -181,7 +187,8 @@ async def query_between(
  }
 
 
-@router.get("/versions/{resource_type}/{resource_id}", dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
+@router.get("/versions/{resource_type}/{resource_id}",
+    dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def get_all_versions(
  resource_type: str,
  resource_id: str,
@@ -222,7 +229,8 @@ async def get_all_versions(
  }
 
 
-@router.post("/compare", dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
+@router.post("/compare",
+    dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def compare_states(
  request: CompareStatesRequest,
  req: Request,
@@ -284,7 +292,8 @@ async def compare_states(
  }
 
 
-@router.get("/timeline/{resource_type}/{resource_id}", dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
+@router.get("/timeline/{resource_type}/{resource_id}",
+    dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def get_resource_timeline(
  resource_type: str,
  resource_id: str,
@@ -302,7 +311,8 @@ async def get_resource_timeline(
  return timeline.model_dump()
 
 
-@router.post("/snapshot", dependencies = [Depends(require_scope([IAMScope.BRANCHES_WRITE]))])
+@router.post("/snapshot",
+    dependencies = [Depends(require_scope([IAMScope.BRANCHES_WRITE]))])
 async def create_snapshot(
  req: Request,
  branch: str = Query(..., description = "Branch to snapshot"),
@@ -325,7 +335,8 @@ async def create_snapshot(
  return snapshot.model_dump()
 
 
-@router.get("/resource-at-time", dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
+@router.get("/resource-at-time",
+    dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def get_resource_at_time(
  req: Request,
  resource_type: str = Query(..., description = "Type of resource"),

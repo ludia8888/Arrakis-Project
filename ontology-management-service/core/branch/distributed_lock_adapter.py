@@ -6,20 +6,22 @@ Redis 기반 잠금으로 전환하는 어댑터
 """
 
 import asyncio
-from typing import Optional, Dict, List, Any
-from datetime import datetime, timezone, timedelta
 from contextlib import AsyncExitStack
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional
 
 import redis.asyncio as redis
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from models.branch_state import (
- BranchState, BranchLock, BranchStateInfo,
- LockType, LockScope
-)
-from core.branch.lock_manager import BranchLockManager, LockConflictError
-from core.branch.redis_lock_manager import RedisLockManager, LockInfo
 from arrakis_common import get_logger
+from core.branch.lock_manager import BranchLockManager, LockConflictError
+from core.branch.redis_lock_manager import LockInfo, RedisLockManager
+from models.branch_state import (
+    BranchLock,
+    BranchState,
+    BranchStateInfo,
+    LockScope,
+    LockType,
+)
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = get_logger(__name__)
 

@@ -68,9 +68,7 @@ async def get_schema_service() -> SchemaService:
  """Get schema service instance"""
  # In production, this would come from the service container
  # Using bootstrap dependencies to get the properly configured service
- from bootstrap.dependencies import (
- get_schema_service as bootstrap_get_schema_service,
- )
+ from bootstrap.dependencies import get_schema_service as bootstrap_get_schema_service
 
  return await bootstrap_get_schema_service()
 

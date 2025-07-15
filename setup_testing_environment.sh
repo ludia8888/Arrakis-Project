@@ -57,7 +57,7 @@ except Exception as e:
 
 cd ..
 
-# User Service 설정  
+# User Service 설정
 cd user-service
 export PYTHONPATH="${PWD}:${PYTHONPATH}"
 echo "✅ User Service PYTHONPATH set: $PWD"
@@ -77,17 +77,17 @@ cd ..
 # 테스트 실행 함수
 test_all_services() {
     echo "🧪 Testing all services..."
-    
+
     # 서비스 상태 확인
     echo "1. OMS Health Check:"
     curl -s http://localhost:8000/health && echo " ✅" || echo " ❌"
-    
+
     echo "2. User Service Health Check:"
     curl -s http://localhost:8010/health && echo " ✅" || echo " ❌"
-    
+
     echo "3. Schema CRUD Test:"
     curl -s http://localhost:8000/api/v1/schemas/ && echo " ✅" || echo " ❌"
-    
+
     echo "4. User Registration Test:"
     curl -X POST http://localhost:8010/auth/register \
       -H "Content-Type: application/json" \

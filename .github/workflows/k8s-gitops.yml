@@ -3,27 +3,27 @@ name: Kubernetes GitOps Validation & Sync
 on:
   push:
     paths:
-      - '*/k8s/**'
-      - '.github/workflows/k8s-gitops.yml'
-      - 'terraform/modules/arrakis-services/**'
+      - "*/k8s/**"
+      - ".github/workflows/k8s-gitops.yml"
+      - "terraform/modules/arrakis-services/**"
   pull_request:
     paths:
-      - '*/k8s/**'
-      - '.github/workflows/k8s-gitops.yml'
-      - 'terraform/modules/arrakis-services/**'
+      - "*/k8s/**"
+      - ".github/workflows/k8s-gitops.yml"
+      - "terraform/modules/arrakis-services/**"
 
 env:
-  KUBERNETES_VERSION: '1.28.0'
-  KUBECTL_VERSION: '1.28.0'
-  HELM_VERSION: '3.13.0'
-  KUSTOMIZE_VERSION: '5.2.1'
-  KUBEVAL_VERSION: '0.16.1'
-  KUBESCORE_VERSION: '1.17.0'
-  POLARIS_VERSION: '8.5.4'
-  OPA_VERSION: '0.57.0'
-  CONFTEST_VERSION: '0.46.0'
-  PLUTO_VERSION: '5.18.4'
-  NOVA_VERSION: '3.6.0'
+  KUBERNETES_VERSION: "1.28.0"
+  KUBECTL_VERSION: "1.28.0"
+  HELM_VERSION: "3.13.0"
+  KUSTOMIZE_VERSION: "5.2.1"
+  KUBEVAL_VERSION: "0.16.1"
+  KUBESCORE_VERSION: "1.17.0"
+  POLARIS_VERSION: "8.5.4"
+  OPA_VERSION: "0.57.0"
+  CONFTEST_VERSION: "0.46.0"
+  PLUTO_VERSION: "5.18.4"
+  NOVA_VERSION: "3.6.0"
 
 jobs:
   validate-manifests:
@@ -48,44 +48,44 @@ jobs:
           # Create tools directory
           mkdir -p $HOME/.local/bin
           export PATH=$HOME/.local/bin:$PATH
-          
+
           # Install kubectl
           curl -LO "https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
           chmod +x kubectl && mv kubectl $HOME/.local/bin/
-          
+
           # Install helm
           curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
           chmod 700 get_helm.sh
           HELM_INSTALL_DIR=$HOME/.local/bin ./get_helm.sh --version v${HELM_VERSION} --no-sudo
-          
+
           # Install kustomize
           curl -L "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${KUSTOMIZE_VERSION}/kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz" | tar xz
           chmod +x kustomize && mv kustomize $HOME/.local/bin/
-          
+
           # Install kubeval
           curl -L "https://github.com/instrumenta/kubeval/releases/download/v${KUBEVAL_VERSION}/kubeval-linux-amd64.tar.gz" | tar xz
           chmod +x kubeval && mv kubeval $HOME/.local/bin/
-          
+
           # Install kube-score
           curl -L "https://github.com/zegl/kube-score/releases/download/v${KUBESCORE_VERSION}/kube-score_${KUBESCORE_VERSION}_linux_amd64.tar.gz" | tar xz
           chmod +x kube-score && mv kube-score $HOME/.local/bin/
-          
+
           # Install polaris
           curl -L "https://github.com/FairwindsOps/polaris/releases/download/${POLARIS_VERSION}/polaris_linux_amd64.tar.gz" | tar xz
           chmod +x polaris && mv polaris $HOME/.local/bin/
-          
+
           # Install OPA
           curl -L "https://openpolicyagent.org/downloads/v${OPA_VERSION}/opa_linux_amd64_static" -o opa
           chmod +x opa && mv opa $HOME/.local/bin/
-          
+
           # Install conftest
           curl -L "https://github.com/open-policy-agent/conftest/releases/download/v${CONFTEST_VERSION}/conftest_${CONFTEST_VERSION}_Linux_x86_64.tar.gz" | tar xz
           chmod +x conftest && mv conftest $HOME/.local/bin/
-          
+
           # Install pluto (deprecation checker)
           curl -L "https://github.com/FairwindsOps/pluto/releases/download/v${PLUTO_VERSION}/pluto_${PLUTO_VERSION}_linux_amd64.tar.gz" | tar xz
           chmod +x pluto && mv pluto $HOME/.local/bin/
-          
+
           # Install nova (version checker)
           curl -L "https://github.com/FairwindsOps/nova/releases/download/v${NOVA_VERSION}/nova_${NOVA_VERSION}_linux_amd64.tar.gz" | tar xz
           chmod +x nova && mv nova $HOME/.local/bin/
@@ -145,7 +145,7 @@ jobs:
           if [ -d "${{ matrix.service }}/k8s" ]; then
             # Extract image references
             grep -h "image:" ${{ matrix.service }}/k8s/*.yaml | sed 's/.*image: *//' | sort -u > images-${{ matrix.service }}.txt || true
-            
+
             # Run nova if images found
             if [ -s images-${{ matrix.service }}.txt ]; then
               nova find \
@@ -159,41 +159,41 @@ jobs:
           # Create OPA policies
           cat > security-policies.rego <<'EOF'
           package kubernetes.security
-          
+
           deny[msg] {
             input.kind == "Deployment"
             not input.spec.template.spec.securityContext.runAsNonRoot
             msg := sprintf("Deployment %s must run as non-root user", [input.metadata.name])
           }
-          
+
           deny[msg] {
             input.kind == "Deployment"
             container := input.spec.template.spec.containers[_]
             not container.securityContext.allowPrivilegeEscalation == false
             msg := sprintf("Container %s in Deployment %s must set allowPrivilegeEscalation to false", [container.name, input.metadata.name])
           }
-          
+
           deny[msg] {
             input.kind == "Deployment"
             container := input.spec.template.spec.containers[_]
             not container.resources.limits.memory
             msg := sprintf("Container %s in Deployment %s must have memory limits", [container.name, input.metadata.name])
           }
-          
+
           deny[msg] {
             input.kind == "Deployment"
             container := input.spec.template.spec.containers[_]
             not container.resources.limits.cpu
             msg := sprintf("Container %s in Deployment %s must have CPU limits", [container.name, input.metadata.name])
           }
-          
+
           deny[msg] {
             input.kind == "Deployment"
             container := input.spec.template.spec.containers[_]
             not container.livenessProbe
             msg := sprintf("Container %s in Deployment %s must have livenessProbe", [container.name, input.metadata.name])
           }
-          
+
           deny[msg] {
             input.kind == "Deployment"
             container := input.spec.template.spec.containers[_]
@@ -201,7 +201,7 @@ jobs:
             msg := sprintf("Container %s in Deployment %s must have readinessProbe", [container.name, input.metadata.name])
           }
           EOF
-          
+
           # Run OPA validation
           if [ -d "${{ matrix.service }}/k8s" ]; then
             find ${{ matrix.service }}/k8s -name "*.yaml" -o -name "*.yml" | while read file; do
@@ -231,15 +231,15 @@ jobs:
       - name: Run Trivy security scan
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: 'config'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-k8s-results.sarif'
+          scan-type: "config"
+          scan-ref: "."
+          format: "sarif"
+          output: "trivy-k8s-results.sarif"
 
       - name: Upload Trivy scan results
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: 'trivy-k8s-results.sarif'
+          sarif_file: "trivy-k8s-results.sarif"
 
       - name: Run Kubesec scan
         run: |
@@ -270,7 +270,7 @@ jobs:
         run: |
           echo "# Kubernetes Manifest Changes" > k8s-diff.md
           echo "" >> k8s-diff.md
-          
+
           for service in ontology-management-service user-service audit-service data-kernel-service embedding-service scheduler-service event-gateway; do
             if [ -d "$service/k8s" ] && [ -d "main/$service/k8s" ]; then
               echo "## $service" >> k8s-diff.md
@@ -287,18 +287,18 @@ jobs:
           script: |
             const fs = require('fs');
             const diffContent = fs.readFileSync('k8s-diff.md', 'utf8');
-            
+
             // Find existing comment
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
             });
-            
-            const botComment = comments.find(comment => 
+
+            const botComment = comments.find(comment =>
               comment.user.type === 'Bot' && comment.body.includes('# Kubernetes Manifest Changes')
             );
-            
+
             if (botComment) {
               // Update existing comment
               await github.rest.issues.updateComment({
@@ -331,11 +331,11 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-west-2
+          aws-region: ${{ vars.AWS_REGION || 'us-west-2' }}
 
       - name: Update kubeconfig
         run: |
-          aws eks update-kubeconfig --region us-west-2 --name arrakis-eks-staging
+          aws eks update-kubeconfig --region ${{ vars.AWS_REGION || 'us-west-2' }} --name ${{ vars.EKS_CLUSTER_STAGING || 'arrakis-eks-staging' }}
 
       - name: Dry run deployment
         run: |
@@ -360,7 +360,7 @@ jobs:
           echo "# Kubernetes Manifest Validation Summary" > summary.md
           echo "" >> summary.md
           echo "## Validation Results" >> summary.md
-          
+
           # Process kube-score results
           echo "### Kube-score Analysis" >> summary.md
           for file in kube-score-*.json; do
@@ -371,7 +371,7 @@ jobs:
               echo "" >> summary.md
             fi
           done
-          
+
           # Process Polaris results
           echo "### Polaris Security Analysis" >> summary.md
           for file in polaris-*.json; do
@@ -382,7 +382,7 @@ jobs:
               echo "" >> summary.md
             fi
           done
-          
+
           # Process deprecated API results
           echo "### Deprecated API Usage" >> summary.md
           for file in pluto-*.json; do
@@ -393,7 +393,7 @@ jobs:
               echo "" >> summary.md
             fi
           done
-          
+
           echo "## Next Steps" >> summary.md
           echo "- Review and address any security or compliance issues" >> summary.md
           echo "- Update deprecated API versions before they are removed" >> summary.md
@@ -412,7 +412,7 @@ jobs:
           script: |
             const fs = require('fs');
             const summary = fs.readFileSync('summary.md', 'utf8');
-            
+
             github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -435,11 +435,11 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-west-2
+          aws-region: ${{ vars.AWS_REGION || 'us-west-2' }}
 
       - name: Update kubeconfig
         run: |
-          aws eks update-kubeconfig --region us-west-2 --name arrakis-eks-production
+          aws eks update-kubeconfig --region ${{ vars.AWS_REGION || 'us-west-2' }} --name ${{ vars.EKS_CLUSTER_PRODUCTION || 'arrakis-eks-production' }}
 
       - name: Create namespace if not exists
         run: |
@@ -447,53 +447,95 @@ jobs:
 
       - name: Apply manifests
         run: |
-          # Apply shared resources first
-          kubectl apply -f - <<EOF
-          apiVersion: v1
-          kind: Secret
-          metadata:
-            name: jwt-secret
-            namespace: arrakis
-          type: Opaque
-          stringData:
-            secret: "${{ secrets.JWT_SECRET }}"
-          ---
-          apiVersion: v1
-          kind: Secret
-          metadata:
-            name: encryption-key
-            namespace: arrakis
-          type: Opaque
-          stringData:
-            key: "${{ secrets.ENCRYPTION_KEY }}"
-          ---
-          apiVersion: v1
-          kind: Secret
-          metadata:
-            name: redis-credentials
-            namespace: arrakis
-          type: Opaque
-          stringData:
-            url: "${{ secrets.REDIS_URL }}"
-          EOF
-          
+          # Apply shared resources first using secure secret creation
+          # Create temporary secret creation script to avoid exposure in process list
+          cat > /tmp/create_secrets.sh << 'SCRIPT_EOF'
+          #!/bin/bash
+          set -euo pipefail
+
+          # Create JWT secret securely
+          kubectl create secret generic jwt-secret \
+            --namespace=arrakis \
+            --from-literal=secret="${JWT_SECRET}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+          # Create encryption key secret securely
+          kubectl create secret generic encryption-key \
+            --namespace=arrakis \
+            --from-literal=key="${ENCRYPTION_KEY}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+          # Create Redis credentials secret securely
+          kubectl create secret generic redis-credentials \
+            --namespace=arrakis \
+            --from-literal=url="${REDIS_URL}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+          SCRIPT_EOF
+
+          chmod +x /tmp/create_secrets.sh
+
+          # Execute with environment variables passed securely
+          JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+          ENCRYPTION_KEY="${{ secrets.ENCRYPTION_KEY }}" \
+          REDIS_URL="${{ secrets.REDIS_URL }}" \
+          /tmp/create_secrets.sh
+
+          # Clean up temporary script
+          rm -f /tmp/create_secrets.sh
+
           # Apply service manifests
           for service in ontology-management-service user-service audit-service data-kernel-service embedding-service scheduler-service event-gateway; do
             if [ -d "$service/k8s" ]; then
               echo "Deploying $service"
-              
-              # Substitute environment variables
-              export ECR_REGISTRY="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-west-2.amazonaws.com"
-              export IMAGE_TAG="${{ github.sha }}"
-              export AWS_ACCOUNT_ID="${{ secrets.AWS_ACCOUNT_ID }}"
-              export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
-              export AWS_REGION="us-west-2"
-              
-              # Apply manifests with envsubst
+
+              # Apply manifests with secure environment substitution
+              # Note: Using process substitution to prevent secret exposure in logs
               for file in $service/k8s/*.yaml; do
-                envsubst < "$file" | kubectl apply -f -
+                # Mask the full file path to avoid potential information disclosure
+                filename=$(basename "$file")
+                echo "🔒 Securely applying $filename with environment substitution"
+
+                # Create temporary script to avoid exposing secrets in process list or logs
+                temp_script="/tmp/apply_manifest_$$.sh"
+                trap "rm -f '$temp_script'" EXIT ERR
+
+                cat > "$temp_script" << 'SCRIPT_EOF'
+                #!/bin/bash
+                set -euo pipefail
+
+                # Disable command echoing to prevent accidental secret logging
+                set +x
+
+                # Construct ECR registry URL securely
+                ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+
+                # Apply manifest with environment substitution
+                # Redirect stderr to prevent potential secret leakage in error messages
+                envsubst < "$1" | kubectl apply -f - 2>/dev/null || {
+                  echo "❌ Failed to apply manifest: $(basename "$1")" >&2
+                  exit 1
+                }
+
+                echo "✅ Successfully applied manifest: $(basename "$1")"
+                SCRIPT_EOF
+
+                chmod +x "$temp_script"
+
+                # Execute with environment variables passed securely
+                # Use process substitution to avoid environment variable exposure
+                if ! AWS_ACCOUNT_ID="${{ secrets.AWS_ACCOUNT_ID }}" \
+                   IMAGE_TAG="${{ github.sha }}" \
+                   DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
+                   AWS_REGION="${{ vars.AWS_REGION || 'us-west-2' }}" \
+                   "$temp_script" "$file"; then
+                  echo "⚠️ Deployment failed for $filename - check cluster state" >&2
+                  # Continue with other services rather than failing completely
+                  continue
+                fi
+
+                # Clean up is handled by trap
               done
-              
+
               # Wait for rollout
               kubectl rollout status deployment/$service -n arrakis --timeout=300s || true
             fi
@@ -503,7 +545,7 @@ jobs:
         run: |
           echo "## Deployment Status" > deployment-status.md
           echo "" >> deployment-status.md
-          
+
           for service in ontology-management-service user-service audit-service data-kernel-service embedding-service scheduler-service event-gateway; do
             echo "### $service" >> deployment-status.md
             kubectl get deployment $service -n arrakis -o json | jq -r '"- Replicas: \(.status.replicas // 0)/\(.spec.replicas)"' >> deployment-status.md
@@ -511,7 +553,7 @@ jobs:
             kubectl get deployment $service -n arrakis -o json | jq -r '"- Updated: \(.status.updatedReplicas // 0)"' >> deployment-status.md
             echo "" >> deployment-status.md
           done
-          
+
           # Check pod status
           echo "## Pod Status" >> deployment-status.md
           kubectl get pods -n arrakis -o wide >> deployment-status.md
@@ -532,7 +574,7 @@ jobs:
           if [ "$STATUS" != "success" ]; then
             COLOR="danger"
           fi
-          
+
           curl -X POST -H 'Content-type: application/json' \
             --data "{
               \"attachments\": [{

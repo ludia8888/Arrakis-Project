@@ -4,26 +4,33 @@ import asyncio
 import json
 import logging
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Any, Callable
+from typing import Any, Callable, Dict, List, Optional
 from uuid import uuid4
 
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.cron import CronTrigger
-from apscheduler.triggers.interval import IntervalTrigger
-from apscheduler.triggers.date import DateTrigger
-from apscheduler.events import (
- EVENT_JOB_EXECUTED, EVENT_JOB_ERROR, EVENT_JOB_MISSED,
- JobExecutionEvent
-)
-from apscheduler.job import Job as APJob
 import aioredis
 import pytz
-
-from .models import (
- Job, JobExecution, JobStatus, ExecutionStatus,
- CronSchedule, IntervalSchedule, OneTimeSchedule
+from apscheduler.events import (
+    EVENT_JOB_ERROR,
+    EVENT_JOB_EXECUTED,
+    EVENT_JOB_MISSED,
+    JobExecutionEvent,
 )
+from apscheduler.job import Job as APJob
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
+from apscheduler.triggers.date import DateTrigger
+from apscheduler.triggers.interval import IntervalTrigger
+
 from .executors import JobExecutor
+from .models import (
+    CronSchedule,
+    ExecutionStatus,
+    IntervalSchedule,
+    Job,
+    JobExecution,
+    JobStatus,
+    OneTimeSchedule,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -179,7 +186,8 @@ class SchedulerService:
 
  return filtered_jobs[start:end], total
 
- async def run_job(self, job_id: str, override_parameters: Optional[Dict] = None) -> str:
+ async def run_job(self, job_id: str,
+     override_parameters: Optional[Dict] = None) -> str:
  """Manually trigger a job execution."""
  job = await self.get_job(job_id)
  if not job:

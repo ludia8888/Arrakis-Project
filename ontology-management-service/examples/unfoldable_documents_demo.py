@@ -3,15 +3,19 @@
 Unfoldable Documents Demo
 Demonstrates the complete functionality of the @unfoldable Documents system
 """
-import json
 import asyncio
+import json
 from datetime import datetime
-from typing import Dict, Any
+from typing import Any, Dict
 
 from core.documents import (
- UnfoldLevel, UnfoldContext, UnfoldableDocument,
- UnfoldableProcessor, MetadataFrameParser,
- SchemaDocumentationGenerator, get_document_storage
+    MetadataFrameParser,
+    SchemaDocumentationGenerator,
+    UnfoldableDocument,
+    UnfoldableProcessor,
+    UnfoldContext,
+    UnfoldLevel,
+    get_document_storage,
 )
 
 
@@ -61,7 +65,8 @@ def create_sample_documents() -> Dict[str, Dict[str, Any]]:
  research_data = {
  "study_id": "study_2024_climate",
  "title": "Climate Change Impact Analysis",
- "abstract": "This study analyzes the impact of climate change..." * 100, # Large abstract
+ "abstract": "This study analyzes the impact of climate change..." * 100,
+     # Large abstract
  "methodology": {
  "data_collection": "X" * 2000, # Large text
  "analysis_methods": ["method1", "method2"] * 100, # Large array

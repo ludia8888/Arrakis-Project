@@ -9,8 +9,8 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 import aiohttp
-from celery import Task
 from arrakis_common import get_logger
+from celery import Task
 from services.job_service import JobService
 from workers.celery_app import app
 
@@ -188,7 +188,7 @@ async def _send_email_alert(config: Dict[str, str], alert_data: Dict[str, Any]) 
  msg["To"] = config["alert_email"]
  msg["Subject"] = f"[{alert_data['severity'].upper()}] {alert_data['title']}"
 
- body = f"""
+ body = """
  Alert: {alert_data['title']}
  Severity: {alert_data['severity']}
  Message: {alert_data['message']}
@@ -339,7 +339,8 @@ async def _async_cleanup_expired_jobs(task: MaintenanceTask, batch_size: int):
 
 
 @app.task(
- bind = True, base = MaintenanceTask, name = "workers.tasks.maintenance.check_stuck_jobs"
+ bind = True, base = MaintenanceTask,
+     name = "workers.tasks.maintenance.check_stuck_jobs"
 )
 def check_stuck_jobs_task(self, timeout_minutes: int = 60):
  """Check for stuck jobs and alert"""
@@ -360,6 +361,8 @@ async def _async_check_stuck_jobs(task: MaintenanceTask, timeout_minutes: int):
  alert_type = "stuck_jobs",
  title = "Stuck Jobs Detected",
  message = f"Found {len(stuck_jobs)} stuck jobs that have been running for more than {timeout_minutes} minutes",
+
+
  severity = "warning",
  data={"job_ids": stuck_jobs, "timeout_minutes": timeout_minutes},
  )
@@ -372,7 +375,8 @@ async def _async_check_stuck_jobs(task: MaintenanceTask, timeout_minutes: int):
 
 
 @app.task(
- bind = True, base = MaintenanceTask, name = "workers.tasks.maintenance.generate_job_stats"
+ bind = True, base = MaintenanceTask,
+     name = "workers.tasks.maintenance.generate_job_stats"
 )
 def generate_job_stats_task(self):
  """Generate job statistics for monitoring"""

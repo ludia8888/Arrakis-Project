@@ -6,13 +6,13 @@ This adapter ensures all database operations include verified author information
 from the authenticated UserContext, preventing unauthorized author spoofing.
 """
 
-from typing import Dict, Any, List, Optional, Union
 from contextlib import asynccontextmanager
+from typing import Any, Dict, List, Optional, Union
 
-from database.clients.unified_database_client import UnifiedDatabaseClient
+from arrakis_common import get_logger
 from core.auth_utils import UserContext
 from core.auth_utils.secure_author_provider import get_secure_author_provider
-from arrakis_common import get_logger
+from database.clients.unified_database_client import UnifiedDatabaseClient
 
 logger = get_logger(__name__)
 

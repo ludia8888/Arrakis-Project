@@ -18,7 +18,7 @@ service QueryService {
   rpc Execute(WOQL) returns (stream Document);
 }
 
-// Schema operations service  
+// Schema operations service
 service SchemaService {
   rpc Get(SchemaRequest) returns (Schema);
   rpc Update(Schema) returns (Empty);
@@ -31,18 +31,18 @@ service DataKernelService {
   rpc CreateDocument(CreateDocumentRequest) returns (CreateDocumentResponse);
   rpc UpdateDocument(UpdateDocumentRequest) returns (UpdateDocumentResponse);
   rpc DeleteDocument(DeleteDocumentRequest) returns (DeleteDocumentResponse);
-  
+
   // Query operations
   rpc ExecuteQuery(ExecuteQueryRequest) returns (ExecuteQueryResponse);
   rpc StreamQuery(StreamQueryRequest) returns (stream StreamQueryResponse);
-  
+
   // Schema operations
   rpc GetSchema(GetSchemaRequest) returns (GetSchemaResponse);
   rpc UpdateSchema(UpdateSchemaRequest) returns (UpdateSchemaResponse);
-  
+
   // Branch operations
   rpc SwitchBranch(SwitchBranchRequest) returns (SwitchBranchResponse);
-  
+
   // Health check
   rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
 }
@@ -182,22 +182,22 @@ message CommitMeta {
   string branch = 4;
 }
 
-message DocumentId { 
-  string id = 1; 
+message DocumentId {
+  string id = 1;
   string database = 2;
   CommitMeta meta = 3;
 }
 
-message Document { 
+message Document {
   bytes json = 1;
   string database = 2;
   CommitMeta meta = 3;
 }
 
-message WOQL { 
-  string query = 1; 
+message WOQL {
+  string query = 1;
   string database = 2;
-  CommitMeta meta = 3; 
+  CommitMeta meta = 3;
 }
 
 message SchemaRequest {

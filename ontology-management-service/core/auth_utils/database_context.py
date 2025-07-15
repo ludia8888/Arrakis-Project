@@ -6,14 +6,17 @@ This module bridges the gap between request-scoped user context
 and database operations that may happen in background tasks or services.
 """
 import contextvars
-from typing import Optional, TypeVar, Callable, Any
 from functools import wraps
-from starlette.middleware.base import BaseHTTPMiddleware
+from typing import Any, Callable, Optional, TypeVar
 
+from arrakis_common import get_logger
 from core.auth_utils import UserContext
 from database.clients.secure_database_adapter import SecureDatabaseAdapter
-from database.clients.unified_database_client import UnifiedDatabaseClient, get_unified_database_client
-from arrakis_common import get_logger
+from database.clients.unified_database_client import (
+    UnifiedDatabaseClient,
+    get_unified_database_client,
+)
+from starlette.middleware.base import BaseHTTPMiddleware
 
 logger = get_logger(__name__)
 

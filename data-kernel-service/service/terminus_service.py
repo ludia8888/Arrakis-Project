@@ -1,15 +1,15 @@
+import logging
 import os
 import time
-from typing import Any, Dict, Optional, List, Tuple
 from contextlib import asynccontextmanager
-import logging
-from functools import wraps
 from contextvars import ContextVar
+from functools import wraps
+from typing import Any, Dict, List, Optional, Tuple
 
-from database.clients.terminus_db import TerminusDBClient
 from core.observability.tracing import trace_method
 from data_kernel.hook import CommitHookPipeline
 from data_kernel.hook.base import CommitMeta, ValidationError
+from database.clients.terminus_db import TerminusDBClient
 
 logger = logging.getLogger(__name__)
 
@@ -27,9 +27,9 @@ class TerminusService:
  _health_cache_ttl: int = 60 # 60 seconds cache TTL
 
  def __new__(cls):
- if cls._instance is None:
- cls._instance = super().__new__(cls)
- return cls._instance
+         if cls._instance is None:
+             cls._instance = super().__new__(cls)
+         return cls._instance
 
  def __init__(self):
  if self._client is None:
@@ -81,7 +81,8 @@ class TerminusService:
  return decorator
 
  @trace_method
- async def get_document(self, db_name: str, doc_id: str, branch: str = "main", revision: Optional[str] = None) -> Dict[str, Any]:
+ async def get_document(self, db_name: str, doc_id: str, branch: str = "main",
+     revision: Optional[str] = None) -> Dict[str, Any]:
  """Retrieve a document from TerminusDB with full branch/revision support."""
  try:
  # Implement proper branch support using TerminusDB's context system
@@ -178,7 +179,8 @@ class TerminusService:
 
  @trace_method
  @TerminusService.commit_author()
- async def insert_document(self, db_name: str, document: Dict[str, Any], commit_msg: str = "Insert document", author: str = None) -> Dict[str, Any]:
+ async def insert_document(self, db_name: str, document: Dict[str, Any],
+     commit_msg: str = "Insert document", author: str = None) -> Dict[str, Any]:
  """Insert a new document into TerminusDB."""
  query = {
  "@type": "InsertDocument",
@@ -212,7 +214,8 @@ class TerminusService:
 
  @trace_method
  @TerminusService.commit_author()
- async def update_document(self, db_name: str, doc_id: str, updates: Dict[str, Any], commit_msg: str = "Update document", author: str = None) -> Dict[str, Any]:
+ async def update_document(self, db_name: str, doc_id: str, updates: Dict[str, Any],
+     commit_msg: str = "Update document", author: str = None) -> Dict[str, Any]:
  """Update an existing document in TerminusDB."""
  # Get current document for before state
  before = await self.get_document(db_name, doc_id)
@@ -246,7 +249,8 @@ class TerminusService:
 
  @trace_method
  @TerminusService.commit_author()
- async def delete_document(self, db_name: str, doc_id: str, commit_msg: str = "Delete document", author: str = None) -> Dict[str, Any]:
+ async def delete_document(self, db_name: str, doc_id: str,
+     commit_msg: str = "Delete document", author: str = None) -> Dict[str, Any]:
  """Delete a document from TerminusDB."""
  # Get document before deletion
  before = await self.get_document(db_name, doc_id)
@@ -276,7 +280,8 @@ class TerminusService:
  return result
 
  @trace_method
- async def query(self, db_name: str, query: Dict[str, Any], commit_msg: Optional[str] = None) -> Dict[str, Any]:
+ async def query(self, db_name: str, query: Dict[str, Any],
+     commit_msg: Optional[str] = None) -> Dict[str, Any]:
  """Execute a raw WOQL query."""
  return await self._client.query(db_name, query, commit_msg = commit_msg)
 
@@ -294,7 +299,8 @@ class TerminusService:
 
  @trace_method
  @TerminusService.commit_author()
- async def update_schema(self, db_name: str, schema: Dict[str, Any], commit_msg: str = "Update schema", author: str = None) -> Dict[str, Any]:
+ async def update_schema(self, db_name: str, schema: Dict[str, Any],
+     commit_msg: str = "Update schema", author: str = None) -> Dict[str, Any]:
  """Update the schema for a database."""
  return await self._client.update_schema(db_name, schema, commit_msg = commit_msg)
 
@@ -321,7 +327,8 @@ class TerminusService:
  self._health_cache = None
  raise
 
- async def _run_commit_hooks(self, db_name: str, diff: Dict[str, Any], commit_msg: str, author: str = None):
+ async def _run_commit_hooks(self, db_name: str, diff: Dict[str, Any], commit_msg: str,
+     author: str = None):
  """Run commit hooks after successful operations"""
  try:
  # Get context information
@@ -364,7 +371,8 @@ class TerminusService:
  from shared.terminus_context import get_branch
  branch = get_branch()
 
- logger.info(f"Performing rollback: database={db_name}, branch={branch}, commit={commit_id}")
+ logger.info(f"Performing rollback: database={db_name}, branch={branch},
+     commit={commit_id}")
 
  # Implement actual rollback using TerminusDB API
  try:
@@ -374,8 +382,9 @@ class TerminusService:
  logger.info(f"Reset successful: {reset_result}")
  else:
  # Fallback to direct API call
- import httpx
  import os
+
+ import httpx
 
  terminus_endpoint = os.getenv("TERMINUSDB_ENDPOINT", "http://terminusdb:6363")
  reset_url = f"{terminus_endpoint}/api/branch/{db_name}/local/branch/{branch}/reset/{commit_id}"
@@ -412,9 +421,10 @@ class TerminusService:
  async def _audit_rollback_operation(self, db_name: str, branch: str, commit_id: str):
  """Audit the rollback operation"""
  try:
- import httpx
  import os
  import time
+
+ import httpx
 
  audit_url = os.getenv("AUDIT_SERVICE_URL", "http://audit-service:8000")
 

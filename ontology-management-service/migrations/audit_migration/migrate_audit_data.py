@@ -3,18 +3,19 @@
 Audit Data Migration Script
 OMS 모놀리스에서 audit-service로 데이터 벌크 마이그레이션
 """
+import argparse
 import asyncio
+import json
+import logging
 import os
 import sys
+from contextlib import asynccontextmanager
+from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
+
 import asyncpg
 import httpx
-import json
-from datetime import datetime, timezone
-from typing import Dict, List, Optional, Any
-from dataclasses import dataclass, asdict
-import argparse
-import logging
-from contextlib import asynccontextmanager
 
 # 로깅 설정
 logging.basicConfig(
@@ -320,7 +321,8 @@ class AuditDataMigrator:
 
  except Exception as e:
  logger.error(f"Batch migration failed at offset {offset}: {e}")
- return {"processed": 0, "failed": len(records) if 'records' in locals() else self.config.batch_size}
+ return {"processed": 0,
+     "failed": len(records) if 'records' in locals() else self.config.batch_size}
 
  async def run_migration(self) -> MigrationStats:
  """마이그레이션 실행"""
@@ -463,7 +465,9 @@ class AuditDataMigrator:
  logger.info(f"Skipped: {self.stats.skipped_records}")
  logger.info(f"Success rate: {self.stats.success_rate():.2f}%")
  logger.info(f"Duration: {self.stats.duration():.2f} seconds")
- logger.info(f"Records per second: {self.stats.migrated_records / max(self.stats.duration(), 1):.2f}")
+ logger.info(f"Records per second: {self.stats.migrated_records / max(self.stats.duration(),
+
+     1):.2f}")
 
  if self.failed_records:
  logger.warning(f"Failed records count: {len(self.failed_records)}")
@@ -476,7 +480,8 @@ async def main():
  parser.add_argument("--audit-service-url", required = True, help = "Audit service URL")
  parser.add_argument("--api-key", required = True, help = "Audit service API key")
  parser.add_argument("--batch-size", type = int, default = 1000, help = "Batch size")
- parser.add_argument("--max-concurrent", type = int, default = 5, help = "Max concurrent batches")
+ parser.add_argument("--max-concurrent", type = int, default = 5,
+     help = "Max concurrent batches")
  parser.add_argument("--start-date", help = "Start date (YYYY-MM-DD)")
  parser.add_argument("--end-date", help = "End date (YYYY-MM-DD)")
  parser.add_argument("--dry-run", action = "store_true", help = "Dry run mode")
@@ -489,7 +494,8 @@ async def main():
  end_date = None
 
  if args.start_date:
- start_date = datetime.strptime(args.start_date, "%Y-%m-%d").replace(tzinfo = timezone.utc)
+ start_date = datetime.strptime(args.start_date,
+     "%Y-%m-%d").replace(tzinfo = timezone.utc)
  if args.end_date:
  end_date = datetime.strptime(args.end_date, "%Y-%m-%d").replace(tzinfo = timezone.utc)
 

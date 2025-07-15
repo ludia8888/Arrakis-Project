@@ -2,23 +2,23 @@
 Enhanced Authentication Middleware
 User Service와 연동하여 JWT 토큰 검증 및 사용자 컨텍스트 주입
 """
+import inspect
+import json
 import os
-from typing import Optional, Callable, Dict, Any
-from fastapi import Request, HTTPException, status, Response
+from typing import Any, Callable, Dict, Optional
+
+import httpx
+import jwt
+import redis.asyncio as redis
+from arrakis_common import get_logger
+from bootstrap.config import get_config
+from config.secure_config import secure_config
+from core.auth import UserContext
+from fastapi import HTTPException, Request, Response, status
+from jwt import PyJWKClient
+from middleware.circuit_breaker import CircuitBreakerError, CircuitBreakerGroup
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
-import redis.asyncio as redis
-import json
-import httpx
-import inspect
-import jwt
-from jwt import PyJWKClient
-
-from core.auth import UserContext
-from bootstrap.config import get_config
-from middleware.circuit_breaker import CircuitBreakerGroup, CircuitBreakerError
-from arrakis_common import get_logger
-from config.secure_config import secure_config
 
 logger = get_logger(__name__)
 
@@ -63,7 +63,8 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
  authorization = request.headers.get("Authorization")
  if not authorization or not authorization.startswith("Bearer "):
- return Response('{"detail": "Unauthorized"}', status_code = 401, headers={"WWW-Authenticate": "Bearer"})
+ return Response('{"detail": "Unauthorized"}', status_code = 401,
+     headers={"WWW-Authenticate": "Bearer"})
 
  token = authorization.split(" ")[1]
 
@@ -81,7 +82,8 @@ class AuthMiddleware(BaseHTTPMiddleware):
  if not user:
  if not self.jwks_client:
  logger.error("JWKS client not available.")
- return Response('{"detail": "Authentication service not configured"}', status_code = 503)
+ return Response('{"detail": "Authentication service not configured"}',
+     status_code = 503)
 
  user_data = await self._validate_token_with_jwks(token)
 
@@ -115,7 +117,8 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
  return await call_next(request)
 
- async def _get_cached_user(self, token: str, redis_client: redis.Redis) -> Optional[UserContext]:
+ async def _get_cached_user(self, token: str,
+     redis_client: redis.Redis) -> Optional[UserContext]:
  try:
  cached = await redis_client.get(f"auth_token:{token}")
  if cached:

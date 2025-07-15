@@ -3,13 +3,14 @@
 Enhanced Import Verification Tool
 더 정확한 import 오류 탐지 및 분류
 """
-import os
-import sys
 import ast
 import importlib.util
+import os
+import re
+import sys
 from pathlib import Path
 from typing import Dict, List, Set, Tuple
-import re
+
 
 class ImportAnalyzer:
  def __init__(self, root_path: str = '.'):
@@ -38,7 +39,7 @@ class ImportAnalyzer:
  'tenacity', 'structlog', 'sentry_sdk', 'celery', 'flower',
  'alembic', 'sqlalchemy', 'apscheduler', 'croniter', 'jsonschema',
  'orjson', 'minio', 'passlib', 'pyotp', 'boto3', 'grpcio',
- 'protobuf', 'slowapi', 'pyyaml', 'pandas', 'numpy', 'scipy'
+ 'protobu', 'slowapi', 'pyyaml', 'pandas', 'numpy', 'scipy'
  }
  return module_name.split('.')[0] in external_libs
 
@@ -210,7 +211,7 @@ class ImportAnalyzer:
  successful = results['successful']
  missing = results['missing']
 
- report.append(f"\n📊 Summary:")
+ report.append("\n📊 Summary:")
  report.append(f" ✅ Successful imports: {len(successful)}")
  report.append(f" ❌ Missing imports: {len(missing)}")
 
@@ -222,12 +223,12 @@ class ImportAnalyzer:
  categories[cat] = []
  categories[cat].append(item)
 
- report.append(f"\n📋 Missing imports by category:")
+ report.append("\n📋 Missing imports by category:")
  for category, items in categories.items():
  report.append(f" {category}: {len(items)} items")
 
  # 상세 리스트
- report.append(f"\n❌ Missing Imports Detail:")
+ report.append("\n❌ Missing Imports Detail:")
  for category, items in categories.items():
  if not items:
  continue

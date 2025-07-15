@@ -3,13 +3,16 @@ Database Dependencies for FastAPI
 Provides secure database access with user context propagation
 """
 from typing import Optional, Union
-from fastapi import Depends, Request
 
-from database.clients.unified_database_client import UnifiedDatabaseClient, get_unified_database_client
-from database.clients.secure_database_adapter import SecureDatabaseAdapter
-from core.auth import UserContext
-from middleware.auth_middleware import get_current_user
 from arrakis_common import get_logger
+from core.auth import UserContext
+from database.clients.secure_database_adapter import SecureDatabaseAdapter
+from database.clients.unified_database_client import (
+    UnifiedDatabaseClient,
+    get_unified_database_client,
+)
+from fastapi import Depends, Request
+from middleware.auth_middleware import get_current_user
 
 logger = get_logger(__name__)
 

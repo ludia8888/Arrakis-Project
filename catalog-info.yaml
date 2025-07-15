@@ -4,7 +4,7 @@ metadata:
   name: arrakis-core
   title: Arrakis Platform
   description: |
-    Enterprise-grade microservices platform for ontology management, 
+    Enterprise-grade microservices platform for ontology management,
     data processing, and knowledge graph operations.
   annotations:
     github.com/project-slug: Arrakis-Project

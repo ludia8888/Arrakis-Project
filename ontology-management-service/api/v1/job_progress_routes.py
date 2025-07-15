@@ -2,21 +2,28 @@
 Job Progress Routes
 Real-time job progress tracking via WebSocket and Server-Sent Events
 """
-import json
 import asyncio
-from typing import Dict, Any, Optional
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, Request, HTTPException
-from fastapi.responses import StreamingResponse
-from sse_starlette.sse import EventSourceResponse
-import redis.asyncio as redis
+import json
+from typing import Any, Dict, Optional
 
+import redis.asyncio as redis
+from arrakis_common import get_logger
+from bootstrap.dependencies import get_redis_client
 from core.auth_utils import UserContext
 from core.iam.dependencies import require_scope
 from core.iam.iam_integration import IAMScope
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Request,
+    WebSocket,
+    WebSocketDisconnect,
+)
+from fastapi.responses import StreamingResponse
 from middleware.auth_middleware import get_current_user
 from services.job_service import JobService
-from bootstrap.dependencies import get_redis_client
-from arrakis_common import get_logger
+from sse_starlette.sse import EventSourceResponse
 
 logger = get_logger(__name__)
 
@@ -235,7 +242,8 @@ async def job_progress_sse(
  return EventSourceResponse(event_generator())
 
 
-@router.get("/{job_id}/logs", dependencies = [Depends(require_scope([IAMScope.PROPOSALS_READ]))])
+@router.get("/{job_id}/logs",
+    dependencies = [Depends(require_scope([IAMScope.PROPOSALS_READ]))])
 async def get_job_logs(
  job_id: str,
  limit: int = 100,

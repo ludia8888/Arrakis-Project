@@ -1,11 +1,13 @@
 """
 System resource health check implementation
 """
-import psutil
 import asyncio
-from typing import Dict, Any, Optional
-from .base import HealthCheck
+from typing import Any, Dict, Optional
+
+import psutil
+
 from ..models import HealthCheckResult, HealthStatus
+from .base import HealthCheck
 
 
 class SystemHealthCheck(HealthCheck):

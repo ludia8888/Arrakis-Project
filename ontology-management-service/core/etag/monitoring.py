@@ -2,18 +2,23 @@
 ETag Monitoring and Alerting
 Comprehensive monitoring for ETag operations with Prometheus metrics and alerting
 """
-from typing import Dict, Any, Optional, List
-from datetime import datetime, timedelta
-from dataclasses import dataclass, field
-from collections import defaultdict
-import time
 import asyncio
+import time
+from collections import defaultdict
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
-from prometheus_client import (
- Counter, Histogram, Gauge, Summary, Info,
- generate_latest, CONTENT_TYPE_LATEST
-)
 import structlog
+from prometheus_client import (
+    CONTENT_TYPE_LATEST,
+    Counter,
+    Gauge,
+    Histogram,
+    Info,
+    Summary,
+    generate_latest,
+)
 
 logger = structlog.get_logger(__name__)
 
@@ -183,7 +188,8 @@ class ETagMonitor:
  # Start background tasks
  asyncio.create_task(self._update_metrics_loop())
 
- logger.info("ETag monitoring initialized", slos = len(self.slos), alerts = len(self.alert_rules))
+ logger.info("ETag monitoring initialized", slos = len(self.slos),
+     alerts = len(self.alert_rules))
 
  def record_request(
  self,
@@ -323,7 +329,8 @@ class ETagMonitor:
  cutoff_time = now - timedelta(seconds = window_seconds)
 
  # Group by resource type
- resource_stats: Dict[str, Dict[str, int]] = defaultdict(lambda: {"hits": 0, "total": 0})
+ resource_stats: Dict[str, Dict[str, int]] = defaultdict(lambda: {"hits": 0,
+     "total": 0})
 
  for entry in self._request_history:
  if entry["timestamp"] < cutoff_time:

@@ -1,219 +1,201 @@
 """
-병합 힌트 메타데이터 정의
+Merge hint metadata definition
 
-스키마에 병합 전략을 명시하기 위한 메타데이터 모델
+Metadata model for specifying merge strategy in schema
 """
 
-from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, Field, ConfigDict
 from enum import Enum
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class MergeStrategy(str, Enum):
- """병합 전략 타입"""
- LCS_REORDERABLE = "lcs-reorderable" # 순서가 중요한 리스트
- UNORDERED_SET = "unordered-set" # 순서가 중요하지 않은 집합
- KEYED_MAP = "keyed-map" # 키로 식별되는 맵
- ATOMIC = "atomic" # 원자적 단위로 처리
- CUSTOM = "custom" # 커스텀 병합 로직
+    """Merge strategy type"""
+
+    LCS_REORDERABLE = "lcs-reorderable"  # List where order matters
+    UNORDERED_SET = "unordered-set"  # Set where order doesn't matter
+    KEYED_MAP = "keyed-map"  # Map identified by key
+    ATOMIC = "atomic"  # Process as atomic unit
+    CUSTOM = "custom"  # Custom merge logic
 
 
 class ConflictResolution(str, Enum):
- """충돌 해결 전략"""
- MANUAL = "manual" # 수동 해결 필요
- PREFER_SOURCE = "prefer-source" # 소스 우선
- PREFER_TARGET = "prefer-target" # 타겟 우선
- MERGE_BOTH = "merge-both" # 양쪽 병합 시도
- FAIL_FAST = "fail-fast" # 즉시 실패
+    """Conflict resolution strategy"""
+
+    MANUAL = "manual"  # Manual resolution required
+    PREFER_SOURCE = "prefer-source"  # Prefer source
+    PREFER_TARGET = "prefer-target"  # Prefer target
+    MERGE_BOTH = "merge-both"  # Attempt to merge both
+    FAIL_FAST = "fail-fast"  # Fail immediately
 
 
 class MergeHint(BaseModel):
- """병합 힌트 메타데이터"""
+    """Merge hint metadata"""
 
- strategy: MergeStrategy = Field(
- default = MergeStrategy.KEYED_MAP,
- description = "병합 전략"
- )
+    strategy: MergeStrategy = Field(
+        default=MergeStrategy.KEYED_MAP, description="Merge strategy"
+    )
 
- identity_key: Optional[str] = Field(
- default = None,
- description = "리스트/맵 항목을 식별하는 키 (예: 'name', 'id')"
- )
+    identity_key: Optional[str] = Field(
+        default=None,
+        description="Key identifying list/map items (example: 'name', 'id')",
+    )
 
- order_field: Optional[str] = Field(
- default = None,
- description = "순서를 나타내는 필드 이름 (예: 'order', 'sortOrder')"
- )
+    order_field: Optional[str] = Field(
+        default=None,
+        description="Field name indicating order (example: 'order', 'sortOrder')",
+    )
 
- conflict_resolution: ConflictResolution = Field(
- default = ConflictResolution.MANUAL,
- description = "충돌 해결 전략"
- )
+    conflict_resolution: ConflictResolution = Field(
+        default=ConflictResolution.MANUAL, description="Conflict resolution strategy"
+    )
 
- preserve_order: bool = Field(
- default = False,
- description = "순서 정보 보존 여부"
- )
+    preserve_order: bool = Field(
+        default=False, description="Whether to preserve order information"
+    )
 
- semantic_groups: Optional[List[List[str]]] = Field(
- default = None,
- description = "함께 처리되어야 하는 필드 그룹들"
- )
+    semantic_groups: Optional[List[List[str]]] = Field(
+        default=None, description="Field groups that must be processed together"
+    )
 
- validation_rules: Optional[List[str]] = Field(
- default = None,
- description = "병합 후 검증 규칙 (표현식)"
- )
+    validation_rules: Optional[List[str]] = Field(
+        default=None, description="Post-merge validation rules (expressions)"
+    )
 
- custom_merger: Optional[str] = Field(
- default = None,
- description = "커스텀 병합 함수 이름"
- )
+    custom_merger: Optional[str] = Field(
+        default=None, description="Custom merge function name"
+    )
 
 
 class PropertyMergeHint(MergeHint):
- """Property 배열 병합을 위한 힌트"""
+    """Hints for Property array merging"""
 
- # Property 특화 설정
- merge_property_groups: bool = Field(
- default = True,
- description = "관련 속성들을 그룹으로 병합"
- )
+    # Property-specific settings
+    merge_property_groups: bool = Field(
+        default=True, description="Merge related properties as a group"
+    )
 
- handle_type_changes: bool = Field(
- default = True,
- description = "타입 변경 자동 처리"
- )
+    handle_type_changes: bool = Field(
+        default=True, description="Automatically handle type changes"
+    )
 
 
 class FieldMergeHint(BaseModel):
- """개별 필드에 대한 병합 힌트"""
+    """Merge hints for individual fields"""
 
- field_name: str = Field(..., description = "필드 이름")
+    field_name: str = Field(..., description="Field name")
 
- merge_hint: MergeHint = Field(
- ...,
- description = "해당 필드의 병합 힌트"
- )
+    merge_hint: MergeHint = Field(..., description="Merge hint for the field")
 
 
 class SchemaMergeMetadata(BaseModel):
- """
- 스키마 전체의 병합 메타데이터
+    """
+    Schema-wide merge metadata
 
- ObjectType이나 다른 스키마 정의에 추가되는 메타데이터
- """
+    Metadata added to ObjectType or other schema definitions
+    """
 
- # 기본 병합 전략
- default_strategy: MergeStrategy = Field(
- default = MergeStrategy.KEYED_MAP,
- description = "기본 병합 전략"
- )
+    # Default merge strategy
+    default_strategy: MergeStrategy = Field(
+        default=MergeStrategy.KEYED_MAP, description="Default merge strategy"
+    )
 
- # 필드별 병합 힌트
- field_hints: Dict[str, MergeHint] = Field(
- default_factory = dict,
- description = "필드별 병합 힌트"
- )
+    # Per-field merge hints
+    field_hints: Dict[str, MergeHint] = Field(
+        default_factory=dict, description="Per-field merge hints"
+    )
 
- # 특별 처리가 필요한 필드들
- properties_hint: Optional[PropertyMergeHint] = Field(
- default = None,
- description = "properties 배열 병합 힌트"
- )
+    # Fields requiring special handling
+    properties_hint: Optional[PropertyMergeHint] = Field(
+        default=None, description="Properties array merge hints"
+    )
 
- # 의미론적 필드 그룹
- semantic_field_groups: Optional[List[Dict[str, Any]]] = Field(
- default = None,
- description = "의미론적으로 연관된 필드 그룹 정의"
- )
+    # Semantic field groups
+    semantic_field_groups: Optional[List[Dict[str, Any]]] = Field(
+        default=None, description="Semantically related field group definitions"
+    )
 
- # 상태 전이 규칙 (기존 모델과 연동)
- enforce_state_transitions: bool = Field(
- default = True,
- description = "상태 전이 규칙 적용 여부"
- )
+    # State transition rules (integration with existing models)
+    enforce_state_transitions: bool = Field(
+        default=True, description="Whether to enforce state transition rules"
+    )
 
- # 병합 검증 규칙
- post_merge_validations: Optional[List[str]] = Field(
- default = None,
- description = "병합 후 실행할 검증 규칙들"
- )
+    # Merge validation rules
+    post_merge_validations: Optional[List[str]] = Field(
+        default=None, description="Validation rules to execute after merge"
+    )
 
- class Config:
- json_schema_extra = {
- "example": {
- "default_strategy": "keyed-map",
- "field_hints": {
- "properties": {
- "strategy": "lcs-reorderable",
- "identity_key": "name",
- "preserve_order": True,
- "conflict_resolution": "manual"
- },
- "interfaces": {
- "strategy": "unordered-set",
- "identity_key": "name"
- }
- },
- "properties_hint": {
- "merge_property_groups": True,
- "handle_type_changes": True
- },
- "semantic_field_groups": [
- {
- "name": "tax_info",
- "fields": ["isTaxable", "taxRate", "taxExemptionReason"],
- "merge_as_unit": True
- }
- ]
- }
- }
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "default_strategy": "keyed-map",
+                "field_hints": {
+                    "properties": {
+                        "strategy": "lcs-reorderable",
+                        "identity_key": "name",
+                        "preserve_order": True,
+                        "conflict_resolution": "manual",
+                    },
+                    "interfaces": {"strategy": "unordered-set", "identity_key": "name"},
+                },
+                "properties_hint": {
+                    "merge_property_groups": True,
+                    "handle_type_changes": True,
+                },
+                "semantic_field_groups": [
+                    {
+                        "name": "tax_info",
+                        "fields": ["isTaxable", "taxRate", "taxExemptionReason"],
+                        "merge_as_unit": True,
+                    }
+                ],
+            }
+        }
 
 
 def get_merge_hint_for_field(
- schema_metadata: Optional[SchemaMergeMetadata],
- field_name: str
+    schema_metadata: Optional[SchemaMergeMetadata], field_name: str
 ) -> Optional[MergeHint]:
- """특정 필드의 병합 힌트 조회"""
- if not schema_metadata:
- return None
+    """Get merge hint for a specific field"""
+    if not schema_metadata:
+        return None
 
- # 필드별 힌트 확인
- if field_name in schema_metadata.field_hints:
- return schema_metadata.field_hints[field_name]
+    # Check field-specific hints
+    if field_name in schema_metadata.field_hints:
+        return schema_metadata.field_hints[field_name]
 
- # properties 필드 특별 처리
- if field_name == "properties" and schema_metadata.properties_hint:
- return schema_metadata.properties_hint
+    # Special handling for properties field
+    if field_name == "properties" and schema_metadata.properties_hint:
+        return schema_metadata.properties_hint
 
- return None
+    return None
 
 
 def create_default_merge_hints() -> SchemaMergeMetadata:
- """기본 병합 힌트 생성"""
- return SchemaMergeMetadata(
- default_strategy = MergeStrategy.KEYED_MAP,
- field_hints={
- "properties": MergeHint(
- strategy = MergeStrategy.LCS_REORDERABLE,
- identity_key = "name",
- preserve_order = True,
- conflict_resolution = ConflictResolution.MANUAL
- ),
- "parentTypes": MergeHint(
- strategy = MergeStrategy.UNORDERED_SET,
- conflict_resolution = ConflictResolution.MERGE_BOTH
- ),
- "interfaces": MergeHint(
- strategy = MergeStrategy.UNORDERED_SET,
- conflict_resolution = ConflictResolution.MERGE_BOTH
- ),
- "fieldGroups": MergeHint(
- strategy = MergeStrategy.KEYED_MAP,
- identity_key = "name",
- conflict_resolution = ConflictResolution.MANUAL
- )
- },
- enforce_state_transitions = True
- )
+    """Create default merge hints"""
+    return SchemaMergeMetadata(
+        default_strategy=MergeStrategy.KEYED_MAP,
+        field_hints={
+            "properties": MergeHint(
+                strategy=MergeStrategy.LCS_REORDERABLE,
+                identity_key="name",
+                preserve_order=True,
+                conflict_resolution=ConflictResolution.MANUAL,
+            ),
+            "parentTypes": MergeHint(
+                strategy=MergeStrategy.UNORDERED_SET,
+                conflict_resolution=ConflictResolution.MERGE_BOTH,
+            ),
+            "interfaces": MergeHint(
+                strategy=MergeStrategy.UNORDERED_SET,
+                conflict_resolution=ConflictResolution.MERGE_BOTH,
+            ),
+            "fieldGroups": MergeHint(
+                strategy=MergeStrategy.KEYED_MAP,
+                identity_key="name",
+                conflict_resolution=ConflictResolution.MANUAL,
+            ),
+        },
+        enforce_state_transitions=True,
+    )

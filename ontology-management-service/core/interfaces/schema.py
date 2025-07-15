@@ -1,7 +1,8 @@
 """Schema service protocol"""
 
-from typing import Protocol, Dict, Any, List, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Protocol
+
 
 class SchemaServiceProtocol(Protocol):
  """Protocol for schema service implementations"""

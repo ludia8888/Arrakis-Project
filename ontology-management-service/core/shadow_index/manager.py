@@ -5,17 +5,23 @@ Manages near-zero downtime indexing with atomic switch pattern
 import asyncio
 import os
 import shutil
-from typing import Optional, Dict, List, Any
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 
-from models.shadow_index import (
- ShadowIndexInfo, ShadowIndexOperation, ShadowIndexState, IndexType,
- SwitchRequest, SwitchResult, is_valid_shadow_transition,
- get_switch_critical_states, estimate_switch_duration
-)
-from core.branch.lock_manager import get_lock_manager, LockType, LockScope
 from arrakis_common import get_logger
+from core.branch.lock_manager import LockScope, LockType, get_lock_manager
+from models.shadow_index import (
+    IndexType,
+    ShadowIndexInfo,
+    ShadowIndexOperation,
+    ShadowIndexState,
+    SwitchRequest,
+    SwitchResult,
+    estimate_switch_duration,
+    get_switch_critical_states,
+    is_valid_shadow_transition,
+)
 
 logger = get_logger(__name__)
 
@@ -41,7 +47,8 @@ class ShadowIndexManager:
  - Automatic rollback on switch failure
  """
 
- def __init__(self, index_base_path: str = "/tmp/oms_indexes", cache_service = None, db_service = None):
+ def __init__(self, index_base_path: str = "/tmp/oms_indexes", cache_service = None,
+     db_service = None):
  self.index_base_path = Path(index_base_path)
  self.cache_service = cache_service
  self.db_service = db_service
@@ -133,7 +140,8 @@ class ShadowIndexManager:
  )
 
  # Transition to building state
- await self._transition_shadow_state(shadow_info.id, ShadowIndexState.BUILDING, service_name)
+ await self._transition_shadow_state(shadow_info.id, ShadowIndexState.BUILDING,
+     service_name)
 
  logger.info(
  f"Started shadow index build: {shadow_info.id} for {branch_name}:{index_type.value}"
@@ -239,7 +247,8 @@ class ShadowIndexManager:
  )
 
  # Transition to built state
- await self._transition_shadow_state(shadow_index_id, ShadowIndexState.BUILT, service_name)
+ await self._transition_shadow_state(shadow_index_id, ShadowIndexState.BUILT,
+     service_name)
 
  logger.info(
  f"Completed shadow index build: {shadow_index_id} "
@@ -286,7 +295,8 @@ class ShadowIndexManager:
  # 1. Pre-switch validation (no lock required)
  await self._validate_switch_readiness(shadow_info, request, switch_result)
  if not switch_result.validation_passed and not request.force_switch:
- switch_result.message = f"Validation failed: {', '.join(switch_result.validation_errors)}"
+ switch_result.message = f"Validation failed: {',
+     '.join(switch_result.validation_errors)}"
  return switch_result
 
  # 2. Acquire minimal lock for switch operation
@@ -311,7 +321,8 @@ class ShadowIndexManager:
 
  try:
  # Transition to switching state
- await self._transition_shadow_state(shadow_index_id, ShadowIndexState.SWITCHING, service_name)
+ await self._transition_shadow_state(shadow_index_id, ShadowIndexState.SWITCHING,
+     service_name)
 
  # 3. Perform atomic switch (critical section)
  await self._perform_atomic_switch(shadow_info, request, switch_result)
@@ -321,7 +332,8 @@ class ShadowIndexManager:
  await self._verify_switch_success(shadow_info, switch_result)
 
  # Transition to active state
- await self._transition_shadow_state(shadow_index_id, ShadowIndexState.ACTIVE, service_name)
+ await self._transition_shadow_state(shadow_index_id, ShadowIndexState.ACTIVE,
+     service_name)
  shadow_info.switched_at = datetime.now(timezone.utc)
 
  finally:
@@ -349,8 +361,10 @@ class ShadowIndexManager:
  )
  else:
  # Transition to failed state
- await self._transition_shadow_state(shadow_index_id, ShadowIndexState.FAILED, service_name)
- switch_result.message = f"Index switch failed: {', '.join(switch_result.verification_errors)}"
+ await self._transition_shadow_state(shadow_index_id, ShadowIndexState.FAILED,
+     service_name)
+ switch_result.message = f"Index switch failed: {',
+     '.join(switch_result.verification_errors)}"
 
  except Exception as e:
  # Handle any switch errors
@@ -360,7 +374,8 @@ class ShadowIndexManager:
  switch_result.message = f"Switch failed with error: {str(e)}"
 
  # Transition to failed state
- await self._transition_shadow_state(shadow_index_id, ShadowIndexState.FAILED, service_name)
+ await self._transition_shadow_state(shadow_index_id, ShadowIndexState.FAILED,
+     service_name)
 
  # Record failed switch
  await self._record_operation(
@@ -381,7 +396,8 @@ class ShadowIndexManager:
  """Get current status of a shadow index"""
  return self._active_shadows.get(shadow_index_id)
 
- async def list_active_shadows(self, branch_name: Optional[str] = None) -> List[ShadowIndexInfo]:
+ async def list_active_shadows(self,
+     branch_name: Optional[str] = None) -> List[ShadowIndexInfo]:
  """List all active shadow indexes"""
  shadows = list(self._active_shadows.values())
 
@@ -406,7 +422,8 @@ class ShadowIndexManager:
  return False
 
  # Transition to cancelled state
- await self._transition_shadow_state(shadow_index_id, ShadowIndexState.CANCELLED, service_name)
+ await self._transition_shadow_state(shadow_index_id, ShadowIndexState.CANCELLED,
+     service_name)
 
  # Clean up shadow index files
  if shadow_info.shadow_index_path and Path(shadow_info.shadow_index_path).exists():
@@ -637,7 +654,8 @@ class ShadowIndexManager:
 
  to_remove = []
  for shadow_id, shadow_info in self._active_shadows.items():
- if (shadow_info.state in [ShadowIndexState.ACTIVE, ShadowIndexState.FAILED, ShadowIndexState.CANCELLED] and
+ if (shadow_info.state in [ShadowIndexState.ACTIVE, ShadowIndexState.FAILED,
+     ShadowIndexState.CANCELLED] and
  shadow_info.created_at < cutoff_time):
  to_remove.append(shadow_id)
 
@@ -674,7 +692,8 @@ def get_shadow_manager() -> ShadowIndexManager:
  return _shadow_manager
 
 
-async def initialize_shadow_manager(index_base_path: str = "/tmp/oms_indexes", **kwargs):
+async def initialize_shadow_manager(index_base_path: str = "/tmp/oms_indexes",
+    **kwargs):
  """Initialize global shadow index manager"""
  global _shadow_manager
  _shadow_manager = ShadowIndexManager(index_base_path, **kwargs)

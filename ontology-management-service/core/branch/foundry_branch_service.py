@@ -1,24 +1,32 @@
 """
 Foundry-style Branch Service with optimistic concurrency
 """
-from typing import Optional, Dict, Any, List, Tuple
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
+
+from arrakis_common import get_logger
+from core.concurrency.optimistic_lock import FoundryStyleLockManager
+from core.interfaces import ITimeTravelService
+from middleware.three_way_merge import JsonMerger
+from middleware.three_way_merge import MergeStrategy as JsonMergeStrategy
+from models.branch_state import BranchState, BranchStateInfo
+from models.exceptions import ConcurrencyError, ConflictError
 from sqlalchemy.ext.asyncio import AsyncSession
+
 # from sqlalchemy.sql import text # No longer using SQLAlchemy text
 
-from core.concurrency.optimistic_lock import FoundryStyleLockManager
-from models.exceptions import ConflictError, ConcurrencyError
-from models.branch_state import BranchState, BranchStateInfo
-from arrakis_common import get_logger
-from middleware.three_way_merge import JsonMerger, MergeStrategy as JsonMergeStrategy
-from core.interfaces import ITimeTravelService
-from typing import TYPE_CHECKING
 
 # Import concrete type only for type checking
 if TYPE_CHECKING:
  from core.time_travel.service import TimeTravelQueryService
+
+from core.time_travel.models import (
+    TemporalOperator,
+    TemporalQuery,
+    TemporalReference,
+    TemporalResourceQuery,
+)
 from core.versioning.version_service import VersionTrackingService
-from core.time_travel.models import TemporalResourceQuery, TemporalQuery, TemporalReference, TemporalOperator
 
 logger = get_logger(__name__)
 
@@ -215,8 +223,10 @@ class FoundryBranchService:
  # This part needs a way to fetch full schema/data for a given branch/commit
  # For now, we will mock this data. A dedicated service/client method is needed.
  base_data = await self._get_data_at_commit(target_branch, parent_commit)
- ours_data = await self._get_data_at_commit(source_branch, "latest") # Assume latest from source
- theirs_data = await self._get_data_at_commit(target_branch, "latest") # This is the current state
+ ours_data = await self._get_data_at_commit(source_branch,
+     "latest") # Assume latest from source
+ theirs_data = await self._get_data_at_commit(target_branch,
+     "latest") # This is the current state
 
  # 2. Perform three-way merge using the powerful engine
  merger = JsonMerger()
@@ -303,8 +313,10 @@ class FoundryBranchService:
  def _is_valid_transition(self, from_state: BranchState, to_state: BranchState) -> bool:
  """Validate state transitions"""
  valid_transitions = {
- BranchState.ACTIVE: [BranchState.LOCKED_FOR_WRITE, BranchState.READY, BranchState.ARCHIVED],
- BranchState.LOCKED_FOR_WRITE: [BranchState.ACTIVE, BranchState.READY, BranchState.FAILED],
+ BranchState.ACTIVE: [BranchState.LOCKED_FOR_WRITE, BranchState.READY,
+     BranchState.ARCHIVED],
+ BranchState.LOCKED_FOR_WRITE: [BranchState.ACTIVE, BranchState.READY,
+     BranchState.FAILED],
  BranchState.READY: [BranchState.MERGED, BranchState.ACTIVE, BranchState.ARCHIVED],
  BranchState.MERGED: [BranchState.ARCHIVED],
  BranchState.FAILED: [BranchState.ACTIVE, BranchState.ARCHIVED],
@@ -438,6 +450,8 @@ class ConflictResolutionHelper:
  "instructions": [
  f"1. Fetch latest changes from '{conflict_error.merge_hints.get('target_branch')}'",
  f"2. Rebase your branch '{conflict_error.merge_hints.get('source_branch')}' onto the new head",
+
+
  "3. Resolve any merge conflicts locally",
  "4. Push the rebased branch and retry the merge"
  ],

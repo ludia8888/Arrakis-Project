@@ -369,6 +369,8 @@ class MergeEngine:
  branch_a_value = source_prop,
  branch_b_value = target_prop,
  description = f"Property type conflict: {source_prop.get('type')} vs {target_prop.get('type')}",
+
+
  auto_resolvable = severity
  in [ConflictSeverity.INFO, ConflictSeverity.WARN],
  )
@@ -408,6 +410,8 @@ class MergeEngine:
  branch_a_value = source_link,
  branch_b_value = target_link,
  description = f"Cardinality conflict: {source_link.get('cardinality')} vs {target_link.get('cardinality')}",
+
+
  auto_resolvable = severity == ConflictSeverity.INFO,
  migration_impact = migration_impact,
  )

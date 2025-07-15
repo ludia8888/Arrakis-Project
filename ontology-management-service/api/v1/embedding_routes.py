@@ -2,16 +2,16 @@
 Vector Embeddings API Routes
 Provides REST API endpoints for the enhanced embedding functionality
 """
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
-from pydantic import BaseModel, Field
-from typing import List, Dict, Any, Optional
 import logging
+from typing import Any, Dict, List, Optional
 
 from bootstrap.providers.embedding import (
- get_embedding_service_provider,
- get_embedding_provider_status,
- test_embedding_providers
+    get_embedding_provider_status,
+    get_embedding_service_provider,
+    test_embedding_providers,
 )
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from pydantic import BaseModel, Field
 from shared.embedding_config import get_embedding_config, validate_embedding_config
 
 logger = logging.getLogger(__name__)
@@ -48,7 +48,8 @@ class SemanticSearchRequest(BaseModel):
 
 class StoreTextRequest(BaseModel):
  text: str = Field(..., description = "Text to store")
- document_id: Optional[str] = Field(None, description = "Document ID (auto-generated if not provided)")
+ document_id: Optional[str] = Field(None,
+     description = "Document ID (auto-generated if not provided)")
  collection: str = Field("default", description = "Collection to store in")
  metadata: Optional[Dict[str, Any]] = Field(None, description = "Document metadata")
 

@@ -1,6 +1,7 @@
 """Working GraphQL Schema for OMS - Simple approach"""
 import strawberry
 
+
 @strawberry.type
 class ObjectType:
  id: str

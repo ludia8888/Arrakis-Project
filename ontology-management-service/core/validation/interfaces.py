@@ -192,7 +192,8 @@ class ValidationService(ABC):
  pass
 
  @abstractmethod
- async def generate_migration_plan(self, validation_result: ValidationResult) -> MigrationPlan:
+ async def generate_migration_plan(self,
+     validation_result: ValidationResult) -> MigrationPlan:
  """
  REQ-OMS-F3-AC2: Generate migration plan for breaking changes
  """

@@ -55,7 +55,7 @@ check_service() {
     local health_url=$2
     local max_attempts=30
     local attempt=0
-    
+
     while [ $attempt -lt $max_attempts ]; do
         if curl -s -f "$health_url" > /dev/null 2>&1; then
             echo -e "${GREEN}✅ $service_name is ready${NC}"
@@ -65,7 +65,7 @@ check_service() {
         echo -n "."
         sleep 2
     done
-    
+
     echo -e "\n${RED}❌ $service_name failed to start${NC}"
     return 1
 }
@@ -141,19 +141,19 @@ kill $LOGS_PID 2>/dev/null || true
 echo -e "\n=================================="
 if [ $TEST_RESULT -eq 0 ]; then
     echo -e "${GREEN}🎉 All integration tests passed!${NC}"
-    
+
     # Show some statistics
     echo -e "\n${YELLOW}📊 Test Statistics:${NC}"
     docker exec oms-test-postgres psql -U audit_user -d audit_db -c "SELECT COUNT(*) as total_events FROM audit_events;" 2>/dev/null || true
     docker exec oms-test-postgres psql -U audit_user -d audit_db -c "SELECT status, COUNT(*) FROM outbox_events GROUP BY status;" 2>/dev/null || true
-    
+
 else
     echo -e "${RED}❌ Integration tests failed${NC}"
-    
+
     # Show recent logs for debugging
     echo -e "\n${YELLOW}📋 Recent OMS logs:${NC}"
     docker logs oms-test-service --tail 50
-    
+
     echo -e "\n${YELLOW}📋 Recent Audit Service logs:${NC}"
     docker logs oms-test-audit-service --tail 50
 fi

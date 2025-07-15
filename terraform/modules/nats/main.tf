@@ -191,7 +191,7 @@ resource "kubernetes_stateful_set" "nats" {
 
       spec {
         service_account_name = kubernetes_service_account.nats.metadata[0].name
-        
+
         security_context {
           fs_group = 1000
           run_as_non_root = true
@@ -647,7 +647,7 @@ resource "kubernetes_pod_disruption_budget" "nats" {
 
   spec {
     max_unavailable = var.cluster_size > 3 ? 1 : 0
-    
+
     selector {
       match_labels = {
         app = "nats"
@@ -737,12 +737,12 @@ resource "kubernetes_network_policy" "nats" {
       to {
         namespace_selector {}
       }
-      
+
       ports {
         protocol = "TCP"
         port     = "53"
       }
-      
+
       ports {
         protocol = "UDP"
         port     = "53"

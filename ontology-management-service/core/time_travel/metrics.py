@@ -2,16 +2,16 @@
 Time Travel Query Metrics
 Prometheus metrics and Jaeger tracing for temporal queries
 """
-from typing import Optional, Callable, Any
-from functools import wraps
-import time
 import asyncio
+import time
+from functools import wraps
+from typing import Any, Callable, Optional
 
-from prometheus_client import Counter, Histogram, Gauge
+from arrakis_common import get_logger
 from core.resilience.unified_circuit_breaker import circuit_breaker
 from opentelemetry import trace
 from opentelemetry.trace import Status, StatusCode
-from arrakis_common import get_logger
+from prometheus_client import Counter, Gauge, Histogram
 
 logger = get_logger(__name__)
 
@@ -126,9 +126,11 @@ def track_temporal_query(query_type: str):
  ).inc()
 
  # Add span attributes
- span.set_attribute("result.count", len(result.resources) if hasattr(result, 'resources') else 0)
+ span.set_attribute("result.count", len(result.resources) if hasattr(result,
+     'resources') else 0)
  span.set_attribute("result.cache_hit", getattr(result, 'cache_hit', False))
- span.set_attribute("execution.time_ms", getattr(result, 'execution_time_ms', duration * 1000))
+ span.set_attribute("execution.time_ms", getattr(result, 'execution_time_ms',
+     duration * 1000))
 
  span.set_status(Status(StatusCode.OK))
  return result

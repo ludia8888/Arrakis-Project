@@ -52,11 +52,11 @@ module "security" {
   environment            = "production"
   cluster_name           = "arrakis-prod"
   cluster_oidc_issuer_url = "https://oidc.eks.us-west-2.amazonaws.com/id/EXAMPLE"
-  
+
   # VPC Configuration
   vpc_id   = "vpc-12345678"
   vpc_cidr = "10.0.0.0/16"
-  
+
   # Service Accounts (automatically includes all 7 microservices)
   service_accounts = {
     monitoring = {
@@ -66,7 +66,7 @@ module "security" {
       ]
     }
   }
-  
+
   # Secrets Configuration
   secrets = {
     database_credentials = {
@@ -77,12 +77,12 @@ module "security" {
       }
     }
   }
-  
+
   # Security Features
   enable_cloudtrail   = true
   enable_guardduty    = true
   enable_security_hub = true
-  
+
   tags = {
     Environment = "production"
     Project     = "arrakis"
@@ -171,7 +171,7 @@ secrets = {
       password = var.db_password
     }
   }
-  
+
   jwt_secrets = {
     description = "JWT signing keys"
     secret_data = {
@@ -286,10 +286,10 @@ module "security" {
   environment            = "production"
   cluster_name           = "arrakis-prod"
   cluster_oidc_issuer_url = data.aws_eks_cluster.main.identity[0].oidc[0].issuer
-  
+
   vpc_id   = module.networking.vpc_id
   vpc_cidr = module.networking.vpc_cidr
-  
+
   # Production security configuration
   enable_cloudtrail   = true
   enable_guardduty    = true
@@ -297,25 +297,25 @@ module "security" {
   enable_aws_config   = true
   enable_detective    = true
   enable_macie        = true
-  
+
   # Compliance requirements
   compliance_standards = [
     "cis",
-    "pci-dss", 
+    "pci-dss",
     "aws-foundational",
     "soc2"
   ]
-  
+
   # Enhanced monitoring
   security_notification_email = "security@company.com"
   enable_real_time_notifications = true
   security_alert_severity_threshold = "MEDIUM"
-  
+
   # Backup and recovery
   enable_cross_region_backup = true
   backup_retention_days      = 90
   secret_recovery_window     = 30
-  
+
   # Custom service account
   service_accounts = {
     backup_service = {
@@ -338,7 +338,7 @@ module "security" {
       ]
     }
   }
-  
+
   tags = {
     Environment     = "production"
     Project         = "arrakis"
@@ -359,24 +359,24 @@ module "security" {
   environment            = "development"
   cluster_name           = "arrakis-dev"
   cluster_oidc_issuer_url = data.aws_eks_cluster.dev.identity[0].oidc[0].issuer
-  
+
   vpc_id   = module.networking.vpc_id
   vpc_cidr = module.networking.vpc_cidr
-  
+
   # Reduced monitoring for cost optimization
   enable_cloudtrail   = true
   enable_guardduty    = false  # Disabled for cost savings
   enable_security_hub = false  # Disabled for cost savings
   enable_aws_config   = false  # Disabled for cost savings
-  
+
   # Basic compliance
   compliance_standards = ["aws-foundational"]
-  
+
   # Reduced retention for cost optimization
   backup_retention_days = 30
   secret_recovery_window = 7
   security_log_retention_days = 90
-  
+
   tags = {
     Environment = "development"
     Project     = "arrakis"
@@ -416,18 +416,18 @@ module "security" {
   environment            = var.environment
   cluster_name           = "arrakis-${var.environment}"
   cluster_oidc_issuer_url = data.aws_eks_cluster.main.identity[0].oidc[0].issuer
-  
+
   vpc_id   = module.networking.vpc_id
   vpc_cidr = module.networking.vpc_cidr
-  
+
   # Environment-specific configuration
   enable_guardduty    = local.environments[var.environment].enable_advanced_security
   enable_security_hub = local.environments[var.environment].enable_advanced_security
   enable_detective    = local.environments[var.environment].enable_advanced_security
-  
+
   compliance_standards = local.environments[var.environment].compliance_standards
   backup_retention_days = local.environments[var.environment].retention_days
-  
+
   tags = merge(local.common_tags, {
     Environment = var.environment
   })
@@ -518,7 +518,7 @@ metadata:
    ```bash
    # Check OIDC provider
    aws iam list-open-id-connect-providers
-   
+
    # Verify service account annotation
    kubectl get sa ontology-management-service -n arrakis -o yaml
    ```
@@ -536,7 +536,7 @@ metadata:
    ```bash
    # Check KMS key policy
    aws kms describe-key --key-id alias/arrakis-secrets-production
-   
+
    # Test decryption
    aws kms decrypt --ciphertext-blob fileb://encrypted-data
    ```

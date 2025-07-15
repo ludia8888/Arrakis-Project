@@ -4,7 +4,7 @@ services:
     image: grafana/pyroscope:latest
     container_name: oms-pyroscope
     ports:
-      - "4040:4040"  # Pyroscope UI
+      - "4040:4040" # Pyroscope UI
     environment:
       - PYROSCOPE_ANALYTICS_OPT_OUT=true
       - PYROSCOPE_LOG_LEVEL=info

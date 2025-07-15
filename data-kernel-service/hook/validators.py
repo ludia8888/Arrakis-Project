@@ -20,14 +20,14 @@ logger = logging.getLogger(__name__)
 
 
 class RuleValidator(BaseValidator):
- """Adapter for existing ValidationService"""
+    """Adapter for existing ValidationService"""
 
- def __init__(self):
- self.validation_service = None
+    def __init__(self):
+        self.validation_service = None
 
- @property
- def name(self) -> str:
- return "RuleValidator"
+    @property
+    def name(self) -> str:
+        return "RuleValidator"
 
  async def initialize(self):
  """Initialize validation service"""
@@ -86,7 +86,7 @@ class RuleValidator(BaseValidator):
  if not strict_mode:
  # Validation bypass - log critical security event
  logger.critical(
- f"VALIDATION_BYPASS: Rule validation error bypassed in non-strict mode. "
+ "VALIDATION_BYPASS: Rule validation error bypassed in non-strict mode. "
  f"Error: {str(e)}, Context: author={context.meta.author}, "
  f"branch={context.meta.branch}, trace_id={context.meta.trace_id}"
  )
@@ -148,7 +148,7 @@ class TamperValidator(BaseValidator):
  )
  if strict_security:
  raise ValidationError(
- f"Security validation failed: suspicious pattern detected",
+ "Security validation failed: suspicious pattern detected",
  errors = [
  {"pattern": pattern, "error": "Suspicious content"}
  ],

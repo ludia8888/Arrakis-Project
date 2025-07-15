@@ -10,9 +10,9 @@ build_optimized_image() {
     local service=$1
     local dockerfile=$2
     local tag=$3
-    
+
     echo "Building optimized image for $service..."
-    
+
     # Multi-stage build with minimal final image
     cat > $dockerfile.optimized << EOF
 # Build stage
@@ -71,10 +71,10 @@ EOF
 
     # Build the optimized image
     docker build -f $dockerfile.optimized -t $tag .
-    
+
     # Clean up
     rm $dockerfile.optimized
-    
+
     # Show image size
     echo "Image size for $service:"
     docker images $tag --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}"
@@ -94,10 +94,10 @@ version: '3.8'
 services:
   embedding-service:
     image: oms/embedding-service:optimized
-    
+
   scheduler-service:
     image: oms/scheduler-service:optimized
-    
+
   event-gateway:
     image: oms/event-gateway:optimized
 EOF

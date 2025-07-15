@@ -9,8 +9,8 @@ from typing import Dict, List, Optional
 
 from arrakis_common import get_logger
 from core.branch.distributed_lock_manager import (
- DISTRIBUTED_LOCK_SCHEMA,
- DistributedLockManager,
+    DISTRIBUTED_LOCK_SCHEMA,
+    DistributedLockManager,
 )
 from core.branch.lock_manager import BranchLockManager
 from models.branch_state import BranchStateInfo

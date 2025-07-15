@@ -17,12 +17,12 @@ HAS_JSONSCHEMA = True
 
 from arrakis_common import get_logger
 from core.validation.naming_convention import (
- EntityType,
- NamingConvention,
- NamingPattern,
- NamingRule,
- enum_encoder,
- utc_datetime_encoder,
+    EntityType,
+    NamingConvention,
+    NamingPattern,
+    NamingRule,
+    enum_encoder,
+    utc_datetime_encoder,
 )
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 from pydantic.json_schema import GenerateJsonSchema, JsonSchemaValue

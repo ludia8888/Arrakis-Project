@@ -4,33 +4,33 @@ on:
   push:
     branches: [main, develop]
     paths:
-      - 'terraform/**'
-      - 'ontology-management-service/**'
-      - 'user-service/**'
-      - 'audit-service/**'
-      - 'data-kernel-service/**'
-      - 'embedding-service/**'
-      - 'scheduler-service/**'
-      - 'event-gateway/**'
-      - 'scripts/**'
-      - '.github/workflows/**'
+      - "terraform/**"
+      - "ontology-management-service/**"
+      - "user-service/**"
+      - "audit-service/**"
+      - "data-kernel-service/**"
+      - "embedding-service/**"
+      - "scheduler-service/**"
+      - "event-gateway/**"
+      - "scripts/**"
+      - ".github/workflows/**"
   pull_request:
     branches: [main]
     paths:
-      - 'terraform/**'
-      - 'ontology-management-service/**'
-      - 'user-service/**'
-      - 'audit-service/**'
-      - 'data-kernel-service/**'
-      - 'embedding-service/**'
-      - 'scheduler-service/**'
-      - 'event-gateway/**'
+      - "terraform/**"
+      - "ontology-management-service/**"
+      - "user-service/**"
+      - "audit-service/**"
+      - "data-kernel-service/**"
+      - "embedding-service/**"
+      - "scheduler-service/**"
+      - "event-gateway/**"
 
 env:
-  TERRAFORM_VERSION: '1.6.0'
-  PYTHON_VERSION: '3.11'
-  NODE_VERSION: '20'
-  
+  TERRAFORM_VERSION: "1.6.0"
+  PYTHON_VERSION: "3.11"
+  NODE_VERSION: "20"
+
 jobs:
   # ==========================================
   # CODE QUALITY & SECURITY VALIDATION
@@ -42,97 +42,97 @@ jobs:
       contents: read
       security-events: write
       actions: read
-    
+
     steps:
       - name: 📥 Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: 🐍 Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
-      
+          cache: "pip"
+
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: '**/package*.json'
-      
+          cache: "npm"
+          cache-dependency-path: "**/package*.json"
+
       - name: 🔧 Install Code Quality Tools
         run: |
           # Python tools
           pip install --upgrade pip
           pip install black isort flake8 mypy bandit safety pylint autopep8 ruff
           pip install pre-commit yamllint ansible-lint
-          
+
           # Node.js tools
           npm install -g prettier eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin
           npm install -g markdownlint-cli htmlhint jsonlint yaml-lint
-          
+
           # Additional security tools
           pip install semgrep checkov
-          
+
           echo "✅ Code quality tools installed"
-      
+
       - name: 🐍 Python Code Quality Check
         run: |
           echo "🔍 Running Python code quality checks..."
-          
+
           # Find all Python files
           python_files=$(find . -name "*.py" -not -path "./venv/*" -not -path "./.venv/*" -not -path "./node_modules/*")
-          
+
           if [ -n "$python_files" ]; then
             echo "📝 Found Python files, running checks..."
-            
+
             # Black formatting check
             echo "🎨 Checking Black formatting..."
             black --check --diff $python_files || echo "⚠️ Black formatting issues found"
-            
+
             # isort import sorting
             echo "📋 Checking import sorting..."
             isort --check-only --diff $python_files || echo "⚠️ Import sorting issues found"
-            
+
             # Flake8 linting
             echo "🔍 Running Flake8 linting..."
             flake8 $python_files --max-line-length=88 --extend-ignore=E203,W503 || echo "⚠️ Flake8 issues found"
-            
+
             # Ruff (faster linter)
             echo "⚡ Running Ruff linting..."
             ruff check $python_files || echo "⚠️ Ruff issues found"
-            
+
             # Bandit security check
             echo "🔒 Running Bandit security check..."
             bandit -r . -f json -o bandit-report.json || echo "⚠️ Security issues found"
-            
+
             # Safety check for known vulnerabilities
             echo "🛡️ Checking for known vulnerabilities..."
             pip freeze | safety check --json --output safety-report.json || echo "⚠️ Vulnerable dependencies found"
-            
+
           else
             echo "ℹ️ No Python files found"
           fi
-      
+
       - name: 📄 YAML & JSON Validation
         run: |
           echo "📄 Validating YAML and JSON files..."
-          
+
           # YAML validation
           find . -name "*.yml" -o -name "*.yaml" | grep -v node_modules | while read file; do
             echo "Validating: $file"
             yamllint "$file" || echo "⚠️ YAML issues in $file"
           done
-          
+
           # JSON validation
           find . -name "*.json" | grep -v node_modules | while read file; do
             echo "Validating: $file"
             jsonlint "$file" >/dev/null || echo "⚠️ JSON issues in $file"
           done
-      
+
       - name: 📝 Markdown Validation
         run: |
           echo "📝 Validating Markdown files..."
@@ -140,20 +140,20 @@ jobs:
             echo "Validating: $file"
             markdownlint "$file" || echo "⚠️ Markdown issues in $file"
           done
-      
+
       - name: 🔒 Advanced Security Scanning
         run: |
           echo "🔒 Running advanced security scans..."
-          
+
           # Semgrep security analysis
           echo "🔍 Running Semgrep security analysis..."
           semgrep --config=auto --json --output=semgrep-report.json . || echo "⚠️ Semgrep issues found"
-          
+
           # Secrets scanning
           echo "🔐 Scanning for secrets..."
           pip install detect-secrets
           detect-secrets scan --all-files --baseline .secrets.baseline || echo "⚠️ Potential secrets found"
-      
+
       - name: 📊 Upload Security Reports
         uses: actions/upload-artifact@v4
         if: always()
@@ -175,40 +175,40 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    
+
     strategy:
       matrix:
         environment: [development, staging, production]
-    
+
     steps:
       - name: 📥 Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
+
       - name: 🔧 Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
-      
+
       - name: 📦 Install Additional Tools
         run: |
           # Install tflint for Terraform linting
           curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
-          
+
           # Install tfsec for security scanning
           curl -s https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash
-          
+
           # Install checkov for additional security checks
           pip install checkov
-          
+
           # Install inframap for diagram generation
           wget https://github.com/cycloidio/inframap/releases/download/v0.6.7/inframap-linux-amd64.tar.gz
           tar -xzf inframap-linux-amd64.tar.gz
           sudo mv inframap /usr/local/bin/
-          
+
           echo "✅ Additional tools installed"
-      
+
       - name: 🔍 Terraform Format Check
         working-directory: ./terraform
         run: |
@@ -219,21 +219,21 @@ jobs:
             exit 1
           }
           echo "✅ Terraform formatting is correct"
-      
+
       - name: 🔧 Terraform Initialization
         working-directory: ./terraform
         run: |
           echo "🔧 Initializing Terraform..."
           terraform init -backend=false
           echo "✅ Terraform initialized"
-      
+
       - name: ✅ Terraform Validation
         working-directory: ./terraform
         run: |
           echo "✅ Validating Terraform configuration..."
           terraform validate
           echo "✅ Terraform configuration is valid"
-      
+
       - name: 🔍 TFLint Analysis
         working-directory: ./terraform
         run: |
@@ -241,28 +241,28 @@ jobs:
           tflint --init
           tflint --recursive --format=sarif --output=tflint-report.sarif || echo "⚠️ TFLint issues found"
           echo "✅ TFLint analysis completed"
-      
+
       - name: 🔒 TFSec Security Scan
         working-directory: ./terraform
         run: |
           echo "🔒 Running TFSec security scan..."
           tfsec . --format=sarif --out=tfsec-report.sarif || echo "⚠️ Security issues found"
           echo "✅ TFSec security scan completed"
-      
+
       - name: 🛡️ Checkov Security Analysis
         working-directory: ./terraform
         run: |
           echo "🛡️ Running Checkov security analysis..."
           checkov -d . --framework terraform --output sarif --output-file-path checkov-report.sarif || echo "⚠️ Checkov issues found"
           echo "✅ Checkov security analysis completed"
-      
+
       - name: 📋 Terraform Plan (Dry Run)
         working-directory: ./terraform
         env:
           TF_VAR_environment: ${{ matrix.environment }}
         run: |
           echo "📋 Creating Terraform plan for ${{ matrix.environment }}..."
-          
+
           # Create a basic tfvars file for validation
           cat > terraform.tfvars << EOF
           # Validation configuration for ${{ matrix.environment }}
@@ -280,14 +280,14 @@ jobs:
           encryption_key = "dummy-key"
           grafana_admin_password = "dummy-password"
           EOF
-          
+
           terraform plan -var-file=terraform.tfvars -out=tfplan-${{ matrix.environment }} || {
             echo "❌ Terraform plan failed for ${{ matrix.environment }}"
             exit 1
           }
-          
+
           echo "✅ Terraform plan created successfully for ${{ matrix.environment }}"
-      
+
       - name: 📊 Upload Terraform Reports
         uses: actions/upload-artifact@v4
         if: always()
@@ -312,29 +312,29 @@ jobs:
       contents: write
       pages: write
       id-token: write
-    
+
     steps:
       - name: 📥 Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: 🐍 Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      
+
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-      
+
       - name: 🔧 Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
-      
+
       - name: 📦 Install Documentation Tools
         run: |
           # Python documentation tools
@@ -342,36 +342,36 @@ jobs:
           pip install mkdocs mkdocs-material mkdocs-mermaid2-plugin
           pip install terraform-docs diagrams pydot graphviz
           pip install sphinx sphinx-rtd-theme sphinx-autodoc-typehints
-          
+
           # Install terraform-docs
           curl -Lo ./terraform-docs.tar.gz https://github.com/terraform-docs/terraform-docs/releases/download/v0.17.0/terraform-docs-v0.17.0-$(uname)-amd64.tar.gz
           tar -xzf terraform-docs.tar.gz
           chmod +x terraform-docs
           sudo mv terraform-docs /usr/local/bin/
-          
+
           # Install pre-commit for hooks
           pip install pre-commit
-          
+
           echo "✅ Documentation tools installed"
-      
+
       - name: 🔧 Generate Terraform Documentation
         run: |
           echo "📚 Generating Terraform module documentation..."
-          
+
           # Generate documentation for each module
           for module_dir in terraform/modules/*; do
             if [ -d "$module_dir" ]; then
               module_name=$(basename "$module_dir")
               echo "📝 Generating docs for module: $module_name"
-              
+
               # Generate terraform-docs
               terraform-docs markdown table "$module_dir" > "$module_dir/TERRAFORM.md"
-              
+
               # Update existing README.md with terraform-docs if needed
               if [ -f "$module_dir/README.md" ]; then
                 # Create backup
                 cp "$module_dir/README.md" "$module_dir/README.md.bak"
-                
+
                 # Add terraform docs section if not exists
                 if ! grep -q "## Terraform Documentation" "$module_dir/README.md"; then
                   echo "" >> "$module_dir/README.md"
@@ -382,29 +382,29 @@ jobs:
               fi
             fi
           done
-          
+
           echo "✅ Terraform documentation generated"
-      
+
       - name: 🎨 Generate Mermaid Diagrams
         run: |
           echo "🎨 Generating Mermaid diagrams..."
-          
+
           # Generate Mermaid diagrams
           python3 scripts/generate-mermaid-diagrams.py
-          
+
           echo "✅ Mermaid diagrams generated successfully"
-      
+
       - name: 🎨 Generate Infrastructure Diagrams
         run: |
           echo "🎨 Generating infrastructure diagrams..."
-          
+
           # Install system dependencies
           sudo apt-get update
           sudo apt-get install -y graphviz curl wget
-          
+
           # Make script executable
           chmod +x scripts/infrastructure-diagrams/generate-diagrams.sh
-          
+
           # Run diagram generation with enhanced error handling
           if ./scripts/infrastructure-diagrams/generate-diagrams.sh; then
             echo "✅ Infrastructure diagrams generated successfully"
@@ -417,72 +417,72 @@ jobs:
             # Continue despite diagram generation issues
             echo "⚠️ Continuing workflow despite diagram generation issues"
           fi
-      
+
       - name: 📄 Generate API Documentation
         run: |
           echo "📄 Generating API documentation..."
-          
+
           # Generate OpenAPI documentation for each service
           services=("ontology-management-service" "user-service" "audit-service" "data-kernel-service" "embedding-service" "scheduler-service" "event-gateway")
-          
+
           for service in "${services[@]}"; do
             if [ -d "$service" ]; then
               echo "📝 Processing service: $service"
-              
+
               # Create docs directory
               mkdir -p "docs/api/$service"
-              
+
               # Look for OpenAPI specs
               if [ -f "$service/openapi.json" ]; then
                 cp "$service/openapi.json" "docs/api/$service/"
               fi
-              
+
               if [ -f "$service/api/openapi.json" ]; then
                 cp "$service/api/openapi.json" "docs/api/$service/"
               fi
-              
+
               # Look for AsyncAPI specs
               if [ -f "$service/asyncapi.yaml" ]; then
                 cp "$service/asyncapi.yaml" "docs/api/$service/"
               fi
             fi
           done
-          
+
           echo "✅ API documentation collected"
-      
+
       - name: 📊 Generate Metrics Documentation
         run: |
           echo "📊 Generating metrics and monitoring documentation..."
-          
+
           # Create monitoring docs
           mkdir -p docs/monitoring
-          
+
           # Copy monitoring configurations
           if [ -d "monitoring" ]; then
             cp -r monitoring/* docs/monitoring/ 2>/dev/null || echo "No monitoring configs found"
           fi
-          
+
           echo "✅ Metrics documentation generated"
-      
+
       - name: 🔄 Update Project Documentation
         run: |
           echo "🔄 Updating project documentation..."
-          
+
           # Update main README.md with latest information
           current_date=$(date '+%Y-%m-%d %H:%M:%S UTC')
-          
+
           # Create comprehensive project documentation
           cat > docs/PROJECT_OVERVIEW.md << EOF
           # Arrakis Platform - Project Overview
-          
+
           Generated on: $current_date
-          
+
           ## Architecture
-          
+
           The Arrakis platform is a production-ready microservices architecture built on AWS with Kubernetes.
-          
+
           ### Microservices
-          
+
           1. **Ontology Management Service** - Core domain logic and ontology management
           2. **User Service** - User authentication and management
           3. **Audit Service** - Comprehensive audit logging and compliance
@@ -490,9 +490,9 @@ jobs:
           5. **Embedding Service** - ML embeddings and vector operations
           6. **Scheduler Service** - Job scheduling and workflow management
           7. **Event Gateway** - Event routing and external integrations
-          
+
           ### Infrastructure Components
-          
+
           - **Kubernetes (EKS)** - Container orchestration
           - **PostgreSQL (RDS)** - Primary databases
           - **Redis (ElastiCache)** - Caching and session storage
@@ -500,39 +500,39 @@ jobs:
           - **Prometheus/Grafana** - Monitoring and observability
           - **Jaeger** - Distributed tracing
           - **AWS Security Services** - GuardDuty, Security Hub, CloudTrail
-          
+
           ## Documentation
-          
+
           - [Infrastructure Diagrams](diagrams/index.html)
           - [API Documentation](api/)
           - [Monitoring Documentation](monitoring/)
           - [Terraform Documentation](../terraform/)
-          
+
           ## Links
-          
+
           - [GitHub Repository](https://github.com/user/arrakis-project)
           - [Infrastructure Diagrams](diagrams/)
           - [API Documentation](api/)
-          
+
           EOF
-          
+
           echo "✅ Project documentation updated"
-      
+
       - name: 💾 Commit Documentation Updates
         run: |
           echo "💾 Committing documentation updates..."
-          
+
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          
+
           # Add all generated documentation
           git add docs/
           git add terraform/modules/*/TERRAFORM.md
           git add terraform/modules/*/README.md
-          
+
           # Add Mermaid diagrams
           git add docs/diagrams/mermaid/ || true
-          
+
           # Check if there are changes
           if git diff --staged --quiet; then
             echo "ℹ️ No documentation changes to commit"
@@ -546,9 +546,9 @@ jobs:
             - Generated infrastructure diagrams (InfraMap + Python)
             - Updated API documentation
             - Refreshed monitoring documentation
-            
+
             Generated on: $(date '+%Y-%m-%d %H:%M:%S UTC')"
-            
+
             git push
             echo "✅ Documentation updates committed and pushed"
           fi
@@ -560,7 +560,7 @@ jobs:
     name: 🧪 Integration Testing
     runs-on: ubuntu-latest
     needs: [code-quality]
-    
+
     services:
       postgres:
         image: postgres:16
@@ -574,7 +574,7 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-      
+
       redis:
         image: redis:7-alpine
         options: >-
@@ -584,58 +584,58 @@ jobs:
           --health-retries 5
         ports:
           - 6379:6379
-    
+
     steps:
       - name: 📥 Checkout Repository
         uses: actions/checkout@v4
-      
+
       - name: 🐍 Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      
+
       - name: 📦 Install Dependencies
         run: |
           echo "📦 Installing test dependencies..."
-          
+
           # Install Python testing tools
           pip install --upgrade pip
           pip install pytest pytest-cov pytest-asyncio pytest-mock
           pip install httpx pytest-httpx
           pip install docker-compose
-          
+
           echo "✅ Test dependencies installed"
-      
+
       - name: 🧪 Run Integration Tests
         env:
           POSTGRES_URL: postgresql://postgres:postgres@localhost:5432/test_db
           REDIS_URL: redis://localhost:6379
         run: |
           echo "🧪 Running integration tests..."
-          
+
           # Run tests for each service
           services=("ontology-management-service" "user-service" "audit-service" "data-kernel-service" "embedding-service" "scheduler-service" "event-gateway")
-          
+
           for service in "${services[@]}"; do
             if [ -d "$service" ] && [ -f "$service/requirements.txt" ]; then
               echo "🧪 Testing service: $service"
-              
+
               pushd "$service"
-              
+
               # Install service dependencies
               pip install -r requirements.txt
-              
+
               # Run tests if they exist
               if [ -d "tests" ]; then
                 pytest tests/ -v --cov=. --cov-report=xml --cov-report=html || echo "⚠️ Tests failed for $service"
               fi
-              
+
               popd
             fi
           done
-          
+
           echo "✅ Integration tests completed"
-      
+
       - name: 📊 Upload Test Results
         uses: actions/upload-artifact@v4
         if: always()
@@ -655,34 +655,34 @@ jobs:
     runs-on: ubuntu-latest
     needs: [terraform-validation, integration-testing]
     if: github.ref == 'refs/heads/main'
-    
+
     steps:
       - name: 📥 Checkout Repository
         uses: actions/checkout@v4
-      
+
       - name: 🔧 Setup Tools
         run: |
           # Install kubectl
           curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
           chmod +x kubectl
           sudo mv kubectl /usr/local/bin/
-          
+
           # Install helm
           curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-          
+
           # Install docker compose
           sudo apt-get update
           sudo apt-get install -y docker-compose
-          
+
           echo "✅ Deployment tools installed"
-      
+
       - name: ✅ Validate Kubernetes Manifests
         run: |
           echo "✅ Validating Kubernetes manifests..."
-          
+
           # Find all Kubernetes manifests
           k8s_files=$(find . -name "*.yaml" -o -name "*.yml" | grep -E "(k8s|kubernetes|manifests)" | head -20)
-          
+
           if [ -n "$k8s_files" ]; then
             for file in $k8s_files; do
               echo "Validating: $file"
@@ -691,15 +691,15 @@ jobs:
           else
             echo "ℹ️ No Kubernetes manifests found"
           fi
-          
+
           echo "✅ Kubernetes manifest validation completed"
-      
+
       - name: ✅ Validate Docker Compose
         run: |
           echo "✅ Validating Docker Compose configurations..."
-          
+
           compose_files=$(find . -name "docker-compose*.yml" -o -name "docker-compose*.yaml")
-          
+
           if [ -n "$compose_files" ]; then
             for file in $compose_files; do
               echo "Validating: $file"
@@ -708,7 +708,7 @@ jobs:
           else
             echo "ℹ️ No Docker Compose files found"
           fi
-          
+
           echo "✅ Docker Compose validation completed"
 
   # ==========================================
@@ -717,26 +717,33 @@ jobs:
   notification:
     name: 📢 Notification & Reporting
     runs-on: ubuntu-latest
-    needs: [code-quality, terraform-validation, documentation-generation, integration-testing, deployment-validation]
+    needs:
+      [
+        code-quality,
+        terraform-validation,
+        documentation-generation,
+        integration-testing,
+        deployment-validation,
+      ]
     if: always()
-    
+
     steps:
       - name: 📊 Generate Summary Report
         run: |
           echo "📊 Generating workflow summary report..."
-          
+
           # Create summary
           cat > workflow-summary.md << EOF
           # 🏗️ Infrastructure Validation Summary
-          
+
           **Workflow Run:** ${{ github.run_number }}
           **Triggered by:** ${{ github.actor }}
           **Branch:** ${{ github.ref_name }}
           **Commit:** ${{ github.sha }}
           **Timestamp:** $(date '+%Y-%m-%d %H:%M:%S UTC')
-          
+
           ## 📋 Job Results
-          
+
           | Job | Status |
           |-----|--------|
           | Code Quality & Security | ${{ needs.code-quality.result }} |
@@ -744,19 +751,19 @@ jobs:
           | Documentation Generation | ${{ needs.documentation-generation.result }} |
           | Integration Testing | ${{ needs.integration-testing.result }} |
           | Deployment Validation | ${{ needs.deployment-validation.result }} |
-          
+
           ## 📈 Next Steps
-          
+
           EOF
-          
+
           if [ "${{ needs.code-quality.result }}" = "success" ] && [ "${{ needs.terraform-validation.result }}" = "success" ]; then
             echo "✅ All validations passed - Ready for deployment" >> workflow-summary.md
           else
             echo "❌ Some validations failed - Review required" >> workflow-summary.md
           fi
-          
+
           cat workflow-summary.md
-      
+
       - name: 📢 Create Issue on Failure
         if: failure()
         uses: actions/github-script@v7
@@ -768,28 +775,28 @@ jobs:
               title: `🚨 Infrastructure Validation Failed - Run #${{ github.run_number }}`,
               body: `
                 ## 🚨 Infrastructure Validation Failure
-                
+
                 **Workflow Run:** #${{ github.run_number }}
                 **Branch:** ${{ github.ref_name }}
                 **Commit:** ${{ github.sha }}
                 **Actor:** ${{ github.actor }}
                 **Timestamp:** ${new Date().toISOString()}
-                
+
                 ### 📋 Job Results
                 - Code Quality: ${{ needs.code-quality.result }}
                 - Terraform Validation: ${{ needs.terraform-validation.result }}
                 - Documentation Generation: ${{ needs.documentation-generation.result }}
                 - Integration Testing: ${{ needs.integration-testing.result }}
                 - Deployment Validation: ${{ needs.deployment-validation.result }}
-                
+
                 ### 🔍 Action Required
                 1. Review the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
                 2. Fix any identified issues
                 3. Re-run the workflow
-                
+
                 ### 📁 Artifacts
                 Check the workflow artifacts for detailed reports and logs.
-                
+
                 ---
                 *This issue was automatically created by the Infrastructure Validation workflow*
               `,

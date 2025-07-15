@@ -2,10 +2,10 @@
 데코레이터를 사용한 검증 규칙 예제
 새로운 규칙 작성 시 참고용
 """
-from typing import Dict, Any, Optional, List
+from typing import Any, Dict, List, Optional
 
-from core.validation.interfaces import BreakingChangeRule
 from core.validation.decorators import validation_rule
+from core.validation.interfaces import BreakingChangeRule
 from core.validation.models import BreakingChange, Severity
 from core.validation.ports import ValidationContext
 

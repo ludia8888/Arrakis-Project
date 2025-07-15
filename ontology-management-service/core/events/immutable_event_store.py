@@ -6,21 +6,25 @@ True immutable event log with cryptographic integrity guarantees
 """
 
 import asyncio
+import base64
 import hashlib
+import hmac
 import json
+import logging
 import time
 import uuid
-from dataclasses import dataclass, asdict, field
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Union, AsyncIterator, Tuple
 from enum import Enum
-import hmac
-import base64
-from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import rsa, padding
-from cryptography.hazmat.primitives.serialization import load_pem_private_key, load_pem_public_key
+from typing import Any, AsyncIterator, Dict, List, Optional, Tuple, Union
+
 import redis.asyncio as redis
-import logging
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import padding, rsa
+from cryptography.hazmat.primitives.serialization import (
+    load_pem_private_key,
+    load_pem_public_key,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -531,7 +535,8 @@ class ImmutableEventStore:
 
  return None
 
- def _apply_event_to_state(self, state: Dict[str, Any], event: ImmutableEvent) -> Dict[str, Any]:
+ def _apply_event_to_state(self, state: Dict[str, Any],
+     event: ImmutableEvent) -> Dict[str, Any]:
  """Apply event to aggregate state (domain-specific logic)"""
 
  if event.metadata.event_type == EventType.AGGREGATE_SNAPSHOT:

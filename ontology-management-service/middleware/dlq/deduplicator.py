@@ -3,9 +3,9 @@ Message deduplicator for DLQ
 """
 import hashlib
 import json
-from typing import Dict, Any, Optional, Set
-from datetime import datetime, timedelta
 import logging
+from datetime import datetime, timedelta
+from typing import Any, Dict, Optional, Set
 
 from .models import DLQMessage
 

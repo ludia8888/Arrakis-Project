@@ -6,10 +6,10 @@ Validates that all components are working together correctly.
 """
 
 import asyncio
-import sys
-from pathlib import Path
-from datetime import datetime
 import json
+import sys
+from datetime import datetime
+from pathlib import Path
 from typing import Dict, List, Tuple
 
 # Add project root to path
@@ -17,15 +17,15 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from arrakis_common import get_logger
+from core.api.schema_generator import graphql_generator, openapi_generator
+from core.schema.conflict_resolver import conflict_resolver
+from core.versioning.dag_compaction import dag_compactor
+from core.versioning.merge_engine import merge_engine
+from models.domain import Cardinality, Directionality, LinkType, ObjectType, Property
 
 # Import all major components
-from models.semantic_types import semantic_type_registry, SemanticType
-from models.struct_types import struct_type_registry, StructType
-from models.domain import ObjectType, Property, LinkType, Cardinality, Directionality
-from core.api.schema_generator import graphql_generator, openapi_generator
-from core.versioning.merge_engine import merge_engine
-from core.versioning.dag_compaction import dag_compactor
-from core.schema.conflict_resolver import conflict_resolver
+from models.semantic_types import SemanticType, semantic_type_registry
+from models.struct_types import StructType, struct_type_registry
 
 logger = get_logger(__name__)
 

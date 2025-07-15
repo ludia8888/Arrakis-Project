@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 Comprehensive System Validation
-최종적으로 모든 근원적 문제를 식별하고 검증하는 포괄적 테스트
+Comprehensive test to finally identify and verify all root problems
 """
 import asyncio
 import importlib
@@ -116,10 +116,7 @@ class SystemValidator:
 
  # Delta Encoding 테스트
  async def test_delta_encoding():
- from core.versioning.delta_compression import (
- DeltaType,
- EnhancedDeltaEncoder,
- )
+ from core.versioning.delta_compression import DeltaType, EnhancedDeltaEncoder
 
  encoder = EnhancedDeltaEncoder()
  old = {"name": "test", "value": 1}
@@ -142,7 +139,7 @@ class SystemValidator:
  doc = UnfoldableDocument(doc_data)
  folded = doc.fold(UnfoldLevel.COLLAPSED)
  assert "@unfoldable" in folded
- return f"Document folded successfully"
+ return "Document folded successfully"
 
  # Metadata Frames 테스트
  async def test_metadata():
@@ -213,7 +210,7 @@ Content"""
  total_deps = len(dependencies)
  working_deps = sum(1 for r in dependencies.values() if r["success"])
 
- report = f"""
+ report = """
 # OMS TerminusDB 확장 기능 포괄적 검증 보고서
 
 **검증 일시**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
@@ -269,8 +266,8 @@ Content"""
  for dep in missing_deps_list:
  report += f"- {dep}\n"
 
- # 근원적 문제 분석
- report += "\n\n## 🔧 근원적 문제 분석 및 해결방안\n"
+ # 근원적 문제 minutes석
+ report += "\n\n## 🔧 근원적 문제 minutes석 및 해결방안\n"
 
  failed_modules = [m for m, r in file_structure.items() if not r["success"]]
  if failed_modules:
@@ -295,13 +292,13 @@ Content"""
 
  # 해결방안 제시
  if "sentence_transformers" in missing_module:
- report += f"- 해결방안: `pip install sentence-transformers`\n"
+ report += "- 해결방안: `pip install sentence-transformers`\n"
  elif "middleware.common" in missing_module:
- report += f"- 해결방안: 누락된 middleware 모듈 생성 필요\n"
+ report += "- 해결방안: 누락된 middleware 모듈 생성 필요\n"
  elif "core.middleware" in missing_module:
- report += f"- 해결방안: 누락된 core.middleware 모듈 생성 필요\n"
+ report += "- 해결방안: 누락된 core.middleware 모듈 생성 필요\n"
  else:
- report += f"- 해결방안: 적절한 import 경로 수정 또는 모듈 생성 필요\n"
+ report += "- 해결방안: 적절한 import 경로 수정 또는 모듈 생성 필요\n"
 
  # 성공한 기능들
  working_features = [m for m, r in file_structure.items() if r["success"]]
@@ -318,22 +315,22 @@ Content"""
  * 100
  )
 
- report += f"\n## 📈 전체 결론\n"
+ report += "\n## 📈 전체 결론\n"
  report += f"\n**전체 성공률: {overall_success:.1f}%**\n"
 
  if overall_success >= 70:
- report += "\n🎉 **시스템 상태: 양호** - 대부분의 핵심 기능이 정상 동작합니다.\n"
+ report += "\n🎉 **시스템 상태: 양호** - 대부minutes의 핵심 기능이 정상 동작합니다.\n"
  elif overall_success >= 50:
  report += "\n⚠️ **시스템 상태: 보통** - 일부 의존성 문제가 있지만 핵심 기능은 동작합니다.\n"
  else:
  report += "\n🚨 **시스템 상태: 주의 필요** - 다수의 의존성 문제로 인해 기능 제한이 있습니다.\n"
 
- report += f"\n### 즉시 수행할 작업:\n"
+ report += "\n### 즉시 수행할 작업:\n"
  if missing_deps_list:
  report += f"1. **의존성 설치**: `pip install {' '.join(missing_deps_list)}`\n"
  if failed_modules:
  report += f"2. **Import 경로 수정**: {len(failed_modules)}개 모듈의 import 문제 해결\n"
- report += f"3. **통합 테스트**: 모든 수정 후 전체 시스템 재검증\n"
+ report += "3. **통합 테스트**: 모든 수정 후 전체 시스템 재검증\n"
 
  return report
 
@@ -364,7 +361,7 @@ async def main():
  with open(report_path, "w", encoding = "utf-8") as f:
  f.write(report)
 
- print(f"\n✅ 포괄적 검증 완료!")
+ print("\n✅ 포괄적 검증 완료!")
  print(f"📄 상세 보고서: {report_path}")
  print("\n" + "=" * 80)
  print("🎯 핵심 요약:")

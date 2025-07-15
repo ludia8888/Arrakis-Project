@@ -36,7 +36,7 @@ spec:
   lifecycle: production
   owner: platform-team
   system: arrakis
-  
+
   # Service dependencies
   dependsOn:
     - component:user-service
@@ -46,7 +46,7 @@ spec:
     - resource:postgresql-primary
     - resource:redis-cluster
     - resource:terminusdb-cluster
-    
+
   # Health checks
   healthChecks:
     - name: http
@@ -61,7 +61,7 @@ spec:
       timeout: 10s
       successThreshold: 1
       failureThreshold: 2
-      
+
   # Metrics and SLOs
   metrics:
     - name: request_rate
@@ -79,7 +79,7 @@ spec:
     - name: branch_operations
       query: rate(oms_branch_operations_total[5m])
       unit: ops/s
-      
+
   slos:
     - name: availability
       description: Service should be available 99.9% of the time
@@ -106,7 +106,7 @@ spec:
         ratio:
           good: http_requests_total{service="ontology-management-service",status!~"5.."}
           total: http_requests_total{service="ontology-management-service"}
-          
+
   # Alerts
   alerts:
     - name: OMSHighErrorRate
@@ -133,7 +133,7 @@ spec:
       annotations:
         summary: OMS memory usage is high
         runbook: https://runbooks.arrakis.internal/oms/high-memory
-        
+
   # Runbooks
   runbooks:
     - name: Service Down
@@ -164,7 +164,7 @@ spec:
         - Check connection pool usage
         - Analyze request patterns
         - Review cache hit rates
-        
+
   # Deployment configuration
   deployment:
     replicas:

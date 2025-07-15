@@ -1,16 +1,16 @@
 """
 Service Factory for resolving circular dependencies
 """
-from typing import Optional, Dict, Any
-import redis.asyncio as redis
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Any, Dict, Optional
 
-from core.interfaces import IBranchService, ITimeTravelService
+import redis.asyncio as redis
+from arrakis_common import get_logger
 from core.branch.foundry_branch_service import FoundryBranchService
+from core.interfaces import IBranchService, ITimeTravelService
 from core.time_travel.service import TimeTravelQueryService
 from core.versioning.version_service import VersionTrackingService, get_version_service
 from shared.cache.smart_cache import SmartCache
-from arrakis_common import get_logger
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = get_logger(__name__)
 

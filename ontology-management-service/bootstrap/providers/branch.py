@@ -1,13 +1,16 @@
 """Branch service provider"""
 from typing import Optional
 
-from core.branch.service_refactored import BranchService
-from database.clients.unified_database_client import UnifiedDatabaseClient
-from .base import Provider
-from .event import EventProvider
+from core.branch.conflict_resolver import ConflictResolver
+
 # Dummy classes to satisfy BranchService dependencies for now
 from core.branch.diff_engine import DiffEngine
-from core.branch.conflict_resolver import ConflictResolver
+from core.branch.service_refactored import BranchService
+from database.clients.unified_database_client import UnifiedDatabaseClient
+
+from .base import Provider
+from .event import EventProvider
+
 
 class BranchProvider(Provider[BranchService]):
  """Provider for branch service instances"""

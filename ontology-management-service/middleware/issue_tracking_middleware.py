@@ -1,6 +1,6 @@
 """
 Issue Tracking Middleware V3 - Production Ready
-엔터프라이즈급 이슈 추적, 감사, 승인 통합 미들웨어
+Enterprise-grade issue tracking, audit, and approval integrated middleware
 
 주요 기능:
 - 이슈 ID 요구사항 검증
@@ -8,18 +8,22 @@ Issue Tracking Middleware V3 - Production Ready
 - 포괄적인 감사 로깅
 - FastAPI 공식 API만 사용 (내부 구조 의존성 제거)
 """
-from typing import Optional, List, Dict, Any, Callable
-from fastapi import Request, Response, HTTPException, status
-from fastapi.responses import JSONResponse
 import json
 import os
 from datetime import datetime
+from typing import Any, Callable, Dict, List, Optional
 
+from arrakis_common import get_logger
 from core.auth import UserContext
 from core.issue_tracking.issue_service import get_issue_service
-from models.issue_tracking import IssueReference, parse_issue_reference, extract_issue_references
-from arrakis_common import get_logger
-from core.override_approval_service import override_approval_service, OverrideType
+from core.override_approval_service import OverrideType, override_approval_service
+from fastapi import HTTPException, Request, Response, status
+from fastapi.responses import JSONResponse
+from models.issue_tracking import (
+    IssueReference,
+    extract_issue_references,
+    parse_issue_reference,
+)
 
 logger = get_logger(__name__)
 
@@ -74,7 +78,8 @@ class IssueTrackingMiddleware:
  # Check if this is a tracked operation
  for tracked_key, tracked_type in self.TRACKED_OPERATIONS.items():
  method, path_pattern = tracked_key
- if method == request.method and self._matches_path_pattern(request.url.path, path_pattern):
+ if method == request.method and self._matches_path_pattern(request.url.path,
+     path_pattern):
  change_type = tracked_type
  break
 
@@ -139,6 +144,8 @@ class IssueTrackingMiddleware:
  content={
  "error": "Unauthorized for emergency override",
  "message": "Emergency override requires pre-approval. Use the override approval API to request permission.",
+
+
  "help": "POST /api/v1/override-approvals to request override approval"
  }
  )
@@ -184,6 +191,8 @@ class IssueTrackingMiddleware:
  justification = override_justification,
  request_headers = dict(request.headers),
  client_ip = getattr(request.client, "host", "unknown") if request.client else "unknown",
+
+
  override_request_id = override_request_id
  )
 
@@ -445,7 +454,8 @@ class IssueTrackingMiddleware:
  except Exception as e:
  logger.error(f"Critical error logging emergency override: {e}")
  # Don't fail the request due to logging errors, but ensure it's recorded
- logger.critical(f"EMERGENCY_OVERRIDE_LOG_FAILURE: user={kwargs.get('user', {}).get('username', 'unknown')} path={kwargs.get('path', 'unknown')}")
+ logger.critical(f"EMERGENCY_OVERRIDE_LOG_FAILURE: user={kwargs.get('user',
+     {}).get('username', 'unknown')} path={kwargs.get('path', 'unknown')}")
 
  def _sanitize_headers(self, headers: Dict[str, str]) -> Dict[str, str]:
  """Sanitize headers to remove sensitive information before logging"""

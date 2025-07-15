@@ -2,15 +2,16 @@
 Time Travel Query Cache with Redis Integration
 Provides distributed caching for temporal queries
 """
-from typing import Optional, Dict, Any, List
-from datetime import datetime, timedelta
-import json
 import hashlib
-import redis.asyncio as redis
+import json
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
-from shared.cache.smart_cache import SmartCache
-from .models import TemporalQueryResult, TemporalResourceVersion
+import redis.asyncio as redis
 from arrakis_common import get_logger
+from shared.cache.smart_cache import SmartCache
+
+from .models import TemporalQueryResult, TemporalResourceVersion
 
 logger = get_logger(__name__)
 
@@ -269,7 +270,7 @@ class TemporalQueryCache:
  ))
 
  # Create dummy query object (not used for cached results)
- from .models import TemporalResourceQuery, TemporalQuery, TemporalOperator
+ from .models import TemporalOperator, TemporalQuery, TemporalResourceQuery
  dummy_query = TemporalResourceQuery(
  resource_type = "cached",
  branch = "cached",

@@ -9,11 +9,11 @@ from .schema import SchemaProvider
 from .validation import ValidationProvider
 
 __all__ = [
- "PostgresClientProvider",
- # "SQLiteClientProvider", # Removed - PostgreSQL-only architecture
- "UnifiedDatabaseProvider",
- "EventProvider",
- "SchemaProvider",
- "ValidationProvider",
- "EmbeddingServiceProvider",
+    "PostgresClientProvider",
+    # "SQLiteClientProvider", # Removed - PostgreSQL-only architecture
+    "UnifiedDatabaseProvider",
+    "EventProvider",
+    "SchemaProvider",
+    "ValidationProvider",
+    "EmbeddingServiceProvider",
 ]

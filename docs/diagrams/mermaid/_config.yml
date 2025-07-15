@@ -24,7 +24,7 @@ nav:
     url: "/"
   - name: "Microservices"
     url: "/microservices-architecture"
-  - name: "Infrastructure" 
+  - name: "Infrastructure"
     url: "/infrastructure-architecture"
   - name: "Security"
     url: "/security-architecture"

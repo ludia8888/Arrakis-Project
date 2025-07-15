@@ -2,15 +2,15 @@
 Optimistic Concurrency Control with Foundry-style conflict resolution
 """
 import hashlib
-from typing import Optional, Dict, Any, Tuple
-from datetime import datetime, timezone
 from contextlib import asynccontextmanager
-import asyncpg
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text
+from datetime import datetime, timezone
+from typing import Any, Dict, Optional, Tuple
 
-from models.exceptions import ConcurrencyError, ConflictError
+import asyncpg
 from arrakis_common import get_logger
+from models.exceptions import ConcurrencyError, ConflictError
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = get_logger(__name__)
 

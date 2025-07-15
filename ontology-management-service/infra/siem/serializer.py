@@ -1,26 +1,26 @@
 """
-SIEM 이벤트 직렬화 도구
-복잡한 이벤트 변환 로직을 분리
+SIEM event serialization tool
+Separate complex event transformation logic
 """
-from typing import Dict, Any, Type
-from datetime import datetime
 import json
+from datetime import datetime
+from typing import Any, Dict, Type
 
 from core.validation.events import (
- TamperingEvent,
- ValidationLogEntry,
- SecurityAlert,
- EVENT_TYPE_MAPPING
+    EVENT_TYPE_MAPPING,
+    SecurityAlert,
+    TamperingEvent,
+    ValidationLogEntry,
 )
 
 
 class SiemEventSerializer:
- """SIEM 형식으로 이벤트를 직렬화하는 도구"""
+ """Tool for serializing events to SIEM format"""
 
  @staticmethod
  def serialize(event: Any) -> Dict[str, Any]:
  """
- 이벤트 객체를 SIEM 형식으로 직렬화
+ Serialize event object to SIEM format
 
  Args:
  event: 직렬화할 이벤트 객체

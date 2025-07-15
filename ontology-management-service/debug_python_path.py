@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Debug Python path and module import issues"""
-import sys
 import os
+import sys
 
 print("=== Python Path Debug ===")
 print(f"Python executable: {sys.executable}")
 print(f"Current working directory: {os.getcwd()}")
-print(f"\nPython path:")
+print("\nPython path:")
 for path in sys.path:
  print(f" - {path}")
 
@@ -16,11 +16,13 @@ clients_path = os.path.join(database_path, 'clients')
 
 print(f"database/ exists: {os.path.exists(database_path)}")
 print(f"database/clients/ exists: {os.path.exists(clients_path)}")
-print(f"database/__init__.py exists: {os.path.exists(os.path.join(database_path, '__init__.py'))}")
-print(f"database/clients/__init__.py exists: {os.path.exists(os.path.join(clients_path, '__init__.py'))}")
+print(f"database/__init__.py exists: {os.path.exists(os.path.join(database_path,
+    '__init__.py'))}")
+print(f"database/clients/__init__.py exists: {os.path.exists(os.path.join(clients_path,
+    '__init__.py'))}")
 
 if os.path.exists(clients_path):
- print(f"\nFiles in database/clients/:")
+ print("\nFiles in database/clients/:")
  for file in os.listdir(clients_path):
  print(f" - {file}")
 

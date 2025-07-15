@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check imports in Docker environment"""
-import sys
 import os
+import sys
 
 print("=== Docker Import Debug ===")
 print(f"Python executable: {sys.executable}")

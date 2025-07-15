@@ -64,7 +64,7 @@ spec:
     - oms-graphql-api
     - oms-websocket-api
     - oms-grpc-api
-  
+
 ---
 apiVersion: backstage.io/v1alpha1
 kind: API

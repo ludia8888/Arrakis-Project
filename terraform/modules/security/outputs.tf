@@ -202,7 +202,7 @@ output "security_policies" {
   value = {
     for sa_name in keys(local.service_accounts) :
     sa_name => {
-      custom_policy_arn = lookup(aws_iam_role_policy.service_account_custom, sa_name, null) != null ? 
+      custom_policy_arn = lookup(aws_iam_role_policy.service_account_custom, sa_name, null) != null ?
                          aws_iam_role_policy.service_account_custom[sa_name].arn : null
       managed_policies  = lookup(local.service_accounts, sa_name, {}).policies
     }

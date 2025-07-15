@@ -8,31 +8,31 @@ from typing import Any, Dict, Optional, Type
 import yaml
 from pydantic import Field, validator
 from pydantic_settings import (
- BaseSettings,
- PydanticBaseSettingsSource,
- SettingsConfigDict,
+    BaseSettings,
+    PydanticBaseSettingsSource,
+    SettingsConfigDict,
 )
 
 
 class YamlConfigSettingsSource(PydanticBaseSettingsSource):
- """
- A settings source that loads variables from a YAML file
- at a specified path.
- """
+    """
+    A settings source that loads variables from a YAML file
+    at a specified path.
+    """
 
- def __init__(self, settings_cls: Type[BaseSettings], yaml_file_path: str):
- super().__init__(settings_cls)
- self.yaml_file_path = yaml_file_path
+    def __init__(self, settings_cls: Type[BaseSettings], yaml_file_path: str):
+        super().__init__(settings_cls)
+        self.yaml_file_path = yaml_file_path
 
- def get_field_value(self, field, field_name):
- # This source is designed to load a whole file content into one field
- return None
+    def get_field_value(self, field, field_name):
+        # This source is designed to load a whole file content into one field
+        return None
 
- def __call__(self) -> Dict[str, Any]:
- if not os.path.exists(self.yaml_file_path):
- return {}
- with open(self.yaml_file_path, "r") as f:
- return yaml.safe_load(f) or {}
+    def __call__(self) -> Dict[str, Any]:
+        if not os.path.exists(self.yaml_file_path):
+            return {}
+        with open(self.yaml_file_path, "r") as f:
+            return yaml.safe_load(f) or {}
 
 
 class TerminusDBConfig(BaseSettings):
@@ -239,7 +239,8 @@ class CircuitBreakerConfig(BaseSettings):
  error_rate_threshold: float = Field(
  default = 0.5, validation_alias = "CIRCUIT_BREAKER_ERROR_RATE_THRESHOLD"
  )
- window_size: int = Field(default = 60, validation_alias = "CIRCUIT_BREAKER_WINDOW_SIZE")
+ window_size: int = Field(default = 60,
+     validation_alias = "CIRCUIT_BREAKER_WINDOW_SIZE")
  half_open_max_calls: int = Field(
  default = 3, validation_alias = "CIRCUIT_BREAKER_HALF_OPEN_MAX_CALLS"
  )

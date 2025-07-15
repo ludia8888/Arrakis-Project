@@ -48,7 +48,8 @@ class SchemaRepository:
  logger.error(f"Error listing all object types from branch '{branch}': {e}")
  raise
 
- async def create_new_object_type(self, branch: str, data: ObjectTypeCreate, author: str) -> bool:
+ async def create_new_object_type(self, branch: str, data: ObjectTypeCreate,
+     author: str) -> bool:
  """
  새로운 ObjectType 문서를 생성합니다.
 
@@ -91,7 +92,8 @@ class SchemaRepository:
  logger.error(f"Error creating new object type '{data.name}': {e}")
  raise
 
- async def get_object_type_by_name(self, name: str, branch: str) -> Optional[Dict[str, Any]]:
+ async def get_object_type_by_name(self, name: str, branch: str) -> Optional[Dict[str,
+     Any]]:
  """
  이름과 브랜치로 특정 ObjectType을 조회합니다.
  현재 UDC는 브랜치를 직접 지원하지 않으므로, 쿼리 필터로 처리합니다.
@@ -109,7 +111,8 @@ class SchemaRepository:
  logger.error(f"Error getting object type by name '{name}': {e}", exc_info = True)
  return None
 
- async def update_object_type(self, schema_id: str, branch: str, schema_def: Dict[str, Any], updated_by: str) -> bool:
+ async def update_object_type(self, schema_id: str, branch: str, schema_def: Dict[str,
+     Any], updated_by: str) -> bool:
  """
  주어진 ID와 브랜치에 해당하는 ObjectType 문서를 업데이트합니다.
  """
@@ -130,7 +133,9 @@ class SchemaRepository:
  logger.error(f"Error updating object type '{schema_id}': {e}", exc_info = True)
  return False
 
- async def get_object_type_by_id(self, schema_id: str, branch: str) -> Optional[Dict[str, Any]]:
+ async def get_object_type_by_id(self, schema_id: str, branch: str) -> Optional[Dict[str,
+
+     Any]]:
  """
  ID로 특정 ObjectType을 조회합니다.
  """
@@ -146,7 +151,8 @@ class SchemaRepository:
  logger.error(f"Error getting object type by ID '{schema_id}': {e}", exc_info = True)
  return None
 
- async def mark_object_type_deleted(self, schema_id: str, branch: str, deleted_by: str) -> bool:
+ async def mark_object_type_deleted(self, schema_id: str, branch: str,
+     deleted_by: str) -> bool:
  """
  ObjectType을 삭제된 것으로 표시합니다.
  실제 삭제 대신 status를 'deleted'로 변경합니다.
@@ -170,5 +176,6 @@ class SchemaRepository:
  logger.info(f"Marked ObjectType '{schema_id}' as deleted in branch '{branch}'")
  return affected_rows > 0 if isinstance(affected_rows, int) else bool(affected_rows)
  except Exception as e:
- logger.error(f"Error marking object type '{schema_id}' as deleted: {e}", exc_info = True)
+ logger.error(f"Error marking object type '{schema_id}' as deleted: {e}",
+     exc_info = True)
  return False

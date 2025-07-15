@@ -15,7 +15,7 @@ NC='\033[0m' # No Color
 echo -e "\n1. 환경 변수 확인:"
 if [ -f "ontology-management-service/.env" ]; then
     echo -e "${GREEN}✓${NC} .env 파일 존재"
-    
+
     # 주요 설정 확인
     if grep -q "CIRCUIT_BREAKER_FAILURE_THRESHOLD" ontology-management-service/.env; then
         echo -e "${GREEN}✓${NC} 서킷 브레이커 설정 확인"
@@ -23,7 +23,7 @@ if [ -f "ontology-management-service/.env" ]; then
     else
         echo -e "${YELLOW}⚠${NC} 서킷 브레이커 설정 없음"
     fi
-    
+
     if grep -q "ENABLE_ETAG_CACHING=true" ontology-management-service/.env; then
         echo -e "${GREEN}✓${NC} E-Tag 캐싱 활성화"
     else
@@ -52,7 +52,7 @@ fi
 echo -e "\n3. 서비스 헬스 체크:"
 if curl -s http://localhost:8091/health > /dev/null 2>&1; then
     echo -e "${GREEN}✓${NC} OMS 서비스 응답"
-    
+
     # E-Tag 테스트
     echo -e "\n4. E-Tag 테스트:"
     RESPONSE=$(curl -s -I http://localhost:8091/api/v1/schemas/main/object-types 2>/dev/null)

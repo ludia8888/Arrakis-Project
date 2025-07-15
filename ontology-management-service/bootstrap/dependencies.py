@@ -2,14 +2,14 @@
 
 from typing import Optional
 
-from dependency_injector.wiring import inject, Provide
-
-from .containers import Container
 from bootstrap.config import AppConfig
+from bootstrap.providers.redis_provider import RedisProvider
 from core.branch.service_refactored import BranchService
 from core.schema.service import SchemaService
 from database.clients.unified_database_client import UnifiedDatabaseClient
-from bootstrap.providers.redis_provider import RedisProvider
+from dependency_injector.wiring import Provide, inject
+
+from .containers import Container
 
 # Global container instance
 _container: Optional[Container] = None

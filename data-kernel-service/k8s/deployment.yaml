@@ -47,23 +47,32 @@ data:
   ENABLE_DISTRIBUTED_QUERIES: "true"
 
 ---
-apiVersion: v1
-kind: Secret
-metadata:
-  name: data-kernel-service-secrets
-  namespace: data-kernel-service
-type: Opaque
-stringData:
-  TERMINUS_DB_USER: "admin"
-  TERMINUS_DB_PASS: "your-terminus-password"
-  TERMINUS_DB_TOKEN: "your-terminus-api-token"
-  DATABASE_URL: "postgresql://data_kernel:password@postgres-rds.cluster-xxx.us-east-1.rds.amazonaws.com:5432/data_kernel_db"
-  REDIS_URL: "redis://redis-cluster.xxx.cache.amazonaws.com:6379/1"
-  NATS_URL: "nats://nats-cluster.data-kernel-service.svc.cluster.local:4222"
-  S3_BUCKET: "arrakis-data-kernel-cache"
-  S3_ACCESS_KEY: "your-s3-access-key"
-  S3_SECRET_KEY: "your-s3-secret-key"
-  ENCRYPTION_KEY: "your-encryption-key-base64"
+# WARNING: This Secret template should NOT be applied directly to production!
+# Create secrets using kubectl or external secret management systems:
+#
+# kubectl create secret generic data-kernel-service-secrets \
+#   --namespace=data-kernel-service \
+#   --from-literal=TERMINUS_DB_USER="${TERMINUS_DB_USER}" \
+#   --from-literal=TERMINUS_DB_PASS="${TERMINUS_DB_PASS}" \
+#   --from-literal=TERMINUS_DB_TOKEN="${TERMINUS_DB_TOKEN}" \
+#   --from-literal=DATABASE_URL="${DATABASE_URL}" \
+#   --from-literal=REDIS_URL="${REDIS_URL}" \
+#   --from-literal=NATS_URL="${NATS_URL}" \
+#   --from-literal=S3_BUCKET="${S3_BUCKET}" \
+#   --from-literal=S3_ACCESS_KEY="${S3_ACCESS_KEY}" \
+#   --from-literal=S3_SECRET_KEY="${S3_SECRET_KEY}" \
+#   --from-literal=ENCRYPTION_KEY="${ENCRYPTION_KEY}"
+#
+# SECURITY NOTE: Data kernel handles core data operations and requires high security.
+# Use external secret management systems (AWS Secrets Manager, HashiCorp Vault, etc.)
+#
+# apiVersion: v1
+# kind: Secret
+# metadata:
+#   name: data-kernel-service-secrets
+#   namespace: data-kernel-service
+# type: Opaque
+# # Data should be provided by external secret management system
 
 ---
 apiVersion: apps/v1

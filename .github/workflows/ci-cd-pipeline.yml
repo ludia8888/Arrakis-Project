@@ -8,9 +8,9 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Deployment environment'
+        description: "Deployment environment"
         required: true
-        default: 'staging'
+        default: "staging"
         type: choice
         options:
           - development
@@ -22,12 +22,12 @@ env:
   ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-west-2.amazonaws.com
   DOCKER_BUILDKIT: 1
   COMPOSE_DOCKER_CLI_BUILD: 1
-  PYTHON_VERSION: '3.12'
-  NODE_VERSION: '20'
-  GO_VERSION: '1.21'
-  TERRAFORM_VERSION: '1.6.0'
-  KUBECTL_VERSION: '1.28.0'
-  HELM_VERSION: '3.13.0'
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION: "20"
+  GO_VERSION: "1.21"
+  TERRAFORM_VERSION: "1.6.0"
+  KUBECTL_VERSION: "1.28.0"
+  HELM_VERSION: "3.13.0"
 
 jobs:
   # Code Quality and Security Checks
@@ -241,7 +241,7 @@ jobs:
       - name: Build and scan Docker image
         run: |
           cd ${{ matrix.service }}
-          
+
           # Build image
           docker build \
             --cache-from ${{ env.ECR_REGISTRY }}/${{ matrix.service }}:cache \
@@ -249,7 +249,7 @@ jobs:
             -t ${{ matrix.service }}:${{ github.sha }} \
             -t ${{ matrix.service }}:latest \
             .
-          
+
           # Scan for vulnerabilities
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
             aquasec/trivy:latest image \
@@ -272,7 +272,7 @@ jobs:
           docker tag ${{ matrix.service }}:${{ github.sha }} ${{ env.ECR_REGISTRY }}/${{ matrix.service }}:${{ github.sha }}
           docker tag ${{ matrix.service }}:latest ${{ env.ECR_REGISTRY }}/${{ matrix.service }}:latest
           docker tag ${{ matrix.service }}:latest ${{ env.ECR_REGISTRY }}/${{ matrix.service }}:cache
-          
+
           docker push ${{ env.ECR_REGISTRY }}/${{ matrix.service }}:${{ github.sha }}
           docker push ${{ env.ECR_REGISTRY }}/${{ matrix.service }}:latest
           docker push ${{ env.ECR_REGISTRY }}/${{ matrix.service }}:cache
@@ -295,7 +295,7 @@ jobs:
       - name: Start services with docker-compose
         run: |
           docker-compose -f docker-compose.yml up -d
-          
+
           # Wait for services to be ready
           for i in {1..30}; do
             if docker-compose ps | grep -E "(Exit|unhealthy)" > /dev/null; then
@@ -303,7 +303,7 @@ jobs:
               docker-compose logs
               exit 1
             fi
-            
+
             if docker-compose ps | grep -v "Up" | grep -v "NAME" > /dev/null; then
               echo "Waiting for services to start..."
               sleep 10
@@ -412,12 +412,12 @@ jobs:
           wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
           tar xf kubeval-linux-amd64.tar.gz
           sudo cp kubeval /usr/local/bin
-          
+
           # Install kube-score
           wget https://github.com/zegl/kube-score/releases/download/v1.17.0/kube-score_1.17.0_linux_amd64.tar.gz
           tar xf kube-score_1.17.0_linux_amd64.tar.gz
           sudo cp kube-score /usr/local/bin
-          
+
           # Install polaris
           wget https://github.com/FairwindsOps/polaris/releases/download/8.5.4/polaris_linux_amd64.tar.gz
           tar xf polaris_linux_amd64.tar.gz
@@ -480,17 +480,17 @@ jobs:
         run: |
           ENVIRONMENT=${{ github.event.inputs.environment || 'staging' }}
           IMAGE_TAG=${{ github.sha }}
-          
+
           # Deploy each service
           for service in ontology-management-service user-service audit-service data-kernel-service embedding-service scheduler-service event-gateway; do
             echo "Deploying $service to $ENVIRONMENT"
-            
+
             # Apply Kubernetes manifests
             kubectl apply -f $service/k8s/ -n arrakis || true
-            
+
             # Update image tag
             kubectl set image deployment/$service $service=${{ env.ECR_REGISTRY }}/$service:$IMAGE_TAG -n arrakis || true
-            
+
             # Wait for rollout
             kubectl rollout status deployment/$service -n arrakis --timeout=300s || true
           done
@@ -498,15 +498,15 @@ jobs:
       - name: Run comprehensive deployment validation
         run: |
           echo "🚀 Running comprehensive deployment validation..."
-          
+
           # Make validation script executable
           chmod +x scripts/deployment-validation.sh
-          
+
           # Run comprehensive validation
           ENVIRONMENT=${{ github.event.inputs.environment || 'staging' }} ./scripts/deployment-validation.sh
-          
+
           echo "✅ Deployment validation completed"
-      
+
       - name: Upload deployment validation report
         uses: actions/upload-artifact@v4
         if: always()
@@ -566,14 +566,14 @@ jobs:
       - name: Download all security reports
         uses: actions/download-artifact@v4
         with:
-          pattern: '*-report*'
+          pattern: "*-report*"
           merge-multiple: true
 
       - name: Generate security summary
         run: |
           echo "# Security Audit Summary" > security-summary.md
           echo "## Vulnerability Scan Results" >> security-summary.md
-          
+
           # Process all security reports
           for report in *-report.json; do
             echo "### $report" >> security-summary.md
@@ -618,7 +618,7 @@ jobs:
           if [ "$STATUS" != "success" ]; then
             COLOR="danger"
           fi
-          
+
           curl -X POST -H 'Content-type: application/json' \
             --data "{
               \"attachments\": [{

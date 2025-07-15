@@ -87,9 +87,9 @@ print_status() {
 run_test() {
     local test_name=$1
     local command=$2
-    
+
     print_status "$YELLOW" "🧪 Running: $test_name"
-    
+
     if [ "$VERBOSE" = true ]; then
         eval "$command"
     else
@@ -115,30 +115,30 @@ record_result() {
     local test_name=$1
     local status=$2
     local duration=$3
-    
+
     TESTS_RUN=$((TESTS_RUN + 1))
     if [ "$status" = "passed" ]; then
         TESTS_PASSED=$((TESTS_PASSED + 1))
     else
         TESTS_FAILED=$((TESTS_FAILED + 1))
     fi
-    
+
     TEST_RESULTS+=("$test_name|$status|$duration")
 }
 
 # Smoke tests - Quick health checks
 run_smoke_tests() {
     print_status "$BLUE" "🔍 Running smoke tests..."
-    
+
     # Test service health endpoints
     local services=("localhost:8000" "localhost:8010" "localhost:8011")
     local names=("OMS" "User Service" "Audit Service")
-    
+
     for i in "${!services[@]}"; do
         if [ -n "$SERVICE" ] && [ "${names[$i]}" != "$SERVICE" ]; then
             continue
         fi
-        
+
         start_time=$(date +%s)
         if curl -f -s "http://${services[$i]}/health" > /dev/null; then
             end_time=$(date +%s)
@@ -150,7 +150,7 @@ run_smoke_tests() {
             print_status "$RED" "❌ ${names[$i]} is not responding"
         fi
     done
-    
+
     # Test Redis
     if redis-cli ping > /dev/null 2>&1; then
         record_result "Redis Connection" "passed" "0s"
@@ -164,28 +164,28 @@ run_smoke_tests() {
 # Integration tests
 run_integration_tests() {
     print_status "$BLUE" "🔗 Running integration tests..."
-    
+
     # Create test user with unique email
     TEST_EMAIL="test_$(date +%s)@example.com"
     run_test "User Registration" "curl -X POST http://localhost:8010/auth/register \
         -H 'Content-Type: application/json' \
         -d '{\"email\":\"${TEST_EMAIL}\",\"password\":\"Test123!\",\"name\":\"Test User\"}'"
-    
+
     # Login
     TOKEN=$(curl -s -X POST http://localhost:8010/auth/login \
         -H "Content-Type: application/x-www-form-urlencoded" \
         -d "username=${TEST_EMAIL}&password=Test123!" | jq -r '.access_token' 2>/dev/null || echo "")
-    
+
     if [ -n "$TOKEN" ] && [ "$TOKEN" != "null" ]; then
         record_result "User Login" "passed" "1s"
         print_status "$GREEN" "✅ Login successful"
-        
+
         # Test authenticated endpoints
         run_test "Create Schema" "curl -X POST http://localhost:8000/api/v1/schemas \
             -H 'Authorization: Bearer $TOKEN' \
             -H 'Content-Type: application/json' \
             -d '{\"name\":\"TestSchema\",\"properties\":{\"field1\":\"string\"}}'"
-        
+
         run_test "List Schemas" "curl -X GET http://localhost:8000/api/v1/schemas \
             -H 'Authorization: Bearer $TOKEN'"
     else
@@ -197,10 +197,10 @@ run_integration_tests() {
 # Performance tests
 run_performance_tests() {
     print_status "$BLUE" "⚡ Running performance tests..."
-    
+
     # Simple performance test without external tools
     print_status "$YELLOW" "🏃 Running simple load test..."
-    
+
     # Test OMS performance with curl in a loop
     start_time=$(date +%s)
     success_count=0
@@ -211,7 +211,7 @@ run_performance_tests() {
     done
     end_time=$(date +%s)
     duration=$((end_time - start_time))
-    
+
     if [ $success_count -eq 50 ]; then
         record_result "OMS Load Test (50 requests)" "passed" "${duration}s"
         print_status "$GREEN" "✅ All 50 requests succeeded in ${duration}s"
@@ -219,7 +219,7 @@ run_performance_tests() {
         record_result "OMS Load Test (50 requests)" "failed" "${duration}s"
         print_status "$RED" "❌ Only $success_count/50 requests succeeded"
     fi
-    
+
     # Test response times
     local response_time=$(curl -o /dev/null -s -w '%{time_total}' http://localhost:8000/health)
     if (( $(echo "$response_time < 0.1" | bc -l) )); then
@@ -234,11 +234,11 @@ run_performance_tests() {
 # Security tests
 run_security_tests() {
     print_status "$BLUE" "🔒 Running security tests..."
-    
+
     # Test for common security headers
     run_test "Security Headers Check" \
         "curl -I http://localhost:8000/health | grep -E 'X-Content-Type-Options|X-Frame-Options'"
-    
+
     # Test authentication required
     local status=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/api/v1/schemas)
     if [ "$status" = "401" ] || [ "$status" = "403" ]; then
@@ -253,7 +253,7 @@ run_security_tests() {
 # Generate HTML report
 generate_report() {
     local report_file="test_report_$(date +%Y%m%d_%H%M%S).html"
-    
+
     cat > "$report_file" << EOF
 <!DOCTYPE html>
 <html>
@@ -290,14 +290,14 @@ generate_report() {
             <th>Duration</th>
         </tr>
 EOF
-    
+
     for result in "${TEST_RESULTS[@]}"; do
         IFS='|' read -r name status duration <<< "$result"
         echo "<tr><td>$name</td><td class='$status'>$status</td><td>$duration</td></tr>" >> "$report_file"
     done
-    
+
     echo "</table></body></html>" >> "$report_file"
-    
+
     print_status "$GREEN" "📄 Test report generated: $report_file"
 }
 

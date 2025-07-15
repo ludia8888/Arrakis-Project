@@ -11,16 +11,16 @@ from arrakis_common import get_logger
 from core.auth_utils import UserContext
 from database.clients import create_basic_client
 from models.issue_tracking import (
- ChangeIssueLink,
- IssueProvider,
- IssueReference,
- IssueRequirement,
- IssueStatus,
- IssueTrackingConfig,
- IssueType,
- IssueValidationResult,
- extract_issue_references,
- parse_issue_reference,
+    ChangeIssueLink,
+    IssueProvider,
+    IssueReference,
+    IssueRequirement,
+    IssueStatus,
+    IssueTrackingConfig,
+    IssueType,
+    IssueValidationResult,
+    extract_issue_references,
+    parse_issue_reference,
 )
 
 logger = get_logger(__name__)
@@ -608,7 +608,7 @@ class IssueTrackingService:
  if not has_appropriate_type:
  allowed_types = [t.value for t in hotfix_types]
  return False, (
- f"Production changes require issue type to be one of: "
+ "Production changes require issue type to be one of: "
  f"{', '.join(allowed_types)}"
  )
 

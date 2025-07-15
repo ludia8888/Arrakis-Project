@@ -16,74 +16,74 @@ from services.job_service import JobService
 
 
 class Container(containers.DeclarativeContainer):
- """
- DI Container for managing application dependencies.
- """
+    """
+    DI Container for managing application dependencies.
+    """
 
- config = providers.Singleton(get_config)
+    config = providers.Singleton(get_config)
 
- # Core Infrastructure Providers
- redis_provider = providers.Singleton(RedisProvider)
- circuit_breaker_provider = providers.Singleton(
- CircuitBreakerProvider,
- redis_provider = redis_provider,
- )
- db_client_provider = providers.Resource(get_unified_db_client)
+    # Core Infrastructure Providers
+    redis_provider = providers.Singleton(RedisProvider)
+    circuit_breaker_provider = providers.Singleton(
+        CircuitBreakerProvider,
+        redis_provider=redis_provider,
+    )
+    db_client_provider = providers.Resource(get_unified_db_client)
 
- # Event Gateway
- event_gateway_provider = providers.Factory(get_event_gateway)
+    # Event Gateway
+    event_gateway_provider = providers.Factory(get_event_gateway)
 
- # Branch Service Dependencies
- # First create the dependencies that BranchService needs
- diff_engine_provider = providers.Factory(
- DiffEngine,
- tdb_endpoint = config.provided.terminusdb.endpoint,
- )
+    # Branch Service Dependencies
+    # First create the dependencies that BranchService needs
+    diff_engine_provider = providers.Factory(
+        DiffEngine,
+        tdb_endpoint=config.provided.terminusdb.endpoint,
+    )
 
- conflict_resolver_provider = providers.Factory(
- ConflictResolver,
- )
+    conflict_resolver_provider = providers.Factory(
+        ConflictResolver,
+    )
 
- # Now create BranchService with all its dependencies
- branch_service_provider = providers.Factory(
- BranchService,
- db_client = db_client_provider,
- event_gateway = event_gateway_provider,
- diff_engine = diff_engine_provider,
- conflict_resolver = conflict_resolver_provider,
- audit_client = audit_client_provider,
- )
+    # Now create BranchService with all its dependencies
+    branch_service_provider = providers.Factory(
+        BranchService,
+        db_client=db_client_provider,
+        event_gateway=event_gateway_provider,
+        diff_engine=diff_engine_provider,
+        conflict_resolver=conflict_resolver_provider,
+        audit_client=audit_client_provider,
+    )
 
- # Schema Service Dependencies
- schema_repository_provider = providers.Factory(
- SchemaRepository,
- db = db_client_provider,
- )
- schema_service_provider = providers.Factory(
- SchemaService,
- repository = schema_repository_provider,
- branch_service = branch_service_provider,
- event_publisher = event_gateway_provider,
- audit_client = audit_client_provider,
- )
+    # Schema Service Dependencies
+    schema_repository_provider = providers.Factory(
+        SchemaRepository,
+        db=db_client_provider,
+    )
+    schema_service_provider = providers.Factory(
+        SchemaService,
+        repository=schema_repository_provider,
+        branch_service=branch_service_provider,
+        event_publisher=event_gateway_provider,
+        audit_client=audit_client_provider,
+    )
 
- # Job Service Dependencies
- job_service_provider = providers.Singleton(
- JobService,
- )
+    # Job Service Dependencies
+    job_service_provider = providers.Singleton(
+        JobService,
+    )
 
- # Property Service Dependencies
- property_service = providers.Factory(
- PropertyService,
- terminus_client = providers.Factory(
- lambda unified_client: unified_client.terminus_client,
- unified_client = db_client_provider,
- ),
- )
+    # Property Service Dependencies
+    property_service = providers.Factory(
+        PropertyService,
+        terminus_client=providers.Factory(
+            lambda unified_client: unified_client.terminus_client,
+            unified_client=db_client_provider,
+        ),
+    )
 
- # Document Service Dependencies
- document_service_provider = providers.Factory(
- DocumentService,
- db_client = db_client_provider,
- event_publisher = event_gateway_provider,
- )
+    # Document Service Dependencies
+    document_service_provider = providers.Factory(
+        DocumentService,
+        db_client=db_client_provider,
+        event_publisher=event_gateway_provider,
+    )

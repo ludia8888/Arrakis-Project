@@ -171,7 +171,7 @@ variable "compliance_standards" {
   default     = ["cis", "pci-dss", "aws-foundational"]
   validation {
     condition = alltrue([
-      for standard in var.compliance_standards : 
+      for standard in var.compliance_standards :
       contains(["cis", "pci-dss", "aws-foundational", "nist", "soc2"], standard)
     ])
     error_message = "Compliance standards must be from: cis, pci-dss, aws-foundational, nist, soc2."

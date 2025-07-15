@@ -4,21 +4,23 @@ CI/CD Integration Tool for Naming Convention Validation
 명명 규칙 검증을 CI/CD 파이프라인에 통합
 """
 import argparse
+import ast
 import json
-import sys
 import os
 import re
-import ast
-from pathlib import Path
-from typing import List, Dict, Optional, Set, Tuple
-from datetime import datetime
-import xml.etree.ElementTree as ET
 import subprocess
+import sys
+import xml.etree.ElementTree as ET
+from datetime import datetime
+from pathlib import Path
+from typing import Dict, List, Optional, Set, Tuple
 
-from core.validation.naming_convention import (
- EntityType, NamingConventionEngine, get_naming_engine
-)
 from core.validation.naming_config import get_naming_config_service
+from core.validation.naming_convention import (
+    EntityType,
+    NamingConventionEngine,
+    get_naming_engine,
+)
 
 
 class TextFormatter:
@@ -127,7 +129,8 @@ class GitHubFormatter:
  lines.append(f"::{severity} file={file_path},line={line}::{message}")
 
  if issue.get("suggestion"):
- lines.append(f"::notice file={file_path},line={line}::💡 Suggestion: {issue['suggestion']}")
+ lines.append(f"::notice file={file_path},
+     line={line}::💡 Suggestion: {issue['suggestion']}")
 
  return "\n".join(lines)
 
@@ -212,7 +215,8 @@ class CINamingValidator:
 
  return results
 
- def _validate_python_file(self, file_path: Path, content: str, lines: List[str]) -> List[Dict]:
+ def _validate_python_file(self, file_path: Path, content: str,
+     lines: List[str]) -> List[Dict]:
  """Python 파일 검증"""
  results = []
 
@@ -254,16 +258,19 @@ class CINamingValidator:
 
  return results
 
- def _validate_typescript_file(self, file_path: Path, content: str, lines: List[str]) -> List[Dict]:
+ def _validate_typescript_file(self, file_path: Path, content: str,
+     lines: List[str]) -> List[Dict]:
  """TypeScript/JavaScript 파일 검증"""
  # TypeScript는 AST 파싱이 복잡하므로 정규식 사용
  return self._validate_with_regex(file_path, content, lines)
 
- def _validate_java_file(self, file_path: Path, content: str, lines: List[str]) -> List[Dict]:
+ def _validate_java_file(self, file_path: Path, content: str,
+     lines: List[str]) -> List[Dict]:
  """Java 파일 검증"""
  return self._validate_with_regex(file_path, content, lines)
 
- def _validate_with_regex(self, file_path: Path, content: str, lines: List[str]) -> List[Dict]:
+ def _validate_with_regex(self, file_path: Path, content: str,
+     lines: List[str]) -> List[Dict]:
  """정규식 기반 검증"""
  results = []
 
@@ -319,7 +326,7 @@ class CINamingValidator:
  # 부모 노드 확인은 복잡하므로 간단히 self 파라미터로 판단
  if node.args.args and len(node.args.args) > 0:
  first_arg = node.args.args[0]
- if hasattr(first_arg, 'arg') and first_arg.arg == 'self':
+ if hasattr(first_arg, 'arg') and first_arg.arg == 'sel':
  return True
  return False
 
@@ -451,7 +458,7 @@ Examples:
 
  parser.add_argument(
  "--format",
- "-f",
+ "-",
  choices = ["text", "json", "junit", "github"],
  default = "text",
  help = "Output format"
@@ -482,7 +489,7 @@ Examples:
  )
 
  parser.add_argument(
- "--git-diff",
+ "--git-dif",
  action = "store_true",
  help = "Only validate files changed in git"
  )
@@ -537,7 +544,7 @@ Examples:
  total = len(results)
  valid = sum(1 for r in results if r.get("valid", True))
  invalid = total - valid
- print(f"\nValidation Summary:", file = sys.stderr)
+ print("\nValidation Summary:", file = sys.stderr)
  print(f" Total entities: {total}", file = sys.stderr)
  print(f" Valid: {valid}", file = sys.stderr)
  print(f" Invalid: {invalid}", file = sys.stderr)

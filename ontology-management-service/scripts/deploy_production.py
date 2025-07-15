@@ -10,13 +10,14 @@ Handles deployment of OMS to production environment with:
 """
 
 import asyncio
-import sys
 import os
-from pathlib import Path
 import subprocess
-import yaml
+import sys
 from datetime import datetime
+from pathlib import Path
 from typing import Dict, List, Optional
+
+import yaml
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
@@ -162,9 +163,9 @@ class ProductionDeployer:
  """Check all dependencies are installed"""
  try:
  import fastapi
+ import prometheus_client
  import pydantic
  import terminusdb_client
- import prometheus_client
 
  logger.info("✅ All dependencies installed")
  return True
@@ -233,7 +234,7 @@ class ProductionDeployer:
 
  try:
  # Create database initialization script
- init_script = f"""
+ init_script = """
 import terminusdb_client as tdb
 
 # Connect to TerminusDB
@@ -277,7 +278,7 @@ print("Database setup complete")
  logger.info("\n🚀 Deploying services...")
 
  # Create systemd service file
- service_content = f"""[Unit]
+ service_content = """[Unit]
 Description = OMS - Ontology Management Service
 After = network.target
 
@@ -310,7 +311,7 @@ WantedBy = multi-user.target
  """Setup DAG compaction cron job"""
  logger.info("Setting up DAG compaction...")
 
- compaction_script = f"""#!/bin/bash
+ compaction_script = """#!/bin/bash
 cd {project_root}
 {sys.executable} -c "
 from core.versioning.dag_compaction import dag_compactor

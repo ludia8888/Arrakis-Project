@@ -68,18 +68,18 @@ print_status() {
 # Function to stop process-based services
 stop_processes() {
     print_status "$YELLOW" "🛑 Stopping process-based services..."
-    
+
     # Stop services using PID files
     if [ -d logs ]; then
         for pidfile in logs/*.pid; do
             if [ -f "$pidfile" ]; then
                 PID=$(cat "$pidfile")
                 SERVICE_NAME=$(basename "$pidfile" .pid)
-                
+
                 if [ -n "$SERVICE" ] && [ "$SERVICE_NAME" != "$SERVICE" ]; then
                     continue
                 fi
-                
+
                 if kill -0 "$PID" 2>/dev/null; then
                     print_status "$YELLOW" "Stopping $SERVICE_NAME (PID: $PID)..."
                     kill "$PID"
@@ -92,14 +92,14 @@ stop_processes() {
             fi
         done
     fi
-    
+
     # Stop any uvicorn processes
     if pgrep -f "uvicorn" > /dev/null 2>&1; then
         print_status "$YELLOW" "Stopping uvicorn processes..."
         pkill -f "uvicorn" || true
         sleep 2
     fi
-    
+
     # Also kill processes on specific ports
     for port in 8000 8010 8011; do
         if lsof -ti:$port > /dev/null 2>&1; then
@@ -107,7 +107,7 @@ stop_processes() {
             lsof -ti:$port | xargs kill -9 2>/dev/null || true
         fi
     done
-    
+
     # Stop Redis if we started it
     if pgrep -x "redis-server" > /dev/null; then
         print_status "$YELLOW" "Stopping Redis..."
@@ -118,38 +118,38 @@ stop_processes() {
 # Function to stop Docker services
 stop_docker() {
     print_status "$YELLOW" "🐳 Stopping Docker services..."
-    
+
     if [ -n "$SERVICE" ]; then
         docker-compose stop "$SERVICE"
     else
         docker-compose down
-        
+
         if [ "$CLEAN" = true ]; then
             print_status "$YELLOW" "🗑️  Removing volumes and images..."
             docker-compose down -v --rmi local
         fi
     fi
-    
+
     print_status "$GREEN" "✅ Docker services stopped"
 }
 
 # Function to clean logs and temporary files
 clean_files() {
     print_status "$YELLOW" "🧹 Cleaning logs and temporary files..."
-    
+
     # Remove log files
     if [ -d logs ]; then
         rm -rf logs/*
         print_status "$GREEN" "✅ Logs cleaned"
     fi
-    
+
     # Remove Python cache
     find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
     find . -type f -name "*.pyc" -delete 2>/dev/null || true
-    
+
     # Remove .pytest_cache
     find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
-    
+
     print_status "$GREEN" "✅ Temporary files cleaned"
 }
 
@@ -157,19 +157,19 @@ clean_files() {
 detect_running_services() {
     local docker_running=false
     local process_running=false
-    
+
     # Check Docker
     if command -v docker-compose >/dev/null 2>&1; then
         if docker-compose ps -q | grep -q .; then
             docker_running=true
         fi
     fi
-    
+
     # Check processes
     if pgrep -f "uvicorn" > /dev/null 2>&1 || ps aux | grep -E "uvicorn|python.*main:app" | grep -v grep > /dev/null 2>&1; then
         process_running=true
     fi
-    
+
     # Also check specific ports
     for port in 8000 8010 8011; do
         if lsof -i:$port > /dev/null 2>&1; then
@@ -177,7 +177,7 @@ detect_running_services() {
             break
         fi
     done
-    
+
     if [ "$docker_running" = true ] && [ "$process_running" = true ]; then
         MODE="all"
     elif [ "$docker_running" = true ]; then

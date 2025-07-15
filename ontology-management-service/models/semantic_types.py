@@ -127,7 +127,8 @@ class SemanticType(BaseModel):
  )
 
  # Metadata
- tags: List[str] = Field(default_factory = list, description = "Tags for categorization")
+ tags: List[str] = Field(default_factory = list,
+     description = "Tags for categorization")
  examples: List[Any] = Field(
  default_factory = list, description = "Example valid values"
  )

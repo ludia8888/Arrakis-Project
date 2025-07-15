@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 """
-마이크로서비스 모드 검증 스크립트
-점진적 마이그레이션 상태를 확인하고 게이트웨이 모드 작동을 검증
+Microservice mode verification script
+Check gradual migration status and verify gateway mode operation
 """
 
 import asyncio
-import aiohttp
 import json
+import os
+import sys
 from datetime import datetime
 from typing import Dict, List, Tuple
-import sys
-import os
+
+import aiohttp
 
 # 색상 코드
 GREEN = '\033[92m'
@@ -30,7 +31,8 @@ class MicroservicesVerifier:
  "summary": {}
  }
 
- async def check_service_health(self, session: aiohttp.ClientSession, name: str, url: str) -> Tuple[bool, str]:
+ async def check_service_health(self, session: aiohttp.ClientSession, name: str,
+     url: str) -> Tuple[bool, str]:
  """서비스 헬스체크"""
  try:
  async with session.get(url, timeout = aiohttp.ClientTimeout(total = 5)) as response:
@@ -110,9 +112,9 @@ class MicroservicesVerifier:
  if gateway_enabled:
  print(f"✅ Gateway 모드 활성화됨: {mode}")
  else:
- print(f"❌ Gateway 모드 비활성화됨")
+ print("❌ Gateway 모드 비활성화됨")
  else:
- print(f"⚠️ Gateway 모드 상태 확인 실패")
+ print("⚠️ Gateway 모드 상태 확인 실패")
  except Exception as e:
  print(f"❌ Gateway 모드 확인 오류: {e}")
 
@@ -130,7 +132,7 @@ class MicroservicesVerifier:
  headers={"X-Commit-Author": "verifier", "X-Commit-Message": "Microservice test"}
  ) as response:
  if response.status in [200, 201]:
- print(f"✅ Data Kernel 직접 접근 테스트 성공")
+ print("✅ Data Kernel 직접 접근 테스트 성공")
  self.results["gateway_mode"]["direct_access"] = "success"
  else:
  print(f"❌ Data Kernel 직접 접근 테스트 실패: {response.status}")
@@ -154,10 +156,10 @@ class MicroservicesVerifier:
  if response.status == 200:
  data = await response.json()
  if "embedding" in data and len(data["embedding"]) > 0:
- print(f"✅ Embedding Service 통합 테스트 성공")
+ print("✅ Embedding Service 통합 테스트 성공")
  self.results["integration"]["embedding"] = "success"
  else:
- print(f"❌ Embedding Service 응답 형식 오류")
+ print("❌ Embedding Service 응답 형식 오류")
  self.results["integration"]["embedding"] = "invalid_response"
  else:
  print(f"❌ Embedding Service 통합 테스트 실패: {response.status}")
@@ -179,7 +181,7 @@ class MicroservicesVerifier:
  json = test_job
  ) as response:
  if response.status in [200, 201]:
- print(f"✅ Scheduler Service 통합 테스트 성공")
+ print("✅ Scheduler Service 통합 테스트 성공")
  self.results["integration"]["scheduler"] = "success"
  else:
  print(f"❌ Scheduler Service 통합 테스트 실패: {response.status}")
@@ -200,7 +202,7 @@ class MicroservicesVerifier:
  json = test_event
  ) as response:
  if response.status in [200, 201, 202]:
- print(f"✅ Event Gateway 통합 테스트 성공")
+ print("✅ Event Gateway 통합 테스트 성공")
  self.results["integration"]["event_gateway"] = "success"
  else:
  print(f"❌ Event Gateway 통합 테스트 실패: {response.status}")
@@ -217,7 +219,8 @@ class MicroservicesVerifier:
  # 인프라 상태
  infra_healthy = sum(1 for s in self.results["infrastructure"].values()
  if isinstance(s, dict) and s.get("status") == "healthy")
- infra_total = len([s for s in self.results["infrastructure"].values() if isinstance(s, dict)])
+ infra_total = len([s for s in self.results["infrastructure"].values() if isinstance(s,
+     dict)])
 
  # 마이크로서비스 상태
  ms_healthy = sum(1 for s in self.results["microservices"].values()
@@ -268,7 +271,7 @@ class MicroservicesVerifier:
  async def run(self):
  """전체 검증 실행"""
  print(f"{BLUE}🔍 Arrakis MSA - 마이크로서비스 모드 검증 시작{RESET}")
- print(f"시간: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+ print(f"hours: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
  async with aiohttp.ClientSession() as session:
  await self.verify_infrastructure(session)

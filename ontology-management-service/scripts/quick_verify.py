@@ -38,7 +38,7 @@ def test_critical_imports():
  except Exception as e:
  print(f"⚠️ {name}: {type(e).__name__}: {e}")
 
- print(f"\n=== Results ===")
+ print("\n=== Results ===")
  print(f"Passed: {passed}")
  print(f"Failed: {failed}")
  print(f"Success Rate: {passed}/{passed+failed} ({100*passed/(passed+failed):.1f}%)")

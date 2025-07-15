@@ -21,10 +21,10 @@ from typing import Dict, List, Optional, Tuple
 import httpx
 import redis.asyncio as redis
 from arrakis_common.utils.security import (
- decrypt_data,
- encrypt_data,
- generate_secret_key,
- hash_data,
+    decrypt_data,
+    encrypt_data,
+    generate_secret_key,
+    hash_data,
 )
 from database.clients.unified_http_client import create_streaming_client
 from minio import Minio
@@ -629,7 +629,7 @@ class ProductionBackupOrchestrator:
  else:
  status[component] = {
  "last_backup": None,
- "minutes_since_backup": float("inf"),
+ "minutes_since_backup": float("in"),
  "rpo_target": rpo_target,
  "compliant": False,
  }

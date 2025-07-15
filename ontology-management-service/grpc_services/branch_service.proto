@@ -14,20 +14,20 @@ service BranchService {
   rpc GetBranch(GetBranchRequest) returns (Branch);
   rpc ListBranches(ListBranchesRequest) returns (ListBranchesResponse);
   rpc DeleteBranch(DeleteBranchRequest) returns (google.protobuf.Empty);
-  
+
   // Diff and conflict operations
   rpc GetDiff(GetDiffRequest) returns (BranchDiff);
   rpc GetConflicts(GetConflictsRequest) returns (ConflictSet);
-  
+
   // Proposal operations
   rpc CreateProposal(CreateProposalRequest) returns (ChangeProposal);
   rpc UpdateProposal(UpdateProposalRequest) returns (ChangeProposal);
   rpc ListProposals(ListProposalsRequest) returns (ListProposalsResponse);
-  
+
   // Merge operations
   rpc MergeBranch(MergeBranchRequest) returns (MergeResult);
   rpc RebaseBranch(RebaseBranchRequest) returns (RebaseResult);
-  
+
   // History operations
   rpc GetCommitHistory(GetCommitHistoryRequest) returns (CommitHistory);
   rpc FindCommonAncestor(FindCommonAncestorRequest) returns (CommitInfo);

@@ -9,7 +9,7 @@ data "aws_region" "current" {}
 locals {
   account_id = data.aws_caller_identity.current.account_id
   region     = data.aws_region.current.name
-  
+
   # Service account configurations with IRSA roles
   service_accounts = merge(var.service_accounts, {
     # Core microservices IRSA roles
@@ -33,7 +33,7 @@ locals {
         }
       ]
     }
-    
+
     "user-service" = {
       namespace = "arrakis"
       policies = [
@@ -53,7 +53,7 @@ locals {
         }
       ]
     }
-    
+
     "audit-service" = {
       namespace = "arrakis"
       policies = [
@@ -76,7 +76,7 @@ locals {
         }
       ]
     }
-    
+
     "data-kernel-service" = {
       namespace = "arrakis"
       policies = [
@@ -96,7 +96,7 @@ locals {
         }
       ]
     }
-    
+
     "embedding-service" = {
       namespace = "arrakis"
       policies = [
@@ -116,7 +116,7 @@ locals {
         }
       ]
     }
-    
+
     "scheduler-service" = {
       namespace = "arrakis"
       policies = [
@@ -137,7 +137,7 @@ locals {
         }
       ]
     }
-    
+
     "event-gateway" = {
       namespace = "arrakis"
       policies = [
@@ -167,7 +167,7 @@ resource "aws_iam_role" "service_account" {
   for_each = local.service_accounts
 
   name = "${var.project_name}-${each.key}-irsa-${var.environment}"
-  
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -213,7 +213,7 @@ resource "aws_iam_role_policy_attachment" "service_account_managed" {
 # Custom IAM policies for service accounts
 resource "aws_iam_role_policy" "service_account_custom" {
   for_each = {
-    for sa_name, sa_config in local.service_accounts : 
+    for sa_name, sa_config in local.service_accounts :
     sa_name => sa_config
     if lookup(sa_config, "custom_policy_statements", null) != null
   }

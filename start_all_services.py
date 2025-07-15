@@ -57,7 +57,7 @@ class ServiceStarter:
         for service in self.services:
             try:
                 subprocess.run(
-                    ["lsof", "-ti", f":{service['port']}"],
+                    ["lso", "-ti", f":{service['port']}"],
                     capture_output=True,
                     text=True,
                 )
@@ -262,7 +262,7 @@ class ServiceStarter:
             self.logger.info("All services startup sequence completed successfully")
             return True
         else:
-            print(f"\n⚠️  WARNING: Some services failed to start properly")
+            print("\n⚠️  WARNING: Some services failed to start properly")
             print("\n🔍 Debug info:")
             for service_name in self.processes.keys():
                 print(f"\n--- {service_name} logs ---")

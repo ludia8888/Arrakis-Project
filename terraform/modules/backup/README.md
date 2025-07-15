@@ -50,10 +50,10 @@ module "backup" {
 
   project_name = "arrakis"
   environment  = "production"
-  
+
   backup_vault_name = "arrakis-backup-vault-production"
   backup_plan_name  = "arrakis-backup-plan-production"
-  
+
   # RDS instances to backup
   rds_instances = [
     {
@@ -61,10 +61,10 @@ module "backup" {
       arn        = "arn:aws:rds:us-west-2:123456789012:db:arrakis-oms-production"
     }
   ]
-  
+
   # Notifications
   notification_email = "ops@company.com"
-  
+
   tags = {
     Environment = "production"
     Project     = "arrakis"
@@ -310,10 +310,10 @@ module "backup" {
 
   project_name = "arrakis"
   environment  = "production"
-  
+
   backup_vault_name = "arrakis-backup-vault-production"
   backup_plan_name  = "arrakis-backup-plan-production"
-  
+
   # All RDS instances
   rds_instances = [
     {
@@ -325,27 +325,27 @@ module "backup" {
       arn        = module.databases.database_instances["user_db"].arn
     }
   ]
-  
+
   # Enhanced security
   compliance_mode = "COMPLIANCE"
   enable_backup_encryption = true
-  
+
   # Monitoring
   enable_backup_notifications = true
   notification_email = "ops@company.com"
   enable_backup_monitoring = true
   enable_backup_validation = true
-  
+
   # Cost optimization
   enable_intelligent_tiering = true
   enable_backup_deduplication = true
   backup_compression_enabled = true
-  
+
   # Disaster recovery
   replica_region = "us-east-1"
   rpo_target_hours = 24
   rto_target_hours = 4
-  
+
   tags = {
     Environment     = "production"
     Project         = "arrakis"
@@ -388,21 +388,21 @@ module "backup" {
 
   project_name = "arrakis"
   environment  = var.environment
-  
+
   backup_vault_name = "arrakis-backup-vault-${var.environment}"
   backup_plan_name  = "arrakis-backup-plan-${var.environment}"
-  
+
   # Environment-specific configuration
   backup_schedule = local.environments[var.environment].backup_schedule
   delete_after_days = local.environments[var.environment].retention_days
-  
+
   # Cross-region based on environment
   replica_region = local.environments[var.environment].enable_cross_region ? "us-east-1" : null
-  
+
   # Monitoring based on environment
   notification_email = var.notification_email
   enable_backup_notifications = true
-  
+
   tags = merge(local.common_tags, {
     Environment = var.environment
   })

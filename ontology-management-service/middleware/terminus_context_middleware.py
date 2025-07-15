@@ -1,18 +1,21 @@
 """
 TerminusDB Context Middleware - Automatically sets branch, author, and trace context
 """
-import os
 import logging
+import os
 from typing import Callable
 
-from fastapi import Request, Response, HTTPException
-from starlette.middleware.base import BaseHTTPMiddleware
+from fastapi import HTTPException, Request, Response
 from opentelemetry import trace
-
 from shared.terminus_context import (
- set_author, set_branch, set_trace_id, set_request_context,
- format_author, get_default_branch
+    format_author,
+    get_default_branch,
+    set_author,
+    set_branch,
+    set_request_context,
+    set_trace_id,
 )
+from starlette.middleware.base import BaseHTTPMiddleware
 
 logger = logging.getLogger(__name__)
 

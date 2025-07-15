@@ -5,27 +5,27 @@ apis:
   ontology-management-service:
     root: openapi/ontology-management-service.openapi.yaml
     definition: openapi/ontology-management-service.openapi.yaml
-  
+
   user-service:
     root: openapi/user-service.openapi.yaml
     definition: openapi/user-service.openapi.yaml
-  
+
   audit-service:
     root: openapi/audit-service.openapi.yaml
     definition: openapi/audit-service.openapi.yaml
-  
+
   data-kernel-service:
     root: openapi/data-kernel-service.openapi.yaml
     definition: openapi/data-kernel-service.openapi.yaml
-  
+
   embedding-service:
     root: openapi/embedding-service.openapi.yaml
     definition: openapi/embedding-service.openapi.yaml
-  
+
   scheduler-service:
     root: openapi/scheduler-service.openapi.yaml
     definition: openapi/scheduler-service.openapi.yaml
-  
+
   event-gateway:
     root: openapi/event-gateway.openapi.yaml
     definition: openapi/event-gateway.openapi.yaml
@@ -42,10 +42,10 @@ lint:
     operation-summary: warn
     operation-description: warn
     parameter-description: warn
-    
+
     # Arrakis-specific rules
     info-contact: warn
-    info-license: off  # Not required for internal APIs
+    info-license: off # Not required for internal APIs
     no-server-example.com: error
     no-server-trailing-slash: error
 
@@ -54,37 +54,37 @@ referenceDocs:
     theme:
       colors:
         primary:
-          main: '#2196F3'
+          main: "#2196F3"
         success:
-          main: '#4CAF50'
+          main: "#4CAF50"
         warning:
-          main: '#FF9800'
+          main: "#FF9800"
         error:
-          main: '#F44336'
+          main: "#F44336"
       typography:
-        fontSize: '14px'
-        fontFamily: 'Roboto, sans-serif'
+        fontSize: "14px"
+        fontFamily: "Roboto, sans-serif"
       sidebar:
-        backgroundColor: '#1e293b'
-        textColor: '#e2e8f0'
+        backgroundColor: "#1e293b"
+        textColor: "#e2e8f0"
       navbar:
-        backgroundColor: '#0f172a'
-    
+        backgroundColor: "#0f172a"
+
     # Arrakis platform customization
     logo:
-      url: 'https://example.com/arrakis-logo.png'
-      altText: 'Arrakis Platform'
-    
+      url: "https://example.com/arrakis-logo.png"
+      altText: "Arrakis Platform"
+
     # Custom styling for microservices documentation
-    favicon: 'https://example.com/favicon.ico'
-    
+    favicon: "https://example.com/favicon.ico"
+
     # SEO and metadata
-    ogImage: 'https://example.com/arrakis-social-card.png'
-    
+    ogImage: "https://example.com/arrakis-social-card.png"
+
     # Navigation and organization
     hideDownloadButton: false
     disableSearch: false
-    
+
     # Custom footer
     footer: |
       <div style="text-align: center; padding: 20px;">
@@ -111,7 +111,7 @@ decorators:
       property: info
     severity: error
     message: All APIs must include Arrakis platform information
-    
+
   # Ensure consistent tagging
   consistent-tagging:
     subject:
@@ -121,4 +121,4 @@ decorators:
 
 # Plugin configuration for additional features
 plugins:
-  - '@redocly/plugin-arrakis-custom'  # Custom plugin for Arrakis-specific validation
+  - "@redocly/plugin-arrakis-custom" # Custom plugin for Arrakis-specific validation

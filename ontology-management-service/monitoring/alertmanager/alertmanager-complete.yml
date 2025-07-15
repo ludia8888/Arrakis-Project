@@ -1,23 +1,23 @@
 global:
-  smtp_smarthost: 'localhost:587'
-  smtp_from: 'alerts@arrakis-project.com'
+  smtp_smarthost: "localhost:587"
+  smtp_from: "alerts@arrakis-project.com"
 
 route:
-  group_by: ['alertname']
+  group_by: ["alertname"]
   group_wait: 10s
   group_interval: 10s
   repeat_interval: 1h
-  receiver: 'web.hook'
+  receiver: "web.hook"
 
 receivers:
-- name: 'web.hook'
-  webhook_configs:
-  - url: 'http://host.docker.internal:8080/webhook/alerts'
-    send_resolved: true
+  - name: "web.hook"
+    webhook_configs:
+      - url: "http://host.docker.internal:8080/webhook/alerts"
+        send_resolved: true
 
 inhibit_rules:
   - source_match:
-      severity: 'critical'
+      severity: "critical"
     target_match:
-      severity: 'warning'
-    equal: ['alertname', 'dev', 'instance']
+      severity: "warning"
+    equal: ["alertname", "dev", "instance"]

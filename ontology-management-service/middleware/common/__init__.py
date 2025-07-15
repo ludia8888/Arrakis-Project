@@ -2,8 +2,10 @@
 Common utilities for middleware components
 """
 
-from .metrics import MetricsCollector, MetricType
 from utils.retry_strategy import RetryStrategy
+
+from .metrics import MetricsCollector, MetricType
+
 
 # Placeholder Redis utilities until proper implementation
 class RedisConnectionPool:
@@ -16,14 +18,15 @@ def redis_retry(func):
  return func
 
 # Temporary placeholder functions until proper implementation
-def exponential_backoff(attempt: int, base_delay: float = 1.0, max_delay: float = 60.0) -> float:
+def exponential_backoff(attempt: int, base_delay: float = 1.0,
+    max_delay: float = 60.0) -> float:
  """Calculate exponential backoff delay"""
  delay = min(base_delay * (2 ** attempt), max_delay)
  jitter = random.uniform(0, delay * 0.1)
  return delay + jitter
 
 def retry_with_backoff(max_attempts: int = 3, base_delay: float = 1.0):
- """Decorator for retrying with exponential backoff"""
+ """Decorator for retrying with exponential backof"""
  def decorator(func):
  @functools.wraps(func)
  async def wrapper(*args, **kwargs):
@@ -39,9 +42,9 @@ def retry_with_backoff(max_attempts: int = 3, base_delay: float = 1.0):
  return wrapper
  return decorator
 
-import random
-import functools
 import asyncio
+import functools
+import random
 
 __all__ = [
  'RedisConnectionPool',
@@ -50,6 +53,6 @@ __all__ = [
  'MetricsCollector',
  'MetricType',
  'RetryStrategy',
- 'exponential_backoff',
+ 'exponential_backof',
  'retry_with_backoff'
 ]

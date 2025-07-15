@@ -1,19 +1,19 @@
 """
 Integration tests for @unfoldable Documents feature
 """
-import pytest
 import json
-from typing import Dict, Any, List
+from typing import Any, Dict, List
 
-from core.documents.unfoldable import (
- UnfoldLevel,
- UnfoldContext,
- UnfoldableDocument,
- UnfoldableProcessor
-)
-from api.v1.document_routes import router
+import pytest
 from api.graphql.document_schema import DocumentQueries
+from api.v1.document_routes import router
 from arrakis_common import get_logger
+from core.documents.unfoldable import (
+    UnfoldableDocument,
+    UnfoldableProcessor,
+    UnfoldContext,
+    UnfoldLevel,
+)
 
 logger = get_logger(__name__)
 
@@ -277,7 +277,7 @@ class TestUnfoldableDocumentsIntegration:
  """Test handling of circular references in documents"""
  # Create document with circular reference
  doc_content = {"id": "root"}
- doc_content["self_ref"] = doc_content # Circular reference
+ doc_content["self_re"] = doc_content # Circular reference
  doc_content["@unfoldable"] = {
  "data": {
  "content": {"nested": doc_content} # Another circular ref
@@ -302,7 +302,8 @@ class TestUnfoldableDocumentsIntegration:
  UnfoldContext(level = UnfoldLevel.COLLAPSED),
  UnfoldContext(level = UnfoldLevel.SHALLOW),
  UnfoldContext(level = UnfoldLevel.DEEP),
- UnfoldContext(level = UnfoldLevel.CUSTOM, paths={"/sections/1/@unfoldable/large_dataset"})
+ UnfoldContext(level = UnfoldLevel.CUSTOM,
+     paths={"/sections/1/@unfoldable/large_dataset"})
  ]
 
  # Create concurrent fold operations
@@ -371,8 +372,8 @@ class TestUnfoldableDocumentsAPI:
  @pytest.fixture
  def client(self):
  """Create test client"""
- from fastapi.testclient import TestClient
  from fastapi import FastAPI
+ from fastapi.testclient import TestClient
 
  app = FastAPI()
  app.include_router(router)

@@ -1,18 +1,21 @@
 """
 Integration tests for Time Travel Queries
 """
-import pytest
-from datetime import datetime, timedelta
 import asyncio
-from typing import Dict, Any
+from datetime import datetime, timedelta
+from typing import Any, Dict
 
+import pytest
+from core.auth import UserContext
 from core.time_travel import (
- TemporalOperator, TemporalReference, TemporalQuery,
- TemporalResourceQuery, TemporalComparisonQuery,
- TimeTravelQueryService
+    TemporalComparisonQuery,
+    TemporalOperator,
+    TemporalQuery,
+    TemporalReference,
+    TemporalResourceQuery,
+    TimeTravelQueryService,
 )
 from core.versioning.version_service import VersionTrackingService
-from core.auth import UserContext
 from models.etag import ResourceVersion
 
 

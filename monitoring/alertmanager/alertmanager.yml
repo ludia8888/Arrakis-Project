@@ -2,30 +2,30 @@ global:
   resolve_timeout: 5m
 
 route:
-  group_by: ['alertname', 'cluster', 'service']
+  group_by: ["alertname", "cluster", "service"]
   group_wait: 10s
   group_interval: 10s
   repeat_interval: 12h
-  receiver: 'default-receiver'
+  receiver: "default-receiver"
   routes:
     - match:
         severity: critical
-      receiver: 'critical-receiver'
+      receiver: "critical-receiver"
 
 receivers:
-  - name: 'default-receiver'
+  - name: "default-receiver"
     webhook_configs:
-      - url: 'http://event-gateway:8003/webhooks/alerts'
+      - url: "http://event-gateway:8003/webhooks/alerts"
         send_resolved: true
 
-  - name: 'critical-receiver'
+  - name: "critical-receiver"
     webhook_configs:
-      - url: 'http://event-gateway:8003/webhooks/critical-alerts'
+      - url: "http://event-gateway:8003/webhooks/critical-alerts"
         send_resolved: true
 
 inhibit_rules:
   - source_match:
-      severity: 'critical'
+      severity: "critical"
     target_match:
-      severity: 'warning'
-    equal: ['alertname', 'dev', 'instance']
+      severity: "warning"
+    equal: ["alertname", "dev", "instance"]

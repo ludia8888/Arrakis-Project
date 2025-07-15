@@ -1,10 +1,11 @@
 """
 Rate Limiting Middleware for FastAPI
 """
-from typing import Callable, Optional
-from fastapi import Request, Response, HTTPException
-from fastapi.responses import JSONResponse
 import logging
+from typing import Callable, Optional
+
+from fastapi import HTTPException, Request, Response
+from fastapi.responses import JSONResponse
 
 from .coordinator import RateLimitCoordinator
 from .models import RateLimitConfig, RateLimitKey, RateLimitScope

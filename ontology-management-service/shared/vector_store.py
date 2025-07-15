@@ -3,13 +3,14 @@ Vector Storage and Similarity Search with TerminusDB Integration
 Provides vector storage, retrieval, and similarity search capabilities
 """
 import asyncio
-import json
 import hashlib
-import numpy as np
-from typing import List, Dict, Any, Optional, Tuple, Union
-from datetime import datetime
-from dataclasses import dataclass, asdict
+import json
 import logging
+from dataclasses import asdict, dataclass
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -447,7 +448,8 @@ class VectorStore:
  logger.warning(f"Failed to calculate cosine similarity: {e}")
  return 0.0
 
- def _terminus_doc_to_vector_doc(self, doc_data: Dict[str, Any]) -> Optional[VectorDocument]:
+ def _terminus_doc_to_vector_doc(self, doc_data: Dict[str,
+     Any]) -> Optional[VectorDocument]:
  """Convert TerminusDB document to VectorDocument"""
  try:
  metadata = {}

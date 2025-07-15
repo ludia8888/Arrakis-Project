@@ -3,16 +3,17 @@ OMS Action Metadata Service
 ActionType 메타데이터 관리만 담당 (실행 로직은 별도 Actions Service MSA에서 처리)
 """
 import logging
-import sys
 import os
-from typing import Any, Dict, List, Optional
+import sys
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 # Add database path for simple client
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../database'))
 
-from .models import ActionTypeModel, ActionDefinition
 from database.clients.terminus_db_simple import SimpleTerminusDBClient
+
+from .models import ActionDefinition, ActionTypeModel
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +82,8 @@ class ActionMetadataService:
  id = action_id,
  objectTypeId = action_data.get('objectTypeId', 'default'),
  name = action_data.get('name', 'New Action Type'),
- displayName = action_data.get('displayName', action_data.get('name', 'New Action Type')),
+ displayName = action_data.get('displayName', action_data.get('name',
+     'New Action Type')),
  description = action_data.get('description'),
  inputSchema = action_data.get('inputSchema', {}),
  validationExpression = action_data.get('validationExpression'),
@@ -138,7 +140,8 @@ class ActionMetadataService:
 
  return None
 
- async def update_action_type(self, action_type_id: str, updates: Dict[str, Any]) -> ActionTypeModel:
+ async def update_action_type(self, action_type_id: str, updates: Dict[str,
+     Any]) -> ActionTypeModel:
  """ActionType 업데이트"""
  action_type = await self.get_action_type(action_type_id)
  if not action_type:
@@ -254,7 +257,8 @@ class ActionMetadataService:
  except Exception as e:
  logger.warning(f"Failed to save ActionType to TerminusDB: {e}")
 
- async def _load_from_terminusdb(self, action_type_id: str) -> Optional[ActionTypeModel]:
+ async def _load_from_terminusdb(self,
+     action_type_id: str) -> Optional[ActionTypeModel]:
  """TerminusDB에서 ActionType 로드"""
  if not self.tdb:
  return None
@@ -268,9 +272,11 @@ class ActionMetadataService:
  # ISO 문자열을 datetime 객체로 변환
  from datetime import datetime
  if 'createdAt' in clean_doc and isinstance(clean_doc['createdAt'], str):
- clean_doc['createdAt'] = datetime.fromisoformat(clean_doc['createdAt'].replace('Z', '+00:00'))
+ clean_doc['createdAt'] = datetime.fromisoformat(clean_doc['createdAt'].replace('Z',
+     '+00:00'))
  if 'modifiedAt' in clean_doc and isinstance(clean_doc['modifiedAt'], str):
- clean_doc['modifiedAt'] = datetime.fromisoformat(clean_doc['modifiedAt'].replace('Z', '+00:00'))
+ clean_doc['modifiedAt'] = datetime.fromisoformat(clean_doc['modifiedAt'].replace('Z',
+     '+00:00'))
 
  return ActionTypeModel(**clean_doc)
  except Exception as e:

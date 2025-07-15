@@ -10,22 +10,22 @@ service EventGatewayService {
     // Publish events
     rpc PublishEvent(PublishEventRequest) returns (PublishEventResponse);
     rpc PublishEventsBatch(PublishEventsBatchRequest) returns (PublishEventsBatchResponse);
-    
+
     // Subscribe to events
     rpc Subscribe(SubscribeRequest) returns (stream Event);
     rpc Unsubscribe(UnsubscribeRequest) returns (UnsubscribeResponse);
-    
+
     // Event management
     rpc GetEvent(GetEventRequest) returns (GetEventResponse);
     rpc ListEvents(ListEventsRequest) returns (ListEventsResponse);
     rpc AcknowledgeEvent(AcknowledgeEventRequest) returns (AcknowledgeEventResponse);
-    
+
     // Webhook management
     rpc RegisterWebhook(RegisterWebhookRequest) returns (RegisterWebhookResponse);
     rpc UpdateWebhook(UpdateWebhookRequest) returns (UpdateWebhookResponse);
     rpc DeleteWebhook(DeleteWebhookRequest) returns (DeleteWebhookResponse);
     rpc ListWebhooks(ListWebhooksRequest) returns (ListWebhooksResponse);
-    
+
     // Stream management
     rpc CreateStream(CreateStreamRequest) returns (CreateStreamResponse);
     rpc DeleteStream(DeleteStreamRequest) returns (DeleteStreamResponse);
@@ -38,19 +38,19 @@ message CloudEvent {
     string source = 2;
     string spec_version = 3;
     string type = 4;
-    
+
     optional string data_content_type = 5;
     optional string data_schema = 6;
     optional string subject = 7;
     optional google.protobuf.Timestamp time = 8;
-    
+
     // Event data
     oneof data {
         google.protobuf.Struct data_json = 9;
         bytes data_binary = 10;
         string data_text = 11;
     }
-    
+
     // Extension attributes
     map<string, string> extensions = 12;
 }
@@ -73,13 +73,13 @@ message Webhook {
     string name = 2;
     string url = 3;
     repeated string event_types = 4;
-    
+
     WebhookConfig config = 5;
-    
+
     google.protobuf.Timestamp created_at = 6;
     google.protobuf.Timestamp updated_at = 7;
     bool enabled = 8;
-    
+
     WebhookStats stats = 9;
 }
 
@@ -147,14 +147,14 @@ message SubscribeRequest {
     string consumer_id = 1;
     repeated string event_types = 2;
     string stream = 3;
-    
+
     oneof start_position {
         uint64 start_sequence = 4;
         google.protobuf.Timestamp start_time = 5;
         bool deliver_all = 6;
         bool deliver_new = 7;
     }
-    
+
     string durable_name = 8;
     int32 max_in_flight = 9;
     int32 ack_wait_seconds = 10;

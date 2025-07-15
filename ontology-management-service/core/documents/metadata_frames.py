@@ -2,13 +2,13 @@
 Metadata Frames for Markdown Documentation
 Implements @metadata frames for embedding structured metadata in markdown
 """
-from typing import Dict, Any, List, Optional, Tuple
-import re
-import yaml
 import json
-from datetime import datetime
+import re
 from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
 
+import yaml
 from arrakis_common import get_logger
 
 logger = get_logger(__name__)
@@ -224,8 +224,10 @@ class SchemaDocumentationGenerator:
  if "@id" in object_type:
  # RDF/OWL format
  name = object_type["@id"]
- title = object_type.get("@documentation", {}).get("@label", name) if "@documentation" in object_type else name
- description = object_type.get("@documentation", {}).get("@comment", "") if "@documentation" in object_type else ""
+ title = object_type.get("@documentation", {}).get("@label",
+     name) if "@documentation" in object_type else name
+ description = object_type.get("@documentation", {}).get("@comment",
+     "") if "@documentation" in object_type else ""
  else:
  # Standard format
  name = object_type.get('name', object_type.get('@id', 'Unknown'))
@@ -238,7 +240,11 @@ class SchemaDocumentationGenerator:
  description = description,
  version = object_type.get('version', '1.0.0'),
  created_at = datetime.fromisoformat(object_type['createdAt']) if 'createdAt' in object_type else None,
+
+
  updated_at = datetime.fromisoformat(object_type['modifiedAt']) if 'modifiedAt' in object_type else None,
+
+
  tags = object_type.get('tags', [])
  )
 
@@ -260,7 +266,8 @@ class SchemaDocumentationGenerator:
  # Handle RDF/OWL format properties
  content_parts.append('## Properties\n')
  for key, value in object_type.items():
- if not key.startswith('@') and key not in ['name', 'displayName', 'description', 'version', 'createdAt', 'modifiedAt', 'tags']:
+ if not key.startswith('@') and key not in ['name', 'displayName', 'description',
+     'version', 'createdAt', 'modifiedAt', 'tags']:
  prop_name = key.replace('_', ' ').title()
  if isinstance(value, dict):
  if "@type" in value:
@@ -305,7 +312,8 @@ class SchemaDocumentationGenerator:
 
  # Add example properties
  for key, value in object_type.items():
- if not key.startswith('@') and key not in ['name', 'displayName', 'description', 'version']:
+ if not key.startswith('@') and key not in ['name', 'displayName', 'description',
+     'version']:
  if isinstance(value, str) and value.startswith('xsd:'):
  # Add example value based on XSD type
  if value == 'xsd:string':

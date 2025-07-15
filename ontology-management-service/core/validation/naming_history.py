@@ -2,18 +2,20 @@
 Naming Convention History Management
 명명 규칙 변경 이력 관리
 """
+import difflib
 import json
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Any
 from enum import Enum
 from pathlib import Path
-import difflib
-from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional
 
-from core.validation.naming_convention import (
- NamingConvention, EntityType, NamingPattern
-)
 from arrakis_common import get_logger
+from core.validation.naming_convention import (
+    EntityType,
+    NamingConvention,
+    NamingPattern,
+)
 
 logger = get_logger(__name__)
 
@@ -103,7 +105,8 @@ def safe_enum_parse(enum_class: type, value: Any, default: Optional[Any] = None)
 
  # 변환 실패
  if default is not None:
- logger.warning(f"Failed to convert '{value}' to {enum_class.__name__}, using default: {default}")
+ logger.warning(f"Failed to convert '{value}' to {enum_class.__name__},
+     using default: {default}")
  return default
 
  valid_values = [item.value for item in enum_class]
@@ -210,7 +213,8 @@ class NamingConventionHistory:
  try:
  changed_at = datetime.fromisoformat(data["changed_at"])
  except (ValueError, TypeError) as e:
- logger.warning(f"Failed to parse datetime '{data.get('changed_at')}', using current time: {e}")
+ logger.warning(f"Failed to parse datetime '{data.get('changed_at')}',
+     using current time: {e}")
  changed_at = datetime.now(timezone.utc)
 
  return cls(
@@ -503,7 +507,8 @@ class NamingConventionHistoryService:
 
  return diffs
 
- def _compare_snapshots(self, old_snapshot: Dict, new_snapshot: Dict) -> List[ChangeDiff]:
+ def _compare_snapshots(self, old_snapshot: Dict,
+     new_snapshot: Dict) -> List[ChangeDiff]:
  """스냅샷 비교 (딕셔너리 레벨)"""
  diffs = []
 
@@ -569,7 +574,7 @@ class NamingConventionHistoryService:
  to_version = history[-1].version
 
  report_lines = [
- f"=== Naming Convention History Report ===",
+ "=== Naming Convention History Report ===",
  f"Convention ID: {convention_id}",
  f"Version Range: v{from_version} → v{to_version}",
  ""

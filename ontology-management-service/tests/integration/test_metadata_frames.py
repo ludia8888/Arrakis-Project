@@ -1,20 +1,20 @@
 """
 Integration tests for @metadata Frames feature
 """
-import pytest
 import json
-from typing import Dict, Any, List
 from datetime import datetime
+from typing import Any, Dict, List
 
-from core.documents.metadata_frames import (
- MetadataFrame,
- MetadataFrameParser,
- SchemaDocumentation,
- SchemaDocumentationGenerator
-)
-from api.v1.document_routes import router
+import pytest
 from api.graphql.document_schema import DocumentQueries
+from api.v1.document_routes import router
 from arrakis_common import get_logger
+from core.documents.metadata_frames import (
+    MetadataFrame,
+    MetadataFrameParser,
+    SchemaDocumentation,
+    SchemaDocumentationGenerator,
+)
 
 logger = get_logger(__name__)
 
@@ -173,7 +173,8 @@ This concludes our API documentation with embedded metadata frames.
 
  # Verify all frame types detected
  frame_types = {frame.frame_type for frame in frames}
- expected_types = {'document', 'api', 'schema', 'example', 'validation', 'changelog', 'custom'}
+ expected_types = {'document', 'api', 'schema', 'example', 'validation', 'changelog',
+     'custom'}
  assert frame_types == expected_types
 
  # Verify frame count
@@ -504,7 +505,7 @@ Normal content here.
  large_markdown = "# Large Document\n\n"
 
  for i in range(100):
- large_markdown += f"""
+ large_markdown += """
 ## Section {i}
 
 Some content for section {i}.
@@ -564,8 +565,8 @@ class TestMetadataFramesAPI:
  @pytest.fixture
  def client(self):
  """Create test client"""
- from fastapi.testclient import TestClient
  from fastapi import FastAPI
+ from fastapi.testclient import TestClient
 
  app = FastAPI()
  app.include_router(router)

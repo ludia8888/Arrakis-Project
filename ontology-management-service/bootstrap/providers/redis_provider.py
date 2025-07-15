@@ -1,12 +1,14 @@
 """
 Provider for the Redis client.
 """
-import redis.asyncio as redis
-from bootstrap.config import get_config
-from .base import Provider
-from arrakis_common import get_logger
 import os
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
+
+import redis.asyncio as redis
+from arrakis_common import get_logger
+from bootstrap.config import get_config
+
+from .base import Provider
 
 logger = get_logger(__name__)
 

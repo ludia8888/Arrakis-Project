@@ -1,9 +1,10 @@
 """
 gRPC interceptors for authentication, tracing, and metadata propagation
 """
-import grpc
 import logging
-from typing import Callable, Any
+from typing import Any, Callable
+
+import grpc
 from opentelemetry import trace
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
@@ -11,10 +12,12 @@ logger = logging.getLogger(__name__)
 tracer = trace.get_tracer(__name__)
 
 
-class ClientAuthInterceptor(grpc.aio.UnaryUnaryClientInterceptor, grpc.aio.UnaryStreamClientInterceptor):
+class ClientAuthInterceptor(grpc.aio.UnaryUnaryClientInterceptor,
+    grpc.aio.UnaryStreamClientInterceptor):
  """Client interceptor that adds authentication and tracing metadata."""
 
- def __init__(self, get_auth_token: Callable[[], str] = None, get_user_context: Callable[[], Any] = None):
+ def __init__(self, get_auth_token: Callable[[], str] = None,
+     get_user_context: Callable[[], Any] = None):
  self.get_auth_token = get_auth_token
  self.get_user_context = get_user_context
 
@@ -112,9 +115,12 @@ def get_server_interceptor():
 
 
 # Convenience function to create client with all interceptors
-def create_instrumented_channel(target: str, auth_token_func = None, user_context_func = None):
+def create_instrumented_channel(target: str, auth_token_func = None,
+    user_context_func = None):
  """Create a gRPC channel with all necessary interceptors."""
- from opentelemetry.instrumentation.grpc import client_interceptor as otel_client_interceptor
+ from opentelemetry.instrumentation.grpc import (
+     client_interceptor as otel_client_interceptor,
+ )
 
  interceptors = [
  otel_client_interceptor(), # OpenTelemetry auto-instrumentation

@@ -3,7 +3,7 @@ Terminus DB 클라이언트 - 표준 httpx 클라이언트 기반으로 리팩�
 TerminusDB 내부 LRU 캐싱 활용 최적화 (섹션 8.6.1 참조)
 mTLS 지원으로 보안 강화 (NFR-S2)
 
-표준 `httpx.AsyncClient`와 `httpx.Limits`를 사용하여 안정적인 연결 관리를 수행합니다.
+Perform stable connection management using standard `httpx.AsyncClient` and `httpx.Limits`.
 """
 import logging
 import os
@@ -12,13 +12,13 @@ from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urljoin
 
 import httpx
-from bootstrap.config import TerminusDBConfig
 from arrakis_common import get_logger
+from bootstrap.config import TerminusDBConfig
 from utils.retry_strategy import (
- DB_CRITICAL_CONFIG,
- DB_READ_CONFIG,
- DB_WRITE_CONFIG,
- with_retry,
+    DB_CRITICAL_CONFIG,
+    DB_READ_CONFIG,
+    DB_WRITE_CONFIG,
+    with_retry,
 )
 
 logger = logging.getLogger(__name__)
@@ -46,7 +46,8 @@ class TerminusDBClient:
  self._client: Optional[httpx.AsyncClient] = None
 
  logger.info(
- f"TerminusDB client configured - service: {self.service_name}, mTLS: {self.config.use_mtls}"
+ f"TerminusDB client configured - service: {self.service_name},
+     mTLS: {self.config.use_mtls}"
  )
 
  async def __aenter__(self):
@@ -57,7 +58,7 @@ class TerminusDBClient:
  await self.close()
 
  async def _initialize_client(self):
- """클라이언트 초기화 - mTLS 지원"""
+ """클라이언트 seconds기화 - mTLS 지원"""
  if self._client:
  return
 
@@ -173,7 +174,7 @@ class TerminusDBClient:
  query: Union[str, Dict[str, Any]],
  commit_msg: Optional[str] = None,
  ):
- """특정 브랜치를 대상으로 WOQL 쿼리를 실행합니다."""
+ """특정 branch를 대상으로 WOQL query를 실행합니다."""
  if not self._client:
  raise ConnectionError("Client not initialized")
  add_span_attributes(
@@ -199,7 +200,7 @@ class TerminusDBClient:
  query: Union[str, Dict[str, Any]],
  commit_msg: Optional[str] = None,
  ):
- """WOQL 쿼리 실행 - 읽기 작업 최적화된 재시도"""
+ """WOQL query 실행 - 읽기 작업 최적화된 재시도"""
  if not self._client:
  raise ConnectionError("Client not initialized")
  add_span_attributes({"db.name": db_name, "db.operation": "query"})
@@ -219,7 +220,7 @@ class TerminusDBClient:
  async def get_branch_info(
  self, db_name: str, branch_name: str
  ) -> Optional[Dict[str, Any]]:
- """특정 브랜치의 정보를 가져옵니다 (head commit 등). 브랜치가 없으면 None을 반환합니다."""
+ """특정 branch의 정보를 가져옵니다 (head commit 등). branch가 없으면 None을 반환합니다."""
  if not self._client:
  raise ConnectionError("Client not initialized")
  add_span_attributes(
@@ -246,7 +247,7 @@ class TerminusDBClient:
  async def get_document(
  self, db_name: str, branch_name: str, document_id: str
  ) -> Optional[Dict[str, Any]]:
- """특정 브랜치에서 ID로 문서를 가져옵니다. 문서가 없으면 None을 반환합니다."""
+ """특정 from branch ID로 문서를 가져옵니다. 문서가 없으면 None을 반환합니다."""
  if not self._client:
  raise ConnectionError("Client not initialized")
  add_span_attributes(
@@ -319,7 +320,7 @@ class TerminusDBClient:
  async def create_branch(
  self, db_name: str, new_branch_name: str, source_branch: str = "main"
  ) -> bool:
- """새로운 브랜치를 생성합니다. 성공 시 True, 이미 존재하면 False를 반환합니다."""
+ """새로운 branch를 생성합니다. 성공 시 True, 이미 존재하면 False를 반환합니다."""
  if not self._client:
  raise ConnectionError("Client not initialized")
  add_span_attributes(
@@ -360,7 +361,7 @@ class TerminusDBClient:
  document: Dict[str, Any],
  commit_msg: Optional[str] = None,
  ) -> Dict[str, Any]:
- """특정 브랜치에 문서를 삽입합니다."""
+ """특정 branch에 문서를 삽입합니다."""
  if not self._client:
  raise ConnectionError("Client not initialized")
  add_span_attributes(
@@ -386,7 +387,7 @@ class TerminusDBClient:
  @with_retry("terminusdb_delete_branch", config = DB_CRITICAL_CONFIG)
  @trace_method("terminusdb.delete_branch")
  async def delete_branch(self, db_name: str, branch_name: str) -> bool:
- """네이티브 브랜치를 삭제합니다. 성공 시 True, 실패 시 예외가 발생합니다."""
+ """네이티브 branch를 삭제합니다. 성공 시 True, 실패 시 예외가 발생합니다."""
  if not self._client:
  raise ConnectionError("Client not initialized")
  add_span_attributes(
@@ -423,7 +424,7 @@ class TerminusDBClient:
  document_id: str,
  commit_msg: Optional[str] = None,
  ) -> bool:
- """특정 브랜치에서 문서를 삭제합니다."""
+ """특정 from branch 문서를 삭제합니다."""
  if not self._client:
  raise ConnectionError("Client not initialized")
  add_span_attributes(
@@ -469,7 +470,7 @@ class TerminusDBClient:
  document: Dict[str, Any],
  commit_msg: Optional[str] = None,
  ) -> Dict[str, Any]:
- """특정 브랜치의 문서를 업데이트(덮어쓰기)합니다."""
+ """특정 branch의 문서를 업데이트(덮어쓰기)합니다."""
  if not self._client:
  raise ConnectionError("Client not initialized")
  add_span_attributes(

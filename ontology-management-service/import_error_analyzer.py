@@ -64,7 +64,7 @@ def analyze_import_errors():
  report.append("")
 
  # Overall statistics
- report.append(f"📊 OVERALL STATISTICS")
+ report.append("📊 OVERALL STATISTICS")
  report.append(f"Total files analyzed: {results['total_files']}")
  report.append(f"Total imports: {results['total_imports']}")
  report.append(f"Valid imports: {results['valid_imports']}")

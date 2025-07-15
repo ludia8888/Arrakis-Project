@@ -5,11 +5,7 @@ REQ-OMS-F3: Breaking Change Detection - 타입 호환성 검증
 import logging
 from typing import Any, Dict, List, Optional
 
-from core.validation.models import (
- BreakingChange,
- Severity,
- ValidationContext,
-)
+from core.validation.models import BreakingChange, Severity, ValidationContext
 from core.validation.rules.base import BreakingChangeRule, RuleResult
 from models.domain import ObjectType
 

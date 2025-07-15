@@ -3,10 +3,11 @@
 Static import analysis to find unused modules
 """
 import ast
-import os
-from pathlib import Path
-from collections import defaultdict
 import json
+import os
+from collections import defaultdict
+from pathlib import Path
+
 
 class ImportAnalyzer(ast.NodeVisitor):
  def __init__(self):

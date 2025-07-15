@@ -2,14 +2,14 @@
 Scope Mapper - Unified mapping between IAM scopes and OMS permissions
 Centralizes all permission transformation logic
 """
-from typing import List, Dict, Set, Optional
-from enum import Enum
-from dataclasses import dataclass
 import re
+from dataclasses import dataclass
+from enum import Enum
+from typing import Dict, List, Optional, Set
 
-from shared.iam_contracts import IAMScope
-from models.permissions import ResourceType, Action, Role
 from arrakis_common import get_logger
+from models.permissions import Action, ResourceType, Role
+from shared.iam_contracts import IAMScope
 
 logger = get_logger(__name__)
 
@@ -67,24 +67,38 @@ class ScopeMapper:
  # Extended mappings for complex permissions
  self.extended_mappings = [
  # Object types are part of ontologies
- PermissionMapping("api:ontologies:read", "object_type:*:read", ResourceType.OBJECT_TYPE, [Action.READ]),
- PermissionMapping("api:ontologies:write", "object_type:*:write", ResourceType.OBJECT_TYPE, [Action.CREATE, Action.UPDATE]),
- PermissionMapping("api:ontologies:write", "object_type:*:delete", ResourceType.OBJECT_TYPE, [Action.DELETE]),
+ PermissionMapping("api:ontologies:read", "object_type:*:read", ResourceType.OBJECT_TYPE,
+
+     [Action.READ]),
+ PermissionMapping("api:ontologies:write", "object_type:*:write",
+     ResourceType.OBJECT_TYPE, [Action.CREATE, Action.UPDATE]),
+ PermissionMapping("api:ontologies:write", "object_type:*:delete",
+     ResourceType.OBJECT_TYPE, [Action.DELETE]),
 
  # Link types are part of ontologies
- PermissionMapping("api:ontologies:read", "link_type:*:read", ResourceType.LINK_TYPE, [Action.READ]),
- PermissionMapping("api:ontologies:write", "link_type:*:write", ResourceType.LINK_TYPE, [Action.CREATE, Action.UPDATE]),
- PermissionMapping("api:ontologies:write", "link_type:*:delete", ResourceType.LINK_TYPE, [Action.DELETE]),
+ PermissionMapping("api:ontologies:read", "link_type:*:read", ResourceType.LINK_TYPE,
+     [Action.READ]),
+ PermissionMapping("api:ontologies:write", "link_type:*:write", ResourceType.LINK_TYPE,
+     [Action.CREATE, Action.UPDATE]),
+ PermissionMapping("api:ontologies:write", "link_type:*:delete", ResourceType.LINK_TYPE,
+     [Action.DELETE]),
 
  # Action types are part of ontologies
- PermissionMapping("api:ontologies:read", "action_type:*:read", ResourceType.ACTION_TYPE, [Action.READ]),
- PermissionMapping("api:ontologies:write", "action_type:*:write", ResourceType.ACTION_TYPE, [Action.CREATE, Action.UPDATE]),
- PermissionMapping("api:ontologies:write", "action_type:*:delete", ResourceType.ACTION_TYPE, [Action.DELETE]),
+ PermissionMapping("api:ontologies:read", "action_type:*:read", ResourceType.ACTION_TYPE,
+
+     [Action.READ]),
+ PermissionMapping("api:ontologies:write", "action_type:*:write",
+     ResourceType.ACTION_TYPE, [Action.CREATE, Action.UPDATE]),
+ PermissionMapping("api:ontologies:write", "action_type:*:delete",
+     ResourceType.ACTION_TYPE, [Action.DELETE]),
 
  # Function types are part of ontologies
- PermissionMapping("api:ontologies:read", "function_type:*:read", ResourceType.FUNCTION_TYPE, [Action.READ]),
- PermissionMapping("api:ontologies:write", "function_type:*:write", ResourceType.FUNCTION_TYPE, [Action.CREATE, Action.UPDATE]),
- PermissionMapping("api:ontologies:write", "function_type:*:delete", ResourceType.FUNCTION_TYPE, [Action.DELETE]),
+ PermissionMapping("api:ontologies:read", "function_type:*:read",
+     ResourceType.FUNCTION_TYPE, [Action.READ]),
+ PermissionMapping("api:ontologies:write", "function_type:*:write",
+     ResourceType.FUNCTION_TYPE, [Action.CREATE, Action.UPDATE]),
+ PermissionMapping("api:ontologies:write", "function_type:*:delete",
+     ResourceType.FUNCTION_TYPE, [Action.DELETE]),
  ]
 
  # Scope hierarchy (parent -> children)
@@ -248,7 +262,8 @@ class ScopeMapper:
 
  return sorted(list(scopes))
 
- def check_permission_match(self, user_permissions: List[str], required_permission: str) -> bool:
+ def check_permission_match(self, user_permissions: List[str],
+     required_permission: str) -> bool:
  """
  Check if user permissions match a required permission
  Handles wildcards and hierarchical permissions
@@ -324,10 +339,14 @@ class ScopeMapper:
  permissions[ResourceType.ACTION_TYPE] = [Action.CREATE, Action.READ, Action.UPDATE]
  permissions[ResourceType.FUNCTION_TYPE] = [Action.CREATE, Action.READ, Action.UPDATE]
  elif scope == IAMScope.ONTOLOGIES_ADMIN:
- permissions[ResourceType.OBJECT_TYPE] = [Action.CREATE, Action.READ, Action.UPDATE, Action.DELETE]
- permissions[ResourceType.LINK_TYPE] = [Action.CREATE, Action.READ, Action.UPDATE, Action.DELETE]
- permissions[ResourceType.ACTION_TYPE] = [Action.CREATE, Action.READ, Action.UPDATE, Action.DELETE]
- permissions[ResourceType.FUNCTION_TYPE] = [Action.CREATE, Action.READ, Action.UPDATE, Action.DELETE]
+ permissions[ResourceType.OBJECT_TYPE] = [Action.CREATE, Action.READ, Action.UPDATE,
+     Action.DELETE]
+ permissions[ResourceType.LINK_TYPE] = [Action.CREATE, Action.READ, Action.UPDATE,
+     Action.DELETE]
+ permissions[ResourceType.ACTION_TYPE] = [Action.CREATE, Action.READ, Action.UPDATE,
+     Action.DELETE]
+ permissions[ResourceType.FUNCTION_TYPE] = [Action.CREATE, Action.READ, Action.UPDATE,
+     Action.DELETE]
  elif scope == IAMScope.SCHEMAS_READ:
  permissions[ResourceType.SCHEMA] = [Action.READ]
  elif scope == IAMScope.SCHEMAS_WRITE:
@@ -335,7 +354,8 @@ class ScopeMapper:
  elif scope == IAMScope.BRANCHES_READ:
  permissions[ResourceType.BRANCH] = [Action.READ]
  elif scope == IAMScope.BRANCHES_WRITE:
- permissions[ResourceType.BRANCH] = [Action.CREATE, Action.READ, Action.UPDATE, Action.DELETE, Action.MERGE]
+ permissions[ResourceType.BRANCH] = [Action.CREATE, Action.READ, Action.UPDATE,
+     Action.DELETE, Action.MERGE]
  elif scope == IAMScope.PROPOSALS_READ:
  permissions[ResourceType.PROPOSAL] = [Action.READ]
  elif scope == IAMScope.PROPOSALS_WRITE:

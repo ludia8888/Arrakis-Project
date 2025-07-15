@@ -2,8 +2,8 @@
 """
 Check references to potentially unused files
 """
-import subprocess
 import json
+import subprocess
 from pathlib import Path
 
 # Load the analysis results
@@ -88,12 +88,12 @@ results = {
 with open('reference_check.json', 'w') as f:
  json.dump(results, f, indent = 2)
 
-print(f"\n📊 Results:")
+print("\n📊 Results:")
 print(f"❌ Definitely unused: {len(definitely_unused)}")
 print(f"⚠️ Possibly used: {len(possibly_used)}")
 
 if definitely_unused:
- print(f"\n🗑️ Safe to remove (no references found):")
+ print("\n🗑️ Safe to remove (no references found):")
  for file in definitely_unused[:10]:
  print(f" - {file}")
  if len(definitely_unused) > 10:

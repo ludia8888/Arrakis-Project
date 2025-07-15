@@ -17,10 +17,10 @@ INTEGRATION POINTS:
 import hashlib
 import json
 from datetime import datetime, timezone
-from typing import Optional, Dict, Any, Tuple
+from typing import Any, Dict, Optional, Tuple
 
-from core.auth_utils import UserContext
 from arrakis_common import get_logger
+from core.auth_utils import UserContext
 
 logger = get_logger(__name__)
 
@@ -270,6 +270,7 @@ def get_secure_author_provider(jwt_secret: Optional[str] = None) -> SecureAuthor
 
  if not _secure_author_provider:
  import os
+
  # Try multiple sources for JWT secret
  secret = (
  jwt_secret or

@@ -60,7 +60,7 @@ def check_dependencies():
             print(f"{GREEN}✓ Redis is running{RESET}")
         else:
             print(f"{RED}✗ Redis is not running{RESET}")
-            print(f"  Start with: brew services start redis")
+            print("  Start with: brew services start redis")
             return False
     except (subprocess.CalledProcessError, FileNotFoundError) as e:
         print(f"{RED}✗ Redis CLI not found or failed: {e}{RESET}")
@@ -139,10 +139,10 @@ def start_graphql_services():
     ws_process = subprocess.Popen(ws_cmd, cwd=str(oms_dir), env=os.environ)
 
     print(f"\n{BOLD}{GREEN}GraphQL Services Started!{RESET}")
-    print(f"  - GraphQL HTTP: http://localhost:8006/graphql")
-    print(f"  - GraphQL Playground: http://localhost:8006/graphql")
-    print(f"  - GraphQL WebSocket: ws://localhost:8004/ws")
-    print(f"  - Health Check: http://localhost:8006/health")
+    print("  - GraphQL HTTP: http://localhost:8006/graphql")
+    print("  - GraphQL Playground: http://localhost:8006/graphql")
+    print("  - GraphQL WebSocket: ws://localhost:8004/ws")
+    print("  - Health Check: http://localhost:8006/health")
     print(f"\n{YELLOW}Press Ctrl+C to stop the services{RESET}")
 
     try:

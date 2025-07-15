@@ -4,11 +4,12 @@ Generated at: 2025-06-25T11:15:14.778517
 DO NOT EDIT - This file is auto-generated
 """
 
-from typing import Optional, List, Dict, Any, Union, Callable, Awaitable
+import uuid
 from datetime import datetime
 from enum import Enum
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Union
+
 from pydantic import BaseModel, Field
-import uuid
 
 
 class PublishResult(BaseModel):

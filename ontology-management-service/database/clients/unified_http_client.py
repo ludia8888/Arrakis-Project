@@ -40,22 +40,24 @@ USAGE:
 """
 
 import asyncio
+import logging
 import ssl
 import time
 from abc import ABC, abstractmethod
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Dict, Optional, Any, Union, AsyncIterator, Tuple
-import logging
+from typing import Any, AsyncIterator, Dict, Optional, Tuple, Union
 
-import httpx
-from httpx import AsyncClient, Response
-from prometheus_client import Counter, Histogram, Gauge
 import backoff
-
+import httpx
 from arrakis_common import get_logger
-from core.resilience.unified_circuit_breaker import UnifiedCircuitBreaker, CircuitBreakerConfig
+from core.resilience.unified_circuit_breaker import (
+    CircuitBreakerConfig,
+    UnifiedCircuitBreaker,
+)
+from httpx import AsyncClient, Response
+from prometheus_client import Counter, Gauge, Histogram
 
 logger = get_logger(__name__)
 
@@ -71,7 +73,8 @@ http_request_duration = Histogram(
  'http_client_request_duration_seconds',
  'HTTP request duration',
  ['method', 'endpoint', 'client_mode'],
- buckets=(0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0, 300.0)
+ buckets=(0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0,
+     300.0)
 )
 
 circuit_breaker_state = Gauge(
@@ -574,7 +577,8 @@ def create_secure_client(**kwargs) -> UnifiedHTTPClient:
  )
 
 
-def create_service_client(service_registry: Dict[str, str], **kwargs) -> UnifiedHTTPClient:
+def create_service_client(service_registry: Dict[str, str],
+    **kwargs) -> UnifiedHTTPClient:
  """Create a service HTTP client (replaces ServiceClient)"""
  return UnifiedHTTPClient(
  mode = ClientMode.SERVICE,

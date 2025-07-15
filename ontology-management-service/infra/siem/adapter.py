@@ -352,7 +352,7 @@ class SIEMAdapter:
  logger.info(f"SIEM adapter initialized: {siem_type}")
  self._initialized = True
  else:
- logger.warning(f"SIEM adapter health check failed, using mock fallback")
+ logger.warning("SIEM adapter health check failed, using mock fallback")
  self._adapter = MockSiemAdapter()
  self._initialized = True
 

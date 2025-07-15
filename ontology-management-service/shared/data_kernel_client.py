@@ -14,10 +14,10 @@ from opentelemetry import trace
 from shared.proto_stubs import data_kernel_pb2 as dk_pb2
 from shared.proto_stubs import data_kernel_pb2_grpc as dk_pb2_grpc
 from shared.terminus_context import (
- get_author,
- get_branch,
- get_commit_message,
- get_trace_id,
+    get_author,
+    get_branch,
+    get_commit_message,
+    get_trace_id,
 )
 
 # gRPC instrumentation is handled by create_instrumented_channel

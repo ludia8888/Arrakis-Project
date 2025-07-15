@@ -1,13 +1,14 @@
 """
 Naming Convention Engine
-엔티티 명명 규칙 검증 및 자동 교정 기능
+Entity naming convention validation and automatic correction functionality
 """
+import logging
 import re
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Tuple
-from datetime import datetime, timezone
-from pydantic import BaseModel, Field, field_validator, ConfigDict
-import logging
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,7 @@ def enum_encoder(v):
 
 
 def utc_datetime_encoder(v):
- """UTC 시간대 포함 datetime 인코더"""
+ """UTC timezone 포함 datetime 인코더"""
  if isinstance(v, datetime):
  if v.tzinfo is None:
  # naive datetime을 UTC로 가정
@@ -144,7 +145,7 @@ class NamingValidationResult(BaseModel):
 class NamingConventionEngine:
  """명명 규칙 검증 엔진"""
 
- # 일반적인 기술 약어 사전 (대소문자 보존)
+ # 일반적인 기술 약어 사전 (case 보존)
  KNOWN_ACRONYMS = {
  # 프로토콜/통신
  'HTTP', 'HTTPS', 'FTP', 'SSH', 'TCP', 'UDP', 'IP', 'DNS', 'URL', 'URI',
@@ -169,7 +170,7 @@ class NamingConventionEngine:
  # 버전/인증
  'OAuth', 'OAuth2', 'SAML', 'LDAP', 'SSO', 'MFA', '2FA',
 
- # 기타
+ # Other
  'ID', 'PK', 'FK', 'ACL', 'RBAC', 'CRUD', 'DTO', 'DAO', 'POC',
  'MVP', 'SKU', 'PII', 'GDPR', 'HIPAA', 'SOC', 'ISO',
  }
@@ -185,12 +186,12 @@ class NamingConventionEngine:
  NamingPattern.UPPER_CASE: re.compile(r'^[A-Z][A-Z0-9]*$')
  }
 
- # 단어 분리용 정규식 (숫자, 대문자 약어 처리)
+ # word separation용 정규식 (숫자, 대문자 약어 처리)
  # 패턴: 연속 대문자 | 대문자+소문자 | 소문자 | 숫자
  WORD_SPLIT_REGEX = re.compile(
  r'[A-Z]+(?=[A-Z][a-z]|\b)|' # 연속 대문자 (HTTP, XML)
- r'[A-Z][a-z]+|' # 대문자로 시작하는 단어 (Server)
- r'[a-z]+|' # 소문자 단어 (get)
+ r'[A-Z][a-z]+|' # 대문자로 시작하는 word (Server)
+ r'[a-z]+|' # 소문자 word (get)
  r'[0-9]+' # 숫자 (2, 123)
  )
 
@@ -214,7 +215,7 @@ class NamingConventionEngine:
  EntityType.LINK_TYPE: NamingRule(
  entity_type = EntityType.LINK_TYPE,
  pattern = NamingPattern.CAMEL_CASE,
- required_suffix = ["Link", "Relation", "Ref"],
+ required_suffix = ["Link", "Relation", "Re"],
  min_length = 5,
  max_length = 60
  ),
@@ -248,17 +249,17 @@ class NamingConventionEngine:
  )
  }
 
- # 예약어 (프로그래밍 언어 키워드)
+ # example약어 (프로그래밍 언어 키워드)
  DEFAULT_RESERVED_WORDS = {
- "class", "function", "if", "else", "for", "while", "return",
+ "class", "function", "i", "else", "for", "while", "return",
  "true", "false", "null", "undefined", "void", "var", "let", "const",
  "public", "private", "protected", "static", "abstract", "interface",
  "extends", "implements", "import", "export", "default", "new",
- "this", "super", "self", "id", "type", "name", "value"
+ "this", "super", "sel", "id", "type", "name", "value"
  }
 
  def __init__(self, convention: Optional[NamingConvention] = None):
- """명명 규칙 엔진 초기화"""
+ """naming convention engine initialization"""
  if convention:
  self.convention = convention
  else:
@@ -337,7 +338,7 @@ class NamingConventionEngine:
  auto_fixable = True
  ))
 
- # 3. 접두사/접미사 검증
+ # 3. 접두사/suffix 검증
  prefix_issue = self._check_affixes(
  entity_name, rule.required_prefix, rule.forbidden_prefix, "prefix"
  )
@@ -382,7 +383,7 @@ class NamingConventionEngine:
  message = f"Name contains forbidden words: {', '.join(forbidden_found)}"
  ))
 
- # 5. 예약어 검증
+ # 5. example약어 검증
  if self._is_reserved_word(entity_name):
  issues.append(ValidationIssue(
  entity_type = entity_type,
@@ -449,12 +450,12 @@ class NamingConventionEngine:
  if not rule:
  return entity_name
 
- # 1. 단어 분리
+ # 1. word separation
  words = self._split_words(entity_name)
  if not words:
  return entity_name
 
- # 2. 필수 접두사 처리 (단어 리스트에 추가)
+ # 2. 필수 접두사 처리 (word 리스트에 추가)
  if rule.required_prefix:
  # 이미 있는 접두사 확인
  has_prefix = any(
@@ -462,36 +463,36 @@ class NamingConventionEngine:
  ) if words else False
 
  if not has_prefix:
- # 접두사를 단어로 분리하여 추가
+ # 접두사를 word로 separation하여 추가
  prefix_words = self._split_words(rule.required_prefix[0])
  words = prefix_words + words
 
- # 3. 필수 접미사 처리 (단어 리스트에 추가)
+ # 3. 필수 suffix 처리 (word 리스트에 추가)
  if rule.required_suffix:
- # 이미 있는 접미사 확인
+ # 이미 있는 suffix 확인
  has_suffix = any(
  words[-1].lower() == s.lower() for s in rule.required_suffix
  ) if words else False
 
  if not has_suffix:
- # 접미사를 단어로 분리하여 추가
+ # suffix를 word로 separation하여 추가
  suffix_words = self._split_words(rule.required_suffix[0])
  words.extend(suffix_words)
 
- # 4. 예약어 처리 (전체 이름 검사)
+ # 4. example약어 처리 (전체 이름 검사)
  temp_name = self._convert_to_pattern(''.join(words), rule.pattern)
  if self._is_reserved_word(temp_name):
- # 마지막 단어에 _ 추가
+ # last word에 _ 추가
  words[-1] = words[-1] + '_'
 
- # 5. 패턴 변환 (수정된 단어 리스트로)
+ # 5. 패턴 변환 (수정된 word 리스트로)
  fixed_name = self._convert_words_to_pattern(words, rule.pattern)
 
  # 6. 길이 조정
  if len(fixed_name) > rule.max_length:
- # 접미사는 보존하고 중간 부분 자르기
+ # suffix는 보존하고 중간 part 자르기
  if rule.required_suffix and words:
- # 접미사 제외한 부분을 자름
+ # suffix excluding part을 자름
  suffix_len = len(rule.required_suffix[0])
  if len(fixed_name) - suffix_len > 0:
  fixed_name = fixed_name[:rule.max_length - suffix_len] + \
@@ -504,12 +505,12 @@ class NamingConventionEngine:
  return fixed_name
 
  def _convert_words_to_pattern(self, words: List[str], pattern: NamingPattern) -> str:
- """단어 리스트를 특정 패턴으로 변환"""
+ """word 리스트를 특정 패턴으로 변환"""
  if not words:
  return ""
 
  if pattern == NamingPattern.CAMEL_CASE:
- # 첫 단어는 전체 소문자, 나머지는 적절히 처리
+ # 첫 word는 전체 소문자, 나머지는 적절히 처리
  result = words[0].lower()
  for word in words[1:]:
  if word.upper() in self.KNOWN_ACRONYMS:
@@ -522,7 +523,7 @@ class NamingConventionEngine:
  result += word.capitalize()
  return result
  elif pattern == NamingPattern.PASCAL_CASE:
- # 모든 단어 첫 글자 대문자
+ # 모든 word 첫 글자 대문자
  result = ""
  for word in words:
  if word.upper() in self.KNOWN_ACRONYMS:
@@ -558,19 +559,19 @@ class NamingConventionEngine:
 
  def _convert_to_pattern(self, name: str, pattern: NamingPattern) -> str:
  """패턴 변환"""
- # 단어 분리
+ # word separation
  words = self._split_words(name)
  if not words:
  return name
 
- # 단어 리스트를 패턴으로 변환
+ # word 리스트를 패턴으로 변환
  return self._convert_words_to_pattern(words, pattern)
 
  def _split_words(self, name: str) -> List[str]:
- """이름을 단어로 분리"""
+ """이름을 word로 separation"""
  # snake_case / kebab-case 먼저 처리
  if '_' in name:
- # snake_case 각 부분을 다시 분석
+ # snake_case each part을 again analysis
  parts = name.split('_')
  words = []
  for part in parts:
@@ -579,7 +580,7 @@ class NamingConventionEngine:
  return words
 
  if '-' in name:
- # kebab-case 각 부분을 다시 분석
+ # kebab-case each part을 again analysis
  parts = name.split('-')
  words = []
  for part in parts:
@@ -587,22 +588,22 @@ class NamingConventionEngine:
  words.extend(self._split_camel_case(part))
  return words
 
- # camelCase/PascalCase 분리
+ # camelCase/PascalCase separation
  return self._split_camel_case(name)
 
  def _split_camel_case(self, name: str) -> List[str]:
- """CamelCase/PascalCase 분리 - 정규식 기반 단순 구현"""
+ """CamelCase/PascalCase separation - 정규식 기반 단순 구현"""
  if not name:
  return []
 
- # 정규식을 사용한 간단한 단어 분리
+ # 정규식을 사용한 간단한 word separation
  # 패턴: 연속 대문자 | 대문자+소문자 | 소문자 | 숫자
  words = re.findall(self.WORD_SPLIT_REGEX, name)
 
  # 빈 문자열 제거
  words = [w for w in words if w]
 
- # 특별한 패턴 후처리
+ # 특별한 패턴 after처리
  processed_words = []
  i = 0
  while i < len(words):
@@ -633,12 +634,12 @@ class NamingConventionEngine:
  def _remove_numbers(self, name: str) -> str:
  """이름에서 숫자 제거"""
  # 단순히 숫자만 제거하면 의미가 깨질 수 있으므로
- # 단어 분리 후 숫자가 포함된 단어 제거
+ # word separation after 숫자가 포함된 word 제거
  words = self._split_words(name)
  filtered_words = [w for w in words if not w.isdigit()]
 
  if not filtered_words:
- # 모든 단어가 숫자면 원본 반환
+ # 모든 word가 숫자면 원본 반환
  return name
 
  # 현재 엔티티의 패턴 유추
@@ -656,7 +657,7 @@ class NamingConventionEngine:
  forbidden: Optional[List[str]],
  affix_type: str
  ) -> Optional[Tuple[str, str, Optional[str]]]:
- """접두사/접미사 검증"""
+ """접두사/suffix 검증"""
  check_func = name.startswith if affix_type == "prefix" else name.endswith
 
  # 필수 검증
@@ -710,12 +711,12 @@ class NamingConventionEngine:
  logger.error(f"Failed to compile regex for {entity_type}: {rule.custom_regex}")
 
  def _is_reserved_word(self, word: str) -> bool:
- """예약어 확인 (case_sensitive 옵션 고려)"""
+ """example약어 확인 (case_sensitive 옵션 고려)"""
  if self.convention.case_sensitive:
- # 대소문자 구분
+ # case distinction
  return word in self.convention.reserved_words
  else:
- # 대소문자 무시
+ # case 무시
  word_lower = word.lower()
  return any(
  word_lower == reserved.lower()
@@ -727,7 +728,7 @@ class NamingConventionEngine:
 _default_engine = None
 
 def get_naming_engine(convention: Optional[NamingConvention] = None) -> NamingConventionEngine:
- """명명 규칙 엔진 인스턴스 반환"""
+ """naming convention engine 인스턴스 반환"""
  global _default_engine
  if convention:
  return NamingConventionEngine(convention)

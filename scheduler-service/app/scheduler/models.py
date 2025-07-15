@@ -1,10 +1,10 @@
 """Data models for scheduler service."""
 
 from datetime import datetime
-from typing import Dict, List, Optional, Any, Union
 from enum import Enum
+from typing import Any, Dict, List, Optional, Union
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class JobStatus(str, Enum):
@@ -33,7 +33,8 @@ class CronSchedule(BaseModel):
 class IntervalSchedule(BaseModel):
  """Interval-based schedule."""
  interval_seconds: int = Field(..., gt = 0, description = "Interval in seconds")
- start_time: Optional[datetime] = Field(default = None, description = "Start time for interval")
+ start_time: Optional[datetime] = Field(default = None,
+     description = "Start time for interval")
 
 
 class OneTimeSchedule(BaseModel):
@@ -44,10 +45,13 @@ class OneTimeSchedule(BaseModel):
 class JobConfig(BaseModel):
  """Job configuration."""
  job_type: str = Field(..., description = "Type of job to execute")
- parameters: Dict[str, Any] = Field(default_factory = dict, description = "Job parameters")
+ parameters: Dict[str, Any] = Field(default_factory = dict,
+     description = "Job parameters")
  max_retries: int = Field(default = 3, ge = 0, description = "Maximum retry attempts")
- retry_delay_seconds: int = Field(default = 60, gt = 0, description = "Delay between retries")
- timeout_seconds: int = Field(default = 300, gt = 0, description = "Job execution timeout")
+ retry_delay_seconds: int = Field(default = 60, gt = 0,
+     description = "Delay between retries")
+ timeout_seconds: int = Field(default = 300, gt = 0,
+     description = "Job execution timeout")
  tags: List[str] = Field(default_factory = list, description = "Job tags for filtering")
 
 
@@ -69,8 +73,10 @@ class Job(BaseModel):
  enabled: bool = Field(default = True, description = "Whether job is enabled")
  status: JobStatus = Field(default = JobStatus.ACTIVE, description = "Job status")
 
- next_run_time: Optional[datetime] = Field(default = None, description = "Next scheduled run")
- last_run_time: Optional[datetime] = Field(default = None, description = "Last execution time")
+ next_run_time: Optional[datetime] = Field(default = None,
+     description = "Next scheduled run")
+ last_run_time: Optional[datetime] = Field(default = None,
+     description = "Last execution time")
 
  class Config:
  use_enum_values = True
@@ -81,10 +87,13 @@ class JobExecution(BaseModel):
  id: str = Field(..., description = "Execution ID")
  job_id: str = Field(..., description = "Parent job ID")
  started_at: datetime = Field(..., description = "Execution start time")
- finished_at: Optional[datetime] = Field(default = None, description = "Execution end time")
+ finished_at: Optional[datetime] = Field(default = None,
+     description = "Execution end time")
  status: ExecutionStatus = Field(..., description = "Execution status")
- error_message: Optional[str] = Field(default = None, description = "Error message if failed")
- result: Optional[Dict[str, Any]] = Field(default = None, description = "Execution result")
+ error_message: Optional[str] = Field(default = None,
+     description = "Error message if failed")
+ result: Optional[Dict[str, Any]] = Field(default = None,
+     description = "Execution result")
  retry_count: int = Field(default = 0, description = "Number of retry attempts")
 
  class Config:

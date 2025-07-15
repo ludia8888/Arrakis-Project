@@ -2,17 +2,17 @@
 Scope-based RBAC Middleware
 Enhanced RBAC middleware that supports both role-based and scope-based authorization
 """
-from typing import Callable, Optional, List, Dict, Tuple
-from fastapi import Request, HTTPException, status
+from typing import Callable, Dict, List, Optional, Tuple
+
+from arrakis_common import get_logger
+from core.auth_utils import UserContext
+from core.iam.iam_integration import IAMScope, get_iam_integration
+from fastapi import HTTPException, Request, status
 from fastapi.responses import JSONResponse
+from models.permissions import Action, ResourceType
+from shared.terminus_context import get_branch, is_readonly_branch
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
-
-from core.auth_utils import UserContext
-from core.iam.iam_integration import get_iam_integration, IAMScope
-from models.permissions import ResourceType, Action
-from arrakis_common import get_logger
-from shared.terminus_context import get_branch, is_readonly_branch
 
 logger = get_logger(__name__)
 
@@ -60,7 +60,8 @@ class ScopeRBACMiddleware(BaseHTTPMiddleware):
  if "permissions" not in user.metadata and not hasattr(request.state, "permissions"):
  # Only fetch permissions if not already available
  auth_header = request.headers.get("Authorization", "")
- token = auth_header.replace("Bearer ", "") if auth_header.startswith("Bearer ") else None
+ token = auth_header.replace("Bearer ",
+     "") if auth_header.startswith("Bearer ") else None
 
  if token is None:
  # This should not happen if AuthMiddleware is working correctly,

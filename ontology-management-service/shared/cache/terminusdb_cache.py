@@ -55,13 +55,13 @@ Related modules:
 - database/clients/terminus_db.py: Direct database access
 """
 
+import asyncio
+import hashlib
+import json
 import logging
 import os
-import asyncio
-from typing import Any, Dict, List, Optional, Callable
 from datetime import datetime, timedelta
-import json
-import hashlib
+from typing import Any, Callable, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +82,8 @@ class TerminusDBCacheManager:
  """
  self.db_client = db_client
  self.cache_db = cache_db
- self.enable_internal_cache = os.getenv("TERMINUSDB_CACHE_ENABLED", "true").lower() == "true"
+ self.enable_internal_cache = os.getenv("TERMINUSDB_CACHE_ENABLED",
+     "true").lower() == "true"
  self.lru_cache_size = int(os.getenv("TERMINUSDB_LRU_CACHE_SIZE", "500000000")) # 500MB
  self.default_ttl = int(os.getenv("CACHE_DEFAULT_TTL", "3600")) # 1 hour
 
@@ -90,7 +91,8 @@ class TerminusDBCacheManager:
  self._memory_cache: Dict[str, Dict[str, Any]] = {}
  self._memory_cache_max_size = 1000 # Max items in memory cache
 
- logger.info(f"TerminusDBCacheManager initialized with cache_size={self.lru_cache_size}, ttl={self.default_ttl}")
+ logger.info(f"TerminusDBCacheManager initialized with cache_size={self.lru_cache_size},
+     ttl={self.default_ttl}")
 
  async def initialize(self):
  """Initialize cache database and schema"""

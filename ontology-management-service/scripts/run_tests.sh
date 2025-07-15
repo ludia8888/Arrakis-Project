@@ -54,9 +54,9 @@ echo ""
 run_test() {
     local test_name=$1
     local test_path=$2
-    
+
     echo -n "Testing $test_name... "
-    
+
     if python -m pytest "$test_path" -v --tb=short > /tmp/test_output.txt 2>&1; then
         echo -e "${GREEN}✅ PASSED${NC}"
         return 0

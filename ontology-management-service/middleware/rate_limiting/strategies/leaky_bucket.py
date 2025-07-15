@@ -1,13 +1,12 @@
 """
 Leaky bucket rate limiting strategy
 """
-from datetime import datetime, timedelta
-from typing import Optional, List
 from collections import deque
+from datetime import datetime, timedelta
+from typing import List, Optional
+
+from ..models import RateLimitConfig, RateLimitKey, RateLimitResult, RateLimitState
 from .base import RateLimitStrategy
-from ..models import (
- RateLimitConfig, RateLimitResult, RateLimitState, RateLimitKey
-)
 
 
 class LeakyBucketStrategy(RateLimitStrategy):

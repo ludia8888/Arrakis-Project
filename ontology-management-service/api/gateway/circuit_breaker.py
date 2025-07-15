@@ -198,6 +198,8 @@ class Circuit:
  "total_failures": self.total_failures,
  "total_successes": self.total_successes,
  "failure_rate": self.total_failures / self.total_requests if self.total_requests > 0 else 0,
+
+
  "consecutive_failures": self.consecutive_failures,
  "consecutive_successes": self.consecutive_successes,
  "config": {

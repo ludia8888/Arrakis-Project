@@ -1,8 +1,8 @@
 from typing import Any, Dict, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, Path
 
+from data_kernel.api.deps import CommitMeta, get_commit_meta, get_terminus_service
 from data_kernel.service.terminus_service import TerminusService
-from data_kernel.api.deps import get_terminus_service, get_commit_meta, CommitMeta
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 
 router = APIRouter(prefix = "/db/{db_name}", tags = ["data-kernel"])
 
@@ -13,10 +13,10 @@ async def health_check(
 ):
  """Check health of TerminusDB connection."""
  try:
- health = await svc.health_check()
- return {"status": "healthy", "terminus_db": health}
+         health = await svc.health_check()
+         return {"status": "healthy", "terminus_db": health}
  except Exception as e:
- raise HTTPException(status_code = 503, detail = f"Service unhealthy: {str(e)}")
+         raise HTTPException(status_code = 503, detail = f"Service unhealthy: {str(e)}")
 
 
 @router.get("/doc/{doc_id}")

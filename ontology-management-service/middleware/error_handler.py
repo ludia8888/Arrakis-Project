@@ -3,6 +3,7 @@ Global Error Handler Middleware
 """
 import logging
 import traceback
+
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.responses import JSONResponse

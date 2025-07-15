@@ -2,10 +2,11 @@
 Request ID Middleware
 Adds unique request ID to each request for tracking
 """
+import logging
 import uuid
+
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
-import logging
 
 logger = logging.getLogger(__name__)
 

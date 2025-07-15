@@ -5,10 +5,10 @@ Implements automated conflict resolution strategies based on
 conflict type and severity grades.
 """
 
-from typing import Dict, List, Optional, Any, Tuple
-from datetime import datetime
-from dataclasses import dataclass
 import json
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
 
 from arrakis_common import get_logger
 
@@ -78,7 +78,8 @@ class ConflictResolver:
  )
  }
 
- async def resolve_conflict(self, conflict: 'MergeConflict') -> Optional['MergeConflict']:
+ async def resolve_conflict(self,
+     conflict: 'MergeConflict') -> Optional['MergeConflict']:
  """
  Attempt to automatically resolve a conflict.
 
@@ -124,7 +125,8 @@ class ConflictResolver:
 
  return None
 
- def _find_applicable_strategy(self, conflict: 'MergeConflict') -> Optional[ResolutionStrategy]:
+ def _find_applicable_strategy(self,
+     conflict: 'MergeConflict') -> Optional[ResolutionStrategy]:
  """Find strategy applicable to given conflict"""
  for strategy in self.strategies.values():
  if (conflict.type.value in strategy.applicable_types and
@@ -138,7 +140,8 @@ class ConflictResolver:
  return (severity_order.index(conflict_severity.value) <=
  severity_order.index(max_severity))
 
- async def _resolve_by_type_widening(self, conflict: 'MergeConflict') -> Optional['MergeConflict']:
+ async def _resolve_by_type_widening(self,
+     conflict: 'MergeConflict') -> Optional['MergeConflict']:
  """Resolve by widening type to accommodate both values"""
  type_a = conflict.branch_a_value.get("type")
  type_b = conflict.branch_b_value.get("type")
@@ -171,7 +174,8 @@ class ConflictResolver:
 
  return None
 
- async def _resolve_by_union_constraints(self, conflict: 'MergeConflict') -> Optional['MergeConflict']:
+ async def _resolve_by_union_constraints(self,
+     conflict: 'MergeConflict') -> Optional['MergeConflict']:
  """Resolve by taking union of constraints"""
  constraints_a = conflict.branch_a_value.get("constraints", [])
  constraints_b = conflict.branch_b_value.get("constraints", [])
@@ -193,7 +197,8 @@ class ConflictResolver:
 
  return conflict
 
- async def _resolve_prefer_modification(self, conflict: 'MergeConflict') -> Optional['MergeConflict']:
+ async def _resolve_prefer_modification(self,
+     conflict: 'MergeConflict') -> Optional['MergeConflict']:
  """Resolve delete-modify conflict by preferring modification"""
  # Check if entity is marked as deprecated
  if conflict.branch_a_value and conflict.branch_a_value.get("deprecated"):
@@ -213,7 +218,8 @@ class ConflictResolver:
  conflict.auto_resolvable = True
  return conflict
 
- async def _resolve_by_merging_properties(self, conflict: 'MergeConflict') -> Optional['MergeConflict']:
+ async def _resolve_by_merging_properties(self,
+     conflict: 'MergeConflict') -> Optional['MergeConflict']:
  """Resolve by merging property sets"""
  props_a = set(conflict.branch_a_value.get("properties", []))
  props_b = set(conflict.branch_b_value.get("properties", []))
@@ -223,7 +229,8 @@ class ConflictResolver:
 
  # Check for property conflicts
  common_props = props_a & props_b
- if self._has_property_conflicts(conflict.branch_a_value, conflict.branch_b_value, common_props):
+ if self._has_property_conflicts(conflict.branch_a_value, conflict.branch_b_value,
+     common_props):
  # Cannot auto-resolve if properties conflict
  return None
 
@@ -241,7 +248,8 @@ class ConflictResolver:
 
  return conflict
 
- async def _resolve_cardinality_expansion(self, conflict: 'MergeConflict') -> Optional['MergeConflict']:
+ async def _resolve_cardinality_expansion(self,
+     conflict: 'MergeConflict') -> Optional['MergeConflict']:
  """Resolve by expanding to more permissive cardinality"""
  card_a = conflict.branch_a_value.get("cardinality")
  card_b = conflict.branch_b_value.get("cardinality")
@@ -254,7 +262,8 @@ class ConflictResolver:
  }
 
  # Check both directions
- expanded = expansion_rules.get((card_a, card_b)) or expansion_rules.get((card_b, card_a))
+ expanded = expansion_rules.get((card_a, card_b)) or expansion_rules.get((card_b,
+     card_a))
 
  if expanded:
  resolved_value = {
@@ -277,7 +286,8 @@ class ConflictResolver:
 
  return None
 
- def _merge_constraints(self, constraints_a: List[Dict], constraints_b: List[Dict]) -> List[Dict]:
+ def _merge_constraints(self, constraints_a: List[Dict],
+     constraints_b: List[Dict]) -> List[Dict]:
  """Merge two sets of constraints, keeping most permissive"""
  merged = {}
 
@@ -303,7 +313,7 @@ class ConflictResolver:
  return c1 if c1.get("value", 0) <= c2.get("value", 0) else c2
  elif c_type == "max_length":
  # Larger max is more permissive
- return c1 if c1.get("value", float('inf')) >= c2.get("value", float('inf')) else c2
+ return c1 if c1.get("value", float('in')) >= c2.get("value", float('in')) else c2
  elif c_type == "pattern":
  # For patterns, we'd need to analyze regex - for now, return first
  return c1

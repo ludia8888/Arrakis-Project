@@ -3,19 +3,27 @@ Version Tracking Service
 Manages resource versions and generates ETags for efficient caching
 """
 import json
-from typing import Optional, Dict, Any, List, Tuple
-from datetime import datetime, timezone
 import os
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional, Tuple
 
-from models.etag import (
- VersionInfo, ResourceVersion, DeltaRequest, DeltaResponse,
- ResourceDelta, VersionConflict, CacheValidation,
- calculate_content_hash, generate_commit_hash, create_json_patch
-)
-from core.auth_utils import UserContext
-from shared.database.sqlite_connector import SQLiteConnector, get_sqlite_connector
 from arrakis_common import get_logger
-from .delta_compression import EnhancedDeltaEncoder, DeltaType, DeltaStorageOptimizer
+from core.auth_utils import UserContext
+from models.etag import (
+    CacheValidation,
+    DeltaRequest,
+    DeltaResponse,
+    ResourceDelta,
+    ResourceVersion,
+    VersionConflict,
+    VersionInfo,
+    calculate_content_hash,
+    create_json_patch,
+    generate_commit_hash,
+)
+from shared.database.sqlite_connector import SQLiteConnector, get_sqlite_connector
+
+from .delta_compression import DeltaStorageOptimizer, DeltaType, EnhancedDeltaEncoder
 
 logger = get_logger(__name__)
 
@@ -72,7 +80,8 @@ class VersionTrackingService:
  UNIQUE(resource_type, resource_id, branch, version)
  )
  """,
- "CREATE INDEX IF NOT EXISTS idx_resource ON resource_versions (resource_type, resource_id, branch)",
+ "CREATE INDEX IF NOT EXISTS idx_resource ON resource_versions (resource_type,
+     resource_id, branch)",
  "CREATE INDEX IF NOT EXISTS idx_commit ON resource_versions (commit_hash)",
  "CREATE INDEX IF NOT EXISTS idx_modified ON resource_versions (modified_at)",
  """
@@ -89,7 +98,8 @@ class VersionTrackingService:
  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
  )
  """,
- "CREATE INDEX IF NOT EXISTS idx_delta ON version_deltas (resource_type, resource_id, branch, from_version, to_version)",
+ "CREATE INDEX IF NOT EXISTS idx_delta ON version_deltas (resource_type, resource_id,
+     branch, from_version, to_version)",
  """
  CREATE TABLE IF NOT EXISTS branch_heads (
  branch TEXT NOT NULL,
@@ -106,7 +116,7 @@ class VersionTrackingService:
  # Initialize with migrations
  await self._connector.initialize(migrations = migrations)
  self._initialized = True
- logger.info(f"Version tracking initialized with SQLiteConnector")
+ logger.info("Version tracking initialized with SQLiteConnector")
 
  async def _ensure_initialized(self):
  """Ensure database is initialized"""
@@ -285,7 +295,8 @@ class VersionTrackingService:
  SELECT * FROM resource_versions
  WHERE resource_type = :resource_type AND resource_id = :resource_id AND branch = :branch AND version = :version
  """,
- {"resource_type": resource_type, "resource_id": resource_id, "branch": branch, "version": version}
+ {"resource_type": resource_type, "resource_id": resource_id, "branch": branch,
+     "version": version}
  )
  if not row:
  return None
@@ -636,7 +647,8 @@ class VersionTrackingService:
 
  return summary
 
- async def get_version_by_commit_hash(self, commit_hash: str) -> Optional[ResourceVersion]:
+ async def get_version_by_commit_hash(self,
+     commit_hash: str) -> Optional[ResourceVersion]:
  """Get a resource version by its commit hash."""
  await self._ensure_initialized()
  assert self._connector is not None

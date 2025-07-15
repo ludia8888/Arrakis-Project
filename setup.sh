@@ -294,7 +294,7 @@ def health_check():
 def register(user: UserRegister):
     if user.email in users_db:
         raise HTTPException(status_code=400, detail="Email already registered")
-    
+
     users_db[user.email] = {
         "email": user.email,
         "password": user.password,  # In production, hash this!
@@ -311,14 +311,14 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = jwt.encode(
         {"sub": user["email"], "exp": datetime.utcnow() + access_token_expires},
         SECRET_KEY,
         algorithm=ALGORITHM
     )
-    
+
     return {"access_token": access_token, "token_type": "bearer"}
 EOF
 fi

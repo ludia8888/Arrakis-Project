@@ -677,6 +677,8 @@ class EventSubscriber:
  "username": deployment_config.get("triggered_by", "system"),
  "target_type": "deployment",
  "target_id": f"{deployment_config.get('environment')}_{deployment_config.get('branch_name')}",
+
+
  "operation": "trigger_deployment",
  "metadata": deployment_config,
  }

@@ -5,17 +5,18 @@ Implements FR-LK-IDX and GF-02 requirements from Ontology_Requirements_Document.
 Generates metadata definitions that describe how graphs should be indexed and traversed.
 
 IMPORTANT: OMS does NOT store or query actual graph data. It defines the rules and contracts
-that other services (Object Set Service, Object Storage, Vertex) use to operate on graphs.
+that other services (Object Set Service, Object Storage,
+    Vertex) use to operate on graphs.
 """
 
 import hashlib
 import json
-from typing import Dict, List, Optional, Set, Tuple, Any
 from datetime import datetime
-from pydantic import BaseModel, Field
+from typing import Any, Dict, List, Optional, Set, Tuple
 
-from models.domain import LinkType, ObjectType, Directionality, Cardinality
 from arrakis_common import get_logger
+from models.domain import Cardinality, Directionality, LinkType, ObjectType
+from pydantic import BaseModel, Field
 
 logger = get_logger(__name__)
 
@@ -251,6 +252,8 @@ class GraphMetadataGenerator:
  max_depth = max_depth,
  allow_cycles = False,
  traversal_direction = "both" if link_type.directionality == Directionality.BIDIRECTIONAL else "forward",
+
+
  is_transitive = is_transitive,
  enable_caching = True,
  cache_ttl_seconds = 300
@@ -402,7 +405,7 @@ class GraphMetadataGenerator:
  issues.append({
  "type": "missing_index",
  "link_type_id": rule.link_type_id,
- "message": f"Traversal rule exists but no index metadata found"
+ "message": "Traversal rule exists but no index metadata found"
  })
 
  # Check permission and state rules reference valid link types
@@ -413,7 +416,7 @@ class GraphMetadataGenerator:
  issues.append({
  "type": "orphaned_permission_rule",
  "rule_id": perm_rule.rule_id,
- "message": f"Permission rule references unknown link type"
+ "message": "Permission rule references unknown link type"
  })
 
  return issues

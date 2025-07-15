@@ -20,7 +20,8 @@ class RateLimiter:
  self.policy = policy
  self.key_prefix = "rate_limit:"
 
- async def check_rate_limit(self, context: RequestContext) -> Tuple[bool, Optional[Dict]]:
+ async def check_rate_limit(self, context: RequestContext) -> Tuple[bool,
+     Optional[Dict]]:
  """Rate limit 확인"""
 
  # Rate limit 키 생성
@@ -62,7 +63,8 @@ class RateLimiter:
  return False, {
  "limit": self.policy.requests_per_day,
  "window": "day",
- "retry_after": int((datetime.utcnow().replace(hour = 0, minute = 0, second = 0) + timedelta(days = 1) - datetime.utcnow()).total_seconds())
+ "retry_after": int((datetime.utcnow().replace(hour = 0, minute = 0,
+     second = 0) + timedelta(days = 1) - datetime.utcnow()).total_seconds())
  }
 
  # Burst 확인
@@ -157,7 +159,8 @@ class DistributedRateLimiter(RateLimiter):
  super().__init__(redis_cluster, policy)
  self.sliding_window = True # Sliding window 알고리즘 사용
 
- async def check_rate_limit(self, context: RequestContext) -> Tuple[bool, Optional[Dict]]:
+ async def check_rate_limit(self, context: RequestContext) -> Tuple[bool,
+     Optional[Dict]]:
  """향상된 rate limit 확인 (sliding window)"""
 
  if self.sliding_window:
@@ -165,7 +168,8 @@ class DistributedRateLimiter(RateLimiter):
  else:
  return await super().check_rate_limit(context)
 
- async def _check_sliding_window(self, context: RequestContext) -> Tuple[bool, Optional[Dict]]:
+ async def _check_sliding_window(self, context: RequestContext) -> Tuple[bool,
+     Optional[Dict]]:
  """Sliding window 알고리즘"""
 
  key = self._generate_key(context)

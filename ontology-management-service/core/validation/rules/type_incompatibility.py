@@ -7,10 +7,10 @@ import logging
 from typing import Any, Dict, List, Optional
 
 from core.validation.models import (
- BreakingChange,
- DataImpact,
- Severity,
- ValidationContext,
+    BreakingChange,
+    DataImpact,
+    Severity,
+    ValidationContext,
 )
 from core.validation.rules.base import BreakingChangeRule
 
@@ -104,7 +104,8 @@ class TypeIncompatibilityRule(BreakingChangeRule):
  # 가장 심각한 변경사항 반환
  if breaking_changes:
  # Severity 우선순위로 정렬
- breaking_changes.sort(key = lambda x: self._severity_priority(x.severity), reverse = True)
+ breaking_changes.sort(key = lambda x: self._severity_priority(x.severity),
+     reverse = True)
  result = breaking_changes[0]
 
  # 결과 캐싱 (P4 원칙)
@@ -146,6 +147,8 @@ class TypeIncompatibilityRule(BreakingChangeRule):
  old_value = old_type,
  new_value = new_type,
  description = f"Property '{property_name}' type change from {old_type} to {new_type} is incompatible",
+
+
  data_impact = data_impact,
  migration_strategy = self._generate_migration_strategy(old_type, new_type),
  foundry_compliance = "Violates Foundry Ontology type system constraints"
@@ -168,6 +171,8 @@ class TypeIncompatibilityRule(BreakingChangeRule):
  old_value = old_type,
  new_value = new_type,
  description = f"Property '{property_name}' type conversion may cause data loss: {self.LOSSY_CONVERSIONS[conversion_key]}",
+
+
  data_impact = data_impact,
  migration_strategy = self._generate_migration_strategy(old_type, new_type),
  foundry_compliance = "Foundry recommends data validation before lossy conversions"
@@ -194,7 +199,7 @@ class TypeIncompatibilityRule(BreakingChangeRule):
  object_type_name = self._get_resource_name(schema)
 
  # TerminusDB 쿼리로 영향받는 레코드 수 계산
- count_query = f"""
+ count_query = """
  SELECT (COUNT(?instance) AS ?totalCount)
  WHERE {{
  ?instance a <{object_type_name}> .
@@ -203,7 +208,7 @@ class TypeIncompatibilityRule(BreakingChangeRule):
  """
 
  # 샘플링 쿼리 (대용량 데이터셋 대응)
- sample_query = f"""
+ sample_query = """
  SELECT ?instance ?value
  WHERE {{
  ?instance a <{object_type_name}> .
@@ -312,7 +317,8 @@ class TypeIncompatibilityRule(BreakingChangeRule):
 
  return int(base_minutes * complexity_multiplier)
 
- def _calculate_complexity_score(self, old_type: str, new_type: str, record_count: int) -> int:
+ def _calculate_complexity_score(self, old_type: str, new_type: str,
+     record_count: int) -> int:
  """마이그레이션 복잡도 점수 (1-10)"""
 
  base_score = 5
@@ -343,8 +349,12 @@ class TypeIncompatibilityRule(BreakingChangeRule):
  """Foundry 호환 마이그레이션 전략 생성"""
 
  strategies = {
- ("string", "integer"): "1. Validate numeric format 2. Handle non-numeric values 3. Batch convert with validation",
- ("integer", "string"): "1. Direct conversion (safe) 2. Update Foundry object type definition",
+ ("string",
+     "integer"): "1. Validate numeric format 2. Handle non-numeric values 3. Batch convert with validation",
+
+
+ ("integer",
+     "string"): "1. Direct conversion (safe) 2. Update Foundry object type definition",
  ("date", "datetime"): "1. Append default time (00:00:00) 2. Update temporal queries",
  ("datetime", "date"): "1. Truncate time component 2. Verify no time-dependent logic",
  }

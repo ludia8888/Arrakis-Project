@@ -63,15 +63,15 @@ user_agent (optional, str) – User agent header when making requests. Defaults 
 **kwargs – Extra configuration options
 
 propertyteam
- 
+
 propertydb
- 
+
 propertyuser
- 
+
 propertybranch
- 
+
 propertyrepo
- 
+
 propertyref
 connect(team='admin', db=None, remote_auth=None, use_token=False, jwt_token=None, api_token=None, key='root', user='admin', branch='main', ref=None, repo='local', **kwargs)
 Connect to a Terminus server at the given URI with an API key.

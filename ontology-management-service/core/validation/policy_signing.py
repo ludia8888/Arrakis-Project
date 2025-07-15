@@ -10,16 +10,17 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
+from arrakis_common import get_logger
+
 # Use arrakis_common.utils.security for cryptographic operations
 from arrakis_common.utils.security import (
- calculate_hmac,
- generate_signing_key,
- hash_data,
- sign,
- verify_hmac,
- verify_signature,
+    calculate_hmac,
+    generate_signing_key,
+    hash_data,
+    sign,
+    verify_hmac,
+    verify_signature,
 )
-from arrakis_common import get_logger
 from core.validation.naming_convention import NamingConvention
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -412,11 +413,7 @@ class PolicySigningManager:
  # NamingConvention 복원
  rules = {}
  for entity_type_str, rule_data in policy_data.get("rules", {}).items():
- from core.validation.naming_convention import (
- EntityType,
- NamingPattern,
- NamingRule,
- )
+ from core.validation.naming_convention import EntityType, NamingPattern, NamingRule
 
  entity_type = EntityType(entity_type_str)
  rule_data["entity_type"] = entity_type

@@ -24,9 +24,9 @@ check_service() {
     local name=$1
     local url=$2
     local type=$3
-    
+
     printf "%-20s" "$name"
-    
+
     if [ "$type" = "docker" ]; then
         # Check Docker container
         if docker ps --format "table {{.Names}}" | grep -q "$url"; then
@@ -61,7 +61,7 @@ check_service() {
 check_port_status() {
     local port=$1
     local service=$2
-    
+
     if lsof -i:$port > /dev/null 2>&1; then
         echo -e "   Port $port: ${GREEN}✓ In use${NC} ($service)"
     else
