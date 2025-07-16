@@ -15,9 +15,11 @@ from .realtime_publisher import EventType, RealtimeEvent, realtime_publisher
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class WebSocketConnection:
     """WebSocket connection"""
+
     websocket: WebSocket
     user_id: str
     connection_id: str
@@ -39,12 +41,15 @@ class WebSocketConnection:
             await self.websocket.send_text(json.dumps(message))
             self.messages_sent += 1
         except Exception as e:
-            logger.error(f"Failed to send message on connection {self.connection_id}: {e}")
+            logger.error(
+                f"Failed to send message on connection {self.connection_id}: {e}"
+            )
             raise
 
     def update_last_ping(self):
         """Update last ping timestamp"""
         self.last_ping = time.time()
+
 
 class WebSocketManager:
     """WebSocket connection manager"""
@@ -52,12 +57,15 @@ class WebSocketManager:
     def __init__(self):
         self.connections: Dict[str, WebSocketConnection] = {}
         self.user_connections: Dict[str, Set[str]] = {}
-        self.subscriptions: Dict[str, Set[str]] = {}  # connection_id -> subscription_ids
+        self.subscriptions: Dict[
+            str, Set[str]
+        ] = {}  # connection_id -> subscription_ids
         self._heartbeat_task = None
         # Don't start heartbeat in __init__ to avoid event loop issues
 
     def _start_heartbeat(self):
         """Start heartbeat task"""
+
         async def heartbeat():
             while True:
                 try:
@@ -72,10 +80,9 @@ class WebSocketManager:
                                 disconnected.append(conn_id)
                                 continue
 
-                            await connection.websocket.send_text(json.dumps({
-                                "type": "ping",
-                                "timestamp": current_time
-                            }))
+                            await connection.websocket.send_text(
+                                json.dumps({"type": "ping", "timestamp": current_time})
+                            )
                         except Exception as e:
                             logger.warning(f"Failed to ping connection {conn_id}: {e}")
                             disconnected.append(conn_id)
@@ -89,8 +96,9 @@ class WebSocketManager:
         if self._heartbeat_task is None:
             self._heartbeat_task = asyncio.create_task(heartbeat())
 
-    async def connect(self, websocket: WebSocket,
-        user_context=None) -> WebSocketConnection:
+    async def connect(
+        self, websocket: WebSocket, user_context=None
+    ) -> WebSocketConnection:
         """Register connection"""
         await websocket.accept()
 
@@ -99,18 +107,16 @@ class WebSocketManager:
             self._start_heartbeat()
 
         # Handle user_context (can be UserContext object or None for anonymous)
-        if user_context and hasattr(user_context, 'username'):
+        if user_context and hasattr(user_context, "username"):
             user_id = user_context.username
-        elif user_context and hasattr(user_context, 'user_id'):
+        elif user_context and hasattr(user_context, "user_id"):
             user_id = user_context.user_id
         else:
             user_id = "anonymous"
 
         connection_id = f"{user_id}_{int(time.time() * 1000)}"
         connection = WebSocketConnection(
-            websocket=websocket,
-            user_id=user_id,
-            connection_id=connection_id
+            websocket=websocket, user_id=user_id, connection_id=connection_id
         )
 
         self.connections[connection_id] = connection
@@ -151,8 +157,9 @@ class WebSocketManager:
 
         logger.info(f"WebSocket disconnected: {connection_id}")
 
-    async def subscribe_to_events(self, connection_id: str,
-        event_types: Set[EventType]) -> bool:
+    async def subscribe_to_events(
+        self, connection_id: str, event_types: Set[EventType]
+    ) -> bool:
         """Subscribe to events"""
         if connection_id not in self.connections:
             return False
@@ -165,8 +172,7 @@ class WebSocketManager:
 
         # Create new subscription
         subscription_id = await realtime_publisher.subscribe(
-            connection.user_id,
-            event_types
+            connection.user_id, event_types
         )
         connection.subscription_id = subscription_id
 
@@ -186,7 +192,9 @@ class WebSocketManager:
             return
 
         try:
-            async for event in realtime_publisher.get_subscription_events(connection.subscription_id):
+            async for event in realtime_publisher.get_subscription_events(
+                connection.subscription_id
+            ):
                 if connection_id not in self.connections:
                     break
 
@@ -194,7 +202,7 @@ class WebSocketManager:
                     "type": "event",
                     "event_type": event.event_type,
                     "payload": event.payload,
-                    "timestamp": event.timestamp
+                    "timestamp": event.timestamp,
                 }
 
                 await connection.websocket.send_text(json.dumps(message))
@@ -230,7 +238,7 @@ class WebSocketManager:
                 response = {
                     "type": "subscribe_response",
                     "success": success,
-                    "subscription_id": connection.subscription_id
+                    "subscription_id": connection.subscription_id,
                 }
                 await connection.websocket.send_text(json.dumps(response))
 
@@ -266,13 +274,17 @@ class WebSocketManager:
         """Add subscription to connection"""
         if connection_id in self.subscriptions:
             self.subscriptions[connection_id].add(subscription_id)
-        logger.debug(f"Added subscription {subscription_id} to connection {connection_id}")
+        logger.debug(
+            f"Added subscription {subscription_id} to connection {connection_id}"
+        )
 
     def remove_subscription(self, connection_id: str, subscription_id: str):
         """Remove subscription from connection"""
         if connection_id in self.subscriptions:
             self.subscriptions[connection_id].discard(subscription_id)
-        logger.debug(f"Removed subscription {subscription_id} from connection {connection_id}")
+        logger.debug(
+            f"Removed subscription {subscription_id} from connection {connection_id}"
+        )
 
     def get_statistics(self) -> dict:
         """Get WebSocket connection statistics"""
@@ -280,8 +292,12 @@ class WebSocketManager:
         total_subscriptions = sum(len(subs) for subs in self.subscriptions.values())
 
         # Calculate message stats
-        total_messages_received = sum(conn.messages_received for conn in self.connections.values())
-        total_messages_sent = sum(conn.messages_sent for conn in self.connections.values())
+        total_messages_received = sum(
+            conn.messages_received for conn in self.connections.values()
+        )
+        total_messages_sent = sum(
+            conn.messages_sent for conn in self.connections.values()
+        )
 
         return {
             "total_connections": total_connections,
@@ -292,11 +308,13 @@ class WebSocketManager:
             "connections_by_user": {
                 user_id: len(connections)
                 for user_id, connections in self.user_connections.items()
-            }
+            },
         }
+
 
 # 전역 WebSocket 매니저 인스턴스
 websocket_manager = WebSocketManager()
+
 
 # WebSocket 엔드포인트용 헬퍼 함수
 async def handle_websocket_connection(websocket: WebSocket, user_id: str):

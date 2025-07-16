@@ -52,12 +52,12 @@ from shared.user_service_client import (
 
 logger = get_logger(__name__)
 
-security = HTTPBearer(auto_error = False)
+security = HTTPBearer(auto_error=False)
 
 
 async def get_current_user_optional(
     request: Request,
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
 ) -> Optional[UserContext]:
     """
     Get current user for GraphQL queries (optional authentication)
@@ -77,13 +77,13 @@ async def get_current_user_optional(
 
         if user_data:
             return UserContext(
-                user_id = user_data.get("user_id", user_data.get("sub")),
-                username = user_data.get("username", user_data.get("name", "unknown")),
-                email = user_data.get("email"),
-                roles = user_data.get("roles", []),
-                permissions = user_data.get("permissions", []),
-                is_authenticated = True,
-                metadata = user_data
+                user_id=user_data.get("user_id", user_data.get("sub")),
+                username=user_data.get("username", user_data.get("name", "unknown")),
+                email=user_data.get("email"),
+                roles=user_data.get("roles", []),
+                permissions=user_data.get("permissions", []),
+                is_authenticated=True,
+                metadata=user_data,
             )
     except Exception as e:
         logger.debug(f"Optional auth failed: {e}")
@@ -100,15 +100,13 @@ class AuthenticationManager:
     def __init__(self):
         self.redis_client: Optional[redis.Redis] = None
         self.redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
-        self._session_ttl = 3600 # 1 hour
+        self._session_ttl = 3600  # 1 hour
 
     async def init_redis(self):
         """Initialize Redis connection"""
         try:
             self.redis_client = redis.from_url(
-                self.redis_url,
-                encoding = "utf-8",
-                decode_responses = True
+                self.redis_url, encoding="utf-8", decode_responses=True
             )
             await self.redis_client.ping()
             logger.info("Redis connection established for AuthenticationManager")
@@ -132,6 +130,7 @@ class AuthenticationManager:
             if cached:
                 # Parse cached user data
                 import json
+
                 user_data = json.loads(cached)
                 return UserContext(**user_data)
 
@@ -142,10 +141,11 @@ class AuthenticationManager:
             # Cache the result
             if self.redis_client and user:
                 import json
+
                 await self.redis_client.setex(
                     f"auth:token:{token}",
                     self._session_ttl,
-                    json.dumps(user.model_dump())
+                    json.dumps(user.model_dump()),
                 )
 
             return user
@@ -162,12 +162,9 @@ class AuthenticationManager:
                 "user_id": user.user_id,
                 "username": user.username,
                 "connection_id": connection_id,
-                "connected_at": datetime.now(timezone.utc).isoformat()
+                "connected_at": datetime.now(timezone.utc).isoformat(),
             }
-            await self.redis_client.hset(
-                f"session:{session_id}",
-                mapping = session_data
-            )
+            await self.redis_client.hset(f"session:{session_id}", mapping=session_data)
             await self.redis_client.expire(f"session:{session_id}", self._session_ttl)
 
         return session_id
@@ -189,9 +186,7 @@ class GraphQLWebSocketAuth:
         self._connections: Dict[str, UserContext] = {}
 
     async def authenticate_websocket(
-        self,
-        websocket: WebSocket,
-        token: Optional[str] = None
+        self, websocket: WebSocket, token: Optional[str] = None
     ) -> Optional[UserContext]:
         """
         Authenticate WebSocket connection
@@ -226,7 +221,9 @@ class GraphQLWebSocketAuth:
         # Store connection
         self._connections[connection_id] = user
 
-        logger.info(f"WebSocket authenticated for user {user.username} (session: {session_id})")
+        logger.info(
+            f"WebSocket authenticated for user {user.username} (session: {session_id})"
+        )
         return user
 
     async def disconnect_websocket(self, websocket: WebSocket):
@@ -251,8 +248,7 @@ class GraphQLWebSocketAuth:
         return self._connections.get(connection_id)
 
     async def authenticate_graphql_subscription(
-        self,
-        websocket: WebSocket
+        self, websocket: WebSocket
     ) -> Optional[UserContext]:
         """
         Authenticate GraphQL subscription WebSocket
@@ -277,10 +273,7 @@ class GraphQLWebSocketAuth:
         return await self.authenticate_websocket(websocket, token)
 
     async def authorize_subscription(
-        self,
-        user: UserContext,
-        subscription_name: str,
-        variables: Dict[str, Any]
+        self, user: UserContext, subscription_name: str, variables: Dict[str, Any]
     ) -> bool:
         """
         Authorize a specific subscription for a user

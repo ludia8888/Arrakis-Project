@@ -1,0 +1,147 @@
+# EditorConfig for Arrakis Platform
+# https://editorconfig.org
+#
+# This file ensures consistent coding styles across different editors and IDEs
+# for the entire Arrakis project team
+
+# Top-most EditorConfig file
+root = true
+
+# Default settings for all files
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+max_line_length = 100
+
+# Python files
+[*.py]
+indent_style = space
+indent_size = 4
+max_line_length = 88  # Black formatter default
+quote_type = double
+
+# Python stub files
+[*.pyi]
+indent_style = space
+indent_size = 4
+
+# YAML files (including docker-compose, k8s manifests)
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+quote_type = double
+
+# JSON files
+[*.json]
+indent_style = space
+indent_size = 2
+insert_final_newline = false
+
+# JavaScript/TypeScript files
+[*.{js,jsx,ts,tsx}]
+indent_style = space
+indent_size = 2
+quote_type = single
+
+# HTML/CSS files
+[*.{html,css,scss,less}]
+indent_style = space
+indent_size = 2
+
+# Shell scripts
+[*.{sh,bash}]
+indent_style = space
+indent_size = 2
+shell_variant = bash
+
+# Terraform files
+[*.{tf,tfvars}]
+indent_style = space
+indent_size = 2
+
+# Dockerfile
+[Dockerfile*]
+indent_style = space
+indent_size = 4
+
+# Makefile
+[Makefile]
+indent_style = tab
+indent_size = 4
+
+# Markdown files
+[*.{md,markdown}]
+trim_trailing_whitespace = false  # Preserve trailing spaces for line breaks
+max_line_length = off
+
+# Configuration files
+[*.{ini,toml,cfg}]
+indent_style = space
+indent_size = 4
+
+# Requirements files
+[requirements*.txt]
+indent_style = space
+indent_size = 4
+
+# Protocol Buffers
+[*.proto]
+indent_style = space
+indent_size = 2
+
+# GraphQL
+[*.{graphql,gql}]
+indent_style = space
+indent_size = 2
+
+# SQL files
+[*.sql]
+indent_style = space
+indent_size = 2
+keywords_case = upper
+
+# Git files
+[.git*]
+indent_style = space
+indent_size = 4
+
+# CI/CD files
+[.{gitlab-ci,github/workflows/*}.yml]
+indent_style = space
+indent_size = 2
+
+# Pre-commit config
+[.pre-commit-config.yaml]
+indent_style = space
+indent_size = 2
+
+# VSCode settings
+[.vscode/*.json]
+indent_style = space
+indent_size = 2
+
+# JetBrains settings
+[.idea/*.xml]
+indent_style = space
+indent_size = 2
+
+# Package files
+[package*.json]
+indent_style = space
+indent_size = 2
+
+# Poetry files
+[pyproject.toml]
+indent_style = space
+indent_size = 4
+
+# Ignore generated files and dependencies
+[{node_modules/**,venv/**,.venv/**,__pycache__/**,*.pyc,dist/**,build/**}]
+indent_style = ignore
+indent_size = ignore
+end_of_line = ignore
+trim_trailing_whitespace = ignore
+charset = ignore
+insert_final_newline = ignore

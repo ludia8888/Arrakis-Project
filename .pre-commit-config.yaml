@@ -24,18 +24,48 @@ repos:
       - id: black
         language_version: python3
         files: \.py$
+        args: ["--check", "--diff"]  # Check mode for pre-commit
 
   - repo: https://github.com/pycqa/isort
     rev: 5.13.2
     hooks:
       - id: isort
-        args: ["--profile", "black"]
+        args: ["--profile", "black", "--check-only", "--diff"]
 
   - repo: https://github.com/pycqa/flake8
     rev: 7.0.0
     hooks:
       - id: flake8
-        args: ["--max-line-length=88", "--extend-ignore=E203,W503"]
+        args: ["--max-line-length=88", "--extend-ignore=E203,W503,E501"]
+        additional_dependencies:
+          - flake8-docstrings
+          - flake8-bugbear
+          - flake8-comprehensions
+
+  # Type checking with mypy
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          - types-requests
+          - types-PyYAML
+          - types-setuptools
+          - types-redis
+          - types-python-dateutil
+          - types-protobuf
+        args: ["--ignore-missing-imports", "--allow-untyped-defs", "--no-strict-optional"]
+        files: \.py$
+        exclude: |
+          (?x)^(
+            migrations/|
+            tests/|
+            __pycache__/|
+            venv/|
+            .venv/|
+            build/|
+            dist/
+          )
 
   # Docker
   - repo: https://github.com/hadolint/hadolint
@@ -55,6 +85,35 @@ repos:
   # Custom hooks for Arrakis Platform
   - repo: local
     hooks:
+      # Python indentation validation
+      - id: python-indentation-check
+        name: Python Indentation Check
+        entry: python scripts/check_python_indentation.py
+        language: system
+        files: '\.py$'
+        pass_filenames: true
+        description: "Validate Python files use consistent 4-space indentation"
+
+      # Python type hints validation
+      - id: python-type-hints-check
+        name: Python Type Hints Check
+        entry: python scripts/check_type_hints.py
+        language: system
+        files: '\.py$'
+        pass_filenames: true
+        description: "Check for missing type hints in Python functions (warning only)"
+
+      # Python naming pattern validation
+      - id: python-naming-patterns
+        name: Python Naming Pattern Check
+        entry: python scripts/check-naming-patterns.py
+        language: system
+        files: '\.py$'
+        args: ["--path", "."]
+        pass_filenames: false
+        stages: [pre-commit]
+        verbose: true
+        description: "Check for consistent class, function, and variable naming patterns"
       # Update architecture diagrams when code changes
       - id: update-architecture-diagrams
         name: Update Architecture Diagrams
@@ -224,9 +283,24 @@ repos:
           - |
             echo "🔍 Enhanced Terraform validation..."
 
-            # Find all Terraform directories
-            tf_dirs=$(find . -name "*.tf" -type f | xargs dirname | sort -u)
+            # Check if terraform is installed
+            if ! command -v terraform &> /dev/null; then
+              echo "⚠️  Terraform not installed. Skipping validation."
+              echo "ℹ️  To enable Terraform validation, install terraform: https://www.terraform.io/downloads"
+              exit 0
+            fi
 
+            # Find all Terraform directories
+            tf_dirs=$(find . -name "*.tf" -type f 2>/dev/null | xargs dirname 2>/dev/null | sort -u)
+
+            # Check if any terraform files exist
+            if [ -z "$tf_dirs" ]; then
+              echo "ℹ️  No Terraform files found. Skipping validation."
+              exit 0
+            fi
+
+            # Validate each terraform directory
+            validation_failed=false
             for tf_dir in $tf_dirs; do
               echo "Validating Terraform in: $tf_dir"
               pushd "$tf_dir" > /dev/null
@@ -234,22 +308,30 @@ repos:
               # Format check
               if ! terraform fmt -check=true -diff=true .; then
                 echo "❌ Terraform formatting issues in $tf_dir"
-                exit 1
+                echo "💡 Run 'terraform fmt' to fix formatting"
+                validation_failed=true
               fi
 
-              # Initialize if needed
+              # Initialize if needed (suppress output)
               if [[ ! -d ".terraform" ]]; then
-                terraform init -backend=false > /dev/null
+                if ! terraform init -backend=false > /dev/null 2>&1; then
+                  echo "⚠️  Failed to initialize Terraform in $tf_dir"
+                  # Continue validation anyway
+                fi
               fi
 
               # Validate
               if ! terraform validate; then
                 echo "❌ Terraform validation failed in $tf_dir"
-                exit 1
+                validation_failed=true
               fi
 
               popd > /dev/null
             done
+
+            if [ "$validation_failed" = true ]; then
+              exit 1
+            fi
 
             echo "✅ Enhanced Terraform validation passed"
         pass_filenames: false

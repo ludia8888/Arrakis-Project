@@ -18,7 +18,7 @@ from passlib.context import CryptContext
 CRYPTOGRAPHY_AVAILABLE = True
 
 # 패스워드 해싱 컨텍스트
-pwd_context = CryptContext(schemes = ["bcrypt"], deprecated = "auto")
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def hash_password(password: str) -> str:
@@ -246,13 +246,13 @@ def generate_signing_key(key_size: int = 2048) -> str:
     """RSA 개인키 생성"""
 
     private_key = rsa.generate_private_key(
-        public_exponent = 65537, key_size = key_size, backend = default_backend()
+        public_exponent=65537, key_size=key_size, backend=default_backend()
     )
 
     pem = private_key.private_bytes(
-        encoding = serialization.Encoding.PEM,
-        format = serialization.PrivateFormat.PKCS8,
-        encryption_algorithm = serialization.NoEncryption(),
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption(),
     )
 
     return pem.decode()
@@ -263,14 +263,14 @@ def sign(data: bytes, private_key: str) -> str:
 
     # PEM 형식의 개인키 로드
     key = serialization.load_pem_private_key(
-        private_key.encode(), password = None, backend = default_backend()
+        private_key.encode(), password=None, backend=default_backend()
     )
 
     # PSS 패딩과 SHA256을 사용하여 서명
     signature = key.sign(
         data,
         padding.PSS(
-            mgf = padding.MGF1(hashes.SHA256()), salt_length = padding.PSS.MAX_LENGTH
+            mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH
         ),
         hashes.SHA256(),
     )
@@ -287,7 +287,7 @@ def verify_signature(data: bytes, signature: str, public_key: str) -> bool:
 
         # PEM 형식의 공개키 로드
         key = serialization.load_pem_public_key(
-            public_key.encode(), backend = default_backend()
+            public_key.encode(), backend=default_backend()
         )
 
         # PSS 패딩과 SHA256을 사용하여 검증
@@ -295,7 +295,7 @@ def verify_signature(data: bytes, signature: str, public_key: str) -> bool:
             sig_bytes,
             data,
             padding.PSS(
-                mgf = padding.MGF1(hashes.SHA256()), salt_length = padding.PSS.MAX_LENGTH
+                mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH
             ),
             hashes.SHA256(),
         )
@@ -308,21 +308,21 @@ def generate_rsa_keypair(key_size: int = 2048) -> Tuple[str, str]:
     """RSA 키 쌍 생성 (개인키, 공개키)"""
 
     private_key = rsa.generate_private_key(
-        public_exponent = 65537, key_size = key_size, backend = default_backend()
+        public_exponent=65537, key_size=key_size, backend=default_backend()
     )
 
     # 개인키 PEM 형식
     private_pem = private_key.private_bytes(
-        encoding = serialization.Encoding.PEM,
-        format = serialization.PrivateFormat.PKCS8,
-        encryption_algorithm = serialization.NoEncryption(),
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption(),
     ).decode()
 
     # 공개키 PEM 형식
     public_key = private_key.public_key()
     public_pem = public_key.public_bytes(
-        encoding = serialization.Encoding.PEM,
-        format = serialization.PublicFormat.SubjectPublicKeyInfo,
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo,
     ).decode()
 
     return private_pem, public_pem

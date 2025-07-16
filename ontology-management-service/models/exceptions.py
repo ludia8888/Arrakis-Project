@@ -76,3 +76,12 @@ class ServiceUnavailableError(OMSException):
     """
 
     pass
+
+
+class IAMServiceUnavailableError(ServiceUnavailableError):
+    """IAM service unavailable exception
+
+    Raised when IAM service is unreachable or temporarily unavailable
+    """
+
+    pass

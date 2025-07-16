@@ -14,7 +14,7 @@ from middleware.auth_middleware import AuthMiddleware
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
 # Configure logging
-logging.basicConfig(level = os.getenv("LOG_LEVEL", "INFO"))
+logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
 logger = logging.getLogger(__name__)
 
 
@@ -40,19 +40,19 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
     app = FastAPI(
-        title = "Data-Kernel Gateway",
-        description = "Centralized gateway for TerminusDB operations",
-        version = "1.0.0",
-        lifespan = lifespan
+        title="Data-Kernel Gateway",
+        description="Centralized gateway for TerminusDB operations",
+        version="1.0.0",
+        lifespan=lifespan,
     )
 
     # Add CORS middleware
     app.add_middleware(
         CORSMiddleware,
-        allow_origins = os.getenv("CORS_ORIGINS", "*").split(","),
-        allow_credentials = True,
-        allow_methods = ["*"],
-        allow_headers = ["*"],
+        allow_origins=os.getenv("CORS_ORIGINS", "*").split(","),
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
 
     # Add OpenTelemetry instrumentation
@@ -72,15 +72,15 @@ def create_app() -> FastAPI:
     app.add_middleware(AuditMiddleware)
 
     # Include the main router
-    app.include_router(router, prefix = "/api/v1")
+    app.include_router(router, prefix="/api/v1")
 
     # Root endpoint
     @app.get("/")
     async def root():
-            return {
+        return {
             "service": "Data-Kernel Gateway",
             "status": "operational",
-            "version": "1.0.0"
+            "version": "1.0.0",
         }
 
     # Health check endpoint
@@ -92,16 +92,14 @@ def create_app() -> FastAPI:
             return {
                 "status": "healthy",
                 "service": "data-kernel-gateway",
-                "dependencies": {
-                    "terminus_db": terminus_health
-                }
+                "dependencies": {"terminus_db": terminus_health},
             }
         except Exception as e:
             logger.error(f"Health check failed: {e}")
             return {
                 "status": "unhealthy",
                 "service": "data-kernel-gateway",
-                "error": str(e)
+                "error": str(e),
             }
 
     return app
@@ -118,8 +116,8 @@ if __name__ == "__main__":
 
     uvicorn.run(
         "main:app",
-        host = host,
-        port = port,
-        reload = os.getenv("ENV", "production") == "development",
-        log_level = os.getenv("LOG_LEVEL", "info").lower()
+        host=host,
+        port=port,
+        reload=os.getenv("ENV", "production") == "development",
+        log_level=os.getenv("LOG_LEVEL", "info").lower(),
     )

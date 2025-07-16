@@ -22,14 +22,9 @@ from shared.iam_contracts import (
     TokenValidationResponse,
     UserInfoResponse,
 )
+from models.exceptions import ServiceUnavailableError
 
 logger = get_logger(__name__)
-
-
-# Custom exceptions for explicit error handling
-class ServiceUnavailableError(Exception):
- """Raised when service is unavailable (circuit breaker open, network down)"""
- pass
 
 
 class ServiceTimeoutError(Exception):

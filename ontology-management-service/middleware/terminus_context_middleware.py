@@ -33,7 +33,7 @@ class TerminusContextMiddleware(BaseHTTPMiddleware):
             span = trace.get_current_span()
             if span and span.is_recording():
                 span_ctx = span.get_span_context()
-                trace_id = format(span_ctx.trace_id, '032x')
+                trace_id = format(span_ctx.trace_id, "032x")
                 set_trace_id(trace_id)
             else:
                 set_trace_id("")
@@ -43,15 +43,11 @@ class TerminusContextMiddleware(BaseHTTPMiddleware):
             if user:
                 # User context from auth middleware
                 author = format_author(
-                    user.username or user.user_id,
-                    os.getenv("SERVICE_NAME", "oms")
+                    user.username or user.user_id, os.getenv("SERVICE_NAME", "oms")
                 )
             else:
                 # Anonymous or system user
-                author = format_author(
-                    "anonymous",
-                    os.getenv("SERVICE_NAME", "oms")
-                )
+                author = format_author("anonymous", os.getenv("SERVICE_NAME", "oms"))
             set_author(author)
 
             # 3) Set branch from header or default
@@ -64,11 +60,11 @@ class TerminusContextMiddleware(BaseHTTPMiddleware):
                     # If the header is present but invalid, reject the request.
                     # This prevents data from being accidentally written to the default branch.
                     raise HTTPException(
-                        status_code = 400,
+                        status_code=400,
                         detail=(
                             f"Invalid X-Branch header format: '{branch_header}'. "
                             "Expected format is 'organization/database'."
-                        )
+                        ),
                     )
             else:
                 # Use default branch for service
@@ -76,10 +72,7 @@ class TerminusContextMiddleware(BaseHTTPMiddleware):
             set_branch(branch)
 
             # 4) Set request context for commit message building
-            set_request_context(
-                method = request.method,
-                path = str(request.url.path)
-            )
+            set_request_context(method=request.method, path=str(request.url.path))
 
             # Log context for debugging
             logger.debug(
@@ -103,7 +96,7 @@ class TerminusContextMiddleware(BaseHTTPMiddleware):
             # Allow FastAPI to handle its own exceptions to return proper HTTP responses.
             raise
         except Exception as e:
-            logger.error(f"Error in TerminusContextMiddleware: {e}", exc_info = True)
+            logger.error(f"Error in TerminusContextMiddleware: {e}", exc_info=True)
             # For other unexpected errors, the original logic was to proceed without context.
             # This is risky but we preserve it while allowing HTTPExceptions to pass.
             return await call_next(request)

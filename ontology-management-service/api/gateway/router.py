@@ -15,23 +15,19 @@ from database.clients.unified_http_client import (
     UnifiedHTTPClient,
     create_basic_client,
 )
+from models.exceptions import ServiceUnavailableError
 
 logger = logging.getLogger(__name__)
-
-
-class ServiceUnavailableError(Exception):
- """Service unavailable error"""
- pass
 
 
 class RequestRouter:
     """Request router"""
 
-    def __init__(self, routes: List[ServiceRoute], circuit_breaker = None):
+    def __init__(self, routes: List[ServiceRoute], circuit_breaker=None):
         self.routes = routes
         self.circuit_breaker = circuit_breaker
         self.route_map = self._build_route_map()
-        self.http_client = create_basic_client(timeout = 30.0)
+        self.http_client = create_basic_client(timeout=30.0)
 
     def _build_route_map(self) -> Dict[str, ServiceRoute]:
         """Configure route map"""
@@ -46,7 +42,7 @@ class RequestRouter:
         path: str,
         headers: Dict[str, str],
         body: Optional[bytes],
-        context: RequestContext
+        context: RequestContext,
     ) -> Tuple[int, Dict[str, str], bytes]:
         """Request routing"""
 
@@ -64,18 +60,20 @@ class RequestRouter:
         # Circuit breaker 확인
         if self.circuit_breaker and route.circuit_breaker_enabled:
             if not await self.circuit_breaker.is_closed(route.service_name):
-                raise ServiceUnavailableError(f"Service {route.service_name} is unavailable")
+                raise ServiceUnavailableError(
+                    f"Service {route.service_name} is unavailable"
+                )
 
         # 요청 전달
         try:
             response = await self._forward_request(
-                method = method,
-                url = service_url,
-                headers = forward_headers,
-                body = body,
-                timeout = route.timeout,
-                retry_count = route.retry_count,
-                service_name = route.service_name
+                method=method,
+                url=service_url,
+                headers=forward_headers,
+                body=body,
+                timeout=route.timeout,
+                retry_count=route.retry_count,
+                service_name=route.service_name,
             )
 
             # Circuit breaker 성공 기록
@@ -113,14 +111,17 @@ class RequestRouter:
 
         # 특별한 경우 처리: /object-types/{id} -> /api/v1/schemas/main/object-types/{id}
         if path.startswith("/object-types/") and route.service_name == "schema-service":
-            object_id = path[len("/object-types/"):]
+            object_id = path[len("/object-types/") :]
             service_path = f"/api/v1/schemas/main/object-types/{object_id}"
         # 특별한 경우 처리: /validation/breaking-changes -> /api/v1/validation/breaking-changes
-        elif path == "/validation/breaking-changes" and route.service_name == "validation-service":
+        elif (
+            path == "/validation/breaking-changes"
+            and route.service_name == "validation-service"
+        ):
             service_path = "/api/v1/validation/breaking-changes"
         # Prefix 제거 처리
         elif route.strip_prefix and path.startswith(route.path_pattern.rstrip("/*")):
-            service_path = path[len(route.path_pattern.rstrip("/*")):]
+            service_path = path[len(route.path_pattern.rstrip("/*")) :]
             if not service_path.startswith("/"):
                 service_path = "/" + service_path
         else:
@@ -128,8 +129,9 @@ class RequestRouter:
 
         return urljoin(route.service_url, service_path)
 
-    def _prepare_headers(self, headers: Dict[str, str],
-                        context: RequestContext) -> Dict[str, str]:
+    def _prepare_headers(
+        self, headers: Dict[str, str], context: RequestContext
+    ) -> Dict[str, str]:
         """전달할 헤더 준비"""
 
         # 기본 헤더 복사
@@ -140,11 +142,13 @@ class RequestRouter:
             forward_headers.pop(header, None)
 
         # 컨텍스트 헤더 추가
-        forward_headers.update({
-            "X-Request-ID": context.request_id,
-            "X-Forwarded-For": context.client_ip,
-            "X-Gateway-Time": datetime.utcnow().isoformat()
-        })
+        forward_headers.update(
+            {
+                "X-Request-ID": context.request_id,
+                "X-Forwarded-For": context.client_ip,
+                "X-Gateway-Time": datetime.utcnow().isoformat(),
+            }
+        )
 
         if context.user_id:
             forward_headers["X-User-ID"] = context.user_id
@@ -160,7 +164,7 @@ class RequestRouter:
         body: Optional[bytes],
         timeout: int,
         retry_count: int,
-        service_name: str
+        service_name: str,
     ) -> Tuple[int, Dict[str, str], bytes]:
         """요청 전달 with retry"""
 
@@ -169,31 +173,33 @@ class RequestRouter:
         for attempt in range(retry_count):
             try:
                 response = await self.http_client.request(
-                    method = method,
-                    url = url,
-                    headers = headers,
-                    content = body,
-                    timeout = timeout
+                    method=method,
+                    url=url,
+                    headers=headers,
+                    content=body,
+                    timeout=timeout,
                 )
 
                 # 응답 헤더 정리
                 response_headers = dict(response.headers)
-                response_headers.pop("content-encoding", None) # Gateway에서 처리
+                response_headers.pop("content-encoding", None)  # Gateway에서 처리
                 response_headers.pop("transfer-encoding", None)
 
                 return response.status_code, response_headers, response.content
 
             except httpx.TimeoutException as e:
                 last_error = e
-                logger.warning(f"Timeout calling {service_name} (attempt {attempt + 1}/{retry_count})")
+                logger.warning(
+                    f"Timeout calling {service_name} (attempt {attempt + 1}/{retry_count})"
+                )
                 if attempt < retry_count - 1:
-                    await asyncio.sleep(2 ** attempt) # Exponential backoff
+                    await asyncio.sleep(2**attempt)  # Exponential backoff
 
             except httpx.HTTPError as e:
                 last_error = e
                 logger.error(f"HTTP error calling {service_name}: {e}")
                 if attempt < retry_count - 1:
-                    await asyncio.sleep(2 ** attempt)
+                    await asyncio.sleep(2**attempt)
 
             except Exception as e:
                 last_error = e
@@ -219,12 +225,15 @@ class LoadBalancer:
         self.current_index = {}
         self.health_status = {}
 
-    def get_next_instance(self, service_name: str, instances: List[str]) -> Optional[str]:
+    def get_next_instance(
+        self, service_name: str, instances: List[str]
+    ) -> Optional[str]:
         """다음 인스턴스 선택"""
 
         # 건강한 인스턴스만 필터링
         healthy_instances = [
-            inst for inst in instances
+            inst
+            for inst in instances
             if self.health_status.get(f"{service_name}:{inst}", True)
         ]
 
@@ -244,6 +253,7 @@ class LoadBalancer:
         elif self.strategy == "random":
             # 랜덤 선택
             import random
+
             return random.choice(healthy_instances)
 
         else:

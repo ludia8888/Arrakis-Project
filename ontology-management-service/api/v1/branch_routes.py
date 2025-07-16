@@ -26,9 +26,9 @@ router = APIRouter(prefix="/branches", tags=["Branch Management"])
 
 
 @router.get(
- "/",
- response_model=List[Dict[str, Any]],
- dependencies=[Depends(require_scope([IAMScope.BRANCHES_READ]))],
+    "/",
+    response_model=List[Dict[str, Any]],
+    dependencies=[Depends(require_scope([IAMScope.BRANCHES_READ]))],
 )
 async def list_branches(branch_service=Depends(get_branch_service)):
     """List all branches"""
@@ -47,10 +47,10 @@ async def list_branches(branch_service=Depends(get_branch_service)):
 
 
 @router.post(
- "/",
- response_model=Dict[str, Any],
- status_code=status.HTTP_201_CREATED,
- dependencies=[Depends(require_scope([IAMScope.BRANCHES_WRITE]))],
+    "/",
+    response_model=Dict[str, Any],
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_scope([IAMScope.BRANCHES_WRITE]))],
 )
 async def create_branch(
     name: str, from_branch: str = "main", branch_service=Depends(get_branch_service)
@@ -63,9 +63,9 @@ async def create_branch(
 
 
 @router.get(
- "/{branch_name}",
- response_model=Dict[str, Any],
- dependencies=[Depends(require_scope([IAMScope.BRANCHES_READ]))],
+    "/{branch_name}",
+    response_model=Dict[str, Any],
+    dependencies=[Depends(require_scope([IAMScope.BRANCHES_READ]))],
 )
 async def get_branch(branch_name: str, branch_service=Depends(get_branch_service)):
     """Get a specific branch by name"""
@@ -78,12 +78,12 @@ async def get_branch(branch_name: str, branch_service=Depends(get_branch_service
 
 
 @router.get(
- "/{branch_id}", dependencies=[Depends(require_scope([IAMScope.BRANCHES_READ]))]
+    "/{branch_id}", dependencies=[Depends(require_scope([IAMScope.BRANCHES_READ]))]
 )
 @enable_etag(
- resource_type_func=lambda params: "branch",
- resource_id_func=lambda params: params["branch_id"],
- branch_func=lambda params: params["branch_id"],
+    resource_type_func=lambda params: "branch",
+    resource_id_func=lambda params: params["branch_id"],
+    branch_func=lambda params: params["branch_id"],
 )
 async def get_branch_by_id(
     branch_id: str,
@@ -104,13 +104,13 @@ async def get_branch_by_id(
 
 
 @router.get(
- "/{branch_id}/proposals",
- dependencies=[Depends(require_scope([IAMScope.PROPOSALS_READ]))],
+    "/{branch_id}/proposals",
+    dependencies=[Depends(require_scope([IAMScope.PROPOSALS_READ]))],
 )
 @enable_etag(
- resource_type_func=lambda params: "proposals_collection",
- resource_id_func=lambda params: f"{params['branch_id']}_proposals",
- branch_func=lambda params: params["branch_id"],
+    resource_type_func=lambda params: "proposals_collection",
+    resource_id_func=lambda params: f"{params['branch_id']}_proposals",
+    branch_func=lambda params: params["branch_id"],
 )
 async def list_proposals(
     branch_id: str,
@@ -119,17 +119,17 @@ async def list_proposals(
     branch_service=Depends(get_branch_service),
 ) -> List[Dict[str, Any]]:
     """List all proposals for a specific branch."""
-    return await branch_service.list_proposals(branch_name = branch_id)
+    return await branch_service.list_proposals(branch_name=branch_id)
 
 
 @router.get(
- "/{branch_id}/proposals/{proposal_id}",
- dependencies=[Depends(require_scope([IAMScope.PROPOSALS_READ]))],
+    "/{branch_id}/proposals/{proposal_id}",
+    dependencies=[Depends(require_scope([IAMScope.PROPOSALS_READ]))],
 )
 @enable_etag(
- resource_type_func=lambda params: "proposal",
- resource_id_func=lambda params: params["proposal_id"],
- branch_func=lambda params: params["branch_id"],
+    resource_type_func=lambda params: "proposal",
+    resource_id_func=lambda params: params["proposal_id"],
+    branch_func=lambda params: params["branch_id"],
 )
 async def get_proposal(
     branch_id: str,
@@ -159,9 +159,9 @@ async def get_proposal(
 
 
 @router.post(
- "/{branch_id}/proposals/{proposal_id}/merge",
- status_code=status.HTTP_202_ACCEPTED,
- dependencies=[Depends(require_scope([IAMScope.PROPOSALS_WRITE]))],
+    "/{branch_id}/proposals/{proposal_id}/merge",
+    status_code=status.HTTP_202_ACCEPTED,
+    dependencies=[Depends(require_scope([IAMScope.PROPOSALS_WRITE]))],
 )
 @track_api_performance("merge_proposal_async", "POST")
 async def merge_proposal_async(
@@ -193,26 +193,26 @@ async def merge_proposal_async(
     # Create job (service already initialized via DI)
 
     job = await job_service.create_job(
-        job_type = JobType.BRANCH_MERGE,
-        created_by = current_user.user_id,
+        job_type=JobType.BRANCH_MERGE,
+        created_by=current_user.user_id,
         metadata={
             "proposal_id": proposal_id,
             "source_branch": branch_id,
             "merge_strategy": strategy,
             "conflict_resolutions": conflict_resolutions,
         },
-        priority = JobPriority.HIGH,
-        idempotency_key = idempotency_key,
-        tenant_id = current_user.tenant_id,
+        priority=JobPriority.HIGH,
+        idempotency_key=idempotency_key,
+        tenant_id=current_user.tenant_id,
     )
 
     # Queue the task
     task = branch_merge_task.delay(
-        job_id = job.id,
+        job_id=job.id,
         proposal_id=proposal_id,
-        strategy = strategy,
-        user_id = current_user.user_id,
-        conflict_resolutions = conflict_resolutions,
+        strategy=strategy,
+        user_id=current_user.user_id,
+        conflict_resolutions=conflict_resolutions,
     )
 
     # Update job with Celery task ID
@@ -228,12 +228,12 @@ async def merge_proposal_async(
         "status": "queued",
         "message": f"Merge operation queued for proposal {proposal_id}",
         "tracking_url": f"/api/v1/jobs/{job.id}",
-        "estimated_duration_minutes": 5, # Rough estimate
+        "estimated_duration_minutes": 5,  # Rough estimate
     }
 
 
 @router.get(
- "/jobs/{job_id}", dependencies=[Depends(require_scope([IAMScope.PROPOSALS_READ]))]
+    "/jobs/{job_id}", dependencies=[Depends(require_scope([IAMScope.PROPOSALS_READ]))]
 )
 async def get_job_status(
     job_id: str,
@@ -256,20 +256,20 @@ async def get_job_status(
         )
 
     response = {
-    "job_id": job.id,
-    "type": job.type,
-    "status": job.status,
-    "progress": {
-    "current_step": job.progress.current_step,
-    "completed_steps": job.progress.completed_steps,
-    "total_steps": job.progress.total_steps,
-    "percentage": job.progress.percentage,
-    "message": job.progress.message,
-    },
-    "created_at": job.created_at.isoformat(),
-    "started_at": job.started_at.isoformat() if job.started_at else None,
-    "completed_at": job.completed_at.isoformat() if job.completed_at else None,
-    "result": job.result,
+        "job_id": job.id,
+        "type": job.type,
+        "status": job.status,
+        "progress": {
+            "current_step": job.progress.current_step,
+            "completed_steps": job.progress.completed_steps,
+            "total_steps": job.progress.total_steps,
+            "percentage": job.progress.percentage,
+            "message": job.progress.message,
+        },
+        "created_at": job.created_at.isoformat(),
+        "started_at": job.started_at.isoformat() if job.started_at else None,
+        "completed_at": job.completed_at.isoformat() if job.completed_at else None,
+        "result": job.result,
     }
 
     # Add error details if failed
@@ -284,8 +284,8 @@ async def get_job_status(
 
 
 @router.post(
- "/jobs/{job_id}/cancel",
- dependencies=[Depends(require_scope([IAMScope.PROPOSALS_WRITE]))],
+    "/jobs/{job_id}/cancel",
+    dependencies=[Depends(require_scope([IAMScope.PROPOSALS_WRITE]))],
 )
 async def cancel_job(
     job_id: str,
@@ -317,7 +317,7 @@ async def cancel_job(
 
     # Cancel Celery task if exists
     if job.celery_task_id:
-        celery_app.control.revoke(job.celery_task_id, terminate = True)
+        celery_app.control.revoke(job.celery_task_id, terminate=True)
 
     # Update job status
     await job_service.update_job_status(job_id, "cancelled", "Cancelled by user")

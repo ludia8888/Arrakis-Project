@@ -130,18 +130,18 @@ class AuditLog(BaseEntity):
  # 검색 최적화 필드
  search_text: Optional[str] = None
 
- def generate_search_text(self):
- """검색 텍스트 생성"""
- parts = [
- self.event.event_type,
- self.event.user_id,
- self.event.username,
- self.event.resource_type,
- self.event.resource_id,
- self.event.action,
- self.event.service
- ]
- self.search_text = " ".join(filter(None, parts))
+    def generate_search_text(self):
+        """검색 텍스트 생성"""
+        parts = [
+            self.event.event_type,
+            self.event.user_id,
+            self.event.username,
+            self.event.resource_type,
+            self.event.resource_id,
+            self.event.action,
+            self.event.service
+        ]
+        self.search_text = " ".join(filter(None, parts))
 
 
 class AuditLogFilter(BaseModel):

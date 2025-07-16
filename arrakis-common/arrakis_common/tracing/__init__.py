@@ -27,24 +27,24 @@ logger = logging.getLogger(__name__)
 
 
 class TracingConfig:
- """Configuration for distributed tracing."""
+    """Configuration for distributed tracing."""
 
- def __init__(self, service_name: str, environment: str = None):
- self.service_name = service_name
- self.environment = environment or os.getenv("APP_ENV", "development")
+    def __init__(self, service_name: str, environment: str = None):
+        self.service_name = service_name
+        self.environment = environment or os.getenv("APP_ENV", "development")
 
- # Jaeger configuration
- self.jaeger_endpoint = os.getenv(
- "JAEGER_ENDPOINT", "http://localhost:14268/api/traces"
- )
- self.jaeger_agent_host = os.getenv("JAEGER_AGENT_HOST", "localhost")
- self.jaeger_agent_port = int(os.getenv("JAEGER_AGENT_PORT", "6831"))
+        # Jaeger configuration
+        self.jaeger_endpoint = os.getenv(
+            "JAEGER_ENDPOINT", "http://localhost:14268/api/traces"
+        )
+        self.jaeger_agent_host = os.getenv("JAEGER_AGENT_HOST", "localhost")
+        self.jaeger_agent_port = int(os.getenv("JAEGER_AGENT_PORT", "6831"))
 
- # Sampling configuration
- self.sampling_rate = float(os.getenv("TRACING_SAMPLING_RATE", "1.0"))
- self.max_tag_value_length = int(
- os.getenv("JAEGER_MAX_TAG_VALUE_LENGTH", "1024")
- )
+        # Sampling configuration
+        self.sampling_rate = float(os.getenv("TRACING_SAMPLING_RATE", "1.0"))
+        self.max_tag_value_length = int(
+            os.getenv("JAEGER_MAX_TAG_VALUE_LENGTH", "1024")
+        )
 
  # Service metadata
  self.service_version = os.getenv("SERVICE_VERSION", "1.0.0")

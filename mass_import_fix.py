@@ -19,7 +19,7 @@ from pathlib import Path
 def run_command(cmd):
     """Run shell command and return output"""
     try:
-        result = subprocess.run(cmd, shell = True, capture_output = True, text = True)
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
         return result.stdout.strip().split("\n") if result.stdout.strip() else []
     except Exception as e:
         print(f"Error running command {cmd}: {e}")

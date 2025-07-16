@@ -20,10 +20,10 @@ class GraphQLConfig:
     max_query_depth: int = 15
     max_query_complexity: int = 2000
     rate_limit_requests: int = 100
-    rate_limit_window: int = 60 # seconds
+    rate_limit_window: int = 60  # seconds
 
     # Cache Settings
-    cache_ttl: int = 300 # seconds
+    cache_ttl: int = 300  # seconds
     cache_key_prefix: str = "gql:"
 
     # Tracing Settings
@@ -37,31 +37,37 @@ class GraphQLConfig:
         # Default configurations per environment
         if env == "production":
             return cls(
-                enable_security = os.getenv("ENABLE_GQL_SECURITY", "true").lower() == "true",
-                enable_cache = os.getenv("ENABLE_GQL_CACHE", "true").lower() == "true",
-                enable_tracing = os.getenv("ENABLE_GQL_TRACING", "true").lower() == "true",
-                enable_introspection = False,
-                max_query_depth = int(os.getenv("GQL_MAX_DEPTH", "10")),
-                max_query_complexity = int(os.getenv("GQL_MAX_COMPLEXITY", "1000")),
-                trace_sample_rate = float(os.getenv("TRACE_SAMPLE_RATE", "0.1"))
+                enable_security=os.getenv("ENABLE_GQL_SECURITY", "true").lower()
+                == "true",
+                enable_cache=os.getenv("ENABLE_GQL_CACHE", "true").lower() == "true",
+                enable_tracing=os.getenv("ENABLE_GQL_TRACING", "true").lower()
+                == "true",
+                enable_introspection=False,
+                max_query_depth=int(os.getenv("GQL_MAX_DEPTH", "10")),
+                max_query_complexity=int(os.getenv("GQL_MAX_COMPLEXITY", "1000")),
+                trace_sample_rate=float(os.getenv("TRACE_SAMPLE_RATE", "0.1")),
             )
         elif env == "staging":
             return cls(
-                enable_security = os.getenv("ENABLE_GQL_SECURITY", "true").lower() == "true",
-                enable_cache = os.getenv("ENABLE_GQL_CACHE", "true").lower() == "true",
-                enable_tracing = os.getenv("ENABLE_GQL_TRACING", "true").lower() == "true",
-                enable_introspection = True,
-                trace_sample_rate = 1.0 # Full tracing in staging
+                enable_security=os.getenv("ENABLE_GQL_SECURITY", "true").lower()
+                == "true",
+                enable_cache=os.getenv("ENABLE_GQL_CACHE", "true").lower() == "true",
+                enable_tracing=os.getenv("ENABLE_GQL_TRACING", "true").lower()
+                == "true",
+                enable_introspection=True,
+                trace_sample_rate=1.0,  # Full tracing in staging
             )
-        else: # development/test
+        else:  # development/test
             return cls(
-                enable_security = os.getenv("ENABLE_GQL_SECURITY", "true").lower() == "true",
+                enable_security=os.getenv("ENABLE_GQL_SECURITY", "true").lower()
+                == "true",
                 # Enabled by default
-                enable_cache = os.getenv("ENABLE_GQL_CACHE", "true").lower() == "true",
+                enable_cache=os.getenv("ENABLE_GQL_CACHE", "true").lower() == "true",
                 # Enabled by default
-                enable_tracing = os.getenv("ENABLE_GQL_TRACING", "true").lower() == "true",
+                enable_tracing=os.getenv("ENABLE_GQL_TRACING", "true").lower()
+                == "true",
                 # Enabled by default
-                enable_introspection = True
+                enable_introspection=True,
             )
 
 

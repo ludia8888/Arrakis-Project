@@ -16,6 +16,7 @@ from arrakis_common import get_logger
 from core.auth_utils import UserContext
 from database.clients.unified_http_client import create_iam_client
 from jwt import PyJWKClient
+from models.exceptions import IAMServiceUnavailableError
 
 logger = get_logger(__name__)
 
@@ -30,12 +31,6 @@ __all__ = [
  "get_iam_integration",
  "IAMServiceUnavailableError",
 ]
-
-
-class IAMServiceUnavailableError(Exception):
- """Raised when IAM service is unavailable"""
-
- pass
 
 
 class IAMIntegration:

@@ -20,8 +20,9 @@ class RateLimiter:
         self.policy = policy
         self.key_prefix = "rate_limit:"
 
-    async def check_rate_limit(self, context: RequestContext) -> Tuple[bool,
-                               Optional[Dict]]:
+    async def check_rate_limit(
+        self, context: RequestContext
+    ) -> Tuple[bool, Optional[Dict]]:
         """Rate limit 확인"""
 
         # Rate limit 키 생성
@@ -39,7 +40,7 @@ class RateLimiter:
                 return False, {
                     "limit": self.policy.requests_per_minute,
                     "window": "minute",
-                    "retry_after": 60 - (int(time.time()) % 60)
+                    "retry_after": 60 - (int(time.time()) % 60),
                 }
 
         # 시간당 요청 수 확인
@@ -51,7 +52,7 @@ class RateLimiter:
                 return False, {
                     "limit": self.policy.requests_per_hour,
                     "window": "hour",
-                    "retry_after": 3600 - (int(time.time()) % 3600)
+                    "retry_after": 3600 - (int(time.time()) % 3600),
                 }
 
         # 일일 요청 수 확인
@@ -63,8 +64,13 @@ class RateLimiter:
                 return False, {
                     "limit": self.policy.requests_per_day,
                     "window": "day",
-                    "retry_after": int((datetime.utcnow().replace(hour = 0, minute = 0,
-                                                                 second = 0) + timedelta(days = 1) - datetime.utcnow()).total_seconds())
+                    "retry_after": int(
+                        (
+                            datetime.utcnow().replace(hour=0, minute=0, second=0)
+                            + timedelta(days=1)
+                            - datetime.utcnow()
+                        ).total_seconds()
+                    ),
                 }
 
         # Burst 확인
@@ -75,7 +81,7 @@ class RateLimiter:
             return False, {
                 "limit": self.policy.burst_size,
                 "window": "burst",
-                "retry_after": 1
+                "retry_after": 1,
             }
 
         return True, None
@@ -141,13 +147,17 @@ class RateLimiter:
             minute_key = f"{key}:minute:{current_minute}"
 
             count = await self.redis.get(minute_key)
-            remaining = max(0, self.policy.requests_per_minute - (int(count) if count else 0))
+            remaining = max(
+                0, self.policy.requests_per_minute - (int(count) if count else 0)
+            )
 
-            headers.update({
-                "X-RateLimit-Limit": str(self.policy.requests_per_minute),
-                "X-RateLimit-Remaining": str(remaining),
-                "X-RateLimit-Reset": str(int((current_minute + 1) * 60))
-            })
+            headers.update(
+                {
+                    "X-RateLimit-Limit": str(self.policy.requests_per_minute),
+                    "X-RateLimit-Remaining": str(remaining),
+                    "X-RateLimit-Reset": str(int((current_minute + 1) * 60)),
+                }
+            )
 
         return headers
 
@@ -157,10 +167,11 @@ class DistributedRateLimiter(RateLimiter):
 
     def __init__(self, redis_cluster, policy: RateLimitPolicy):
         super().__init__(redis_cluster, policy)
-        self.sliding_window = True # Sliding window 알고리즘 사용
+        self.sliding_window = True  # Sliding window 알고리즘 사용
 
-    async def check_rate_limit(self, context: RequestContext) -> Tuple[bool,
-                               Optional[Dict]]:
+    async def check_rate_limit(
+        self, context: RequestContext
+    ) -> Tuple[bool, Optional[Dict]]:
         """향상된 rate limit 확인 (sliding window)"""
 
         if self.sliding_window:
@@ -168,8 +179,9 @@ class DistributedRateLimiter(RateLimiter):
         else:
             return await super().check_rate_limit(context)
 
-    async def _check_sliding_window(self, context: RequestContext) -> Tuple[bool,
-                                    Optional[Dict]]:
+    async def _check_sliding_window(
+        self, context: RequestContext
+    ) -> Tuple[bool, Optional[Dict]]:
         """Sliding window 알고리즘"""
 
         key = self._generate_key(context)
@@ -200,7 +212,7 @@ class DistributedRateLimiter(RateLimiter):
 
             if count > self.policy.requests_per_minute:
                 # 가장 오래된 요청 시간 조회
-                oldest = await self.redis.zrange(window_key, 0, 0, withscores = True)
+                oldest = await self.redis.zrange(window_key, 0, 0, withscores=True)
                 if oldest:
                     retry_after = int(60 - (now - oldest[0][1]))
                 else:
@@ -210,7 +222,7 @@ class DistributedRateLimiter(RateLimiter):
                     "limit": self.policy.requests_per_minute,
                     "window": "sliding_minute",
                     "current": count,
-                    "retry_after": retry_after
+                    "retry_after": retry_after,
                 }
 
         return True, None

@@ -13,19 +13,21 @@ logger = logging.getLogger(__name__)
 
 
 class CircuitState(Enum):
- """Circuit 상태"""
- CLOSED = "closed" # 정상 (요청 허용)
- OPEN = "open" # 차단 (요청 거부)
- HALF_OPEN = "half_open" # 반개방 (테스트 요청 허용)
+    """Circuit 상태"""
+
+    CLOSED = "closed"  # 정상 (요청 허용)
+    OPEN = "open"  # 차단 (요청 거부)
+    HALF_OPEN = "half_open"  # 반개방 (테스트 요청 허용)
 
 
 @dataclass
 class CircuitConfig:
- """Circuit Breaker 설정"""
- failure_threshold: int = 5 # 실패 임계값
- success_threshold: int = 2 # 성공 임계값 (HALF_OPEN -> CLOSED)
- timeout: float = 60.0 # OPEN 상태 유지 시간 (초)
- half_open_max_requests: int = 3 # HALF_OPEN 상태에서 허용할 최대 요청 수
+    """Circuit Breaker 설정"""
+
+    failure_threshold: int = 5  # 실패 임계값
+    success_threshold: int = 2  # 성공 임계값 (HALF_OPEN -> CLOSED)
+    timeout: float = 60.0  # OPEN 상태 유지 시간 (초)
+    half_open_max_requests: int = 3  # HALF_OPEN 상태에서 허용할 최대 요청 수
 
 
 class CircuitBreaker:
@@ -66,7 +68,7 @@ class CircuitBreaker:
         circuit = self._get_or_create_circuit(service_name)
         return circuit.get_metrics()
 
-    def _get_or_create_circuit(self, service_name: str) -> 'Circuit':
+    def _get_or_create_circuit(self, service_name: str) -> "Circuit":
         """Circuit 조회 또는 생성"""
 
         if service_name not in self.circuits:
@@ -106,14 +108,17 @@ class Circuit:
 
             elif self.state == CircuitState.OPEN:
                 # 타임아웃 확인
-                if self.last_failure_time and (current_time - self.last_failure_time) >= self.config.timeout:
+                if (
+                    self.last_failure_time
+                    and (current_time - self.last_failure_time) >= self.config.timeout
+                ):
                     # HALF_OPEN으로 전환
                     logger.info(f"Circuit {self.name}: OPEN -> HALF_OPEN")
                     self._transition_to(CircuitState.HALF_OPEN)
                     return True
                 return False
 
-            else: # HALF_OPEN
+            else:  # HALF_OPEN
                 # 최대 요청 수 확인
                 if self.half_open_requests < self.config.half_open_max_requests:
                     self.half_open_requests += 1
@@ -156,12 +161,16 @@ class Circuit:
 
                 # 실패 임계값 도달 시 OPEN으로 전환
                 if self.failure_count >= self.config.failure_threshold:
-                    logger.warning(f"Circuit {self.name}: CLOSED -> OPEN (failures: {self.failure_count})")
+                    logger.warning(
+                        f"Circuit {self.name}: CLOSED -> OPEN (failures: {self.failure_count})"
+                    )
                     self._transition_to(CircuitState.OPEN)
 
             elif self.state == CircuitState.HALF_OPEN:
                 # HALF_OPEN에서 실패 시 즉시 OPEN으로
-                logger.warning(f"Circuit {self.name}: HALF_OPEN -> OPEN (failure in half-open)")
+                logger.warning(
+                    f"Circuit {self.name}: HALF_OPEN -> OPEN (failure in half-open)"
+                )
                 self._transition_to(CircuitState.OPEN)
 
     def _transition_to(self, new_state: CircuitState):
@@ -197,14 +206,16 @@ class Circuit:
             "total_requests": self.total_requests,
             "total_failures": self.total_failures,
             "total_successes": self.total_successes,
-            "failure_rate": self.total_failures / self.total_requests if self.total_requests > 0 else 0,
+            "failure_rate": self.total_failures / self.total_requests
+            if self.total_requests > 0
+            else 0,
             "consecutive_failures": self.consecutive_failures,
             "consecutive_successes": self.consecutive_successes,
             "config": {
                 "failure_threshold": self.config.failure_threshold,
                 "success_threshold": self.config.success_threshold,
-                "timeout": self.config.timeout
-            }
+                "timeout": self.config.timeout,
+            },
         }
 
 
@@ -242,11 +253,11 @@ class DistributedCircuitBreaker(CircuitBreaker):
                 return True
             return False
 
-        else: # HALF_OPEN
+        else:  # HALF_OPEN
             # 동시 요청 수 제한
             counter_key = f"{self.key_prefix}{service_name}:half_open_count"
             count = await self.redis.incr(counter_key)
-            await self.redis.expire(counter_key, 60) # 1분 후 자동 삭제
+            await self.redis.expire(counter_key, 60)  # 1분 후 자동 삭제
 
             return count <= self.config.half_open_max_requests
 
@@ -264,7 +275,9 @@ class DistributedCircuitBreaker(CircuitBreaker):
                 # CLOSED로 전환
                 await self.redis.set(state_key, CircuitState.CLOSED.value)
                 await self.redis.delete(success_key)
-                await self.redis.delete(f"{self.key_prefix}{service_name}:failure_count")
+                await self.redis.delete(
+                    f"{self.key_prefix}{service_name}:failure_count"
+                )
                 logger.info(f"Circuit {service_name}: HALF_OPEN -> CLOSED")
 
     async def record_failure(self, service_name: str):
@@ -276,7 +289,7 @@ class DistributedCircuitBreaker(CircuitBreaker):
         if not state or state == CircuitState.CLOSED.value:
             failure_key = f"{self.key_prefix}{service_name}:failure_count"
             count = await self.redis.incr(failure_key)
-            await self.redis.expire(failure_key, 300) # 5분 후 자동 삭제
+            await self.redis.expire(failure_key, 300)  # 5분 후 자동 삭제
 
             if count >= self.config.failure_threshold:
                 # OPEN으로 전환

@@ -8,10 +8,12 @@ class ObjectType:
     name: str
     version: str = "1.0.0"
 
+
 @strawberry.input
 class ObjectTypeInput:
     name: str
     description: str = ""
+
 
 @strawberry.type
 class Query:
@@ -23,9 +25,10 @@ class Query:
     def object_types(self) -> list[ObjectType]:
         """Get all object types"""
         return [
-            ObjectType(id = "1", name = "TestType", version = "1.0.0"),
-            ObjectType(id = "2", name = "SampleType", version = "1.1.0")
+            ObjectType(id="1", name="TestType", version="1.0.0"),
+            ObjectType(id="2", name="SampleType", version="1.1.0"),
         ]
+
 
 @strawberry.type
 class Mutation:
@@ -33,10 +36,9 @@ class Mutation:
     def create_object_type(self, input: ObjectTypeInput) -> ObjectType:
         """Create a new object type"""
         return ObjectType(
-            id = f"generated_{input.name.lower()}",
-            name = input.name,
-            version = "1.0.0"
+            id=f"generated_{input.name.lower()}", name=input.name, version="1.0.0"
         )
+
 
 @strawberry.type
 class Subscription:
@@ -45,11 +47,8 @@ class Subscription:
         """Subscribe to object type updates"""
         yield "Object type updated"
 
+
 # Create the schema
-schema = strawberry.Schema(
- query = Query,
- mutation = Mutation,
- subscription = Subscription
-)
+schema = strawberry.Schema(query=Query, mutation=Mutation, subscription=Subscription)
 
 __all__ = ["schema", "Query", "Mutation", "Subscription"]
