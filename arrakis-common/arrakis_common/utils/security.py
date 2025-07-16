@@ -141,188 +141,188 @@ def create_secure_filename(filename: str) -> str:
 
 
 def encrypt_data(data: str, key: str) -> str:
- """
- 간단한 데이터 암호화 (개발용)
- 프로덕션에서는 cryptography 라이브러리의 Fernet 사용 권장
- """
- # XOR 기반 간단한 암호화 (개발용)
- key_bytes = key.encode()
- data_bytes = data.encode()
+    """
+    간단한 데이터 암호화 (개발용)
+    프로덕션에서는 cryptography 라이브러리의 Fernet 사용 권장
+    """
+    # XOR 기반 간단한 암호화 (개발용)
+    key_bytes = key.encode()
+    data_bytes = data.encode()
 
- encrypted = bytearray()
- for i, byte in enumerate(data_bytes):
- key_byte = key_bytes[i % len(key_bytes)]
- encrypted.append(byte ^ key_byte)
+    encrypted = bytearray()
+    for i, byte in enumerate(data_bytes):
+        key_byte = key_bytes[i % len(key_bytes)]
+        encrypted.append(byte ^ key_byte)
 
- return encode_base64(bytes(encrypted))
+    return encode_base64(bytes(encrypted))
 
 
 def decrypt_data(encrypted_data: str, key: str) -> str:
- """
- 간단한 데이터 복호화 (개발용)
- 프로덕션에서는 cryptography 라이브러리의 Fernet 사용 권장
- """
- encrypted_bytes = decode_base64(encrypted_data)
- key_bytes = key.encode()
+    """
+    간단한 데이터 복호화 (개발용)
+    프로덕션에서는 cryptography 라이브러리의 Fernet 사용 권장
+    """
+    encrypted_bytes = decode_base64(encrypted_data)
+    key_bytes = key.encode()
 
- decrypted = bytearray()
- for i, byte in enumerate(encrypted_bytes):
- key_byte = key_bytes[i % len(key_bytes)]
- decrypted.append(byte ^ key_byte)
+    decrypted = bytearray()
+    for i, byte in enumerate(encrypted_bytes):
+        key_byte = key_bytes[i % len(key_bytes)]
+        decrypted.append(byte ^ key_byte)
 
- return decrypted.decode()
+    return decrypted.decode()
 
 
 class RateLimiter:
- """간단한 Rate Limiter (메모리 기반)"""
+    """간단한 Rate Limiter (메모리 기반)"""
 
- def __init__(self, max_requests: int = 100, window_seconds: int = 60):
- self.max_requests = max_requests
- self.window_seconds = window_seconds
- self._requests = {}
+    def __init__(self, max_requests: int = 100, window_seconds: int = 60):
+        self.max_requests = max_requests
+        self.window_seconds = window_seconds
+        self._requests = {}
 
- def is_allowed(self, key: str) -> bool:
- """요청 허용 여부 확인"""
- import time
+    def is_allowed(self, key: str) -> bool:
+        """요청 허용 여부 확인"""
+        import time
 
- now = time.time()
+        now = time.time()
 
- # 오래된 요청 정리
- if key in self._requests:
- self._requests[key] = [
- timestamp
- for timestamp in self._requests[key]
- if now - timestamp < self.window_seconds
- ]
- else:
- self._requests[key] = []
+        # 오래된 요청 정리
+        if key in self._requests:
+            self._requests[key] = [
+                timestamp
+                for timestamp in self._requests[key]
+                if now - timestamp < self.window_seconds
+            ]
+        else:
+            self._requests[key] = []
 
- # 요청 수 확인
- if len(self._requests[key]) >= self.max_requests:
- return False
+        # 요청 수 확인
+        if len(self._requests[key]) >= self.max_requests:
+            return False
 
- # 요청 기록
- self._requests[key].append(now)
- return True
+        # 요청 기록
+        self._requests[key].append(now)
+        return True
 
 
 # HMAC 관련 함수들
 def calculate_hmac(data: bytes, key: bytes, algorithm: str = "sha256") -> bytes:
- """HMAC 계산"""
- if algorithm == "sha256":
- return hmac.new(key, data, hashlib.sha256).digest()
- elif algorithm == "sha512":
- return hmac.new(key, data, hashlib.sha512).digest()
- else:
- raise ValueError(f"Unsupported HMAC algorithm: {algorithm}")
+    """HMAC 계산"""
+    if algorithm == "sha256":
+        return hmac.new(key, data, hashlib.sha256).digest()
+    elif algorithm == "sha512":
+        return hmac.new(key, data, hashlib.sha512).digest()
+    else:
+        raise ValueError(f"Unsupported HMAC algorithm: {algorithm}")
 
 
 def verify_hmac(
- data: bytes, signature: bytes, key: bytes, algorithm: str = "sha256"
+    data: bytes, signature: bytes, key: bytes, algorithm: str = "sha256"
 ) -> bool:
- """HMAC 검증"""
- try:
- expected = calculate_hmac(data, key, algorithm)
- return hmac.compare_digest(signature, expected)
- except Exception:
- return False
+    """HMAC 검증"""
+    try:
+        expected = calculate_hmac(data, key, algorithm)
+        return hmac.compare_digest(signature, expected)
+    except Exception:
+        return False
 
 
 # 호환성을 위한 추가 함수들 (common_security 대체)
 def encrypt_text(text: str, key: Optional[str] = None) -> str:
- """텍스트 암호화 (common_security 호환)"""
- if key is None:
- key = generate_secret_key()
- return encrypt_data(text, key)
+    """텍스트 암호화 (common_security 호환)"""
+    if key is None:
+        key = generate_secret_key()
+    return encrypt_data(text, key)
 
 
 def decrypt_text(encrypted_text: str, key: str) -> str:
- """텍스트 복호화 (common_security 호환)"""
- return decrypt_data(encrypted_text, key)
+    """텍스트 복호화 (common_security 호환)"""
+    return decrypt_data(encrypted_text, key)
 
 
 # RSA 서명 관련 함수들 (cryptography 라이브러리 필요)
 def generate_signing_key(key_size: int = 2048) -> str:
- """RSA 개인키 생성"""
+    """RSA 개인키 생성"""
 
- private_key = rsa.generate_private_key(
- public_exponent = 65537, key_size = key_size, backend = default_backend()
- )
+    private_key = rsa.generate_private_key(
+        public_exponent = 65537, key_size = key_size, backend = default_backend()
+    )
 
- pem = private_key.private_bytes(
- encoding = serialization.Encoding.PEM,
- format = serialization.PrivateFormat.PKCS8,
- encryption_algorithm = serialization.NoEncryption(),
- )
+    pem = private_key.private_bytes(
+        encoding = serialization.Encoding.PEM,
+        format = serialization.PrivateFormat.PKCS8,
+        encryption_algorithm = serialization.NoEncryption(),
+    )
 
- return pem.decode()
+    return pem.decode()
 
 
 def sign(data: bytes, private_key: str) -> str:
- """RSA 서명"""
+    """RSA 서명"""
 
- # PEM 형식의 개인키 로드
- key = serialization.load_pem_private_key(
- private_key.encode(), password = None, backend = default_backend()
- )
+    # PEM 형식의 개인키 로드
+    key = serialization.load_pem_private_key(
+        private_key.encode(), password = None, backend = default_backend()
+    )
 
- # PSS 패딩과 SHA256을 사용하여 서명
- signature = key.sign(
- data,
- padding.PSS(
- mgf = padding.MGF1(hashes.SHA256()), salt_length = padding.PSS.MAX_LENGTH
- ),
- hashes.SHA256(),
- )
+    # PSS 패딩과 SHA256을 사용하여 서명
+    signature = key.sign(
+        data,
+        padding.PSS(
+            mgf = padding.MGF1(hashes.SHA256()), salt_length = padding.PSS.MAX_LENGTH
+        ),
+        hashes.SHA256(),
+    )
 
- return base64.b64encode(signature).decode()
+    return base64.b64encode(signature).decode()
 
 
 def verify_signature(data: bytes, signature: str, public_key: str) -> bool:
- """RSA 서명 검증"""
+    """RSA 서명 검증"""
 
- try:
- # Base64 디코딩
- sig_bytes = base64.b64decode(signature)
+    try:
+        # Base64 디코딩
+        sig_bytes = base64.b64decode(signature)
 
- # PEM 형식의 공개키 로드
- key = serialization.load_pem_public_key(
- public_key.encode(), backend = default_backend()
- )
+        # PEM 형식의 공개키 로드
+        key = serialization.load_pem_public_key(
+            public_key.encode(), backend = default_backend()
+        )
 
- # PSS 패딩과 SHA256을 사용하여 검증
- key.verify(
- sig_bytes,
- data,
- padding.PSS(
- mgf = padding.MGF1(hashes.SHA256()), salt_length = padding.PSS.MAX_LENGTH
- ),
- hashes.SHA256(),
- )
- return True
- except Exception:
- return False
+        # PSS 패딩과 SHA256을 사용하여 검증
+        key.verify(
+            sig_bytes,
+            data,
+            padding.PSS(
+                mgf = padding.MGF1(hashes.SHA256()), salt_length = padding.PSS.MAX_LENGTH
+            ),
+            hashes.SHA256(),
+        )
+        return True
+    except Exception:
+        return False
 
 
 def generate_rsa_keypair(key_size: int = 2048) -> Tuple[str, str]:
- """RSA 키 쌍 생성 (개인키, 공개키)"""
+    """RSA 키 쌍 생성 (개인키, 공개키)"""
 
- private_key = rsa.generate_private_key(
- public_exponent = 65537, key_size = key_size, backend = default_backend()
- )
+    private_key = rsa.generate_private_key(
+        public_exponent = 65537, key_size = key_size, backend = default_backend()
+    )
 
- # 개인키 PEM 형식
- private_pem = private_key.private_bytes(
- encoding = serialization.Encoding.PEM,
- format = serialization.PrivateFormat.PKCS8,
- encryption_algorithm = serialization.NoEncryption(),
- ).decode()
+    # 개인키 PEM 형식
+    private_pem = private_key.private_bytes(
+        encoding = serialization.Encoding.PEM,
+        format = serialization.PrivateFormat.PKCS8,
+        encryption_algorithm = serialization.NoEncryption(),
+    ).decode()
 
- # 공개키 PEM 형식
- public_key = private_key.public_key()
- public_pem = public_key.public_bytes(
- encoding = serialization.Encoding.PEM,
- format = serialization.PublicFormat.SubjectPublicKeyInfo,
- ).decode()
+    # 공개키 PEM 형식
+    public_key = private_key.public_key()
+    public_pem = public_key.public_bytes(
+        encoding = serialization.Encoding.PEM,
+        format = serialization.PublicFormat.SubjectPublicKeyInfo,
+    ).decode()
 
- return private_pem, public_pem
+    return private_pem, public_pem

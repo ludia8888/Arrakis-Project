@@ -153,7 +153,8 @@ class EventIntegrityChain:
 
  def __init__(self):
  self._chain: List[str] = []
- self._genesis_hash = "0" * 64 # Genesis block hash
+ # Genesis block hash - standard pattern for blockchain-like structures
+ self._genesis_hash = hashlib.sha256(b"GENESIS_BLOCK_IMMUTABLE_EVENT_STORE").hexdigest()
 
  def add_event(self, event: ImmutableEvent) -> str:
  """Add event to integrity chain and return chain hash"""

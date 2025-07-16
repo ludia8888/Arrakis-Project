@@ -113,13 +113,13 @@ async def get_branch_by_id(
  branch_func=lambda params: params["branch_id"],
 )
 async def list_proposals(
- branch_id: str,
- req: Request,
- current_user: Annotated[UserContext, Depends(get_current_user)],
- branch_service=Depends(get_branch_service),
+    branch_id: str,
+    req: Request,
+    current_user: Annotated[UserContext, Depends(get_current_user)],
+    branch_service=Depends(get_branch_service),
 ) -> List[Dict[str, Any]]:
- """List all proposals for a specific branch."""
- return await branch_service.list_proposals(branch_name = branch_id)
+    """List all proposals for a specific branch."""
+    return await branch_service.list_proposals(branch_name = branch_id)
 
 
 @router.get(
@@ -165,122 +165,122 @@ async def get_proposal(
 )
 @track_api_performance("merge_proposal_async", "POST")
 async def merge_proposal_async(
- branch_id: str,
- proposal_id: str,
- merge_request: Dict[str, Any],
- req: Request,
- current_user: Annotated[UserContext, Depends(get_current_user)],
- job_service: Annotated[Any, Depends(get_job_service)],
+    branch_id: str,
+    proposal_id: str,
+    merge_request: Dict[str, Any],
+    req: Request,
+    current_user: Annotated[UserContext, Depends(get_current_user)],
+    job_service: Annotated[Any, Depends(get_job_service)],
 ) -> Dict[str, Any]:
- """
- Queue branch merge operation for background processing
- Returns immediately with job ID for tracking
- """
- from models.job import JobPriority, JobType
- from workers.tasks.merge import branch_merge_task
+    """
+    Queue branch merge operation for background processing
+    Returns immediately with job ID for tracking
+    """
+    from models.job import JobPriority, JobType
+    from workers.tasks.merge import branch_merge_task
 
- # Validate merge request
- strategy = merge_request.get("strategy", "merge")
- if strategy not in ["merge", "squash", "rebase"]:
- raise HTTPException(
- status_code=status.HTTP_400_BAD_REQUEST,
- detail=f"Invalid merge strategy: {strategy}",
- )
+    # Validate merge request
+    strategy = merge_request.get("strategy", "merge")
+    if strategy not in ["merge", "squash", "rebase"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid merge strategy: {strategy}",
+        )
 
- conflict_resolutions = merge_request.get("conflict_resolutions")
- idempotency_key = merge_request.get("idempotency_key")
+    conflict_resolutions = merge_request.get("conflict_resolutions")
+    idempotency_key = merge_request.get("idempotency_key")
 
- # Create job (service already initialized via DI)
+    # Create job (service already initialized via DI)
 
- job = await job_service.create_job(
- job_type = JobType.BRANCH_MERGE,
- created_by = current_user.user_id,
- metadata={
- "proposal_id": proposal_id,
- "source_branch": branch_id,
- "merge_strategy": strategy,
- "conflict_resolutions": conflict_resolutions,
- },
- priority = JobPriority.HIGH,
- idempotency_key = idempotency_key,
- tenant_id = current_user.tenant_id,
- )
+    job = await job_service.create_job(
+        job_type = JobType.BRANCH_MERGE,
+        created_by = current_user.user_id,
+        metadata={
+            "proposal_id": proposal_id,
+            "source_branch": branch_id,
+            "merge_strategy": strategy,
+            "conflict_resolutions": conflict_resolutions,
+        },
+        priority = JobPriority.HIGH,
+        idempotency_key = idempotency_key,
+        tenant_id = current_user.tenant_id,
+    )
 
- # Queue the task
- task = branch_merge_task.delay(
- job_id = job.id,
- proposal_id=proposal_id,
- strategy = strategy,
- user_id = current_user.user_id,
- conflict_resolutions = conflict_resolutions,
- )
+    # Queue the task
+    task = branch_merge_task.delay(
+        job_id = job.id,
+        proposal_id=proposal_id,
+        strategy = strategy,
+        user_id = current_user.user_id,
+        conflict_resolutions = conflict_resolutions,
+    )
 
- # Update job with Celery task ID
- job.celery_task_id = task.id
- await job_service._save_job(job)
+    # Update job with Celery task ID
+    job.celery_task_id = task.id
+    await job_service._save_job(job)
 
- # Record metrics
- metrics_collector.record_job_request("BRANCH_MERGE", strategy)
+    # Record metrics
+    metrics_collector.record_job_request("BRANCH_MERGE", strategy)
 
- return {
- "job_id": job.id,
- "celery_task_id": task.id,
- "status": "queued",
- "message": f"Merge operation queued for proposal {proposal_id}",
- "tracking_url": f"/api/v1/jobs/{job.id}",
- "estimated_duration_minutes": 5, # Rough estimate
- }
+    return {
+        "job_id": job.id,
+        "celery_task_id": task.id,
+        "status": "queued",
+        "message": f"Merge operation queued for proposal {proposal_id}",
+        "tracking_url": f"/api/v1/jobs/{job.id}",
+        "estimated_duration_minutes": 5, # Rough estimate
+    }
 
 
 @router.get(
  "/jobs/{job_id}", dependencies=[Depends(require_scope([IAMScope.PROPOSALS_READ]))]
 )
 async def get_job_status(
- job_id: str,
- req: Request,
- current_user: Annotated[UserContext, Depends(get_current_user)],
- job_service: Annotated[Any, Depends(get_job_service)],
+    job_id: str,
+    req: Request,
+    current_user: Annotated[UserContext, Depends(get_current_user)],
+    job_service: Annotated[Any, Depends(get_job_service)],
 ) -> Dict[str, Any]:
- """Get job status and progress"""
+    """Get job status and progress"""
 
- job = await job_service.get_job(job_id)
- if not job:
- raise HTTPException(
- status_code=status.HTTP_404_NOT_FOUND, detail=f"Job {job_id} not found"
- )
+    job = await job_service.get_job(job_id)
+    if not job:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Job {job_id} not found"
+        )
 
- # Check permissions
- if job.created_by != current_user.user_id and not current_user.roles.get("admin"):
- raise HTTPException(
- status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
- )
+    # Check permissions
+    if job.created_by != current_user.user_id and not current_user.roles.get("admin"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
+        )
 
- response = {
- "job_id": job.id,
- "type": job.type,
- "status": job.status,
- "progress": {
- "current_step": job.progress.current_step,
- "completed_steps": job.progress.completed_steps,
- "total_steps": job.progress.total_steps,
- "percentage": job.progress.percentage,
- "message": job.progress.message,
- },
- "created_at": job.created_at.isoformat(),
- "started_at": job.started_at.isoformat() if job.started_at else None,
- "completed_at": job.completed_at.isoformat() if job.completed_at else None,
- "result": job.result,
- }
+    response = {
+    "job_id": job.id,
+    "type": job.type,
+    "status": job.status,
+    "progress": {
+    "current_step": job.progress.current_step,
+    "completed_steps": job.progress.completed_steps,
+    "total_steps": job.progress.total_steps,
+    "percentage": job.progress.percentage,
+    "message": job.progress.message,
+    },
+    "created_at": job.created_at.isoformat(),
+    "started_at": job.started_at.isoformat() if job.started_at else None,
+    "completed_at": job.completed_at.isoformat() if job.completed_at else None,
+    "result": job.result,
+    }
 
- # Add error details if failed
- if job.status == "failed":
- response["error"] = {
- "message": job.metadata.error_message,
- "retry_count": job.metadata.retry_count,
- "can_retry": job.can_retry(),
- }
+    # Add error details if failed
+    if job.status == "failed":
+        response["error"] = {
+            "message": job.metadata.error_message,
+            "retry_count": job.metadata.retry_count,
+            "can_retry": job.can_retry(),
+        }
 
- return response
+    return response
 
 
 @router.post(
@@ -288,45 +288,45 @@ async def get_job_status(
  dependencies=[Depends(require_scope([IAMScope.PROPOSALS_WRITE]))],
 )
 async def cancel_job(
- job_id: str,
- req: Request,
- current_user: Annotated[UserContext, Depends(get_current_user)],
- job_service: Annotated[Any, Depends(get_job_service)],
+    job_id: str,
+    req: Request,
+    current_user: Annotated[UserContext, Depends(get_current_user)],
+    job_service: Annotated[Any, Depends(get_job_service)],
 ) -> Dict[str, Any]:
- """Cancel a running job"""
- from workers.celery_app import app as celery_app
+    """Cancel a running job"""
+    from workers.celery_app import app as celery_app
 
- job = await job_service.get_job(job_id)
- if not job:
- raise HTTPException(
- status_code=status.HTTP_404_NOT_FOUND, detail=f"Job {job_id} not found"
- )
+    job = await job_service.get_job(job_id)
+    if not job:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Job {job_id} not found"
+        )
 
- # Check permissions
- if job.created_by != current_user.user_id and not current_user.roles.get("admin"):
- raise HTTPException(
- status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
- )
+    # Check permissions
+    if job.created_by != current_user.user_id and not current_user.roles.get("admin"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
+        )
 
- # Check if job can be cancelled
- if job.is_terminal():
- raise HTTPException(
- status_code=status.HTTP_400_BAD_REQUEST,
- detail=f"Job is already {job.status} and cannot be cancelled",
- )
+    # Check if job can be cancelled
+    if job.is_terminal():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Job is already {job.status} and cannot be cancelled",
+        )
 
- # Cancel Celery task if exists
- if job.celery_task_id:
- celery_app.control.revoke(job.celery_task_id, terminate = True)
+    # Cancel Celery task if exists
+    if job.celery_task_id:
+        celery_app.control.revoke(job.celery_task_id, terminate = True)
 
- # Update job status
- await job_service.update_job_status(job_id, "cancelled", "Cancelled by user")
+    # Update job status
+    await job_service.update_job_status(job_id, "cancelled", "Cancelled by user")
 
- return {
- "job_id": job_id,
- "status": "cancelled",
- "message": "Job cancelled successfully",
- }
+    return {
+        "job_id": job_id,
+        "status": "cancelled",
+        "message": "Job cancelled successfully",
+    }
 
 
 # Legacy endpoint removed - use async merge endpoint instead

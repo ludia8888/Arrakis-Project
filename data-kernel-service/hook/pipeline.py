@@ -41,178 +41,177 @@ class CommitHookPipeline:
 
  @classmethod
  async def initialize(cls):
- """Initialize all pipeline components"""
- if cls._initialized:
- return
+        """Initialize all pipeline components"""
+        if cls._initialized:
+            return
 
- logger.info("Initializing CommitHookPipeline")
+        logger.info("Initializing CommitHookPipeline")
 
- # Default validators
- cls._validators = [
- TamperValidator(),
- SchemaValidator(),
- PIIValidator(),
- RuleValidator() # Now enabled with fallback implementation
- ]
+        # Default validators
+        cls._validators = [
+            TamperValidator(),
+            SchemaValidator(),
+            PIIValidator(),
+            RuleValidator() # Now enabled with fallback implementation
+            ]
 
- # Default sinks
- cls._sinks = [
- NATSSink(),
- AuditSink(),
- MetricsSink(),
- WebhookSink()
- ]
+        # Default sinks
+        cls._sinks = [
+            NATSSink(),
+            AuditSink(),
+            MetricsSink(),
+            WebhookSink()
+            ]
 
- # Initialize all components
- all_components = cls._validators + cls._sinks + cls._pre_hooks + cls._post_hooks + cls._async_hooks
+        # Initialize all components
+        all_components = cls._validators + cls._sinks + cls._pre_hooks + cls._post_hooks + cls._async_hooks
 
- for component in all_components:
- if component.enabled:
- try:
- await component.initialize()
- logger.info(f"Initialized {component.name}")
- except Exception as e:
- logger.error(f"Failed to initialize {component.name}: {e}")
+        for component in all_components:
+            if component.enabled:
+                try:
+                    await component.initialize()
+                    logger.info(f"Initialized {component.name}")
+                except Exception as e:
+                    logger.error(f"Failed to initialize {component.name}: {e}")
 
- cls._initialized = True
+        cls._initialized = True
 
- @classmethod
- async def run(cls, meta: CommitMeta, diff: Dict[str, Any]) -> Dict[str, Any]:
- """
- Main pipeline execution.
- Returns a summary of what was executed.
- """
- if not cls._initialized:
- await cls.initialize()
+    @classmethod
+    async def run(cls, meta: CommitMeta, diff: Dict[str, Any]) -> Dict[str, Any]:
+        """Main pipeline execution.
+        Returns a summary of what was executed.
+        """
+        if not cls._initialized:
+        await cls.initialize()
 
- # Build context
- context = cls._build_context(meta, diff)
+        # Build context
+        context = cls._build_context(meta, diff)
 
- # Check diff size with security consideration
- if cls._should_skip_validation(context):
- # Check if user is authorized to bypass validation
- bypass_authorized = await cls._is_authorized_for_size_bypass(context.meta.author)
+        # Check diff size with security consideration
+        if cls._should_skip_validation(context):
+        # Check if user is authorized to bypass validation
+        bypass_authorized = await cls._is_authorized_for_size_bypass(context.meta.author)
 
- if not bypass_authorized:
- logger.error(
- f"Unauthorized validation bypass attempt. User {context.meta.author} "
- f"tried to commit diff larger than {cls._max_diff_size} bytes"
- )
- raise ValidationError(
- "Diff size exceeds maximum allowed limit",
- errors = [{
- "type": "size_limit",
- "message": f"Diff size exceeds {cls._max_diff_size} bytes. Contact admin for large commits."
- }]
- )
+        if not bypass_authorized:
+        logger.error(
+        f"Unauthorized validation bypass attempt. User {context.meta.author} "
+        f"tried to commit diff larger than {cls._max_diff_size} bytes"
+        )
+        raise ValidationError(
+        "Diff size exceeds maximum allowed limit",
+        errors = [{
+        "type": "size_limit",
+        "message": f"Diff size exceeds {cls._max_diff_size} bytes. Contact admin for large commits."
+        }]
+        )
 
- logger.warning(f"Authorized user {context.meta.author} bypassing validation for large diff: {len(str(diff))} bytes")
- # Still run sinks for large diffs
- await cls._run_sinks_async(context)
- return {"status": "skipped", "reason": "diff_too_large", "authorized": True}
+        logger.warning(f"Authorized user {context.meta.author} bypassing validation for large diff: {len(str(diff))} bytes")
+        # Still run sinks for large diffs
+        await cls._run_sinks_async(context)
+        return {"status": "skipped", "reason": "diff_too_large", "authorized": True}
 
- # Run pre-commit hooks
- try:
- await cls._run_hooks(cls._pre_hooks, context, "pre-commit")
- except Exception as e:
- logger.error(f"Pre-commit hook failed: {e}")
- raise
+        # Run pre-commit hooks
+        try:
+        await cls._run_hooks(cls._pre_hooks, context, "pre-commit")
+        except Exception as e:
+        logger.error(f"Pre-commit hook failed: {e}")
+        raise
 
- # Run validators
- validation_errors = []
- if cls._async_validation:
- # Fire and forget validation
- asyncio.create_task(cls._run_validators_async(context))
- else:
- # Synchronous validation (blocks commit on failure)
- validation_errors = await cls._run_validators(context)
- if validation_errors:
- raise ValidationError(
- f"Validation failed with {len(validation_errors)} errors",
- errors = validation_errors
- )
+        # Run validators
+        validation_errors = []
+        if cls._async_validation:
+        # Fire and forget validation
+        asyncio.create_task(cls._run_validators_async(context))
+        else:
+        # Synchronous validation (blocks commit on failure)
+        validation_errors = await cls._run_validators(context)
+        if validation_errors:
+        raise ValidationError(
+        f"Validation failed with {len(validation_errors)} errors",
+        errors = validation_errors
+        )
 
- # Run post-commit hooks
- try:
- await cls._run_hooks(cls._post_hooks, context, "post-commit")
- except Exception as e:
- logger.error(f"Post-commit hook failed: {e}")
- # Don't fail the commit for post-hooks
+        # Run post-commit hooks
+        try:
+        await cls._run_hooks(cls._post_hooks, context, "post-commit")
+        except Exception as e:
+        logger.error(f"Post-commit hook failed: {e}")
+        # Don't fail the commit for post-hooks
 
- # Run sinks asynchronously (never block commit)
- asyncio.create_task(cls._run_sinks_async(context))
+        # Run sinks asynchronously (never block commit)
+        asyncio.create_task(cls._run_sinks_async(context))
 
- # Run async hooks
- asyncio.create_task(cls._run_hooks(cls._async_hooks, context, "async"))
+        # Run async hooks
+        asyncio.create_task(cls._run_hooks(cls._async_hooks, context, "async"))
 
- return {
- "status": "success",
- "validators_run": len([v for v in cls._validators if v.enabled]),
- "sinks_run": len([s for s in cls._sinks if s.enabled]),
- "validation_errors": validation_errors
- }
+        return {
+        "status": "success",
+        "validators_run": len([v for v in cls._validators if v.enabled]),
+        "sinks_run": len([s for s in cls._sinks if s.enabled]),
+        "validation_errors": validation_errors
+        }
 
- @classmethod
- def _build_context(cls, meta: CommitMeta, diff: Dict[str, Any]) -> DiffContext:
- """Build diff context from commit metadata and dif"""
- # Extract before/after if available
- before = diff.get("before")
- after = diff.get("after")
+    @classmethod
+    def _build_context(cls, meta: CommitMeta, diff: Dict[str, Any]) -> DiffContext:
+        """Build diff context from commit metadata and dif"""
+        # Extract before/after if available
+        before = diff.get("before")
+        after = diff.get("after")
 
- # Extract affected types and IDs
- affected_types = set()
- affected_ids = set()
+        # Extract affected types and IDs
+        affected_types = set()
+        affected_ids = set()
 
- def extract_info(obj):
- if isinstance(obj, dict):
- if "@type" in obj:
- affected_types.add(obj["@type"])
- if "@id" in obj:
- affected_ids.add(obj["@id"])
- for value in obj.values():
- extract_info(value)
- elif isinstance(obj, list):
- for item in obj:
- extract_info(item)
+        def extract_info(obj):
+            if isinstance(obj, dict):
+            if "@type" in obj:
+            affected_types.add(obj["@type"])
+            if "@id" in obj:
+            affected_ids.add(obj["@id"])
+            for value in obj.values():
+            extract_info(value)
+            elif isinstance(obj, list):
+            for item in obj:
+            extract_info(item)
 
- extract_info(diff)
+        extract_info(diff)
 
- return DiffContext(
- meta = meta,
- diff = diff,
- before = before,
- after = after,
- affected_types = list(affected_types),
- affected_ids = list(affected_ids)
- )
+        return DiffContext(
+        meta = meta,
+        diff = diff,
+        before = before,
+        after = after,
+        affected_types = list(affected_types),
+        affected_ids = list(affected_ids)
+        )
 
- @classmethod
- def _should_skip_validation(cls, context: DiffContext) -> bool:
- """Check if validation should be skipped with audit logging"""
- diff_size = len(str(context.diff))
+    @classmethod
+    def _should_skip_validation(cls, context: DiffContext) -> bool:
+        """Check if validation should be skipped with audit logging"""
+        diff_size = len(str(context.diff))
 
- if diff_size > cls._max_diff_size:
- # Log critical security event for validation bypass
- logger.critical(
- "VALIDATION_BYPASS_SIZE: Skipping validation due to large diff size. "
- f"Size: {diff_size} bytes (limit: {cls._max_diff_size}), "
- f"Author: {context.meta.author}, Branch: {context.meta.branch}, "
- f"Trace ID: {context.meta.trace_id}"
- )
+        if diff_size > cls._max_diff_size:
+        # Log critical security event for validation bypass
+        logger.critical(
+        "VALIDATION_BYPASS_SIZE: Skipping validation due to large diff size. "
+        f"Size: {diff_size} bytes (limit: {cls._max_diff_size}), "
+        f"Author: {context.meta.author}, Branch: {context.meta.branch}, "
+        f"Trace ID: {context.meta.trace_id}"
+        )
 
- # Create audit event for size-based bypass
- asyncio.create_task(cls._audit_validation_bypass(
- bypass_type = "diff_size_limit",
- diff_size = diff_size,
- limit = cls._max_diff_size,
- context = context
- ))
+        # Create audit event for size-based bypass
+        asyncio.create_task(cls._audit_validation_bypass(
+        bypass_type = "diff_size_limit",
+        diff_size = diff_size,
+        limit = cls._max_diff_size,
+        context = context
+        ))
 
- return True
+        return True
 
- return False
+        return False
 
- @classmethod
+        @classmethod
  async def _run_validators(cls, context: DiffContext) -> List[Dict[str, Any]]:
  """Run all validators synchronously"""
  errors = []

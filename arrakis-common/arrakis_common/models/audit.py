@@ -115,7 +115,7 @@ class AuditEvent(BaseModel):
  threat_indicators: List[str] = Field(default_factory = list)
 
  class Config:
- use_enum_values = True
+         use_enum_values = True
 
 
 class AuditLog(BaseEntity):

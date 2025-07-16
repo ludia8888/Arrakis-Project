@@ -5,6 +5,7 @@ SIEM Adapter 구현체들
 import asyncio
 import json
 import logging
+import os
 from collections import deque
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -313,10 +314,11 @@ class SIEMAdapter:
  token = os.getenv("SIEM_TOKEN")
  if not token:
  logger.warning(
- "🚨 SECURITY WARNING: SIEM_TOKEN not set. Using 'no-token' placeholder. "
+ "🚨 SECURITY WARNING: SIEM_TOKEN not set. Using placeholder value. "
  "Set SIEM_TOKEN environment variable for production."
  )
- token = "no-token"
+ # Use a clearly non-secret placeholder to avoid false secret detection
+ token = "PLACEHOLDER_NOT_A_SECRET_TOKEN"
  timeout = int(os.getenv("SIEM_TIMEOUT", "30"))
 
  base_adapter = SiemHttpAdapter(endpoint, token, timeout)

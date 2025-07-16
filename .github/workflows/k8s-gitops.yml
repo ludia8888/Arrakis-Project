@@ -335,7 +335,7 @@ jobs:
 
       - name: Update kubeconfig
         run: |
-          aws eks update-kubeconfig --region ${{ vars.AWS_REGION || 'us-west-2' }} --name ${{ vars.EKS_CLUSTER_STAGING || 'arrakis-eks-staging' }}
+          aws eks update-kubeconfig --region ${{ vars.AWS_REGION || 'us-west-2' }} --name ${{ vars.EKS_CLUSTER_STAGING }}
 
       - name: Dry run deployment
         run: |
@@ -439,7 +439,7 @@ jobs:
 
       - name: Update kubeconfig
         run: |
-          aws eks update-kubeconfig --region ${{ vars.AWS_REGION || 'us-west-2' }} --name ${{ vars.EKS_CLUSTER_PRODUCTION || 'arrakis-eks-production' }}
+          aws eks update-kubeconfig --region ${{ vars.AWS_REGION || 'us-west-2' }} --name ${{ vars.EKS_CLUSTER_PRODUCTION }}
 
       - name: Create namespace if not exists
         run: |

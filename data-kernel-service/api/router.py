@@ -29,12 +29,12 @@ async def read_document(
 ):
  """Retrieve a document from TerminusDB."""
  try:
- document = await svc.get_document(db_name, doc_id, branch, revision)
- if document is None:
- raise HTTPException(status_code = 404, detail = f"Document {doc_id} not found")
- return document
+         document = await svc.get_document(db_name, doc_id, branch, revision)
+         if document is None:
+             raise HTTPException(status_code = 404, detail = f"Document {doc_id} not found")
+         return document
  except Exception as e:
- raise HTTPException(status_code = 500, detail = str(e))
+        raise HTTPException(status_code = 500, detail = str(e))
 
 
 @router.post("/doc")
@@ -46,20 +46,20 @@ async def create_document(
 ):
  """Create a new document in TerminusDB."""
  try:
- # Add trace ID to commit message if available
- commit_msg = meta.commit_msg
- if meta.trace_id:
- commit_msg = f"{commit_msg} [trace:{meta.trace_id}]"
+        # Add trace ID to commit message if available
+        commit_msg = meta.commit_msg
+        if meta.trace_id:
+            commit_msg = f"{commit_msg} [trace:{meta.trace_id}]"
 
- result = await svc.insert_document(
- db_name,
- payload,
- commit_msg = commit_msg,
- author = meta.author
- )
- return {"status": "created", "result": result}
+        result = await svc.insert_document(
+            db_name,
+            payload,
+            commit_msg = commit_msg,
+            author = meta.author
+        )
+        return {"status": "created", "result": result}
  except Exception as e:
- raise HTTPException(status_code = 500, detail = str(e))
+        raise HTTPException(status_code = 500, detail = str(e))
 
 
 @router.put("/doc/{doc_id}")
@@ -72,21 +72,21 @@ async def update_document(
 ):
  """Update an existing document in TerminusDB."""
  try:
- # Add trace ID to commit message if available
- commit_msg = meta.commit_msg
- if meta.trace_id:
- commit_msg = f"{commit_msg} [trace:{meta.trace_id}]"
+        # Add trace ID to commit message if available
+        commit_msg = meta.commit_msg
+        if meta.trace_id:
+            commit_msg = f"{commit_msg} [trace:{meta.trace_id}]"
 
- result = await svc.update_document(
- db_name,
- doc_id,
- updates,
- commit_msg = commit_msg,
- author = meta.author
- )
- return {"status": "updated", "result": result}
+        result = await svc.update_document(
+            db_name,
+            doc_id,
+            updates,
+            commit_msg = commit_msg,
+            author = meta.author
+        )
+        return {"status": "updated", "result": result}
  except Exception as e:
- raise HTTPException(status_code = 500, detail = str(e))
+        raise HTTPException(status_code = 500, detail = str(e))
 
 
 @router.delete("/doc/{doc_id}")
@@ -98,20 +98,20 @@ async def delete_document(
 ):
  """Delete a document from TerminusDB."""
  try:
- # Add trace ID to commit message if available
- commit_msg = f"Delete document {doc_id}"
- if meta.trace_id:
- commit_msg = f"{commit_msg} [trace:{meta.trace_id}]"
+        # Add trace ID to commit message if available
+        commit_msg = f"Delete document {doc_id}"
+        if meta.trace_id:
+            commit_msg = f"{commit_msg} [trace:{meta.trace_id}]"
 
- result = await svc.delete_document(
- db_name,
- doc_id,
- commit_msg = commit_msg,
- author = meta.author
- )
- return {"status": "deleted", "result": result}
+        result = await svc.delete_document(
+            db_name,
+            doc_id,
+            commit_msg = commit_msg,
+            author = meta.author
+        )
+        return {"status": "deleted", "result": result}
  except Exception as e:
- raise HTTPException(status_code = 500, detail = str(e))
+        raise HTTPException(status_code = 500, detail = str(e))
 
 
 @router.post("/woql")
@@ -124,17 +124,17 @@ async def execute_query(
 ):
  """Execute a WOQL query against TerminusDB."""
  try:
- # Only pass commit message if this is a write query
- commit_msg = None
- if commit:
- commit_msg = meta.commit_msg
- if meta.trace_id:
- commit_msg = f"{commit_msg} [trace:{meta.trace_id}]"
+        # Only pass commit message if this is a write query
+        commit_msg = None
+        if commit:
+            commit_msg = meta.commit_msg
+            if meta.trace_id:
+                commit_msg = f"{commit_msg} [trace:{meta.trace_id}]"
 
- result = await svc.query(db_name, query, commit_msg = commit_msg)
- return {"status": "success", "result": result}
+        result = await svc.query(db_name, query, commit_msg = commit_msg)
+        return {"status": "success", "result": result}
  except Exception as e:
- raise HTTPException(status_code = 500, detail = str(e))
+        raise HTTPException(status_code = 500, detail = str(e))
 
 
 @router.get("/schema")
@@ -144,10 +144,10 @@ async def get_schema(
 ):
  """Get the schema for a database."""
  try:
- schema = await svc.get_schema(db_name)
- return {"status": "success", "schema": schema}
+        schema = await svc.get_schema(db_name)
+        return {"status": "success", "schema": schema}
  except Exception as e:
- raise HTTPException(status_code = 500, detail = str(e))
+        raise HTTPException(status_code = 500, detail = str(e))
 
 
 @router.put("/schema")
@@ -159,20 +159,20 @@ async def update_schema(
 ):
  """Update the schema for a database."""
  try:
- # Add trace ID to commit message if available
- commit_msg = "Update schema"
- if meta.trace_id:
- commit_msg = f"{commit_msg} [trace:{meta.trace_id}]"
+        # Add trace ID to commit message if available
+        commit_msg = "Update schema"
+        if meta.trace_id:
+            commit_msg = f"{commit_msg} [trace:{meta.trace_id}]"
 
- result = await svc.update_schema(
- db_name,
- schema,
- commit_msg = commit_msg,
- author = meta.author
- )
- return {"status": "updated", "result": result}
+        result = await svc.update_schema(
+            db_name,
+            schema,
+            commit_msg = commit_msg,
+            author = meta.author
+        )
+        return {"status": "updated", "result": result}
  except Exception as e:
- raise HTTPException(status_code = 500, detail = str(e))
+        raise HTTPException(status_code = 500, detail = str(e))
 
 
 @router.post("/branch/{branch_name}")
@@ -183,10 +183,10 @@ async def switch_branch(
 ):
  """Switch to a different branch in the database."""
  try:
- success = await svc.branch_switch(db_name, branch_name)
- if success:
- return {"status": "success", "branch": branch_name}
- else:
- raise HTTPException(status_code = 500, detail = "Failed to switch branch")
+        success = await svc.branch_switch(db_name, branch_name)
+        if success:
+            return {"status": "success", "branch": branch_name}
+        else:
+            raise HTTPException(status_code = 500, detail = "Failed to switch branch")
  except Exception as e:
- raise HTTPException(status_code = 500, detail = str(e))
+        raise HTTPException(status_code = 500, detail = str(e))

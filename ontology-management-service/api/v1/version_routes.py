@@ -21,7 +21,7 @@ router = APIRouter(prefix = "/versions", tags = ["Version Tracking"])
 # Request/Response Models
 
 class VersionHistoryRequest(BaseModel):
- """Request for version history"""
+    """Request for version history"""
  resource_type: str = Field(..., description = "Type of resource")
  resource_id: str = Field(..., description = "Resource identifier")
  branch: str = Field(..., description = "Branch name")
@@ -30,7 +30,7 @@ class VersionHistoryRequest(BaseModel):
 
 
 class VersionHistoryResponse(BaseModel):
- """Response with version history"""
+    """Response with version history"""
  resource_type: str
  resource_id: str
  branch: str
@@ -40,14 +40,14 @@ class VersionHistoryResponse(BaseModel):
 
 
 class DeltaSyncRequest(BaseModel):
- """Request for delta synchronization"""
+    """Request for delta synchronization"""
  resources: List[Dict[str, Any]] = Field(..., description = "Resources to sync")
  branch: str = Field(..., description = "Branch name")
  include_full: bool = Field(False, description = "Include full content for changes")
 
 
 class BulkValidationRequest(BaseModel):
- """Request for bulk cache validation"""
+    """Request for bulk cache validation"""
  branch: str = Field(..., description = "Branch name")
  resources: Dict[str, str] = Field(..., description = "Map of resource key to ETag")
 
@@ -57,67 +57,67 @@ class BulkValidationRequest(BaseModel):
 @router.get("/history/{resource_type}/{resource_id}",
     dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def get_version_history(
- resource_type: str,
- resource_id: str,
- req: Request,
- branch: str = Query(..., description = "Branch name"),
- limit: int = Query(50, ge = 1, le = 100),
- offset: int = Query(0, ge = 0),
- user: UserContext = Depends(get_current_user),
+    resource_type: str,
+    resource_id: str,
+    req: Request,
+    branch: str = Query(..., description = "Branch name"),
+    limit: int = Query(50, ge = 1, le = 100),
+    offset: int = Query(0, ge = 0),
+    user: UserContext = Depends(get_current_user),
 ) -> VersionHistoryResponse:
- """Get version history for a resource"""
- version_service = await get_version_service()
+    """Get version history for a resource"""
+    version_service = await get_version_service()
 
- # This would query the database for version history
- # For now, return current version
- current = await version_service.get_resource_version(
- resource_type, resource_id, branch
- )
+    # This would query the database for version history
+    # For now, return current version
+    current = await version_service.get_resource_version(
+    resource_type, resource_id, branch
+    )
 
- if not current:
- raise HTTPException(
- status_code = status.HTTP_404_NOT_FOUND,
- detail = f"Resource {resource_type}/{resource_id} not found on branch {branch}"
- )
+    if not current:
+    raise HTTPException(
+    status_code = status.HTTP_404_NOT_FOUND,
+    detail = f"Resource {resource_type}/{resource_id} not found on branch {branch}"
+    )
 
- return VersionHistoryResponse(
- resource_type = resource_type,
- resource_id = resource_id,
- branch = branch,
- versions = [current.current_version],
- total_versions = 1,
- has_more = False
- )
+    return VersionHistoryResponse(
+    resource_type = resource_type,
+    resource_id = resource_id,
+    branch = branch,
+    versions = [current.current_version],
+    total_versions = 1,
+    has_more = False
+    )
 
 
 @router.get("/version/{resource_type}/{resource_id}/{version}",
     dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def get_specific_version(
- resource_type: str,
- resource_id: str,
- version: int,
- req: Request,
- branch: str = Query(..., description = "Branch name"),
- user: UserContext = Depends(get_current_user),
+    resource_type: str,
+    resource_id: str,
+    version: int,
+    req: Request,
+    branch: str = Query(..., description = "Branch name"),
+    user: UserContext = Depends(get_current_user),
 ) -> Dict[str, Any]:
- """Get specific version of a resource"""
- version_service = await get_version_service()
+    """Get specific version of a resource"""
+    version_service = await get_version_service()
 
- resource_version = await version_service.get_resource_version(
- resource_type, resource_id, branch, version
- )
+    resource_version = await version_service.get_resource_version(
+    resource_type, resource_id, branch, version
+    )
 
- if not resource_version:
- raise HTTPException(
- status_code = status.HTTP_404_NOT_FOUND,
- detail = f"Version {version} not found for {resource_type}/{resource_id}"
- )
+    if not resource_version:
+    raise HTTPException(
+    status_code = status.HTTP_404_NOT_FOUND,
+    detail = f"Version {version} not found for {resource_type}/{resource_id}"
+    )
 
- return {
- "version_info": resource_version.current_version.model_dump(),
- "content_hash": resource_version.content_hash,
- "content_size": resource_version.content_size
- }
+    return {
+    "version_info": resource_version.current_version.model_dump(),
+    "content_hash": resource_version.content_hash,
+    "content_size": resource_version.content_size
+    }
 
 
 # Delta Sync Endpoints
@@ -125,75 +125,75 @@ async def get_specific_version(
 @router.post("/delta/{resource_type}/{resource_id}",
     dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def get_resource_delta(
- resource_type: str,
- resource_id: str,
- req: Request,
- branch: str = Query(..., description = "Branch name"),
- if_none_match: Optional[str] = Header(None, description = "Client ETag"),
- x_client_version: Optional[int] = Header(None, description = "Client version"),
- x_client_commit: Optional[str] = Header(None, description = "Client commit"),
- x_include_full: bool = Header(False, description = "Include full content"),
- user: UserContext = Depends(get_current_user),
+    resource_type: str,
+    resource_id: str,
+    req: Request,
+    branch: str = Query(..., description = "Branch name"),
+    if_none_match: Optional[str] = Header(None, description = "Client ETag"),
+    x_client_version: Optional[int] = Header(None, description = "Client version"),
+    x_client_commit: Optional[str] = Header(None, description = "Client commit"),
+    x_include_full: bool = Header(False, description = "Include full content"),
+    user: UserContext = Depends(get_current_user),
 ) -> Dict[str, Any]:
- """Get delta for a single resource"""
- version_service = await get_version_service()
+    """Get delta for a single resource"""
+    version_service = await get_version_service()
 
- delta_request = DeltaRequest(
- client_etag = if_none_match,
- client_version = x_client_version,
- client_commit = x_client_commit,
- include_full = x_include_full
- )
+    delta_request = DeltaRequest(
+    client_etag = if_none_match,
+    client_version = x_client_version,
+    client_commit = x_client_commit,
+    include_full = x_include_full
+    )
 
- delta_response = await version_service.get_delta(
- resource_type, resource_id, branch, delta_request
- )
+    delta_response = await version_service.get_delta(
+    resource_type, resource_id, branch, delta_request
+    )
 
- return delta_response.model_dump()
+    return delta_response.model_dump()
 
 
 @router.post("/sync", dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def bulk_sync(
- request: DeltaSyncRequest,
- req: Request,
- user: UserContext = Depends(get_current_user),
+    request: DeltaSyncRequest,
+    req: Request,
+    user: UserContext = Depends(get_current_user),
 ) -> Dict[str, Any]:
- """Sync multiple resources with delta support"""
- version_service = await get_version_service()
+    """Sync multiple resources with delta support"""
+    version_service = await get_version_service()
 
- sync_results = []
- total_delta_size = 0
+    sync_results = []
+    total_delta_size = 0
 
- for resource in request.resources:
- delta_request = DeltaRequest(
- client_etag = resource.get("etag"),
- client_version = resource.get("version"),
- include_full = request.include_full
- )
+    for resource in request.resources:
+    delta_request = DeltaRequest(
+    client_etag = resource.get("etag"),
+    client_version = resource.get("version"),
+    include_full = request.include_full
+    )
 
- delta_response = await version_service.get_delta(
- resource["type"],
- resource["id"],
- request.branch,
- delta_request
- )
+    delta_response = await version_service.get_delta(
+    resource["type"],
+    resource["id"],
+    request.branch,
+    delta_request
+    )
 
- sync_results.append({
- "resource": f"{resource['type']}:{resource['id']}",
- "response_type": delta_response.response_type,
- "changes": len(delta_response.changes),
- "new_etag": delta_response.etag,
- "new_version": delta_response.to_version.version
- })
+    sync_results.append({
+    "resource": f"{resource['type']}:{resource['id']}",
+    "response_type": delta_response.response_type,
+    "changes": len(delta_response.changes),
+    "new_etag": delta_response.etag,
+    "new_version": delta_response.to_version.version
+    })
 
- total_delta_size += delta_response.delta_size
+    total_delta_size += delta_response.delta_size
 
- return {
- "branch": request.branch,
- "resources_synced": len(sync_results),
- "total_delta_size": total_delta_size,
- "results": sync_results
- }
+    return {
+    "branch": request.branch,
+    "resources_synced": len(sync_results),
+    "total_delta_size": total_delta_size,
+    "results": sync_results
+    }
 
 
 # Cache Validation Endpoints
@@ -201,48 +201,48 @@ async def bulk_sync(
 @router.post("/validate-cache",
     dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def validate_cache(
- validation: CacheValidation,
- req: Request,
- branch: str = Query(..., description = "Branch name"),
- user: UserContext = Depends(get_current_user),
+    validation: CacheValidation,
+    req: Request,
+    branch: str = Query(..., description = "Branch name"),
+    user: UserContext = Depends(get_current_user),
 ) -> CacheValidation:
- """Validate multiple resource ETags"""
- version_service = await get_version_service()
+    """Validate multiple resource ETags"""
+    version_service = await get_version_service()
 
- result = await version_service.validate_cache(branch, validation)
+    result = await version_service.validate_cache(branch, validation)
 
- return result
+    return result
 
 
 @router.post("/validate",
     dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def validate_single_etag(
- req: Request,
- resource_type: str = Query(..., description = "Resource type"),
- resource_id: str = Query(..., description = "Resource ID"),
- branch: str = Query(..., description = "Branch name"),
- if_none_match: Optional[str] = Header(None, description = "ETag to validate"),
- user: UserContext = Depends(get_current_user),
+    req: Request,
+    resource_type: str = Query(..., description = "Resource type"),
+    resource_id: str = Query(..., description = "Resource ID"),
+    branch: str = Query(..., description = "Branch name"),
+    if_none_match: Optional[str] = Header(None, description = "ETag to validate"),
+    user: UserContext = Depends(get_current_user),
 ) -> Dict[str, Any]:
- """Validate a single ETag"""
- if not if_none_match:
- raise HTTPException(
- status_code = status.HTTP_400_BAD_REQUEST,
- detail = "If-None-Match header required"
- )
+    """Validate a single ETag"""
+    if not if_none_match:
+    raise HTTPException(
+    status_code = status.HTTP_400_BAD_REQUEST,
+    detail = "If-None-Match header required"
+    )
 
- version_service = await get_version_service()
+    version_service = await get_version_service()
 
- is_valid, current_version = await version_service.validate_etag(
- resource_type, resource_id, branch, if_none_match
- )
+    is_valid, current_version = await version_service.validate_etag(
+    resource_type, resource_id, branch, if_none_match
+    )
 
- return {
- "valid": is_valid,
- "client_etag": if_none_match,
- "current_etag": current_version.current_version.etag if current_version else None,
- "current_version": current_version.current_version.version if current_version else None
- }
+    return {
+    "valid": is_valid,
+    "client_etag": if_none_match,
+    "current_etag": current_version.current_version.etag if current_version else None,
+    "current_version": current_version.current_version.version if current_version else None
+    }
 
 
 # Version Summary Endpoints
@@ -250,68 +250,68 @@ async def validate_single_etag(
 @router.get("/summary/{branch}",
     dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def get_branch_version_summary(
- branch: str,
- req: Request,
- resource_types: Optional[List[str]] = Query(None, description = "Filter by types"),
- user: UserContext = Depends(get_current_user),
+    branch: str,
+    req: Request,
+    resource_types: Optional[List[str]] = Query(None, description = "Filter by types"),
+    user: UserContext = Depends(get_current_user),
 ) -> Dict[str, Any]:
- """Get version summary for a branch"""
- version_service = await get_version_service()
+    """Get version summary for a branch"""
+    version_service = await get_version_service()
 
- summary = await version_service.get_branch_version_summary(
- branch, resource_types
- )
+    summary = await version_service.get_branch_version_summary(
+    branch, resource_types
+    )
 
- return summary
+    return summary
 
 
 @router.post("/compare/{branch1}/{branch2}",
     dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def compare_branches(
- branch1: str,
- branch2: str,
- req: Request,
- resource_types: Optional[List[str]] = Query(None, description = "Filter by types"),
- user: UserContext = Depends(get_current_user),
+    branch1: str,
+    branch2: str,
+    req: Request,
+    resource_types: Optional[List[str]] = Query(None, description = "Filter by types"),
+    user: UserContext = Depends(get_current_user),
 ) -> Dict[str, Any]:
- """Compare versions between two branches"""
- version_service = await get_version_service()
+    """Compare versions between two branches"""
+    version_service = await get_version_service()
 
- # Get summaries for both branches
- summary1 = await version_service.get_branch_version_summary(branch1, resource_types)
- summary2 = await version_service.get_branch_version_summary(branch2, resource_types)
+    # Get summaries for both branches
+    summary1 = await version_service.get_branch_version_summary(branch1, resource_types)
+    summary2 = await version_service.get_branch_version_summary(branch2, resource_types)
 
- # Compare resource types
- comparison = {
- "branch1": branch1,
- "branch2": branch2,
- "differences": {
- "only_in_branch1": [],
- "only_in_branch2": [],
- "version_differences": []
- }
- }
+    # Compare resource types
+    comparison = {
+    "branch1": branch1,
+    "branch2": branch2,
+    "differences": {
+    "only_in_branch1": [],
+    "only_in_branch2": [],
+    "version_differences": []
+    }
+    }
 
- types1 = set(summary1["resource_types"].keys())
- types2 = set(summary2["resource_types"].keys())
+    types1 = set(summary1["resource_types"].keys())
+    types2 = set(summary2["resource_types"].keys())
 
- comparison["differences"]["only_in_branch1"] = list(types1 - types2)
- comparison["differences"]["only_in_branch2"] = list(types2 - types1)
+    comparison["differences"]["only_in_branch1"] = list(types1 - types2)
+    comparison["differences"]["only_in_branch2"] = list(types2 - types1)
 
- # Compare versions for common types
- for resource_type in types1 & types2:
- info1 = summary1["resource_types"][resource_type]
- info2 = summary2["resource_types"][resource_type]
+    # Compare versions for common types
+    for resource_type in types1 & types2:
+    info1 = summary1["resource_types"][resource_type]
+    info2 = summary2["resource_types"][resource_type]
 
- if info1["max_version"] != info2["max_version"]:
- comparison["differences"]["version_differences"].append({
- "resource_type": resource_type,
- "branch1_version": info1["max_version"],
- "branch2_version": info2["max_version"],
- "version_dif": info1["max_version"] - info2["max_version"]
- })
+    if info1["max_version"] != info2["max_version"]:
+    comparison["differences"]["version_differences"].append({
+    "resource_type": resource_type,
+    "branch1_version": info1["max_version"],
+    "branch2_version": info2["max_version"],
+    "version_dif": info1["max_version"] - info2["max_version"]
+    })
 
- return comparison
+    return comparison
 
 
 # Conflict Resolution Endpoints
@@ -319,45 +319,45 @@ async def compare_branches(
 @router.post("/conflicts/detect",
     dependencies = [Depends(require_scope([IAMScope.BRANCHES_READ]))])
 async def detect_conflicts(
- resource_type: str,
- resource_id: str,
- source_branch: str,
- target_branch: str,
- req: Request,
- user: UserContext = Depends(get_current_user),
+    resource_type: str,
+    resource_id: str,
+    source_branch: str,
+    target_branch: str,
+    req: Request,
+    user: UserContext = Depends(get_current_user),
 ) -> Dict[str, Any]:
- """Detect version conflicts between branches"""
- version_service = await get_version_service()
+    """Detect version conflicts between branches"""
+    version_service = await get_version_service()
 
- # Get versions from both branches
- source_version = await version_service.get_resource_version(
- resource_type, resource_id, source_branch
- )
- target_version = await version_service.get_resource_version(
- resource_type, resource_id, target_branch
- )
+    # Get versions from both branches
+    source_version = await version_service.get_resource_version(
+    resource_type, resource_id, source_branch
+    )
+    target_version = await version_service.get_resource_version(
+    resource_type, resource_id, target_branch
+    )
 
- if not source_version:
- raise HTTPException(
- status_code = status.HTTP_404_NOT_FOUND,
- detail = f"Resource not found in source branch {source_branch}"
- )
+    if not source_version:
+    raise HTTPException(
+    status_code = status.HTTP_404_NOT_FOUND,
+    detail = f"Resource not found in source branch {source_branch}"
+    )
 
- if not target_version:
- # No conflict - resource doesn't exist in target
- return {
- "has_conflict": False,
- "conflict_type": "new_in_source",
- "can_auto_merge": True
- }
+    if not target_version:
+    # No conflict - resource doesn't exist in target
+    return {
+    "has_conflict": False,
+    "conflict_type": "new_in_source",
+    "can_auto_merge": True
+    }
 
- # Check if they have common ancestor
- has_conflict = source_version.current_version.commit_hash != target_version.current_version.commit_hash
+    # Check if they have common ancestor
+    has_conflict = source_version.current_version.commit_hash != target_version.current_version.commit_hash
 
- return {
- "has_conflict": has_conflict,
- "conflict_type": "version_divergence" if has_conflict else "no_conflict",
- "source_version": source_version.current_version.model_dump(),
- "target_version": target_version.current_version.model_dump(),
- "can_auto_merge": False # Would need actual content comparison
- }
+    return {
+    "has_conflict": has_conflict,
+    "conflict_type": "version_divergence" if has_conflict else "no_conflict",
+    "source_version": source_version.current_version.model_dump(),
+    "target_version": target_version.current_version.model_dump(),
+    "can_auto_merge": False # Would need actual content comparison
+    }

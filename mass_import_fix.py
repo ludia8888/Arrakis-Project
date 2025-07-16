@@ -101,10 +101,8 @@ def fix_common_security_imports(file_path):
         patterns = [
             # Basic imports
             (
-                r"from arrakis_common.utils.security import encrypt_text, decrypt_text,
-                    hash_data",
-                "from arrakis_common.utils.security import encrypt_text, decrypt_text,
-                    hash_data",
+                r"from arrakis_common.utils.security import encrypt_text, decrypt_text, hash_data",
+                "from arrakis_common.utils.security import encrypt_text, decrypt_text, hash_data",
             ),
             (
                 r"from arrakis_common.utils.security import encrypt_text, decrypt_text",
@@ -126,8 +124,6 @@ def fix_common_security_imports(file_path):
             (
                 r"from common_security\.secrets import get_key",
                 "from arrakis_common.utils.security import generate_secret_key as get_key",
-
-
             ),
             (
                 r"from common_security\.secrets import",

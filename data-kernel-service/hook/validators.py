@@ -29,73 +29,73 @@ class RuleValidator(BaseValidator):
     def name(self) -> str:
         return "RuleValidator"
 
- async def initialize(self):
- """Initialize validation service"""
- try:
- # Initialize validation service with fallback for missing dependencies
- from core.validation.service import ValidationService
+    async def initialize(self):
+        """Initialize validation service"""
+        try:
+            # Initialize validation service with fallback for missing dependencies
+            from core.validation.service import ValidationService
 
- # Create validation service instance
- self.validation_service = ValidationService()
+            # Create validation service instance
+            self.validation_service = ValidationService()
 
- # Try to initialize - use fallback if database unavailable
- try:
- await self.validation_service.initialize()
- logger.info("ValidationService initialized successfully")
- except Exception as init_error:
- logger.warning(
- f"ValidationService initialization failed, using basic validation: {init_error}"
- )
- # Create a simple fallback validator
- self.validation_service = BasicValidationService()
+                        # Try to initialize - use fallback if database unavailable
+            try:
+                await self.validation_service.initialize()
+                logger.info("ValidationService initialized successfully")
+            except Exception as init_error:
+                logger.warning(
+                f"ValidationService initialization failed, using basic validation: {init_error}"
+                )
+                # Create a simple fallback validator
+                self.validation_service = BasicValidationService()
 
- except ImportError as e:
- logger.warning(
- f"ValidationService not available, using basic validation: {e}"
- )
- # Create a simple fallback validator
- self.validation_service = BasicValidationService()
+        except ImportError as e:
+            logger.warning(
+            f"ValidationService not available, using basic validation: {e}"
+            )
+            # Create a simple fallback validator
+            self.validation_service = BasicValidationService()
 
- async def validate(self, context: DiffContext) -> None:
- """Validate using existing rule engine"""
- if not self.validation_service:
- logger.warning(
- "ValidationService not initialized, skipping rule validation"
- )
- return
+    async def validate(self, context: DiffContext) -> None:
+        """Validate using existing rule engine"""
+        if not self.validation_service:
+        logger.warning(
+        "ValidationService not initialized, skipping rule validation"
+        )
+        return
 
- try:
- # Extract relevant data from diff
- if context.after:
- result = await self.validation_service.validate_data(
- context.after,
- context_data={
- "user": context.meta.author,
- "branch": context.meta.branch,
- "trace_id": context.meta.trace_id,
- },
- )
+        try:
+        # Extract relevant data from diff
+        if context.after:
+        result = await self.validation_service.validate_data(
+        context.after,
+        context_data={
+        "user": context.meta.author,
+        "branch": context.meta.branch,
+        "trace_id": context.meta.trace_id,
+        },
+        )
 
- if not result.is_valid:
- raise ValidationError(
- f"Rule validation failed: {result.errors}", errors = result.errors
- )
- except Exception as e:
- logger.error(f"Rule validation error: {e}")
- strict_mode = os.getenv("STRICT_VALIDATION", "false").lower() == "true"
- if not strict_mode:
- # Validation bypass - log critical security event
- logger.critical(
- "VALIDATION_BYPASS: Rule validation error bypassed in non-strict mode. "
- f"Error: {str(e)}, Context: author={context.meta.author}, "
- f"branch={context.meta.branch}, trace_id={context.meta.trace_id}"
- )
- # Try to send to audit service
- await self._audit_validation_bypass(
- bypass_type = "rule_validation", error = str(e), context = context
- )
- else:
- raise
+        if not result.is_valid:
+        raise ValidationError(
+        f"Rule validation failed: {result.errors}", errors = result.errors
+        )
+        except Exception as e:
+        logger.error(f"Rule validation error: {e}")
+        strict_mode = os.getenv("STRICT_VALIDATION", "false").lower() == "true"
+        if not strict_mode:
+        # Validation bypass - log critical security event
+        logger.critical(
+        "VALIDATION_BYPASS: Rule validation error bypassed in non-strict mode. "
+        f"Error: {str(e)}, Context: author={context.meta.author}, "
+        f"branch={context.meta.branch}, trace_id={context.meta.trace_id}"
+        )
+        # Try to send to audit service
+        await self._audit_validation_bypass(
+        bypass_type = "rule_validation", error = str(e), context = context
+        )
+        else:
+        raise
 
 
 class TamperValidator(BaseValidator):
@@ -108,68 +108,68 @@ class TamperValidator(BaseValidator):
  def name(self) -> str:
  return "TamperValidator"
 
- async def validate(self, context: DiffContext) -> None:
- """Check for tampering attempts"""
- try:
- # Check if protected fields are being modified
- if context.before and context.after:
- protected_fields = ["created_by", "created_at", "_id", "_rev"]
+    async def validate(self, context: DiffContext) -> None:
+        """Check for tampering attempts"""
+        try:
+        # Check if protected fields are being modified
+        if context.before and context.after:
+        protected_fields = ["created_by", "created_at", "_id", "_rev"]
 
- for field in protected_fields:
- if field in context.before and field in context.after:
- if context.before[field] != context.after[field]:
- # Allow system users to modify protected fields
- if not context.meta.author.startswith("system@"):
- raise ValidationError(
- f"Tampering detected: attempt to modify protected field '{field}'",
- errors = [
- {
- "field": field,
- "error": "Protected field modification not allowed",
- }
- ],
- )
+        for field in protected_fields:
+        if field in context.before and field in context.after:
+        if context.before[field] != context.after[field]:
+        # Allow system users to modify protected fields
+        if not context.meta.author.startswith("system@"):
+        raise ValidationError(
+        f"Tampering detected: attempt to modify protected field '{field}'",
+        errors = [
+        {
+        "field": field,
+        "error": "Protected field modification not allowed",
+        }
+        ],
+        )
 
- # Use existing tampering detector for deeper checks
- suspicious_patterns = [
- r"<script[^>]*>.*?</script > ", # XSS attempts
- r"'; DROP TABLE", # SQL injection
- r"__proto__", # Prototype pollution
- r"\.\./\.\./", # Path traversal
- ]
+        # Use existing tampering detector for deeper checks
+        suspicious_patterns = [
+        r"<script[^>]*>.*?</script > ", # XSS attempts
+        r"'; DROP TABLE", # SQL injection
+        r"__proto__", # Prototype pollution
+        r"\.\./\.\./", # Path traversal
+        ]
 
- # Check diff content for suspicious patterns
- diff_str = str(context.diff)
- for pattern in suspicious_patterns:
- if pattern in diff_str.lower():
- logger.warning(f"Suspicious pattern detected: {pattern}")
- strict_security = (
- os.getenv("STRICT_SECURITY", "false").lower() == "true"
- )
- if strict_security:
- raise ValidationError(
- "Security validation failed: suspicious pattern detected",
- errors = [
- {"pattern": pattern, "error": "Suspicious content"}
- ],
- )
- else:
- # Security bypass - log critical security event
- logger.critical(
- f"SECURITY_BYPASS: Suspicious pattern '{pattern}' detected but not blocked in non-strict mode. "
- f"Author: {context.meta.author}, Branch: {context.meta.branch}"
- )
- # Try to send to audit service
- await self._audit_validation_bypass(
- bypass_type = "security_validation",
- error = f"Suspicious pattern: {pattern}",
- context = context,
- )
+        # Check diff content for suspicious patterns
+        diff_str = str(context.diff)
+        for pattern in suspicious_patterns:
+        if pattern in diff_str.lower():
+        logger.warning(f"Suspicious pattern detected: {pattern}")
+        strict_security = (
+        os.getenv("STRICT_SECURITY", "false").lower() == "true"
+        )
+        if strict_security:
+        raise ValidationError(
+        "Security validation failed: suspicious pattern detected",
+        errors = [
+        {"pattern": pattern, "error": "Suspicious content"}
+        ],
+        )
+        else:
+        # Security bypass - log critical security event
+        logger.critical(
+        f"SECURITY_BYPASS: Suspicious pattern '{pattern}' detected but not blocked in non-strict mode. "
+        f"Author: {context.meta.author}, Branch: {context.meta.branch}"
+        )
+        # Try to send to audit service
+        await self._audit_validation_bypass(
+        bypass_type = "security_validation",
+        error = f"Suspicious pattern: {pattern}",
+        context = context,
+        )
 
- except ValidationError:
- raise
- except Exception as e:
- logger.error(f"Tamper validation error: {e}")
+        except ValidationError:
+        raise
+        except Exception as e:
+        logger.error(f"Tamper validation error: {e}")
 
 
 class SchemaValidator(BaseValidator):
@@ -182,29 +182,29 @@ class SchemaValidator(BaseValidator):
  def name(self) -> str:
  return "SchemaValidator"
 
- async def validate(self, context: DiffContext) -> None:
- """Validate document against schema"""
- if not context.after:
- return
+    async def validate(self, context: DiffContext) -> None:
+        """Validate document against schema"""
+        if not context.after:
+        return
 
- try:
- # Extract document type
- doc_type = context.after.get("@type")
- if not doc_type:
- logger.debug("No @type field found, skipping schema validation")
- return
+        try:
+        # Extract document type
+        doc_type = context.after.get("@type")
+        if not doc_type:
+        logger.debug("No @type field found, skipping schema validation")
+        return
 
- # Implement comprehensive schema validation
- try:
- await self._validate_against_schema(context.after, doc_type)
- except ValidationError:
- raise
- except Exception as e:
- logger.error(f"Schema validation error: {e}")
- raise ValidationError(f"Schema validation failed: {str(e)}")
- except Exception as e:
- logger.error(f"Unexpected error in schema validation: {e}")
- raise
+        # Implement comprehensive schema validation
+        try:
+        await self._validate_against_schema(context.after, doc_type)
+        except ValidationError:
+        raise
+        except Exception as e:
+        logger.error(f"Schema validation error: {e}")
+        raise ValidationError(f"Schema validation failed: {str(e)}")
+        except Exception as e:
+        logger.error(f"Unexpected error in schema validation: {e}")
+        raise
 
  async def _validate_against_schema(self, document: Dict[str, Any], doc_type: str):
  """Comprehensive schema validation against TerminusDB schema"""
@@ -505,15 +505,15 @@ class PIIValidator(BaseValidator):
  def enabled(self) -> bool:
  return os.getenv("ENABLE_PII_VALIDATION", "true").lower() == "true"
 
- async def validate(self, context: DiffContext) -> None:
- """Check for PII in non-allowed fields"""
- if not context.after:
- return
+    async def validate(self, context: DiffContext) -> None:
+        """Check for PII in non-allowed fields"""
+        if not context.after:
+        return
 
- try:
- import re
+        try:
+        import re
 
- errors = []
+        errors = []
 
  def check_value(value: Any, field_path: str):
  if not isinstance(value, str):
@@ -565,51 +565,51 @@ class BasicValidationService:
  def __init__(self):
  self.initialized = True
 
- async def initialize(self):
- """Initialize - no-op for basic service"""
- pass
+    async def initialize(self):
+        """Initialize - no-op for basic service"""
+        pass
 
- async def validate_data(
- self, data: Any, context_data: dict = None
- ) -> "ValidationResult":
- """Basic validation with hardcoded rules"""
- errors = []
+    async def validate_data(
+        self, data: Any, context_data: dict = None
+        ) -> "ValidationResult":
+        """Basic validation with hardcoded rules"""
+        errors = []
 
- # Basic validation rules
- if isinstance(data, dict):
- # Check for required fields based on type
- doc_type = data.get("@type")
+            # Basic validation rules
+            if isinstance(data, dict):
+            # Check for required fields based on type
+            doc_type = data.get("@type")
 
- required_fields_map = {
- "ObjectType": ["name", "@id"],
- "Branch": ["name", "source_branch"],
- "Property": ["name", "type", "object_type"],
- "ValidationRule": ["name", "rule_type"],
- }
+                required_fields_map = {
+                "ObjectType": ["name", "@id"],
+                "Branch": ["name", "source_branch"],
+                "Property": ["name", "type", "object_type"],
+                "ValidationRule": ["name", "rule_type"],
+                }
 
- if doc_type in required_fields_map:
- required_fields = required_fields_map[doc_type]
- missing_fields = [
- field for field in required_fields if field not in data
- ]
+            if doc_type in required_fields_map:
+                    required_fields = required_fields_map[doc_type]
+                    missing_fields = [
+                    field for field in required_fields if field not in data
+                    ]
 
- if missing_fields:
- errors.append(
- {
- "field": "required_fields",
- "error": f"Missing required fields: {missing_fields}",
- "code": "MISSING_REQUIRED_FIELDS",
- }
- )
+            if missing_fields:
+                        errors.append(
+                        {
+                        "field": "required_fields",
+                        "error": f"Missing required fields: {missing_fields}",
+                        "code": "MISSING_REQUIRED_FIELDS",
+                        }
+                        )
 
- # Basic data type validation
- if "name" in data and not isinstance(data["name"], str):
- errors.append(
- {
- "field": "name",
- "error": "Name must be a string",
- "code": "INVALID_TYPE",
- }
+            # Basic data type validation
+            if "name" in data and not isinstance(data["name"], str):
+            errors.append(
+            {
+            "field": "name",
+            "error": "Name must be a string",
+            "code": "INVALID_TYPE",
+            }
  )
 
  # Basic format validation

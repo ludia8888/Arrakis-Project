@@ -276,9 +276,9 @@ jobs:
           domain_name = "example.com"
           image_registry = "123456789012.dkr.ecr.us-west-2.amazonaws.com"
           image_tag = "latest"
-          jwt_secret = "dummy-secret"
-          encryption_key = "dummy-key"
-          grafana_admin_password = "dummy-password"
+          jwt_secret = "VALIDATION_JWT_SECRET_NOT_FOR_PRODUCTION"
+          encryption_key = "VALIDATION_ENCRYPTION_KEY_NOT_FOR_PRODUCTION"
+          grafana_admin_password = "VALIDATION_PASSWORD_NOT_FOR_PRODUCTION"
           EOF
 
           terraform plan -var-file=terraform.tfvars -out=tfplan-${{ matrix.environment }} || {

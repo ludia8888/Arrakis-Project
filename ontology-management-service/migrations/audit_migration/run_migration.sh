@@ -67,13 +67,13 @@ OPTIONS:
 
 EXAMPLES:
     # Full migration
-    $0 -s "postgresql://user:pass@localhost:5432/oms_db" -k "api-key-123"
+    $0 -s "postgresql://USERNAME:PASSWORD@localhost:5432/oms_db" -k "YOUR_API_KEY"
 
     # Dry run
-    $0 -s "postgresql://user:pass@localhost:5432/oms_db" -k "api-key-123" --dry-run
+    $0 -s "postgresql://USERNAME:PASSWORD@localhost:5432/oms_db" -k "YOUR_API_KEY" --dry-run
 
     # Date range migration
-    $0 -s "postgresql://user:pass@localhost:5432/oms_db" -k "api-key-123" \
+    $0 -s "postgresql://USERNAME:PASSWORD@localhost:5432/oms_db" -k "YOUR_API_KEY" \
        --start-date 2025-01-01 --end-date 2025-07-06
 
 EOF

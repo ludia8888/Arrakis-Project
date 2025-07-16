@@ -78,15 +78,14 @@ class JWTHandler:
             self._setup_rsa_keys(public_key, private_key)
         else:
             # 대칭키 알고리즘
-            self.secret_key = secret_key or os.getenv(
-                "JWT_SECRET_KEY", os.getenv("JWT_SECRET_KEY", secrets.token_urlsafe(32))
-            )
-
-        # 대칭키 알고리즘을 위한 fallback secret_key 설정
-        if not hasattr(self, "secret_key"):
-            self.secret_key = secret_key or os.getenv(
-                "JWT_SECRET_KEY", os.getenv("JWT_SECRET_KEY", secrets.token_urlsafe(32))
-            )
+            self.secret_key = secret_key or os.getenv("JWT_SECRET_KEY")
+            if not self.secret_key:
+                # Generate secure random key if not provided (development only)
+                self.secret_key = secrets.token_urlsafe(32)
+                logger.warning(
+                    "🔧 JWT_SECRET_KEY not set. Generated random key for development. "
+                    "Set JWT_SECRET_KEY environment variable for production."
+                )
 
         # JWKS 클라이언트
         self._jwks_client = None

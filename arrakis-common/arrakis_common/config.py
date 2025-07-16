@@ -107,7 +107,7 @@ class DatabaseSettings(BaseSettings):
 
     # 기본 데이터베이스
     database_url: str = Field(
-        default="postgresql://postgres:postgres@localhost:5432/db", env="DATABASE_URL"
+        default="postgresql://CHANGE_USERNAME:CHANGE_PASSWORD@localhost:5432/db", env="DATABASE_URL"
     )
 
     # 연결 풀 설정
@@ -152,7 +152,7 @@ class SecuritySettings(BaseSettings):
     encryption_key: Optional[str] = Field(default=None, env="ENCRYPTION_KEY")
 
     # 세션
-    session_secret_key: str = Field(default="change-me", env="SESSION_SECRET_KEY")
+    session_secret_key: str = Field(default="PLACEHOLDER_CHANGE_IN_PRODUCTION", env="SESSION_SECRET_KEY")
     session_expire_minutes: int = Field(default=1440, env="SESSION_EXPIRE_MINUTES")
 
     def get_cors_origins_list(self) -> list:

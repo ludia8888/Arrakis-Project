@@ -176,140 +176,140 @@ class WebSocketManager:
         logger.info(f"Subscribed connection {connection_id} to {event_types}")
         return True
 
- async def _stream_events(self, connection_id: str):
- """이벤트 스트림 처리"""
- if connection_id not in self.connections:
- return
+    async def _stream_events(self, connection_id: str):
+        """이벤트 스트림 처리"""
+        if connection_id not in self.connections:
+            return
 
- connection = self.connections[connection_id]
- if not connection.subscription_id:
- return
+        connection = self.connections[connection_id]
+        if not connection.subscription_id:
+            return
 
- try:
- async for event in realtime_publisher.get_subscription_events(connection.subscription_id):
- if connection_id not in self.connections:
- break
+        try:
+            async for event in realtime_publisher.get_subscription_events(connection.subscription_id):
+                if connection_id not in self.connections:
+                    break
 
- message = {
- "type": "event",
- "event_type": event.event_type,
- "payload": event.payload,
- "timestamp": event.timestamp
- }
+                message = {
+                    "type": "event",
+                    "event_type": event.event_type,
+                    "payload": event.payload,
+                    "timestamp": event.timestamp
+                }
 
- await connection.websocket.send_text(json.dumps(message))
+                await connection.websocket.send_text(json.dumps(message))
 
- except Exception as e:
- logger.error(f"Event streaming error for {connection_id}: {e}")
- await self.disconnect(connection_id)
+        except Exception as e:
+            logger.error(f"Event streaming error for {connection_id}: {e}")
+            await self.disconnect(connection_id)
 
- async def handle_message(self, connection_id: str, message: str):
- """클라이언트 메시지 처리"""
- if connection_id not in self.connections:
- return
+    async def handle_message(self, connection_id: str, message: str):
+        """클라이언트 메시지 처리"""
+        if connection_id not in self.connections:
+            return
 
- connection = self.connections[connection_id]
+        connection = self.connections[connection_id]
 
- try:
- data = json.loads(message)
- message_type = data.get("type")
+        try:
+            data = json.loads(message)
+            message_type = data.get("type")
 
- if message_type == "pong":
- connection.last_ping = time.time()
+            if message_type == "pong":
+                connection.last_ping = time.time()
 
- elif message_type == "subscribe":
- event_types = set()
- for event_type_str in data.get("event_types", []):
- try:
- event_types.add(EventType(event_type_str))
- except ValueError:
- logger.warning(f"Unknown event type: {event_type_str}")
+            elif message_type == "subscribe":
+                event_types = set()
+                for event_type_str in data.get("event_types", []):
+                    try:
+                        event_types.add(EventType(event_type_str))
+                    except ValueError:
+                        logger.warning(f"Unknown event type: {event_type_str}")
 
- success = await self.subscribe_to_events(connection_id, event_types)
+                success = await self.subscribe_to_events(connection_id, event_types)
 
- response = {
- "type": "subscribe_response",
- "success": success,
- "subscription_id": connection.subscription_id
- }
- await connection.websocket.send_text(json.dumps(response))
+                response = {
+                    "type": "subscribe_response",
+                    "success": success,
+                    "subscription_id": connection.subscription_id
+                }
+                await connection.websocket.send_text(json.dumps(response))
 
- elif message_type == "unsubscribe":
- if connection.subscription_id:
- await realtime_publisher.unsubscribe(connection.subscription_id)
- connection.subscription_id = None
+            elif message_type == "unsubscribe":
+                if connection.subscription_id:
+                    await realtime_publisher.unsubscribe(connection.subscription_id)
+                    connection.subscription_id = None
 
- response = {"type": "unsubscribe_response", "success": True}
- await connection.websocket.send_text(json.dumps(response))
+                response = {"type": "unsubscribe_response", "success": True}
+                await connection.websocket.send_text(json.dumps(response))
 
- except json.JSONDecodeError:
- logger.warning(f"Invalid JSON from {connection_id}: {message}")
- except Exception as e:
- logger.error(f"Message handling error for {connection_id}: {e}")
+        except json.JSONDecodeError:
+            logger.warning(f"Invalid JSON from {connection_id}: {message}")
+        except Exception as e:
+            logger.error(f"Message handling error for {connection_id}: {e}")
 
- def get_connection_count(self) -> int:
- """활성 연결 수"""
- return len(self.connections)
+    def get_connection_count(self) -> int:
+        """활성 연결 수"""
+        return len(self.connections)
 
- def get_user_connection_count(self, user_id: str) -> int:
- """사용자별 연결 수"""
- return len(self.user_connections.get(user_id, set()))
+    def get_user_connection_count(self, user_id: str) -> int:
+        """사용자별 연결 수"""
+        return len(self.user_connections.get(user_id, set()))
 
- def stop_background_tasks(self):
- """Stop background tasks (called during shutdown)"""
- if self._heartbeat_task:
- self._heartbeat_task.cancel()
- self._heartbeat_task = None
- logger.info("WebSocket background tasks stopped")
+    def stop_background_tasks(self):
+        """Stop background tasks (called during shutdown)"""
+        if self._heartbeat_task:
+            self._heartbeat_task.cancel()
+            self._heartbeat_task = None
+        logger.info("WebSocket background tasks stopped")
 
- def add_subscription(self, connection_id: str, subscription_id: str):
- """Add subscription to connection"""
- if connection_id in self.subscriptions:
- self.subscriptions[connection_id].add(subscription_id)
- logger.debug(f"Added subscription {subscription_id} to connection {connection_id}")
+    def add_subscription(self, connection_id: str, subscription_id: str):
+        """Add subscription to connection"""
+        if connection_id in self.subscriptions:
+            self.subscriptions[connection_id].add(subscription_id)
+        logger.debug(f"Added subscription {subscription_id} to connection {connection_id}")
 
- def remove_subscription(self, connection_id: str, subscription_id: str):
- """Remove subscription from connection"""
- if connection_id in self.subscriptions:
- self.subscriptions[connection_id].discard(subscription_id)
- logger.debug(f"Removed subscription {subscription_id} from connection {connection_id}")
+    def remove_subscription(self, connection_id: str, subscription_id: str):
+        """Remove subscription from connection"""
+        if connection_id in self.subscriptions:
+            self.subscriptions[connection_id].discard(subscription_id)
+        logger.debug(f"Removed subscription {subscription_id} from connection {connection_id}")
 
- def get_statistics(self) -> dict:
- """Get WebSocket connection statistics"""
- total_connections = len(self.connections)
- total_subscriptions = sum(len(subs) for subs in self.subscriptions.values())
+    def get_statistics(self) -> dict:
+        """Get WebSocket connection statistics"""
+        total_connections = len(self.connections)
+        total_subscriptions = sum(len(subs) for subs in self.subscriptions.values())
 
- # Calculate message stats
- total_messages_received = sum(conn.messages_received for conn in self.connections.values())
- total_messages_sent = sum(conn.messages_sent for conn in self.connections.values())
+        # Calculate message stats
+        total_messages_received = sum(conn.messages_received for conn in self.connections.values())
+        total_messages_sent = sum(conn.messages_sent for conn in self.connections.values())
 
- return {
- "total_connections": total_connections,
- "total_subscriptions": total_subscriptions,
- "total_messages_received": total_messages_received,
- "total_messages_sent": total_messages_sent,
- "unique_users": len(self.user_connections),
- "connections_by_user": {
- user_id: len(connections)
- for user_id, connections in self.user_connections.items()
- }
- }
+        return {
+            "total_connections": total_connections,
+            "total_subscriptions": total_subscriptions,
+            "total_messages_received": total_messages_received,
+            "total_messages_sent": total_messages_sent,
+            "unique_users": len(self.user_connections),
+            "connections_by_user": {
+                user_id: len(connections)
+                for user_id, connections in self.user_connections.items()
+            }
+        }
 
 # 전역 WebSocket 매니저 인스턴스
 websocket_manager = WebSocketManager()
 
 # WebSocket 엔드포인트용 헬퍼 함수
 async def handle_websocket_connection(websocket: WebSocket, user_id: str):
- """WebSocket 연결 처리"""
- connection_id = await websocket_manager.connect(websocket, user_id)
+    """WebSocket 연결 처리"""
+    connection_id = await websocket_manager.connect(websocket, user_id)
 
- try:
- while True:
- message = await websocket.receive_text()
- await websocket_manager.handle_message(connection_id, message)
+    try:
+        while True:
+            message = await websocket.receive_text()
+            await websocket_manager.handle_message(connection_id, message)
 
- except WebSocketDisconnect:
- await websocket_manager.disconnect(connection_id)
- except Exception as e:
- logger.error(f"WebSocket error: {e}")
- await websocket_manager.disconnect(connection_id)
+    except WebSocketDisconnect:
+        await websocket_manager.disconnect(connection_id)
+    except Exception as e:
+        logger.error(f"WebSocket error: {e}")
+        await websocket_manager.disconnect(connection_id)
