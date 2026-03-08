@@ -236,10 +236,26 @@ def find_image_for_annotation(images_dir: Path, stem: str) -> Path | None:
     return None
 
 
+def _unwrap_nested_dir(source_dir: Path) -> Path:
+    """Handle double-nested dirs like VisDrone2019-DET-train/VisDrone2019-DET-train/."""
+    if (source_dir / "images").is_dir() and (source_dir / "annotations").is_dir():
+        return source_dir
+    nested = source_dir / source_dir.name
+    if nested.is_dir() and (nested / "images").is_dir() and (nested / "annotations").is_dir():
+        print(f"Unwrapping nested directory: {nested}")
+        return nested
+    return source_dir
+
+
 def convert_visdrone_det_split(source_dir: Path, split_name: str, out_root: Path) -> None:
+    source_dir = _unwrap_nested_dir(source_dir)
     source_images = source_dir / "images"
     if not source_images.is_dir():
-        raise FileNotFoundError(f"VisDrone images directory not found: {source_images}")
+        existing = [p.name for p in source_dir.iterdir()] if source_dir.is_dir() else []
+        raise FileNotFoundError(
+            f"VisDrone images directory not found: {source_images}\n"
+            f"Contents of {source_dir}: {existing}"
+        )
     annotations_dir = source_dir / "annotations"
     if not annotations_dir.is_dir():
         existing = [p.name for p in source_dir.iterdir()]
