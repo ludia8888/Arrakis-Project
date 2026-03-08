@@ -240,12 +240,21 @@ def convert_visdrone_det_split(source_dir: Path, split_name: str, out_root: Path
     source_images = source_dir / "images"
     if not source_images.is_dir():
         raise FileNotFoundError(f"VisDrone images directory not found: {source_images}")
+    annotations_dir = source_dir / "annotations"
+    if not annotations_dir.is_dir():
+        existing = [p.name for p in source_dir.iterdir()]
+        raise FileNotFoundError(
+            f"VisDrone annotations directory not found: {annotations_dir}\n"
+            f"Contents of {source_dir}: {existing}\n"
+            "This dataset may not include raw annotations. "
+            "Use a dataset with VisDrone-DET annotation files, or supply pre-converted YOLO labels via --data-root."
+        )
     images_link = out_root / "images" / split_name
     labels_dir = out_root / "labels" / split_name
     ensure_symlink(source_images, images_link)
     labels_dir.mkdir(parents=True, exist_ok=True)
 
-    for ann_file in sorted((source_dir / "annotations").glob("*.txt")):
+    for ann_file in sorted(annotations_dir.glob("*.txt")):
         image_path = find_image_for_annotation(images_link, ann_file.stem)
         if image_path is None:
             continue
