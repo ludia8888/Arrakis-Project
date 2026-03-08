@@ -26,6 +26,8 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
+This also installs the `kaggle` CLI used for notebook, dataset, and output operations.
+
 ## Local model selection
 
 Local inference now uses the following resolution order:
@@ -94,6 +96,8 @@ The script:
   - `1: vehicle`
 - rebuilds the generated merged dataset on every run to avoid stale labels
 - supports `--resume-from` and `--save-period`
+- auto-detects Kaggle `/kaggle/input` when `--data-root` is omitted
+- converts raw VisDrone Kaggle inputs to YOLO format automatically when needed
 
 Example:
 
@@ -117,6 +121,39 @@ Expected outputs:
 /kaggle/working/runs/visdrone/<run-name>/weights/best.pt
 /kaggle/working/runs/visdrone/<run-name>/weights/last.pt
 ```
+
+### Kaggle GitHub notebook mode
+
+If the Kaggle notebook is linked directly to this repository and points at
+[`kaggle_train_visdrone_yolo26s.py`](/Users/isihyeon/Desktop/Arrakis-Project/kaggle_train_visdrone_yolo26s.py),
+you do not need to paste notebook cells.
+
+Attach a VisDrone dataset to the notebook input and run the notebook. The script will:
+
+1. Detect whether the input is YOLO format, raw directories, or raw zip files
+2. Convert raw VisDrone data into YOLO labels if needed
+3. Build the strict `person / vehicle` dataset
+4. Start training with the repository defaults
+
+Outside Kaggle, keep using `--data-root`.
+
+## Kaggle CLI setup
+
+The local `.venv` includes the official `kaggle` CLI.
+
+Verify:
+
+```bash
+source .venv/bin/activate
+kaggle --version
+```
+
+Authentication options:
+
+1. Put `kaggle.json` in `~/.kaggle/kaggle.json` and set `chmod 600 ~/.kaggle/kaggle.json`
+2. Or export `KAGGLE_USERNAME` and `KAGGLE_KEY`
+
+After authentication, this Codex environment can run Kaggle CLI commands directly.
 
 ## Operational notes
 

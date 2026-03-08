@@ -3,11 +3,22 @@ from __future__ import annotations
 import argparse
 import os
 import shutil
+import zipfile
 from pathlib import Path
 
 import yaml
+from PIL import Image
 from ultralytics import YOLO
 
+
+KAGGLE_INPUT_ROOT = Path("/kaggle/input")
+KAGGLE_WORKING_ROOT = Path("/kaggle/working")
+ZIP_NAMES = {
+    "train": "VisDrone2019-DET-train.zip",
+    "val": "VisDrone2019-DET-val.zip",
+    "test": "VisDrone2019-DET-test-dev.zip",
+}
+IMAGE_SUFFIXES = (".jpg", ".jpeg", ".png", ".bmp")
 
 MERGED_NAMES = {
     0: "person",
@@ -30,22 +41,32 @@ CLASS_MAP = {
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Fine-tune yolo26s.pt on VisDrone-DET with merged person/vehicle classes.")
-    parser.add_argument("--data-root", type=Path, required=True, help="VisDrone root with images/ and labels/ folders.")
+    parser.add_argument(
+        "--data-root",
+        type=Path,
+        help="VisDrone root with images/ and labels/ folders. Optional on Kaggle: the script can auto-detect input data.",
+    )
     parser.add_argument("--weights", type=str, default="yolo26s.pt", help="Base checkpoint path.")
     parser.add_argument("--resume-from", type=Path, help="Path to a last.pt checkpoint to resume from.")
     parser.add_argument(
         "--merged-root",
         type=Path,
-        default=Path("/kaggle/working/visdrone_person_vehicle"),
+        default=KAGGLE_WORKING_ROOT / "visdrone_person_vehicle",
         help="Writable root for generated merged dataset.",
     )
     parser.add_argument(
         "--output-yaml",
         type=Path,
-        default=Path("/kaggle/working/visdrone_person_vehicle.yaml"),
+        default=KAGGLE_WORKING_ROOT / "visdrone_person_vehicle.yaml",
         help="Generated dataset YAML path.",
     )
-    parser.add_argument("--project", type=str, default="/kaggle/working/runs/visdrone", help="Ultralytics project dir.")
+    parser.add_argument(
+        "--converted-yolo-root",
+        type=Path,
+        default=KAGGLE_WORKING_ROOT / "visdrone_yolo",
+        help="Writable root for auto-converted YOLO VisDrone data when raw Kaggle inputs are attached.",
+    )
+    parser.add_argument("--project", type=str, default=str(KAGGLE_WORKING_ROOT / "runs" / "visdrone"), help="Ultralytics project dir.")
     parser.add_argument("--name", type=str, default="yolo26s-person-vehicle-p100", help="Ultralytics run name.")
     parser.add_argument("--epochs", type=int, default=50, help="Training epochs.")
     parser.add_argument("--imgsz", type=int, default=1280, help="Training image size.")
@@ -58,6 +79,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=42, help="Random seed.")
     parser.add_argument("--exist-ok", action="store_true", help="Reuse an existing run directory.")
     return parser.parse_args()
+
+
+def running_on_kaggle() -> bool:
+    return KAGGLE_INPUT_ROOT.exists() and KAGGLE_WORKING_ROOT.exists()
 
 
 def validate_visdrone_root(data_root: Path) -> None:
@@ -98,6 +123,134 @@ def prepare_merged_root(merged_root: Path) -> None:
     merged_root.mkdir(parents=True, exist_ok=True)
     remove_path(merged_root / "images")
     remove_path(merged_root / "labels")
+
+
+def classify_visdrone_root(root: Path) -> str | None:
+    if (root / "images" / "train").exists() and (root / "labels" / "train").exists():
+        return "yolo"
+    if (root / "VisDrone2019-DET-train").exists() and (root / "VisDrone2019-DET-val").exists():
+        return "raw_dir"
+    if (root / ZIP_NAMES["train"]).exists() and (root / ZIP_NAMES["val"]).exists():
+        return "raw_zip"
+    return None
+
+
+def resolve_visdrone_input_root(search_root: Path) -> tuple[str, Path]:
+    candidates = [search_root]
+
+    if search_root.exists():
+        candidates.extend(path for path in search_root.iterdir() if path.is_dir())
+
+    for candidate in candidates:
+        detected = classify_visdrone_root(candidate)
+        if detected:
+            return detected, candidate
+
+    raise FileNotFoundError(
+        "Could not detect VisDrone data.\n"
+        "Expected one of:\n"
+        "1) YOLO format: images/train + labels/train\n"
+        "2) Raw dirs: VisDrone2019-DET-train + VisDrone2019-DET-val\n"
+        "3) Raw zip files: VisDrone2019-DET-train.zip + VisDrone2019-DET-val.zip\n"
+        "Attach a VisDrone dataset to the Kaggle notebook or pass --data-root explicitly."
+    )
+
+
+def prepare_clean_dir(path: Path) -> Path:
+    remove_path(path)
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def find_image_for_annotation(images_dir: Path, stem: str) -> Path | None:
+    for suffix in IMAGE_SUFFIXES:
+        candidate = images_dir / f"{stem}{suffix}"
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def convert_visdrone_det_split(source_dir: Path, split_name: str, out_root: Path) -> None:
+    images_link = out_root / "images" / split_name
+    labels_dir = out_root / "labels" / split_name
+    ensure_symlink(source_dir / "images", images_link)
+    labels_dir.mkdir(parents=True, exist_ok=True)
+
+    for ann_file in sorted((source_dir / "annotations").glob("*.txt")):
+        image_path = find_image_for_annotation(images_link, ann_file.stem)
+        if image_path is None:
+            continue
+
+        with Image.open(image_path) as image:
+            image_width, image_height = image.size
+
+        dw = 1.0 / image_width
+        dh = 1.0 / image_height
+        yolo_lines: list[str] = []
+
+        for raw_line in ann_file.read_text(encoding="utf-8").splitlines():
+            row = [value.strip() for value in raw_line.strip().split(",")]
+            if len(row) < 6 or row[4] == "0":
+                continue
+
+            x, y, w, h = map(int, row[:4])
+            class_id = int(row[5]) - 1
+            if class_id < 0 or class_id > 9:
+                continue
+
+            x_center = (x + w / 2) * dw
+            y_center = (y + h / 2) * dh
+            w_norm = w * dw
+            h_norm = h * dh
+            yolo_lines.append(f"{class_id} {x_center:.6f} {y_center:.6f} {w_norm:.6f} {h_norm:.6f}")
+
+        payload = "\n".join(yolo_lines)
+        if payload:
+            payload += "\n"
+        (labels_dir / ann_file.name).write_text(payload, encoding="utf-8")
+
+
+def prepare_yolo_data_root(args: argparse.Namespace) -> Path:
+    if args.data_root:
+        data_root = args.data_root.resolve()
+        validate_visdrone_root(data_root)
+        return data_root
+
+    if not running_on_kaggle():
+        raise FileNotFoundError("Pass --data-root when running outside Kaggle.")
+
+    detected_format, detected_root = resolve_visdrone_input_root(KAGGLE_INPUT_ROOT)
+    print(f"Auto-detected VisDrone input format: {detected_format}")
+    print(f"Auto-detected input root: {detected_root}")
+
+    if detected_format == "yolo":
+        validate_visdrone_root(detected_root)
+        return detected_root.resolve()
+
+    converted_yolo_root = prepare_clean_dir(args.converted_yolo_root.resolve())
+
+    if detected_format == "raw_zip":
+        extracted_raw_root = prepare_clean_dir(KAGGLE_WORKING_ROOT / "visdrone_raw")
+        for zip_name in ZIP_NAMES.values():
+            zip_path = detected_root / zip_name
+            if zip_path.exists():
+                print(f"Extracting {zip_path} -> {extracted_raw_root}")
+                with zipfile.ZipFile(zip_path, "r") as zip_file:
+                    zip_file.extractall(extracted_raw_root)
+        raw_root = extracted_raw_root
+    else:
+        raw_root = detected_root.resolve()
+
+    convert_visdrone_det_split(raw_root / "VisDrone2019-DET-train", "train", converted_yolo_root)
+    convert_visdrone_det_split(raw_root / "VisDrone2019-DET-val", "val", converted_yolo_root)
+
+    test_dir = raw_root / "VisDrone2019-DET-test-dev"
+    if test_dir.exists():
+        ensure_symlink(test_dir / "images", converted_yolo_root / "images" / "test")
+
+    validate_visdrone_root(converted_yolo_root)
+    print(f"Converted raw VisDrone into YOLO format: {converted_yolo_root}")
+    return converted_yolo_root
 
 
 def merge_label_file(source_file: Path, destination_file: Path) -> None:
@@ -158,9 +311,7 @@ def write_dataset_yaml(data_root: Path, output_yaml: Path) -> Path:
 
 def main() -> None:
     args = parse_args()
-    data_root = args.data_root.resolve()
-
-    validate_visdrone_root(data_root)
+    data_root = prepare_yolo_data_root(args)
     merged_root = build_merged_dataset(data_root, args.merged_root)
     data_yaml = write_dataset_yaml(merged_root, args.output_yaml)
 
