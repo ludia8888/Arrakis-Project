@@ -137,6 +137,11 @@ Attach a VisDrone dataset to the notebook input and run the notebook. The script
 
 Outside Kaggle, keep using `--data-root`.
 
+If you prefer a GitHub-backed Kaggle notebook instead of a `.py` entrypoint, use
+[`kaggle_train_visdrone_yolo26s.ipynb`](/Users/isihyeon/Desktop/Arrakis-Project/kaggle_train_visdrone_yolo26s.ipynb).
+That notebook clones the repo, installs requirements, runs the training script, and copies `best.pt` / `last.pt`
+into `/kaggle/working`.
+
 ## Kaggle CLI setup
 
 The local `.venv` includes the official `kaggle` CLI.

@@ -2,6 +2,7 @@
 .venv/
 .vsptime
 __pycache__/
+.playwright-cli/
 best.pt
 last.pt
 epoch*.pt
