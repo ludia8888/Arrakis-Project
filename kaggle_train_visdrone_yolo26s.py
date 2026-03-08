@@ -178,8 +178,14 @@ def prepare_merged_root(merged_root: Path) -> None:
     remove_path(merged_root / "labels")
 
 
+def _has_label_files(labels_dir: Path) -> bool:
+    return labels_dir.is_dir() and any(labels_dir.glob("*.txt"))
+
+
 def classify_visdrone_root(root: Path) -> str | None:
-    if (root / "images" / "train").exists() and (root / "labels" / "train").exists():
+    images_train = root / "images" / "train"
+    labels_train = root / "labels" / "train"
+    if images_train.exists() and labels_train.exists() and _has_label_files(labels_train):
         return "yolo"
     if (root / RAW_TRAIN_DIR_NAME).exists() and (root / RAW_VAL_DIR_NAME).exists():
         return "raw_dir"
