@@ -101,6 +101,48 @@ def validate_visdrone_root(data_root: Path) -> None:
         raise FileNotFoundError(f"VisDrone root is missing required paths:\n{joined}")
 
 
+def count_image_files(images_dir: Path) -> int:
+    return sum(1 for path in images_dir.iterdir() if path.is_file() and path.suffix.lower() in IMAGE_SUFFIXES)
+
+
+def collect_split_counts(data_root: Path) -> dict[str, dict[str, int]]:
+    counts: dict[str, dict[str, int]] = {}
+    for split in ("train", "val"):
+        images_dir = data_root / "images" / split
+        labels_dir = data_root / "labels" / split
+        counts[split] = {
+            "images": count_image_files(images_dir),
+            "labels": len(list(labels_dir.glob("*.txt"))),
+        }
+    return counts
+
+
+def print_split_counts(title: str, counts: dict[str, dict[str, int]]) -> None:
+    print(title)
+    for split, split_counts in counts.items():
+        print(f"  {split}: images={split_counts['images']}, labels={split_counts['labels']}")
+
+
+def validate_nonempty_training_data(data_root: Path, dataset_name: str) -> dict[str, dict[str, int]]:
+    counts = collect_split_counts(data_root)
+    print_split_counts(f"{dataset_name} counts:", counts)
+
+    missing_images = [split for split, split_counts in counts.items() if split_counts["images"] == 0]
+    missing_labels = [split for split, split_counts in counts.items() if split_counts["labels"] == 0]
+
+    if missing_images or missing_labels:
+        problems: list[str] = []
+        if missing_images:
+            problems.append(f"no images in splits: {', '.join(missing_images)}")
+        if missing_labels:
+            problems.append(f"no label txt files in splits: {', '.join(missing_labels)}")
+        raise RuntimeError(
+            f"{dataset_name} is not usable for training ({'; '.join(problems)}). "
+            "Stopping before YOLO training so an invalid run does not continue."
+        )
+    return counts
+
+
 def ensure_symlink(target: Path, link_path: Path) -> None:
     if link_path.is_symlink():
         try:
@@ -324,7 +366,9 @@ def write_dataset_yaml(data_root: Path, output_yaml: Path) -> Path:
 def main() -> None:
     args = parse_args()
     data_root = prepare_yolo_data_root(args)
+    validate_nonempty_training_data(data_root, "Prepared YOLO dataset")
     merged_root = build_merged_dataset(data_root, args.merged_root)
+    validate_nonempty_training_data(merged_root, "Merged person/vehicle dataset")
     data_yaml = write_dataset_yaml(merged_root, args.output_yaml)
 
     print(f"Using dataset root: {data_root}")
