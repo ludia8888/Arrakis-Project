@@ -143,6 +143,8 @@ That notebook clones the repo, installs requirements, runs the training script, 
 into `/kaggle/working`.
 For Kaggle P100 runs, the notebook installs `ultralytics` with `--no-deps` so it does not replace the platform's
 preinstalled CUDA/PyTorch stack.
+It also installs a P100-compatible PyTorch stack explicitly:
+`torch==2.7.1`, `torchvision==0.22.1`, `torchaudio==2.7.1` from the official CUDA 12.6 wheels.
 
 ## Kaggle CLI setup
 
