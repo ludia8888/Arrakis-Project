@@ -31,6 +31,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Fine-tune yolo26s.pt on VisDrone-DET with merged person/vehicle classes.")
     parser.add_argument("--data-root", type=Path, required=True, help="VisDrone root with images/ and labels/ folders.")
     parser.add_argument("--weights", type=str, default="yolo26s.pt", help="Base checkpoint path.")
+    parser.add_argument("--resume-from", type=Path, help="Path to a last.pt checkpoint to resume from.")
     parser.add_argument(
         "--merged-root",
         type=Path,
@@ -52,6 +53,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--device", type=str, default="0", help="Kaggle GPU device ids, e.g. 0 or 0,1.")
     parser.add_argument("--patience", type=int, default=20, help="Early stopping patience.")
     parser.add_argument("--cache", action="store_true", help="Enable image caching.")
+    parser.add_argument("--save-period", type=int, default=1, help="Save a checkpoint every N epochs.")
     parser.add_argument("--seed", type=int, default=42, help="Random seed.")
     parser.add_argument("--exist-ok", action="store_true", help="Reuse an existing run directory.")
     return parser.parse_args()
@@ -146,28 +148,40 @@ def main() -> None:
     print("Using strict split: train=images/train, val=images/val")
     print("Merged classes: 0=person, 1=vehicle")
 
-    model = YOLO(args.weights)
-    results = model.train(
-        data=str(data_yaml),
-        epochs=args.epochs,
-        imgsz=args.imgsz,
-        batch=args.batch,
-        workers=args.workers,
-        device=args.device,
-        patience=args.patience,
-        cache=args.cache,
-        seed=args.seed,
-        project=args.project,
-        name=args.name,
-        exist_ok=args.exist_ok,
-        cos_lr=True,
-        close_mosaic=10,
-        pretrained=True,
-        plots=True,
-    )
+    train_kwargs = {
+        "data": str(data_yaml),
+        "epochs": args.epochs,
+        "imgsz": args.imgsz,
+        "batch": args.batch,
+        "workers": args.workers,
+        "device": args.device,
+        "patience": args.patience,
+        "cache": args.cache,
+        "save_period": args.save_period,
+        "seed": args.seed,
+        "project": args.project,
+        "name": args.name,
+        "exist_ok": args.exist_ok,
+        "cos_lr": True,
+        "close_mosaic": 10,
+        "plots": True,
+    }
 
-    best_path = Path(results.save_dir) / "weights" / "best.pt"
-    last_path = Path(results.save_dir) / "weights" / "last.pt"
+    if args.resume_from:
+        resume_path = args.resume_from.resolve()
+        if not resume_path.exists():
+            raise FileNotFoundError(f"Resume checkpoint not found: {resume_path}")
+        print(f"Resuming from checkpoint: {resume_path}")
+        model = YOLO(str(resume_path))
+        model.train(resume=True, **train_kwargs)
+    else:
+        model = YOLO(args.weights)
+        model.train(pretrained=True, **train_kwargs)
+
+    save_dir = Path(model.trainer.save_dir)
+    best_path = save_dir / "weights" / "best.pt"
+    last_path = save_dir / "weights" / "last.pt"
+    print(f"Run directory: {save_dir}")
     print(f"Best weights: {best_path}")
     print(f"Last weights: {last_path}")
 
