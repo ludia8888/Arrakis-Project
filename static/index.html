@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YOLO26s Local Test</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Local YOLO Test</p>
+          <h1>Share a YouTube tab and watch detections on top of it.</h1>
+          <p class="lede">
+            Choose the browser tab or window that is playing YouTube. The page keeps the original video visible and
+            draws YOLO26s results on the same frame so you can judge accuracy directly.
+          </p>
+        </div>
+        <div class="hero-card">
+          <button id="startButton" class="primary">Start Share</button>
+          <button id="stopButton" class="secondary" disabled>Stop</button>
+          <p id="status" class="status">Ready. Start by sharing the YouTube tab or browser window.</p>
+        </div>
+      </section>
+
+      <section class="controls">
+        <label>
+          Confidence
+          <input id="confInput" type="range" min="0.1" max="0.9" step="0.05" value="0.25" />
+          <span id="confValue">0.25</span>
+        </label>
+        <label>
+          Inference Size
+          <select id="imgszSelect">
+            <option value="512">512</option>
+            <option value="640" selected>640</option>
+            <option value="768">768</option>
+            <option value="960">960</option>
+          </select>
+        </label>
+        <label>
+          Send FPS
+          <select id="fpsSelect">
+            <option value="2">2</option>
+            <option value="3" selected>3</option>
+            <option value="5">5</option>
+          </select>
+        </label>
+        <div class="stats">
+          <span id="objectsValue">0 objects</span>
+          <span id="latencyValue">0 ms</span>
+          <span id="throughputValue">0 fps</span>
+        </div>
+      </section>
+
+      <section class="viewer-grid viewer-grid-single">
+        <article class="panel">
+          <div class="panel-header">
+            <h2>Detection Overlay</h2>
+            <p>Shared YouTube tab or window with YOLO26s boxes</p>
+          </div>
+          <div class="stage overlay-stage">
+            <video id="overlayVideo" autoplay playsinline muted></video>
+            <canvas id="overlayCanvas"></canvas>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="/static/app.js" defer></script>
+  </body>
+  </html>

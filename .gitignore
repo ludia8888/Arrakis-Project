@@ -1,0 +1,4 @@
+.DS_Store
+.venv/
+.vsptime
+__pycache__/
