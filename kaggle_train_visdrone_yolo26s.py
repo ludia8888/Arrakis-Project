@@ -105,6 +105,10 @@ def count_image_files(images_dir: Path) -> int:
     return sum(1 for path in images_dir.iterdir() if path.is_file() and path.suffix.lower() in IMAGE_SUFFIXES)
 
 
+def count_nonempty_label_files(labels_dir: Path) -> int:
+    return sum(1 for path in labels_dir.glob("*.txt") if path.stat().st_size > 0)
+
+
 def collect_split_counts(data_root: Path) -> dict[str, dict[str, int]]:
     counts: dict[str, dict[str, int]] = {}
     for split in ("train", "val"):
@@ -113,6 +117,7 @@ def collect_split_counts(data_root: Path) -> dict[str, dict[str, int]]:
         counts[split] = {
             "images": count_image_files(images_dir),
             "labels": len(list(labels_dir.glob("*.txt"))),
+            "nonempty_labels": count_nonempty_label_files(labels_dir),
         }
     return counts
 
@@ -120,7 +125,7 @@ def collect_split_counts(data_root: Path) -> dict[str, dict[str, int]]:
 def print_split_counts(title: str, counts: dict[str, dict[str, int]]) -> None:
     print(title)
     for split, split_counts in counts.items():
-        print(f"  {split}: images={split_counts['images']}, labels={split_counts['labels']}")
+        print(f"  {split}: images={split_counts['images']}, labels={split_counts['labels']}, nonempty_labels={split_counts['nonempty_labels']}")
 
 
 def validate_nonempty_training_data(data_root: Path, dataset_name: str) -> dict[str, dict[str, int]]:
@@ -129,13 +134,16 @@ def validate_nonempty_training_data(data_root: Path, dataset_name: str) -> dict[
 
     missing_images = [split for split, split_counts in counts.items() if split_counts["images"] == 0]
     missing_labels = [split for split, split_counts in counts.items() if split_counts["labels"] == 0]
+    empty_labels = [split for split, split_counts in counts.items() if split_counts["labels"] > 0 and split_counts["nonempty_labels"] == 0]
 
-    if missing_images or missing_labels:
+    if missing_images or missing_labels or empty_labels:
         problems: list[str] = []
         if missing_images:
             problems.append(f"no images in splits: {', '.join(missing_images)}")
         if missing_labels:
             problems.append(f"no label txt files in splits: {', '.join(missing_labels)}")
+        if empty_labels:
+            problems.append(f"all label files are empty (no annotations) in splits: {', '.join(empty_labels)}")
         raise RuntimeError(
             f"{dataset_name} is not usable for training ({'; '.join(problems)}). "
             "Stopping before YOLO training so an invalid run does not continue."
@@ -223,9 +231,12 @@ def find_image_for_annotation(images_dir: Path, stem: str) -> Path | None:
 
 
 def convert_visdrone_det_split(source_dir: Path, split_name: str, out_root: Path) -> None:
+    source_images = source_dir / "images"
+    if not source_images.is_dir():
+        raise FileNotFoundError(f"VisDrone images directory not found: {source_images}")
     images_link = out_root / "images" / split_name
     labels_dir = out_root / "labels" / split_name
-    ensure_symlink(source_dir / "images", images_link)
+    ensure_symlink(source_images, images_link)
     labels_dir.mkdir(parents=True, exist_ok=True)
 
     for ann_file in sorted((source_dir / "annotations").glob("*.txt")):
@@ -245,15 +256,23 @@ def convert_visdrone_det_split(source_dir: Path, split_name: str, out_root: Path
             if len(row) < 6 or row[4] == "0":
                 continue
 
-            x, y, w, h = map(int, row[:4])
-            class_id = int(row[5]) - 1
+            x, y, w, h = (int(float(v)) for v in row[:4])
+            class_id = int(float(row[5])) - 1
             if class_id < 0 or class_id > 9:
                 continue
 
-            x_center = (x + w / 2) * dw
-            y_center = (y + h / 2) * dh
-            w_norm = w * dw
-            h_norm = h * dh
+            x1 = max(0, x)
+            y1 = max(0, y)
+            x2 = min(image_width, x + w)
+            y2 = min(image_height, y + h)
+            if x2 <= x1 or y2 <= y1:
+                continue
+            w_clamped = x2 - x1
+            h_clamped = y2 - y1
+            x_center = (x1 + w_clamped / 2) * dw
+            y_center = (y1 + h_clamped / 2) * dh
+            w_norm = w_clamped * dw
+            h_norm = h_clamped * dh
             yolo_lines.append(f"{class_id} {x_center:.6f} {y_center:.6f} {w_norm:.6f} {h_norm:.6f}")
 
         payload = "\n".join(yolo_lines)
@@ -283,12 +302,12 @@ def prepare_yolo_data_root(args: argparse.Namespace) -> Path:
 
     if detected_format == "raw_zip":
         extracted_raw_root = prepare_clean_dir(KAGGLE_WORKING_ROOT / "visdrone_raw")
-        for zip_name in ZIP_NAMES.values():
-            zip_path = detected_root / zip_name
+        for split_key in ("train", "val", "test"):
+            zip_path = detected_root / ZIP_NAMES[split_key]
             if zip_path.exists():
                 print(f"Extracting {zip_path} -> {extracted_raw_root}")
                 with zipfile.ZipFile(zip_path, "r") as zip_file:
-                    zip_file.extractall(extracted_raw_root)
+                    zip_file.extractall(extracted_raw_root, filter="data")
         raw_root = extracted_raw_root
     else:
         raw_root = detected_root.resolve()
@@ -403,17 +422,21 @@ def main() -> None:
             raise FileNotFoundError(f"Resume checkpoint not found: {resume_path}")
         print(f"Resuming from checkpoint: {resume_path}")
         model = YOLO(str(resume_path))
-        model.train(resume=True, **train_kwargs)
+        model.train(resume=True)
     else:
         model = YOLO(args.weights)
         model.train(pretrained=True, **train_kwargs)
 
-    save_dir = Path(model.trainer.save_dir)
-    best_path = save_dir / "weights" / "best.pt"
-    last_path = save_dir / "weights" / "last.pt"
-    print(f"Run directory: {save_dir}")
-    print(f"Best weights: {best_path}")
-    print(f"Last weights: {last_path}")
+    trainer = getattr(model, "trainer", None)
+    if trainer is None:
+        print("Warning: model.trainer is not available; cannot determine output paths.")
+    else:
+        save_dir = Path(trainer.save_dir)
+        best_path = save_dir / "weights" / "best.pt"
+        last_path = save_dir / "weights" / "last.pt"
+        print(f"Run directory: {save_dir}")
+        print(f"Best weights: {best_path}")
+        print(f"Last weights: {last_path}")
 
 
 if __name__ == "__main__":
