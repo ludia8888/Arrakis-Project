@@ -141,6 +141,8 @@ If you prefer a GitHub-backed Kaggle notebook instead of a `.py` entrypoint, use
 [`kaggle_train_visdrone_yolo26s.ipynb`](/Users/isihyeon/Desktop/Arrakis-Project/kaggle_train_visdrone_yolo26s.ipynb).
 That notebook clones the repo, installs requirements, runs the training script, and copies `best.pt` / `last.pt`
 into `/kaggle/working`.
+For Kaggle P100 runs, the notebook installs `ultralytics` with `--no-deps` so it does not replace the platform's
+preinstalled CUDA/PyTorch stack.
 
 ## Kaggle CLI setup
 
