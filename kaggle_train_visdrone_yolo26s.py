@@ -13,9 +13,12 @@ from ultralytics import YOLO
 
 KAGGLE_INPUT_ROOT = Path("/kaggle/input")
 KAGGLE_WORKING_ROOT = Path("/kaggle/working")
+RAW_TRAIN_DIR_NAME = "VisDrone2019-DET-train"
+RAW_VAL_DIR_NAME = "VisDrone2019-DET-val"
+RAW_TEST_DIR_NAMES = ("VisDrone2019-DET-test-dev", "VisDrone2019-DET-test-challenge")
 ZIP_NAMES = {
-    "train": "VisDrone2019-DET-train.zip",
-    "val": "VisDrone2019-DET-val.zip",
+    "train": f"{RAW_TRAIN_DIR_NAME}.zip",
+    "val": f"{RAW_VAL_DIR_NAME}.zip",
     "test": "VisDrone2019-DET-test-dev.zip",
 }
 IMAGE_SUFFIXES = (".jpg", ".jpeg", ".png", ".bmp")
@@ -128,7 +131,7 @@ def prepare_merged_root(merged_root: Path) -> None:
 def classify_visdrone_root(root: Path) -> str | None:
     if (root / "images" / "train").exists() and (root / "labels" / "train").exists():
         return "yolo"
-    if (root / "VisDrone2019-DET-train").exists() and (root / "VisDrone2019-DET-val").exists():
+    if (root / RAW_TRAIN_DIR_NAME).exists() and (root / RAW_VAL_DIR_NAME).exists():
         return "raw_dir"
     if (root / ZIP_NAMES["train"]).exists() and (root / ZIP_NAMES["val"]).exists():
         return "raw_zip"
@@ -136,10 +139,17 @@ def classify_visdrone_root(root: Path) -> str | None:
 
 
 def resolve_visdrone_input_root(search_root: Path) -> tuple[str, Path]:
-    candidates = [search_root]
+    if not search_root.exists():
+        raise FileNotFoundError(f"Search root does not exist: {search_root}")
 
-    if search_root.exists():
-        candidates.extend(path for path in search_root.iterdir() if path.is_dir())
+    candidates: list[Path] = []
+    for current_root, dirnames, _ in os.walk(search_root):
+        current_path = Path(current_root)
+        candidates.append(current_path)
+
+        # Once a candidate already looks like a VisDrone root, stop walking deeper into that branch.
+        if classify_visdrone_root(current_path):
+            dirnames[:] = []
 
     for candidate in candidates:
         detected = classify_visdrone_root(candidate)
@@ -241,12 +251,14 @@ def prepare_yolo_data_root(args: argparse.Namespace) -> Path:
     else:
         raw_root = detected_root.resolve()
 
-    convert_visdrone_det_split(raw_root / "VisDrone2019-DET-train", "train", converted_yolo_root)
-    convert_visdrone_det_split(raw_root / "VisDrone2019-DET-val", "val", converted_yolo_root)
+    convert_visdrone_det_split(raw_root / RAW_TRAIN_DIR_NAME, "train", converted_yolo_root)
+    convert_visdrone_det_split(raw_root / RAW_VAL_DIR_NAME, "val", converted_yolo_root)
 
-    test_dir = raw_root / "VisDrone2019-DET-test-dev"
-    if test_dir.exists():
-        ensure_symlink(test_dir / "images", converted_yolo_root / "images" / "test")
+    for test_dir_name in RAW_TEST_DIR_NAMES:
+        test_dir = raw_root / test_dir_name
+        if test_dir.exists():
+            ensure_symlink(test_dir / "images", converted_yolo_root / "images" / "test")
+            break
 
     validate_visdrone_root(converted_yolo_root)
     print(f"Converted raw VisDrone into YOLO format: {converted_yolo_root}")
