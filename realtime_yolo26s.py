@@ -3,14 +3,18 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-import torch
 from mss import mss
 from ultralytics import YOLO
+
+from model_runtime import MODEL_ENV_VAR, resolve_device, resolve_model_path
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run realtime YOLO26s inference from a webcam or the screen.")
-    parser.add_argument("--model", default="yolo26s.pt", help="Path to the YOLO model weights.")
+    parser.add_argument(
+        "--model",
+        help=f"Optional checkpoint path. Defaults to {MODEL_ENV_VAR}, then ./best.pt, then ./yolo26s.pt.",
+    )
     parser.add_argument("--source", choices=("webcam", "screen"), default="webcam", help="Input source type.")
     parser.add_argument("--camera", type=int, default=0, help="Webcam index to open.")
     parser.add_argument("--conf", type=float, default=0.25, help="Confidence threshold.")
@@ -104,12 +108,10 @@ def place_preview_window(
 
 def main() -> None:
     args = parse_args()
-    model_path = Path(args.model)
-    if not model_path.exists():
-        raise FileNotFoundError(f"Model file not found: {model_path}")
-
-    device = "mps" if torch.backends.mps.is_available() else "cpu"
+    model_path = resolve_model_path(args.model)
+    device = resolve_device()
     model = YOLO(str(model_path))
+    print(f"Loaded realtime model: {model_path} on {device}")
     capture = None
     screen_capture = None
     region = None

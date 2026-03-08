@@ -3,23 +3,22 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-import torch
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from ultralytics import YOLO
 
+from model_runtime import MODEL_ENV_VAR, resolve_device, resolve_model_path
+
 
 BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / "static"
-MODEL_PATH = BASE_DIR / "yolo26s.pt"
-
-if not MODEL_PATH.exists():
-    raise FileNotFoundError(f"Model file not found: {MODEL_PATH}")
-
-DEVICE = "mps" if torch.backends.mps.is_available() else "cpu"
+MODEL_PATH = resolve_model_path()
+DEVICE = resolve_device()
 MODEL = YOLO(str(MODEL_PATH))
+
+print(f"Loaded frontend model: {MODEL_PATH} on {DEVICE} (override with {MODEL_ENV_VAR})")
 
 app = FastAPI(title="YOLO26s Local Frontend")
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
@@ -38,7 +37,11 @@ def read_index() -> FileResponse:
 
 @app.get("/health")
 def health() -> dict[str, str]:
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+        "model": str(MODEL_PATH),
+        "device": DEVICE,
+    }
 
 
 def decode_data_url(image_data: str) -> np.ndarray:

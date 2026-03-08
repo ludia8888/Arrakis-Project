@@ -2,3 +2,7 @@
 .venv/
 .vsptime
 __pycache__/
+best.pt
+last.pt
+epoch*.pt
+runs/

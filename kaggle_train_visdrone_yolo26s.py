@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import shutil
 from pathlib import Path
 
 import yaml
@@ -73,10 +74,30 @@ def validate_visdrone_root(data_root: Path) -> None:
 
 
 def ensure_symlink(target: Path, link_path: Path) -> None:
-    if link_path.is_symlink() or link_path.exists():
-        return
+    if link_path.is_symlink():
+        try:
+            if link_path.resolve() == target.resolve():
+                return
+        except FileNotFoundError:
+            pass
+        link_path.unlink()
+    elif link_path.exists():
+        remove_path(link_path)
     link_path.parent.mkdir(parents=True, exist_ok=True)
     os.symlink(target, link_path, target_is_directory=True)
+
+
+def remove_path(path: Path) -> None:
+    if path.is_symlink() or path.is_file():
+        path.unlink()
+    elif path.exists():
+        shutil.rmtree(path)
+
+
+def prepare_merged_root(merged_root: Path) -> None:
+    merged_root.mkdir(parents=True, exist_ok=True)
+    remove_path(merged_root / "images")
+    remove_path(merged_root / "labels")
 
 
 def merge_label_file(source_file: Path, destination_file: Path) -> None:
@@ -103,6 +124,7 @@ def merge_label_file(source_file: Path, destination_file: Path) -> None:
 
 def build_merged_dataset(data_root: Path, merged_root: Path) -> Path:
     merged_root = merged_root.resolve()
+    prepare_merged_root(merged_root)
 
     for split in ("train", "val"):
         ensure_symlink(data_root / "images" / split, merged_root / "images" / split)
@@ -145,6 +167,7 @@ def main() -> None:
     print(f"Using dataset root: {data_root}")
     print(f"Generated merged dataset: {merged_root}")
     print(f"Generated YAML: {data_yaml}")
+    print("Merged dataset root is rebuilt on every run to avoid stale labels and symlinks.")
     print("Using strict split: train=images/train, val=images/val")
     print("Merged classes: 0=person, 1=vehicle")
 
