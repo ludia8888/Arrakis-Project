@@ -172,6 +172,62 @@ def remove_path(path: Path) -> None:
         shutil.rmtree(path)
 
 
+def link_or_copy_images(source_dir: Path, dest_dir: Path) -> int:
+    """Create hardlinks (or copies) of images, avoiding symlinks that confuse YOLO label derivation."""
+    source_dir = source_dir.resolve()
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    count = 0
+    for img_file in sorted(source_dir.iterdir()):
+        if img_file.is_file() and img_file.suffix.lower() in IMAGE_SUFFIXES:
+            dest_file = dest_dir / img_file.name
+            if dest_file.exists():
+                continue
+            try:
+                os.link(img_file, dest_file)
+            except OSError:
+                shutil.copy2(img_file, dest_file)
+            count += 1
+    return count
+
+
+def delete_yolo_cache_files(root: Path) -> None:
+    """Remove .cache files that may contain stale label mappings."""
+    for cache_file in root.rglob("*.cache"):
+        try:
+            cache_file.unlink()
+            print(f"Deleted cache file: {cache_file}")
+        except OSError:
+            pass
+
+
+def verify_label_mapping(data_root: Path, split: str = "train", sample_size: int = 5) -> None:
+    """Verify YOLO can derive label paths from image paths (mirrors Ultralytics img2label_paths)."""
+    images_dir = data_root / "images" / split
+    sa = f"{os.sep}images{os.sep}"
+    sb = f"{os.sep}labels{os.sep}"
+
+    image_files = sorted(
+        p for p in images_dir.iterdir() if p.is_file() and p.suffix.lower() in IMAGE_SUFFIXES
+    )[:sample_size]
+
+    print(f"Label mapping verification ({split}, {len(image_files)} samples):")
+    for img in image_files:
+        img_str = str(img)
+        label_str = sb.join(img_str.rsplit(sa, 1)).rsplit(".", 1)[0] + ".txt"
+        label_exists = Path(label_str).exists()
+        label_lines = 0
+        if label_exists:
+            label_lines = len(Path(label_str).read_text().strip().splitlines())
+        resolved_str = str(img.resolve())
+        is_resolved_same = resolved_str == img_str
+        print(f"  {img.name}: label_exists={label_exists}, lines={label_lines}, "
+              f"path_resolved_same={is_resolved_same}")
+        if not is_resolved_same:
+            resolved_label = sb.join(resolved_str.rsplit(sa, 1)).rsplit(".", 1)[0] + ".txt"
+            print(f"    WARN resolved image: {resolved_str}")
+            print(f"    WARN resolved label: {resolved_label} (exists={Path(resolved_label).exists()})")
+
+
 def prepare_merged_root(merged_root: Path) -> None:
     merged_root.mkdir(parents=True, exist_ok=True)
     remove_path(merged_root / "images")
@@ -384,7 +440,10 @@ def build_merged_dataset(data_root: Path, merged_root: Path) -> Path:
     prepare_merged_root(merged_root)
 
     for split in ("train", "val"):
-        ensure_symlink(data_root / "images" / split, merged_root / "images" / split)
+        src_images = data_root / "images" / split
+        n = link_or_copy_images(src_images, merged_root / "images" / split)
+        print(f"Linked/copied {n} images for {split} split")
+
         source_labels_dir = data_root / "labels" / split
         destination_labels_dir = merged_root / "labels" / split
         destination_labels_dir.mkdir(parents=True, exist_ok=True)
@@ -421,10 +480,19 @@ def main() -> None:
     validate_nonempty_training_data(merged_root, "Merged person/vehicle dataset")
     data_yaml = write_dataset_yaml(merged_root, args.output_yaml)
 
+    # Verify YOLO can derive label paths from image paths
+    verify_label_mapping(merged_root, "train")
+    verify_label_mapping(merged_root, "val")
+
+    # Remove stale cache files that may contain wrong label mappings
+    delete_yolo_cache_files(merged_root)
+    if running_on_kaggle():
+        delete_yolo_cache_files(KAGGLE_INPUT_ROOT)
+
     print(f"Using dataset root: {data_root}")
     print(f"Generated merged dataset: {merged_root}")
     print(f"Generated YAML: {data_yaml}")
-    print("Merged dataset root is rebuilt on every run to avoid stale labels and symlinks.")
+    print("Images are hardlinked/copied (not symlinked) to avoid YOLO label path resolution issues.")
     print("Using strict split: train=images/train, val=images/val")
     print("Merged classes: 0=person, 1=vehicle")
 
