@@ -172,95 +172,35 @@ class MissionExecutor:
             if current_leg == "return" and self.state_machine.phase != "RETURN":
                 self.state_machine.mark_phase("RETURN", reason="adapter reported return leg")
                 logger.info("Leg transitioned to RETURN")
-            if current_leg == "idle" and telemetry.home_distance_m <= 120:
-                break
+            if current_leg == "landing" or self._ardupilot_autoland_active(telemetry):
+                logger.info(
+                    "Mission-oriented ArduPilot path entering mission-driven landing leg=%s mode=%s home_distance=%.1f alt=%.1f",
+                    current_leg,
+                    telemetry.flight_mode,
+                    telemetry.home_distance_m,
+                    telemetry.alt_m,
+                )
+                self.state_machine.mark_phase(
+                    "PRE_MC_RECOVERY",
+                    reason=f"ArduPilot mission entered landing phase ({current_leg}/{telemetry.flight_mode})",
+                )
+                self.state_machine.mark_phase(
+                    "TRANSITION_MC",
+                    reason="ArduPilot mission is handling multicopter recovery/transition",
+                )
+                self.state_machine.mark_phase(
+                    "LANDING",
+                    reason=f"monitoring mission-driven ArduPilot landing in {telemetry.flight_mode}",
+                )
+                self._wait_for_landing(cancel_event)
+                return
+            if current_leg == "idle" and not telemetry.armed and telemetry.home_distance_m <= 120:
+                self.state_machine.complete()
+                logger.info("Mission reached COMPLETE after mission-driven landing disarm")
+                return
             if self._sleep_with_cancel(cancel_event, 0.2):
                 logger.info("Mission cancelled during route progression")
                 return
-
-        telemetry = self.telemetry_hub.telemetry_snapshot()
-        if self._ardupilot_autoland_active(telemetry):
-            logger.info(
-                "Mission-oriented ArduPilot path already in autopilot landing mode=%s home_distance=%.1f alt=%.1f",
-                telemetry.flight_mode,
-                telemetry.home_distance_m,
-                telemetry.alt_m,
-            )
-            self.state_machine.mark_phase(
-                "PRE_MC_RECOVERY",
-                reason=f"ArduPilot autopilot landing active ({telemetry.flight_mode})",
-            )
-            self.state_machine.mark_phase(
-                "TRANSITION_MC",
-                reason="ArduPilot already handling multicopter recovery/transition",
-            )
-            self.state_machine.mark_phase(
-                "LANDING",
-                reason=f"monitoring ArduPilot-managed landing in {telemetry.flight_mode}",
-            )
-            self._wait_for_landing(cancel_event)
-            return
-        if telemetry.flight_mode.upper() == "RTL":
-            logger.info(
-                "Mission-oriented ArduPilot path reached route completion in RTL; forcing multicopter recovery home_distance=%.1f alt=%.1f airspeed=%.1f",
-                telemetry.home_distance_m,
-                telemetry.alt_m,
-                telemetry.airspeed_mps,
-            )
-            self.state_machine.mark_phase(
-                "PRE_MC_RECOVERY",
-                reason="ArduPilot switched to RTL after mission completion",
-            )
-            self.state_machine.mark_phase(
-                "TRANSITION_MC",
-                reason="forcing multicopter transition from ArduPilot RTL",
-            )
-            self.adapter.transition_to_multicopter()
-            if self._sleep_with_cancel(cancel_event, 1.0):
-                logger.info("Mission cancelled during TRANSITION_MC")
-                return
-            self.state_machine.mark_phase(
-                "LANDING",
-                reason="multicopter transition complete after ArduPilot RTL",
-            )
-            self.adapter.land_vertical()
-            self._wait_for_landing(cancel_event)
-            return
-
-        self.state_machine.mark_phase("PRE_MC_RECOVERY", reason="route complete, preparing multicopter recovery")
-        logger.info("Entered PRE_MC_RECOVERY")
-        self.adapter.prepare_multicopter_recovery(
-            {
-                "recovery_center": route_preview.home.model_dump(),
-                "target_alt_m": RECOVERY_ALT_M,
-                "loiter_radius_m": LOITER_RADIUS_M,
-            },
-        )
-        if not self._wait_for_recovery(PRIMARY_RECOVERY, cancel_event):
-            if self.state_machine.abort_reason:
-                logger.warning("Primary recovery ended due to abort reason=%s", self.state_machine.abort_reason)
-                return
-            if cancel_event.is_set():
-                logger.info("Mission cancelled during primary recovery")
-                return
-            logger.warning("Primary recovery timed out, attempting fallback recovery")
-            self.adapter.return_to_home()
-            if not self._wait_for_recovery(FALLBACK_RECOVERY, cancel_event):
-                if cancel_event.is_set():
-                    logger.info("Mission cancelled during fallback recovery")
-                    return
-                self.state_machine.abort("ABORT_MANUAL", "operator intervention required after recovery fallback")
-                logger.error("Fallback recovery failed, operator intervention required")
-                return
-
-        self.state_machine.mark_phase("TRANSITION_MC", reason="recovery thresholds satisfied")
-        self.adapter.transition_to_multicopter()
-        if self._sleep_with_cancel(cancel_event, 1.0):
-            logger.info("Mission cancelled during TRANSITION_MC")
-            return
-        self.state_machine.mark_phase("LANDING", reason="multicopter transition complete, vertical landing requested")
-        self.adapter.land_vertical()
-        self._wait_for_landing(cancel_event)
 
     def _wait_for_recovery(self, thresholds, cancel_event: threading.Event) -> bool:
         deadline = time.time() + thresholds.timeout_seconds

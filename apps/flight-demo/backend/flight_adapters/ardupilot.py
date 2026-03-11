@@ -93,6 +93,7 @@ class ArduPilotAdapter(FlightControllerAdapter):
         self._route_leg = "idle"
         self._mission_seq_outbound_start = 0
         self._mission_seq_return_start = 0
+        self._mission_seq_landing_start = 0
         self._mission_seq_end = 0
         self._mission_seq_takeoff = 0
         self._target_component = 1
@@ -242,6 +243,7 @@ class ArduPilotAdapter(FlightControllerAdapter):
         self._route_leg = "idle"
         self._mission_seq_outbound_start = 0
         self._mission_seq_return_start = 0
+        self._mission_seq_landing_start = 0
         self._mission_seq_end = 0
         self._mission_seq_takeoff = 0
         self._last_statustext = None
@@ -466,15 +468,10 @@ class ArduPilotAdapter(FlightControllerAdapter):
             self._route_leg = "idle"
             return
         mission_index = self._state.mission_index
-        flight_mode = self._state.flight_mode.upper()
         if mission_index >= self._mission_seq_end:
             self._route_leg = "idle"
-        elif mission_index >= self._mission_seq_end - 1 and flight_mode in {
-            ARDUPILOT_MODE_RTL.upper(),
-            ARDUPILOT_MODE_QLOITER.upper(),
-            ARDUPILOT_MODE_QLAND.upper(),
-        }:
-            self._route_leg = "idle"
+        elif mission_index >= self._mission_seq_landing_start:
+            self._route_leg = "landing"
         elif mission_index >= self._mission_seq_return_start:
             self._route_leg = "return"
         elif mission_index >= self._mission_seq_outbound_start:
@@ -555,6 +552,7 @@ class ArduPilotAdapter(FlightControllerAdapter):
         takeoff_seq = 1
         outbound_start = 2
         return_start = outbound_start + len(outbound)
+        landing_seq = return_start + len(return_path)
         mission_items = [
             master.mav.mission_item_int_encode(
                 self._target_system,
@@ -608,6 +606,24 @@ class ArduPilotAdapter(FlightControllerAdapter):
                     float(cruise_alt_m),
                 )
             )
+        mission_items.append(
+            master.mav.mission_item_int_encode(
+                self._target_system,
+                self._target_component,
+                landing_seq,
+                self._mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT,
+                self._mavutil.mavlink.MAV_CMD_NAV_VTOL_LAND,
+                0,
+                1,
+                0.0,
+                0.0,
+                0.0,
+                float("nan"),
+                int(home.lat * 1e7),
+                int(home.lon * 1e7),
+                0.0,
+            )
+        )
         with self._io_lock:
             master.waypoint_clear_all_send()
             time.sleep(0.2)
@@ -626,15 +642,17 @@ class ArduPilotAdapter(FlightControllerAdapter):
         if result not in (None, accepted):
             raise RuntimeError(f"Mission upload rejected with ack type={result}")
         logger.info(
-            "Uploaded ArduPilot mission takeoff_seq=%s outbound_start=%s return_start=%s count=%s",
+            "Uploaded ArduPilot mission takeoff_seq=%s outbound_start=%s return_start=%s landing_start=%s count=%s",
             takeoff_seq,
             outbound_start,
             return_start,
+            landing_seq,
             len(mission_items),
         )
         self._mission_seq_takeoff = takeoff_seq
         self._mission_seq_outbound_start = outbound_start
         self._mission_seq_return_start = return_start
+        self._mission_seq_landing_start = landing_seq
         self._mission_seq_end = len(mission_items)
 
     def _log_uploaded_mission_locked(self, mission_count: int) -> None:
