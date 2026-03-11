@@ -61,6 +61,7 @@ function App() {
   const mapRef = useRef<Map | null>(null);
   const mapNodeRef = useRef<HTMLDivElement | null>(null);
   const videoPanelRef = useRef<HTMLDivElement | null>(null);
+  const [mapReady, setMapReady] = useState(false);
   const [home, setHome] = useState<LatLon | null>(null);
   const [waypoints, setWaypoints] = useState<LatLon[]>([]);
   const [previewReady, setPreviewReady] = useState(false);
@@ -144,6 +145,7 @@ function App() {
           "circle-stroke-color": "#1d3557",
         },
       });
+      setMapReady(true);
     });
     map.on("click", (event) => {
       setWaypoints((prev) => {
@@ -154,23 +156,26 @@ function App() {
       });
     });
     mapRef.current = map;
-    return () => map.remove();
+    return () => {
+      setMapReady(false);
+      map.remove();
+    };
   }, [home]);
 
   useEffect(() => {
-    if (!home || !mapRef.current) {
+    if (!home || !mapRef.current || !mapReady) {
       return;
     }
     updatePointSource(mapRef.current, "home", [home]);
     updateLineSource(mapRef.current, "route", waypoints);
-  }, [home, waypoints]);
+  }, [home, waypoints, mapReady]);
 
   useEffect(() => {
     const socket = new WebSocket("ws://127.0.0.1:8010/ws/state");
     socket.onmessage = (event) => {
       const payload = JSON.parse(event.data) as StatePayload;
       setState(payload);
-      if (mapRef.current) {
+      if (mapRef.current && mapReady) {
         updateLineSource(mapRef.current, "route", payload.outbound);
         updateLineSource(mapRef.current, "return", payload.return_path);
         updatePolygonSource(mapRef.current, "geofence", payload.geofence?.coordinates ?? []);
@@ -179,7 +184,7 @@ function App() {
     };
     socket.onerror = () => setStatus("State WebSocket disconnected.");
     return () => socket.close();
-  }, []);
+  }, [mapReady]);
 
   async function handleSetRoute() {
     if (!home || waypoints.length < 2) {
