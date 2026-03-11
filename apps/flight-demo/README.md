@@ -108,6 +108,11 @@ cd apps/flight-demo
 - Simulator runtime docs live under `apps/flight-demo/sim_runtime`
 - Environment probe: [`sim_runtime/check_environment.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/check_environment.sh)
 - macOS bootstrap: [`sim_runtime/bootstrap_macos_runtime.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/bootstrap_macos_runtime.sh)
+- Gazebo Harmonic installer: [`sim_runtime/install_gz_harmonic.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/install_gz_harmonic.sh)
+- Rosetta shell helper: [`sim_runtime/open_rosetta_shell.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/open_rosetta_shell.sh)
+- Ubuntu VM bootstrap: [`sim_runtime/bootstrap_ubuntu_vm_runtime.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/bootstrap_ubuntu_vm_runtime.sh)
+- Ubuntu VM runtime check: [`sim_runtime/check_ubuntu_vm_runtime.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/check_ubuntu_vm_runtime.sh)
+- ardupilot_gazebo build helper: [`sim_runtime/build_ardupilot_gazebo.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/build_ardupilot_gazebo.sh)
 - Runtime env template: [`sim_runtime/runtime.env.example`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/runtime.env.example)
 - Gazebo launcher: [`sim_runtime/run_gazebo_zephyr.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/run_gazebo_zephyr.sh)
 - SITL launcher: [`sim_runtime/run_ardupilot_zephyr.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/run_ardupilot_zephyr.sh)

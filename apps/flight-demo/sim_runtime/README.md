@@ -56,6 +56,33 @@ cd apps/flight-demo/sim_runtime
 ./bootstrap_macos_runtime.sh
 ```
 
+Open a dedicated Rosetta shell when you need an x86_64 session:
+
+```bash
+cd apps/flight-demo/sim_runtime
+./open_rosetta_shell.sh
+```
+
+Build `ardupilot_gazebo` after Gazebo itself is installed:
+
+```bash
+cd apps/flight-demo/sim_runtime
+./build_ardupilot_gazebo.sh
+```
+
+Install Gazebo Harmonic from the official macOS Homebrew tap:
+
+```bash
+cd apps/flight-demo/sim_runtime
+./install_gz_harmonic.sh
+```
+
+Important:
+- On this machine, Homebrew does not currently expose a straightforward `gz` formula by the simple names we checked.
+- The official macOS path is the OSRF tap: `brew tap osrf/simulation && brew install gz-harmonic`
+- Treat Gazebo installation as a separate official install step, not something guaranteed by `bootstrap_macos_runtime.sh`.
+- If Gazebo Harmonic install or rendering becomes messy on macOS, switch to the Ubuntu VM fallback early.
+
 Adapter smoke once SITL is already running:
 
 ```bash
@@ -115,6 +142,52 @@ If Rosetta/Gazebo becomes unstable:
 - keep the backend/app layer on macOS
 - move Gazebo + SITL into Ubuntu VM
 - point `ARRAKIS_ARDUPILOT_CONNECTION` and `ARRAKIS_ARDUPILOT_VIDEO_SOURCE` at the VM-exposed endpoints
+
+## Ubuntu VM fallback
+
+Use this path when any of the following happens on macOS:
+- `gz-harmonic` fails to install cleanly
+- `ardupilot_gazebo` plugin build flakes under Rosetta
+- camera transport is unstable enough to break adapter smoke
+- GUI/RTF stays below the thresholds in the architecture document
+
+VM bootstrap:
+
+```bash
+cd apps/flight-demo/sim_runtime
+./bootstrap_ubuntu_vm_runtime.sh
+```
+
+Inside the VM, verify the runtime after cloning/building ArduPilot and `ardupilot_gazebo`:
+
+```bash
+cd apps/flight-demo/sim_runtime
+./check_ubuntu_vm_runtime.sh
+```
+
+Recommended split:
+- Ubuntu VM:
+  - `gz sim`
+  - `sim_vehicle.py`
+  - `ardupilot_gazebo` plugin
+- macOS host:
+  - backend
+  - frontend
+  - detector/perception stack
+
+Host `runtime.env` for VM mode should point at the VM IP:
+
+```bash
+ARRAKIS_ARDUPILOT_CONNECTION=udp:<vm-ip>:14550
+ARRAKIS_ARDUPILOT_VIDEO_SOURCE=udp://<vm-ip>:5600
+```
+
+The backend launcher does not need to change:
+
+```bash
+cd apps/flight-demo/sim_runtime
+./run_backend_ardupilot.sh
+```
 
 ## Failure triggers for Rosetta path
 
