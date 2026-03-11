@@ -7,6 +7,7 @@ This folder exists to isolate flight-stack-specific behavior from the Arrakis mi
 - ArduPilot is the first real integration target.
 - PX4 remains a planned second adapter target, but the Arrakis core must not depend on PX4 semantics.
 - All control, telemetry, and simulator camera handling must enter through the adapter boundary.
+- Adapter implementations must also report `current_leg()` so Arrakis core never relies on stack-specific side channels.
 
 ## ArduPilot implementation direction
 

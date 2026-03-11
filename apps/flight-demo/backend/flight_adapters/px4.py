@@ -24,6 +24,7 @@ class PX4Adapter(FlightControllerAdapter):
     def abort(self, reason: str) -> None: raise NotImplementedError
     def reset(self) -> None: raise NotImplementedError
     def get_snapshot(self) -> TelemetrySnapshot: raise NotImplementedError
+    def current_leg(self) -> str: raise NotImplementedError
     def stream_telemetry(self, callback): raise NotImplementedError
     def stream_video(self, callback): raise NotImplementedError
     def get_home(self) -> LatLon: raise NotImplementedError

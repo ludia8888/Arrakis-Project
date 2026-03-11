@@ -57,6 +57,9 @@ class FlightControllerAdapter(ABC):
     def get_snapshot(self) -> TelemetrySnapshot: ...
 
     @abstractmethod
+    def current_leg(self) -> str: ...
+
+    @abstractmethod
     def stream_telemetry(self, callback: Callable[[TelemetrySnapshot], None]) -> None: ...
 
     @abstractmethod

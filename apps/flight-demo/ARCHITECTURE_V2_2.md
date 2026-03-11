@@ -38,6 +38,7 @@
   - `abort(reason)`
   - `reset()`
   - `get_snapshot()`
+  - `current_leg()`
   - `stream_telemetry(callback)`
   - `stream_video(callback)`
 - `stream_video(callback)`가 camera source의 유일한 공통 진입점이다.
@@ -64,8 +65,10 @@
 - Arrakis core는 아래 모듈로 고정한다.
   - `route_planner`
   - `mission_state_machine`
+  - `mission_executor`
   - `safety_manager`
   - `telemetry_hub`
+  - `video_service`
   - `detector_service`
   - `perception_backends`
 - mission phase는 아래 문자열로 고정한다.
@@ -83,9 +86,13 @@
   - `ABORT_MANUAL`
   - `COMPLETE`
 - 상태 머신은 Arrakis core가 소유한다.
+- 실제 round-trip mission 실행 순서는 `mission_executor`가 소유한다.
 - adapter는 “명령 실행 + telemetry/video 공급”만 담당한다.
 - detector service는 queueing, cadence, event aggregation을 담당하고, 실제 모델 추론은 `perception_backends` 경계 뒤로 숨긴다.
 - 즉 이미지 인식 모델은 비행 스택과 마찬가지로 교체 가능한 backend로 취급한다.
+- `telemetry_hub`는 telemetry/safety/payload 조립만 담당한다.
+- `video_service`는 camera frame, detector runtime, JPEG/MJPEG용 video state를 담당한다.
+- `reset()`은 실행 중 mission thread를 먼저 취소하고 정리한 뒤 adapter/video/state를 초기화해야 한다.
 
 ### 4. Route와 Geofence 정책
 
