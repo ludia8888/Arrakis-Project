@@ -158,6 +158,43 @@ cd apps/flight-demo/sim_runtime
 ./bootstrap_ubuntu_vm_runtime.sh
 ```
 
+### Automated QEMU path on the macOS host
+
+If UTM is unavailable and you still need an Ubuntu VM path from the terminal, use the local QEMU fallback.
+
+Prepare the VM assets:
+
+```bash
+cd apps/flight-demo/sim_runtime
+./bootstrap_qemu_vm.sh
+```
+
+Run the VM:
+
+```bash
+cd apps/flight-demo/sim_runtime
+./run_qemu_vm.sh
+```
+
+If you need serial boot logs for debugging:
+
+```bash
+cd apps/flight-demo/sim_runtime
+./run_qemu_vm_headless.sh
+```
+
+This VM forwards:
+- host `127.0.0.1:2222` -> guest SSH
+- host `127.0.0.1:14550/udp` -> guest MAVLink
+- host `127.0.0.1:5600/udp` -> guest video
+
+That means the host can keep using:
+
+```bash
+ARRAKIS_ARDUPILOT_CONNECTION=udp:127.0.0.1:14550
+ARRAKIS_ARDUPILOT_VIDEO_SOURCE=udp://127.0.0.1:5600
+```
+
 Provision the VM workspace:
 
 ```bash
@@ -202,6 +239,8 @@ You can generate that file automatically on the macOS host:
 cd apps/flight-demo/sim_runtime
 ./write_vm_host_runtime_env.sh <vm-ip>
 ```
+
+If you use the QEMU hostfwd path instead of a bridged UTM VM, you do not need a VM IP. Use the default local ports above.
 
 The backend launcher does not need to change:
 

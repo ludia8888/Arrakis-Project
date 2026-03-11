@@ -114,6 +114,8 @@ cd apps/flight-demo
 - Ubuntu VM workspace provisioner: [`sim_runtime/provision_ubuntu_vm_workspace.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/provision_ubuntu_vm_workspace.sh)
 - Ubuntu VM runtime check: [`sim_runtime/check_ubuntu_vm_runtime.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/check_ubuntu_vm_runtime.sh)
 - Host runtime.env writer for VM mode: [`sim_runtime/write_vm_host_runtime_env.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/write_vm_host_runtime_env.sh)
+- QEMU VM bootstrap: [`sim_runtime/bootstrap_qemu_vm.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/bootstrap_qemu_vm.sh)
+- QEMU VM launcher: [`sim_runtime/run_qemu_vm.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/run_qemu_vm.sh)
 - ardupilot_gazebo build helper: [`sim_runtime/build_ardupilot_gazebo.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/build_ardupilot_gazebo.sh)
 - Runtime env template: [`sim_runtime/runtime.env.example`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/runtime.env.example)
 - Gazebo launcher: [`sim_runtime/run_gazebo_zephyr.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/run_gazebo_zephyr.sh)
