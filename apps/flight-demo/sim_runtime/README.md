@@ -47,6 +47,14 @@ cp runtime.env.example runtime.env
 Update `runtime.env` so these paths match your machine:
 - `ARRAKIS_ARDUPILOT_DIR`
 - `ARRAKIS_ARDUPILOT_GAZEBO_DIR`
+- `ARRAKIS_GZ_CAMERA_ENABLE_TOPIC` if you want to enable simulator camera streaming
+
+Bootstrap macOS runtime prerequisites:
+
+```bash
+cd apps/flight-demo/sim_runtime
+./bootstrap_macos_runtime.sh
+```
 
 Adapter smoke once SITL is already running:
 
@@ -82,14 +90,21 @@ cd apps/flight-demo/sim_runtime
 ./run_ardupilot_zephyr.sh
 ```
 
-Terminal 3, backend on the real adapter:
+Terminal 3, enable camera stream if your world/model requires an explicit toggle:
+
+```bash
+cd apps/flight-demo/sim_runtime
+./enable_camera_stream.sh
+```
+
+Terminal 4, backend on the real adapter:
 
 ```bash
 cd apps/flight-demo/sim_runtime
 ./run_backend_ardupilot.sh
 ```
 
-Terminal 4, adapter smoke:
+Terminal 5, adapter smoke:
 
 ```bash
 cd apps/flight-demo/sim_runtime
