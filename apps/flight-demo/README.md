@@ -50,7 +50,11 @@ This app is a separate demo from the existing YOLO browser overlay.
 - v1 ships a working Arrakis architecture and a full mock-demo path first.
 - Real ArduPilot SITL execution is now wired through a first `pymavlink` adapter implementation, but still needs SITL-on-this-machine validation.
 - Real mission execution is gated on fresh telemetry, valid GPS position, valid home position, and a known flight mode.
+- If ArduPilot SITL has not yet emitted `HOME_POSITION`, the adapter may temporarily use the current valid GPS position as a provisional home so route upload is not blocked forever.
 - For mission-oriented adapters, route home is normalized to the current vehicle home instead of trusting the frontend payload.
+- Real-adapter `reset()` clears mission/session state but preserves live telemetry bootstrap and home cache so repeat runs do not unnecessarily fall back to `waiting for heartbeat/home position`.
+- Route-derived geofence remains strict for cruise legs, but home-operation phases (`ARMING`, `TAKEOFF_MC`, `TRANSITION_FW`, `TRANSITION_MC`, `LANDING`) use an expanded home tolerance to absorb QuadPlane launch drift, FW transition arc, and landing flare near home.
+- Route preview generation also adds waypoint turn bubbles so fixed-wing cornering does not immediately breach the route-derived geofence at the far turnaround.
 - The architecture already assumes:
   - ArduPilot first
   - PX4-compatible adapter boundary later

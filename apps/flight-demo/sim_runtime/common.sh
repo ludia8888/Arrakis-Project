@@ -7,6 +7,10 @@ if [[ -f "$SIM_ROOT/runtime.env" ]]; then
   source "$SIM_ROOT/runtime.env"
 fi
 
+if [[ -d "$HOME/.local/bin" ]]; then
+  export PATH="$HOME/.local/bin:$PATH"
+fi
+
 : "${ARRAKIS_GZ_VERSION:=harmonic}"
 : "${ARRAKIS_ARDUPILOT_DIR:=$HOME/Developer/ardupilot}"
 : "${ARRAKIS_ARDUPILOT_GAZEBO_DIR:=$HOME/Developer/ardupilot_gazebo}"
@@ -16,11 +20,12 @@ fi
 : "${ARRAKIS_ARDUPILOT_VEHICLE:=ArduPlane}"
 : "${ARRAKIS_ARDUPILOT_FRAME:=quadplane}"
 : "${ARRAKIS_ARDUPILOT_MODEL:=}"
-: "${ARRAKIS_ARDUPILOT_DEFAULTS:=Tools/autotest/default_params/quadplane.parm,apps/flight-demo/sim_runtime/params/quadplane_demo.parm}"
+: "${ARRAKIS_ARDUPILOT_DEFAULTS:=apps/flight-demo/sim_runtime/params/quadplane_demo.parm}"
 : "${ARRAKIS_ARDUPILOT_MAP:=1}"
 : "${ARRAKIS_ARDUPILOT_CONSOLE:=1}"
 : "${ARRAKIS_ARDUPILOT_WIPE:=1}"
 : "${ARRAKIS_ARDUPILOT_OUT:=127.0.0.1:14550}"
+: "${ARRAKIS_MAVPROXY_ARGS:=}"
 : "${ARRAKIS_FLIGHTGEAR_SCRIPT:=$ARRAKIS_ARDUPILOT_DIR/Tools/autotest/fg_plane_view.sh}"
 
 runtime_require_dir() {
@@ -50,5 +55,6 @@ runtime_print_summary() {
   echo "[sim-runtime] VEHICLE=$ARRAKIS_ARDUPILOT_VEHICLE FRAME=$ARRAKIS_ARDUPILOT_FRAME MODEL=$ARRAKIS_ARDUPILOT_MODEL"
   echo "[sim-runtime] DEFAULTS=$ARRAKIS_ARDUPILOT_DEFAULTS"
   echo "[sim-runtime] OUT=$ARRAKIS_ARDUPILOT_OUT"
+  echo "[sim-runtime] MAVPROXY_ARGS=${ARRAKIS_MAVPROXY_ARGS:-<unset>}"
   echo "[sim-runtime] FLIGHTGEAR_SCRIPT=$ARRAKIS_FLIGHTGEAR_SCRIPT"
 }

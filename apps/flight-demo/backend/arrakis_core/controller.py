@@ -128,8 +128,8 @@ class ArrakisController:
 
     def _on_telemetry(self, snapshot: TelemetrySnapshot) -> None:
         route_preview = self.state_machine.route_preview
-        decision = self.telemetry_hub.on_telemetry(snapshot, route_preview)
         phase = self.state_machine.phase
+        decision = self.telemetry_hub.on_telemetry(snapshot, route_preview, phase)
         if decision.trigger_battery_rtl and phase not in {"RTL_BATTERY", "LANDING", "COMPLETE"}:
             logger.warning("Battery RTL triggered at %.1f%% during phase=%s", snapshot.battery_percent, phase)
             self.state_machine.abort("RTL_BATTERY", "battery threshold reached")

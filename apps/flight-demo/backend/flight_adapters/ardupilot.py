@@ -117,14 +117,19 @@ class ArduPilotAdapter(FlightControllerAdapter):
             source_component=190,
         )
         try:
-            master.wait_heartbeat(timeout=self._heartbeat_timeout)
+            heartbeat = master.wait_heartbeat(timeout=self._heartbeat_timeout)
         except Exception as exc:
             raise RuntimeError(
                 f"Timed out waiting for ArduPilot heartbeat on {self._connection} after {self._heartbeat_timeout:.1f}s"
             ) from exc
+        if heartbeat is None:
+            raise RuntimeError(
+                f"Did not receive a valid ArduPilot heartbeat on {self._connection} within {self._heartbeat_timeout:.1f}s"
+            )
         self._master = master
         self._target_system = master.target_system or 1
         self._target_component = master.target_component or 1
+        self._handle_message(heartbeat)
         self._request_data_streams()
         self._running = True
         self._telemetry_thread = threading.Thread(target=self._telemetry_loop, name="arrakis-ardupilot-telemetry", daemon=True)
@@ -241,11 +246,9 @@ class ArduPilotAdapter(FlightControllerAdapter):
         self._mission_seq_takeoff = 0
         self._last_statustext = None
         self._last_command_ack = None
-        self._home_initialized = False
-        self._heartbeat_received = False
-        self._last_telemetry_at = None
         with self._state_lock:
-            self._state = _State(lat=self._home.lat, lon=self._home.lon)
+            self._state.mission_index = -1
+            self._state.geofence_breached = False
         if self._master is not None:
             with suppress(Exception):
                 with self._io_lock:
@@ -419,6 +422,7 @@ class ArduPilotAdapter(FlightControllerAdapter):
                 self._state.armed = bool(msg.base_mode & self._mavutil.mavlink.MAV_MODE_FLAG_SAFETY_ARMED)
                 self._state.flight_mode = self._mavutil.mode_string_v10(msg)
                 self._state.mode_valid = self._state.flight_mode.upper() != "DISCONNECTED"
+                self._refresh_route_leg_locked()
             elif msg_type == "GLOBAL_POSITION_INT":
                 self._state.lat = msg.lat / 1e7
                 self._state.lon = msg.lon / 1e7
@@ -426,6 +430,7 @@ class ArduPilotAdapter(FlightControllerAdapter):
                 self._state.position_valid = bool(msg.lat or msg.lon)
                 if not self._home_initialized:
                     self._home = LatLon(lat=self._state.lat, lon=self._state.lon)
+                    self._state.home_valid = self._state.position_valid
                 if hasattr(msg, "vx") and hasattr(msg, "vy"):
                     self._state.groundspeed_mps = math.hypot(msg.vx, msg.vy) / 100.0
             elif msg_type == "VFR_HUD":
@@ -435,17 +440,7 @@ class ArduPilotAdapter(FlightControllerAdapter):
                 self._state.battery_percent = float(msg.battery_remaining)
             elif msg_type == "MISSION_CURRENT":
                 self._state.mission_index = int(msg.seq)
-                if self._outbound_count > 0:
-                    if msg.seq >= self._mission_seq_end:
-                        self._route_leg = "idle"
-                    elif msg.seq >= self._mission_seq_return_start:
-                        self._route_leg = "return"
-                    elif msg.seq >= self._mission_seq_outbound_start:
-                        self._route_leg = "outbound"
-                    elif msg.seq >= self._mission_seq_takeoff:
-                        self._route_leg = "takeoff"
-                    else:
-                        self._route_leg = "idle"
+                self._refresh_route_leg_locked()
             elif msg_type == "HOME_POSITION":
                 self._home = LatLon(lat=msg.latitude / 1e7, lon=msg.longitude / 1e7)
                 self._home_initialized = True
@@ -465,6 +460,29 @@ class ArduPilotAdapter(FlightControllerAdapter):
                 text = text.decode("utf-8", errors="ignore")
             self._last_statustext = text.strip("\x00")
             logger.warning("STATUSTEXT severity=%s text=%s", getattr(msg, "severity", "?"), self._last_statustext)
+
+    def _refresh_route_leg_locked(self) -> None:
+        if self._outbound_count <= 0:
+            self._route_leg = "idle"
+            return
+        mission_index = self._state.mission_index
+        flight_mode = self._state.flight_mode.upper()
+        if mission_index >= self._mission_seq_end:
+            self._route_leg = "idle"
+        elif mission_index >= self._mission_seq_end - 1 and flight_mode in {
+            ARDUPILOT_MODE_RTL.upper(),
+            ARDUPILOT_MODE_QLOITER.upper(),
+            ARDUPILOT_MODE_QLAND.upper(),
+        }:
+            self._route_leg = "idle"
+        elif mission_index >= self._mission_seq_return_start:
+            self._route_leg = "return"
+        elif mission_index >= self._mission_seq_outbound_start:
+            self._route_leg = "outbound"
+        elif mission_index >= self._mission_seq_takeoff:
+            self._route_leg = "takeoff"
+        else:
+            self._route_leg = "idle"
 
     def _set_mode(self, mode_name: str) -> None:
         master = self._require_master()

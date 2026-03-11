@@ -20,6 +20,8 @@ from .telemetry_hub import TelemetryHub
 
 logger = logging.getLogger("arrakis.executor")
 
+ARDUPILOT_AUTOLAND_MODES = {"QRTL", "QLAND", "QLOITER"}
+
 
 class MissionExecutor:
     def __init__(
@@ -74,7 +76,7 @@ class MissionExecutor:
                 return
             current_leg = self.adapter.current_leg()
             telemetry = self.telemetry_hub.telemetry_snapshot()
-            if current_leg == "return":
+            if current_leg == "return" and self.state_machine.phase != "RETURN":
                 self.state_machine.mark_phase("RETURN", reason="adapter reported return leg")
                 logger.info("Leg transitioned to RETURN")
             if current_leg == "idle" and telemetry.home_distance_m <= 120:
@@ -167,7 +169,7 @@ class MissionExecutor:
                 return
             current_leg = self.adapter.current_leg()
             telemetry = self.telemetry_hub.telemetry_snapshot()
-            if current_leg == "return":
+            if current_leg == "return" and self.state_machine.phase != "RETURN":
                 self.state_machine.mark_phase("RETURN", reason="adapter reported return leg")
                 logger.info("Leg transitioned to RETURN")
             if current_leg == "idle" and telemetry.home_distance_m <= 120:
@@ -175,6 +177,55 @@ class MissionExecutor:
             if self._sleep_with_cancel(cancel_event, 0.2):
                 logger.info("Mission cancelled during route progression")
                 return
+
+        telemetry = self.telemetry_hub.telemetry_snapshot()
+        if self._ardupilot_autoland_active(telemetry):
+            logger.info(
+                "Mission-oriented ArduPilot path already in autopilot landing mode=%s home_distance=%.1f alt=%.1f",
+                telemetry.flight_mode,
+                telemetry.home_distance_m,
+                telemetry.alt_m,
+            )
+            self.state_machine.mark_phase(
+                "PRE_MC_RECOVERY",
+                reason=f"ArduPilot autopilot landing active ({telemetry.flight_mode})",
+            )
+            self.state_machine.mark_phase(
+                "TRANSITION_MC",
+                reason="ArduPilot already handling multicopter recovery/transition",
+            )
+            self.state_machine.mark_phase(
+                "LANDING",
+                reason=f"monitoring ArduPilot-managed landing in {telemetry.flight_mode}",
+            )
+            self._wait_for_landing(cancel_event)
+            return
+        if telemetry.flight_mode.upper() == "RTL":
+            logger.info(
+                "Mission-oriented ArduPilot path reached route completion in RTL; forcing multicopter recovery home_distance=%.1f alt=%.1f airspeed=%.1f",
+                telemetry.home_distance_m,
+                telemetry.alt_m,
+                telemetry.airspeed_mps,
+            )
+            self.state_machine.mark_phase(
+                "PRE_MC_RECOVERY",
+                reason="ArduPilot switched to RTL after mission completion",
+            )
+            self.state_machine.mark_phase(
+                "TRANSITION_MC",
+                reason="forcing multicopter transition from ArduPilot RTL",
+            )
+            self.adapter.transition_to_multicopter()
+            if self._sleep_with_cancel(cancel_event, 1.0):
+                logger.info("Mission cancelled during TRANSITION_MC")
+                return
+            self.state_machine.mark_phase(
+                "LANDING",
+                reason="multicopter transition complete after ArduPilot RTL",
+            )
+            self.adapter.land_vertical()
+            self._wait_for_landing(cancel_event)
+            return
 
         self.state_machine.mark_phase("PRE_MC_RECOVERY", reason="route complete, preparing multicopter recovery")
         logger.info("Entered PRE_MC_RECOVERY")
@@ -209,19 +260,7 @@ class MissionExecutor:
             return
         self.state_machine.mark_phase("LANDING", reason="multicopter transition complete, vertical landing requested")
         self.adapter.land_vertical()
-
-        while True:
-            if cancel_event.is_set():
-                logger.info("Mission cancelled during LANDING")
-                return
-            telemetry = self.telemetry_hub.telemetry_snapshot()
-            if not telemetry.armed or telemetry.alt_m <= 0.5:
-                break
-            if self._sleep_with_cancel(cancel_event, 0.2):
-                logger.info("Mission cancelled while waiting for landing")
-                return
-        self.state_machine.complete()
-        logger.info("Mission reached COMPLETE")
+        self._wait_for_landing(cancel_event)
 
     def _wait_for_recovery(self, thresholds, cancel_event: threading.Event) -> bool:
         deadline = time.time() + thresholds.timeout_seconds
@@ -261,6 +300,23 @@ class MissionExecutor:
                 return False
         logger.warning("Recovery wait timed out after %.1fs", thresholds.timeout_seconds)
         return False
+
+    def _wait_for_landing(self, cancel_event: threading.Event) -> None:
+        while True:
+            if cancel_event.is_set():
+                logger.info("Mission cancelled during LANDING")
+                return
+            telemetry = self.telemetry_hub.telemetry_snapshot()
+            if not telemetry.armed or telemetry.alt_m <= 0.5:
+                break
+            if self._sleep_with_cancel(cancel_event, 0.2):
+                logger.info("Mission cancelled while waiting for landing")
+                return
+        self.state_machine.complete()
+        logger.info("Mission reached COMPLETE")
+
+    def _ardupilot_autoland_active(self, telemetry) -> bool:
+        return telemetry.flight_mode.upper() in ARDUPILOT_AUTOLAND_MODES
 
     def _sleep_with_cancel(self, cancel_event: threading.Event, duration_seconds: float, step_seconds: float = 0.1) -> bool:
         deadline = time.time() + duration_seconds

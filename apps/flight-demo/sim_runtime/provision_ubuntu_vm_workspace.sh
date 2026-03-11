@@ -17,13 +17,23 @@ python3 -m pip install --user \
   MAVProxy \
   "empy==3.3.4"
 
+for shell_rc in "$HOME/.profile" "$HOME/.bashrc"; do
+  touch "$shell_rc"
+  if ! grep -Fq 'export PATH="$HOME/.local/bin:$PATH"' "$shell_rc"; then
+    printf '\nexport PATH="$HOME/.local/bin:$PATH"\n' >>"$shell_rc"
+  fi
+done
+
 cat <<EOF
 [sim-runtime] VM workspace provisioned
 [sim-runtime] ArduPilot: $ARRAKIS_VM_ARDUPILOT_DIR
+[sim-runtime] ensured \$HOME/.local/bin is exported in ~/.profile and ~/.bashrc
 
 Next steps:
 1. verify sim_vehicle.py:
    $ARRAKIS_VM_ARDUPILOT_DIR/Tools/autotest/sim_vehicle.py --help | head
-2. run QuadPlane SITL:
+2. verify mavproxy.py:
+   command -v mavproxy.py
+3. run QuadPlane SITL:
    /Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/run_ardupilot_quadplane.sh
 EOF

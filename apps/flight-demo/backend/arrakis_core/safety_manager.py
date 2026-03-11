@@ -1,23 +1,78 @@
 from __future__ import annotations
 
 import logging
+from math import cos, radians
+
 from shapely import Point, Polygon
 
-from config import BATTERY_RTL_THRESHOLD
-from schemas import GeofencePolygon, TelemetrySnapshot
+from config import BATTERY_RTL_THRESHOLD, HOME_OPERATION_BUBBLE_RADIUS_M, OUTBOUND_STARTUP_BUBBLE_RADIUS_M
+from schemas import GeofencePolygon, MissionPhase, TelemetrySnapshot
 
 
 logger = logging.getLogger("arrakis.safety")
 
+HOME_OPERATION_PHASES = {"ARMING", "TAKEOFF_MC", "TRANSITION_FW", "TRANSITION_MC", "LANDING"}
+OUTBOUND_STARTUP_MAX_MISSION_INDEX = 2
 
-def geofence_contains(geofence: GeofencePolygon | None, telemetry: TelemetrySnapshot) -> bool:
+
+def _distance_m(lat_a: float, lon_a: float, lat_b: float, lon_b: float) -> float:
+    lat_scale = 111_320.0
+    lon_scale = cos(radians((lat_a + lat_b) / 2.0)) * 111_320.0
+    dx = (lon_b - lon_a) * lon_scale
+    dy = (lat_b - lat_a) * lat_scale
+    return (dx * dx + dy * dy) ** 0.5
+
+
+def geofence_contains(
+    geofence: GeofencePolygon | None,
+    telemetry: TelemetrySnapshot,
+    phase: MissionPhase,
+    route_home: tuple[float, float] | None = None,
+) -> bool:
     if geofence is None:
         return True
     polygon = Polygon([(point.lon, point.lat) for point in geofence.coordinates])
-    contained = polygon.contains(Point(telemetry.lon, telemetry.lat))
-    if not contained:
-        logger.warning("Geofence containment failed lat=%.6f lon=%.6f", telemetry.lat, telemetry.lon)
-    return contained
+    point = Point(telemetry.lon, telemetry.lat)
+    contained = polygon.covers(point)
+    if contained:
+        return True
+
+    if route_home and phase in HOME_OPERATION_PHASES:
+        home_lat, home_lon = route_home
+        distance_m = _distance_m(home_lat, home_lon, telemetry.lat, telemetry.lon)
+        if distance_m <= HOME_OPERATION_BUBBLE_RADIUS_M:
+            logger.info(
+                "Geofence tolerated for phase=%s lat=%.6f lon=%.6f distance=%.1fm threshold=%.1fm",
+                phase,
+                telemetry.lat,
+                telemetry.lon,
+                distance_m,
+                HOME_OPERATION_BUBBLE_RADIUS_M,
+            )
+            return True
+
+    if route_home and phase == "OUTBOUND" and telemetry.mission_index <= OUTBOUND_STARTUP_MAX_MISSION_INDEX:
+        home_lat, home_lon = route_home
+        distance_m = _distance_m(home_lat, home_lon, telemetry.lat, telemetry.lon)
+        if distance_m <= OUTBOUND_STARTUP_BUBBLE_RADIUS_M:
+            logger.info(
+                "Geofence tolerated for outbound startup lat=%.6f lon=%.6f mission_idx=%d distance=%.1fm threshold=%.1fm",
+                telemetry.lat,
+                telemetry.lon,
+                telemetry.mission_index,
+                distance_m,
+                OUTBOUND_STARTUP_BUBBLE_RADIUS_M,
+            )
+            return True
+
+    logger.warning(
+        "Geofence containment failed phase=%s lat=%.6f lon=%.6f route_home=%s",
+        phase,
+        telemetry.lat,
+        telemetry.lon,
+        route_home,
+    )
+    return False
 
 
 def should_trigger_battery_rtl(telemetry: TelemetrySnapshot) -> bool:

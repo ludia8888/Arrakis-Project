@@ -22,6 +22,10 @@ CMD=(
   --out "$ARRAKIS_ARDUPILOT_OUT"
 )
 
+if [[ -n "$ARRAKIS_MAVPROXY_ARGS" ]]; then
+  CMD+=(--mavproxy-args "$ARRAKIS_MAVPROXY_ARGS")
+fi
+
 if [[ -n "$ARRAKIS_ARDUPILOT_MODEL" ]]; then
   CMD+=(--model "$ARRAKIS_ARDUPILOT_MODEL")
 fi

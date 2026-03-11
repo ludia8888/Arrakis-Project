@@ -41,11 +41,15 @@ cat <<EOF
 Next steps inside the VM:
 1. Clone ArduPilot:
    git clone --filter=blob:none --recurse-submodules https://github.com/ArduPilot/ardupilot.git \$HOME/Developer/ardupilot
-2. Primary runtime path:
+2. Install user-space MAVLink tools and PATH glue:
+   ${SCRIPT_DIR}/provision_ubuntu_vm_workspace.sh
+3. Write a guest runtime.env:
+   ${SCRIPT_DIR}/write_vm_guest_runtime_env.sh
+4. Primary runtime path:
    ${SCRIPT_DIR}/run_ardupilot_quadplane.sh
-3. Optional FlightGear view-only:
+5. Optional FlightGear view-only:
    ${SCRIPT_DIR}/run_flightgear_view.sh
-4. Copy ${SCRIPT_DIR}/runtime.env.example to runtime.env on the macOS host and point:
-   ARRAKIS_ARDUPILOT_CONNECTION=udp://<vm-ip>:14550
+6. On the macOS host, set the backend listener to:
+   ARRAKIS_ARDUPILOT_CONNECTION=udp:0.0.0.0:14550
    ARRAKIS_ARDUPILOT_VIDEO_SOURCE=
 EOF

@@ -32,6 +32,10 @@ def main() -> int:
     adapter.connect()
     connect_ms = (time.perf_counter() - started) * 1000.0
     print(f"[smoke] connect ok in {connect_ms:.1f}ms")
+    bootstrap = adapter.bootstrap_status()
+    print("[smoke] bootstrap", bootstrap.model_dump())
+    if not bootstrap.connected:
+        raise RuntimeError(f"Adapter did not reach connected bootstrap state: {bootstrap.reason}")
 
     snapshot = adapter.get_snapshot()
     print(
@@ -42,6 +46,10 @@ def main() -> int:
             "battery_percent": snapshot.battery_percent,
             "lat": snapshot.lat,
             "lon": snapshot.lon,
+            "telemetry_fresh": snapshot.telemetry_fresh,
+            "mode_valid": snapshot.mode_valid,
+            "position_valid": snapshot.position_valid,
+            "home_valid": snapshot.home_valid,
         },
     )
 
@@ -53,6 +61,7 @@ def main() -> int:
         raise RuntimeError("No telemetry callback received within timeout")
 
     print(f"[smoke] telemetry callbacks: {len(telemetry_events)}")
+    print("[smoke] bootstrap after callbacks", adapter.bootstrap_status().model_dump())
 
     video_source = getattr(importlib.import_module("config"), "ARDUPILOT_VIDEO_SOURCE", None)
     if video_source:

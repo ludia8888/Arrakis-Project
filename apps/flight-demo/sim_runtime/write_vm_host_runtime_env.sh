@@ -20,8 +20,9 @@ ARRAKIS_ARDUPILOT_MODEL=
 ARRAKIS_ARDUPILOT_MAP=1
 ARRAKIS_ARDUPILOT_CONSOLE=1
 ARRAKIS_ARDUPILOT_WIPE=1
-ARRAKIS_ARDUPILOT_OUT=127.0.0.1:14550
-ARRAKIS_ARDUPILOT_CONNECTION=udp:${VM_IP}:${MAVLINK_PORT}
+ARRAKIS_ARDUPILOT_OUT=10.0.2.2:${MAVLINK_PORT}
+ARRAKIS_MAVPROXY_ARGS="--daemon --non-interactive --nowait"
+ARRAKIS_ARDUPILOT_CONNECTION=udp:0.0.0.0:${MAVLINK_PORT}
 ARRAKIS_ARDUPILOT_VIDEO_SOURCE=
 ARRAKIS_FLIGHTGEAR_SCRIPT=\$HOME/Developer/ardupilot/Tools/autotest/fg_plane_view.sh
 
@@ -34,5 +35,7 @@ ARRAKIS_FLIGHTGEAR_SCRIPT=\$HOME/Developer/ardupilot/Tools/autotest/fg_plane_vie
 EOF
 
 echo "[sim-runtime] wrote $RUNTIME_ENV"
-echo "[sim-runtime] ARRAKIS_ARDUPILOT_CONNECTION=udp:${VM_IP}:${MAVLINK_PORT}"
+echo "[sim-runtime] guest should forward MAVLink to host-reachable address 10.0.2.2:${MAVLINK_PORT}"
+echo "[sim-runtime] ARRAKIS_ARDUPILOT_CONNECTION=udp:0.0.0.0:${MAVLINK_PORT}"
 echo "[sim-runtime] ARRAKIS_ARDUPILOT_VIDEO_SOURCE=<empty>"
+echo "[sim-runtime] note: vm ip ${VM_IP} is not used as the host bind address"

@@ -67,6 +67,8 @@
 - real adapter는 `connected`와 `mission_ready`를 구분해야 한다.
   - heartbeat만 받은 상태로는 mission start를 허용하지 않는다.
   - `mission_ready`는 fresh telemetry, valid GPS position, valid home position, known flight mode를 모두 만족할 때만 `true`
+  - adapter `reset()`은 live telemetry bootstrap 자체를 날리지 않고, mission/session state만 초기화한다.
+  - ArduPilot SITL에서는 `HOME_POSITION`이 늦을 수 있으므로, real adapter는 valid GPS position을 provisional home fallback으로 사용할 수 있다.
 - v1 구현은 `ArduPilotAdapter`만 제공한다.
 - `PX4Adapter`는 같은 인터페이스를 따르는 향후 구현 대상으로만 남긴다.
 - 현재 첫 concrete `ArduPilotAdapter` 구현은 `pymavlink`를 사용한다.
@@ -125,12 +127,15 @@
   - home + outbound + return 전체 polyline을 기준으로 corridor polygon 생성
   - corridor half-width 기본값: `120m`
   - home 주변 safety bubble radius: `80m`
+  - home-operation phase(`ARMING`, `TAKEOFF_MC`, `TRANSITION_FW`, `TRANSITION_MC`, `LANDING`)에서는 별도 home tolerance radius `160m`를 적용해 QuadPlane의 launch drift, FW transition arc, landing flare를 흡수한다.
+  - 각 route waypoint에는 fixed-wing turn arc를 흡수하기 위한 turn bubble radius `155m`를 추가한다.
   - 모든 waypoint와 return path가 polygon 내부에 포함되도록 보정
 - 프론트는 route 생성 직후 geofence polygon을 항상 표시한다.
 - v1에서는 사용자가 geofence를 직접 그리지 않는다.
 - `safety_manager`는 adapter snapshot의 위치와 generated geofence polygon을 사용해 breach를 판단한다.
 - bootstrap 이전의 stale/default snapshot으로 geofence abort가 발동하면 안 된다.
   - geofence 판단은 `telemetry_fresh`, `mode_valid`, `position_valid`, `home_valid`가 모두 참일 때만 수행한다.
+  - polygon containment는 `contains()`가 아니라 경계 포함 의미의 `covers()`를 사용한다.
 
 ### 5. Recovery/Transition 정책
 

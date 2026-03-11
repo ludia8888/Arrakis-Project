@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import threading
 from dataclasses import dataclass
-from schemas import RoutePreview, TelemetrySnapshot
+from schemas import MissionPhase, RoutePreview, TelemetrySnapshot
 
 from .safety_manager import geofence_contains, should_trigger_battery_rtl
 from .video_service import VideoService
@@ -32,7 +32,12 @@ class TelemetryHub:
         with self._lock:
             return self._telemetry
 
-    def on_telemetry(self, snapshot: TelemetrySnapshot, route_preview: RoutePreview | None) -> SafetyDecision:
+    def on_telemetry(
+        self,
+        snapshot: TelemetrySnapshot,
+        route_preview: RoutePreview | None,
+        phase: MissionPhase,
+    ) -> SafetyDecision:
         geofence_eligible = bool(
             route_preview
             and snapshot.telemetry_fresh
@@ -40,7 +45,13 @@ class TelemetryHub:
             and snapshot.position_valid
             and snapshot.home_valid
         )
-        geofence_breached = geofence_eligible and not geofence_contains(route_preview.geofence if route_preview else None, snapshot)
+        route_home = (route_preview.home.lat, route_preview.home.lon) if route_preview else None
+        geofence_breached = geofence_eligible and not geofence_contains(
+            route_preview.geofence if route_preview else None,
+            snapshot,
+            phase,
+            route_home,
+        )
         updated = snapshot.model_copy(update={"geofence_breached": geofence_breached})
         with self._lock:
             self._telemetry = updated

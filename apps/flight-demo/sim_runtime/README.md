@@ -37,10 +37,16 @@ cp runtime.env.example runtime.env
 The primary env values are:
 - `ARRAKIS_ARDUPILOT_DIR`
 - `ARRAKIS_ARDUPILOT_FRAME=quadplane`
-- `ARRAKIS_ARDUPILOT_DEFAULTS=Tools/autotest/default_params/quadplane.parm,apps/flight-demo/sim_runtime/params/quadplane_demo.parm`
+- `ARRAKIS_ARDUPILOT_DEFAULTS=apps/flight-demo/sim_runtime/params/quadplane_demo.parm`
 - `ARRAKIS_ARDUPILOT_CONNECTION=udp:127.0.0.1:14550`
 - `ARRAKIS_ARDUPILOT_VIDEO_SOURCE=`  
   Keep this empty for the current path because FlightGear is view-only and does not feed the browser video panel.
+
+Important:
+- `sim_vehicle.py -f quadplane` already injects the stock `default_params/quadplane.parm` internally. `ARRAKIS_ARDUPILOT_DEFAULTS` should therefore point only to Arrakis-specific override params.
+- `sim_vehicle.py --out` is a MAVProxy forwarding path, not a direct ArduPilot output path.
+- On Ubuntu VM guests, `mavproxy.py` must be on `PATH`. This project now assumes `$HOME/.local/bin` is exported.
+- In QEMU user-networking mode, the guest should forward MAVLink to the host-reachable address `10.0.2.2:14550`, while the macOS host backend listens on `udp:0.0.0.0:14550`.
 
 Bootstrap a local macOS runtime:
 
@@ -142,6 +148,13 @@ cd apps/flight-demo/sim_runtime
 ./provision_ubuntu_vm_workspace.sh
 ```
 
+Write a guest runtime env inside the VM:
+
+```bash
+cd apps/flight-demo/sim_runtime
+./write_vm_guest_runtime_env.sh
+```
+
 Verify VM runtime:
 
 ```bash
@@ -169,6 +182,14 @@ On the macOS host, write a VM-targeted env file:
 cd apps/flight-demo/sim_runtime
 ./write_vm_host_runtime_env.sh <vm-ip>
 ```
+
+This host env intentionally binds:
+
+```bash
+ARRAKIS_ARDUPILOT_CONNECTION=udp:0.0.0.0:14550
+```
+
+because the guest MAVProxy forwards UDP to the host rather than the host dialing into the VM IP.
 
 Then start the backend on the host:
 
