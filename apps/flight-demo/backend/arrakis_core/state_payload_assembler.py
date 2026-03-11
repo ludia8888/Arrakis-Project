@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import time
 
-from schemas import LatLon, RoutePreview, RouteProgress, StatePayload, TelemetrySnapshot
+from schemas import LatLon, RoutePreview, RouteProgress, StatePayload, TelemetrySnapshot, TransitionDiagnostics
 
 from .video_service import VideoService
 
@@ -23,6 +23,7 @@ class StatePayloadAssembler:
         abort_reason: str | None,
         route_preview: RoutePreview | None,
         current_leg: str,
+        transition: TransitionDiagnostics,
     ) -> StatePayload:
         progress = RouteProgress(
             outbound_total=len(route_preview.outbound) if route_preview else 0,
@@ -39,6 +40,7 @@ class StatePayloadAssembler:
             route_progress=progress,
             detector=self.video_service.detector_state(),
             simulator=self.video_service.simulator_state(telemetry.sim_rtf),
+            transition=transition,
             geofence=route_preview.geofence if route_preview else None,
             route_home=route_preview.home if route_preview else None,
             outbound=route_preview.outbound if route_preview else [],

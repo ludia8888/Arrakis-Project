@@ -59,6 +59,19 @@ def _project_point_from_home(home: LatLon, reference: LatLon, distance_m: float)
     )
 
 
+def _age_seconds(timestamp: float | None, now: float | None = None) -> float | None:
+    if timestamp is None:
+        return None
+    return max((now or time.time()) - timestamp, 0.0)
+
+
+def _bootstrap_wait_reason(target: str, timestamp: float | None, now: float | None = None) -> str:
+    age = _age_seconds(timestamp, now)
+    if age is None:
+        return f"waiting for {target} (never received)"
+    return f"waiting for {target} (last update {age:.1f}s ago)"
+
+
 @dataclass
 class _State:
     lat: float
@@ -121,6 +134,10 @@ class ArduPilotAdapter(FlightControllerAdapter):
         self._home_initialized = False
         self._heartbeat_received = False
         self._last_telemetry_at: float | None = None
+        self._last_heartbeat_at: float | None = None
+        self._last_mode_at: float | None = None
+        self._last_position_at: float | None = None
+        self._last_home_at: float | None = None
         logger.info("ArduPilotAdapter initialized connection=%s video_source=%s", self._connection, self._video_source)
 
     def connect(self) -> None:
@@ -325,19 +342,25 @@ class ArduPilotAdapter(FlightControllerAdapter):
 
     def bootstrap_status(self) -> AdapterBootstrapStatus:
         snapshot = self.get_snapshot()
+        now = time.time()
         connected = self._master is not None and self._heartbeat_received
         mission_ready = connected and snapshot.telemetry_fresh and snapshot.mode_valid and snapshot.position_valid and snapshot.home_valid
+        telemetry_age_s = _age_seconds(self._last_telemetry_at, now)
+        heartbeat_age_s = _age_seconds(self._last_heartbeat_at, now)
+        mode_age_s = _age_seconds(self._last_mode_at, now)
+        position_age_s = _age_seconds(self._last_position_at, now)
+        home_age_s = _age_seconds(self._last_home_at, now)
         reason: str | None = None
         if not connected:
-            reason = "waiting for heartbeat"
+            reason = _bootstrap_wait_reason("heartbeat", self._last_heartbeat_at, now)
         elif not snapshot.telemetry_fresh:
-            reason = "waiting for fresh telemetry"
+            reason = _bootstrap_wait_reason("fresh telemetry", self._last_telemetry_at, now)
         elif not snapshot.mode_valid:
-            reason = "waiting for valid flight mode"
+            reason = _bootstrap_wait_reason("valid flight mode", self._last_mode_at, now)
         elif not snapshot.position_valid:
-            reason = "waiting for valid GPS position"
+            reason = _bootstrap_wait_reason("valid GPS position", self._last_position_at, now)
         elif not snapshot.home_valid:
-            reason = "waiting for valid home position"
+            reason = _bootstrap_wait_reason("valid home position", self._last_home_at, now)
         return AdapterBootstrapStatus(
             connected=connected,
             heartbeat_received=self._heartbeat_received,
@@ -347,6 +370,15 @@ class ArduPilotAdapter(FlightControllerAdapter):
             home_ready=snapshot.home_valid,
             mission_ready=mission_ready,
             last_telemetry_at=self._last_telemetry_at,
+            last_heartbeat_at=self._last_heartbeat_at,
+            last_mode_at=self._last_mode_at,
+            last_position_at=self._last_position_at,
+            last_home_at=self._last_home_at,
+            telemetry_age_s=telemetry_age_s,
+            heartbeat_age_s=heartbeat_age_s,
+            mode_age_s=mode_age_s,
+            position_age_s=position_age_s,
+            home_age_s=home_age_s,
             reason=reason,
         )
 
@@ -435,22 +467,30 @@ class ArduPilotAdapter(FlightControllerAdapter):
         msg_type = msg.get_type()
         if msg_type == "BAD_DATA":
             return
-        self._last_telemetry_at = time.time()
+        now = time.time()
+        self._last_telemetry_at = now
         with self._state_lock:
             if msg_type == "HEARTBEAT":
                 self._heartbeat_received = True
+                self._last_heartbeat_at = now
                 self._state.armed = bool(msg.base_mode & self._mavutil.mavlink.MAV_MODE_FLAG_SAFETY_ARMED)
                 self._state.flight_mode = self._mavutil.mode_string_v10(msg)
                 self._state.mode_valid = self._state.flight_mode.upper() != "DISCONNECTED"
+                if self._state.mode_valid:
+                    self._last_mode_at = now
                 self._refresh_route_leg_locked()
             elif msg_type == "GLOBAL_POSITION_INT":
                 self._state.lat = msg.lat / 1e7
                 self._state.lon = msg.lon / 1e7
                 self._state.alt_m = msg.relative_alt / 1000.0
                 self._state.position_valid = bool(msg.lat or msg.lon)
+                if self._state.position_valid:
+                    self._last_position_at = now
                 if not self._home_initialized:
                     self._home = LatLon(lat=self._state.lat, lon=self._state.lon)
                     self._state.home_valid = self._state.position_valid
+                    if self._state.home_valid:
+                        self._last_home_at = now
                 if hasattr(msg, "vx") and hasattr(msg, "vy"):
                     self._state.groundspeed_mps = math.hypot(msg.vx, msg.vy) / 100.0
             elif msg_type == "VFR_HUD":
@@ -465,6 +505,7 @@ class ArduPilotAdapter(FlightControllerAdapter):
                 self._home = LatLon(lat=msg.latitude / 1e7, lon=msg.longitude / 1e7)
                 self._home_initialized = True
                 self._state.home_valid = True
+                self._last_home_at = now
             elif msg_type == "NAMED_VALUE_FLOAT":
                 name = msg.name.decode("utf-8", errors="ignore").strip("\x00")
                 if name.upper() in {"RTF", "SIM_RTF"}:

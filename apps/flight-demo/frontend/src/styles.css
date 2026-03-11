@@ -93,9 +93,58 @@ button:disabled {
   gap: 12px;
 }
 
-.actions .status {
+.actions .status,
+.action-flags,
+.action-hint {
   grid-column: 1 / -1;
+}
+
+.actions .status,
+.action-hint {
   margin: 0;
+}
+
+.action-flags {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.status-flag {
+  border-radius: 16px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.status-flag span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.78rem;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.status-flag strong {
+  display: block;
+  font-size: 0.92rem;
+}
+
+.status-flag-ok {
+  outline: 1px solid rgba(42, 157, 143, 0.45);
+}
+
+.status-flag-warn {
+  outline: 1px solid rgba(244, 162, 97, 0.45);
+}
+
+.status-flag-danger {
+  outline: 1px solid rgba(231, 111, 81, 0.55);
+}
+
+.action-hint {
+  color: var(--muted);
+  font-size: 0.92rem;
 }
 
 .grid {
@@ -237,5 +286,9 @@ button:disabled {
 
   .map-node {
     height: 480px;
+  }
+
+  .action-flags {
+    grid-template-columns: 1fr;
   }
 }

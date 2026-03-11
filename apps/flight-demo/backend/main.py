@@ -65,6 +65,7 @@ def get_config(request: Request) -> dict[str, object]:
         "home": home.model_dump(),
         "bootstrap": bootstrap.model_dump(),
         "adapter": os.getenv("ARRAKIS_FLIGHT_ADAPTER", "mock"),
+        "startup_error": controller.startup_error,
     }
 
 
@@ -80,8 +81,10 @@ def get_health(request: Request) -> dict[str, object]:
         else {"adapter": controller.adapter.__class__.__name__, "connected": True}
     )
     memory = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    degraded = bool(controller.startup_error or not adapter_health.get("connected", True))
     return {
-        "status": "ok",
+        "status": "degraded" if degraded else "ok",
+        "startup_error": controller.startup_error,
         "adapter": adapter_health,
         "detector": {
             "enabled": detector.enabled,

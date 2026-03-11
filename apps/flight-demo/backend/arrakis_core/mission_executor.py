@@ -7,6 +7,7 @@ import time
 from config import (
     BATTERY_RTL_THRESHOLD,
     FALLBACK_RECOVERY,
+    LANDING_TIMEOUT_SECONDS,
     LOITER_RADIUS_M,
     PRIMARY_RECOVERY,
     RECOVERY_ALT_M,
@@ -118,19 +119,7 @@ class MissionExecutor:
             return
         self.state_machine.mark_phase("LANDING", reason="multicopter transition complete, vertical landing requested")
         self.adapter.land_vertical()
-
-        while True:
-            if cancel_event.is_set():
-                logger.info("Mission cancelled during LANDING")
-                return
-            telemetry = self.telemetry_hub.telemetry_snapshot()
-            if not telemetry.armed or telemetry.alt_m <= 0.5:
-                break
-            if self._sleep_with_cancel(cancel_event, 0.2):
-                logger.info("Mission cancelled while waiting for landing")
-                return
-        self.state_machine.complete()
-        logger.info("Mission reached COMPLETE")
+        self._wait_for_landing(cancel_event)
 
     def _run_mission_oriented_roundtrip(self, route_preview, cancel_event: threading.Event) -> None:
         self.adapter.upload_roundtrip_mission(
@@ -241,19 +230,36 @@ class MissionExecutor:
         logger.warning("Recovery wait timed out after %.1fs", thresholds.timeout_seconds)
         return False
 
-    def _wait_for_landing(self, cancel_event: threading.Event) -> None:
+    def _wait_for_landing(self, cancel_event: threading.Event) -> bool:
+        deadline = time.time() + LANDING_TIMEOUT_SECONDS
         while True:
             if cancel_event.is_set():
                 logger.info("Mission cancelled during LANDING")
-                return
+                return False
             telemetry = self.telemetry_hub.telemetry_snapshot()
             if not telemetry.armed or telemetry.alt_m <= 0.5:
                 break
+            if time.time() >= deadline:
+                reason = f"timed out waiting for landing after {LANDING_TIMEOUT_SECONDS:.0f}s"
+                logger.error(
+                    "Landing wait timed out mode=%s armed=%s alt=%.2f home_distance=%.1f",
+                    telemetry.flight_mode,
+                    telemetry.armed,
+                    telemetry.alt_m,
+                    telemetry.home_distance_m,
+                )
+                self.state_machine.abort("ABORT_MANUAL", reason)
+                try:
+                    self.adapter.abort(reason)
+                except Exception:
+                    logger.exception("Adapter abort failed after landing timeout")
+                return False
             if self._sleep_with_cancel(cancel_event, 0.2):
                 logger.info("Mission cancelled while waiting for landing")
-                return
+                return False
         self.state_machine.complete()
         logger.info("Mission reached COMPLETE")
+        return True
 
     def _ardupilot_autoland_active(self, telemetry) -> bool:
         return telemetry.flight_mode.upper() in ARDUPILOT_AUTOLAND_MODES

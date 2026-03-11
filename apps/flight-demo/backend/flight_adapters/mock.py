@@ -190,6 +190,7 @@ class MockAdapter(FlightControllerAdapter):
         return self.home
 
     def bootstrap_status(self) -> AdapterBootstrapStatus:
+        now = time.time()
         return AdapterBootstrapStatus(
             connected=self._running,
             heartbeat_received=self._running,
@@ -198,7 +199,16 @@ class MockAdapter(FlightControllerAdapter):
             position_ready=True,
             home_ready=True,
             mission_ready=self._running,
-            last_telemetry_at=time.time(),
+            last_telemetry_at=now,
+            last_heartbeat_at=now,
+            last_mode_at=now,
+            last_position_at=now,
+            last_home_at=now,
+            telemetry_age_s=0.0,
+            heartbeat_age_s=0.0,
+            mode_age_s=0.0,
+            position_age_s=0.0,
+            home_age_s=0.0,
             reason=None if self._running else "mock adapter is not connected",
         )
 

@@ -16,12 +16,14 @@ This app is a separate demo from the existing YOLO browser overlay.
 - WebSocket state feed at 5 Hz
 - Route-derived geofence generation
 - Real-adapter telemetry/home bootstrap gating before route upload and mission start
+- Landing wait timeout with abort fallback
 - Person/vehicle detector service with model fallback
 - Reset endpoint for repeatable demo runs
 - Module-scoped `arrakis.*` loggers for core, adapters, and perception backends
 - Optional JSONL state snapshot dump via `ARRAKIS_STATE_DUMP_PATH`
 - Adapter contract smoke test at `tests/test_adapter_contract.py`
 - Health endpoint at `GET /api/health`
+- Transition diagnostics for `RETURN -> LANDING` segments in state payload/UI
 - Local CI script at [`check.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/check.sh)
 
 ## Architecture spec
@@ -73,6 +75,8 @@ uvicorn main:app --host 127.0.0.1 --port 8010
 
 Use `ARRAKIS_FLIGHT_ADAPTER=mock` for the mock demo path.
 
+- If the adapter cannot connect during startup, the app now boots in degraded mode so `GET /api/health` can still report the failure.
+
 ## Frontend
 
 ```bash
@@ -82,6 +86,8 @@ npm run dev
 ```
 
 The frontend expects the backend at `http://127.0.0.1:8010`.
+
+- Override with `VITE_ARRAKIS_API_BASE` when the backend is not on `127.0.0.1:8010`.
 
 ## Adapter contract smoke test
 
@@ -109,6 +115,7 @@ cd apps/flight-demo
 ## Health endpoint
 
 - `GET /api/health` returns adapter status, detector mode, last telemetry timestamp, simulator status, and process memory high-water mark
+- In degraded startup cases, `/api/health` reports `status=degraded` and includes `startup_error`
 
 ## Runtime notes
 
@@ -128,6 +135,7 @@ cd apps/flight-demo
 - Real adapter backend launcher: [`sim_runtime/run_backend_ardupilot.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/run_backend_ardupilot.sh)
 - Real ArduPilot adapter smoke once SITL is up: [`sim_runtime/smoke_ardupilot_sitl.py`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/smoke_ardupilot_sitl.py)
 - `ARRAKIS_VTOL_LANDING_APPROACH_MIN_M` defaults to `140m` to avoid short-approach QuadPlane landing warnings.
+- `ARRAKIS_LANDING_TIMEOUT_SECONDS` defaults to `90s` to prevent indefinite `LANDING` hangs.
 - `runtime.env` values are loaded through [`sim_runtime/common.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/common.sh), which expands `$HOME`, `${HOME}`, and `~/` for host/guest mixed setups.
 - Experimental Gazebo helpers remain in `sim_runtime`, but the primary runtime is now `sim_vehicle.py -f quadplane`.
 - `POST /api/mission/reset` clears mission state, route preview, detector events, and adapter state for repeatable demos

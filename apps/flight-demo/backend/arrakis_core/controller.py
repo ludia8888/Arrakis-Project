@@ -13,6 +13,7 @@ from .mission_state_machine import MissionStateMachine
 from .state_payload_assembler import StatePayloadAssembler
 from .state_snapshot_recorder import StateSnapshotRecorder
 from .telemetry_hub import TelemetryHub
+from .transition_diagnostics import TransitionDiagnosticsTracker
 from .video_service import VideoService
 
 
@@ -26,13 +27,19 @@ class ArrakisController:
         self._mission_lock = threading.Lock()
         self._mission_thread: threading.Thread | None = None
         self._mission_cancel: threading.Event | None = None
+        self.startup_error: str | None = None
 
         logger.info("Initializing controller with adapter=%s", adapter.__class__.__name__)
-        self.adapter.connect()
+        try:
+            self.adapter.connect()
+        except Exception as exc:
+            self.startup_error = f"{type(exc).__name__}: {exc}"
+            logger.exception("Adapter connect failed during controller initialization: %s", exc)
         self.video_service = VideoService()
         self.telemetry_hub = TelemetryHub(self.adapter.get_snapshot(), self.video_service)
         self.state_payload_assembler = StatePayloadAssembler(self.video_service)
         self.snapshot_recorder = StateSnapshotRecorder()
+        self.transition_diagnostics = TransitionDiagnosticsTracker()
         self.mission_executor = MissionExecutor(
             adapter=self.adapter,
             state_machine=self.state_machine,
@@ -40,7 +47,7 @@ class ArrakisController:
         )
         self.adapter.stream_telemetry(self._on_telemetry)
         self.adapter.stream_video(self._on_video)
-        logger.info("Controller initialized and adapter streams subscribed")
+        logger.info("Controller initialized and adapter streams subscribed startup_error=%s", self.startup_error)
 
     def set_route(self, preview: RoutePreview) -> RoutePreview:
         logger.info(
@@ -76,6 +83,7 @@ class ArrakisController:
                 f"Vehicle telemetry bootstrap incomplete. Mission start is blocked ({bootstrap.reason or 'unknown reason'})."
             )
         self.state_machine.start_mission(self._mission_active())
+        self.transition_diagnostics.reset()
         cancel_event = threading.Event()
         mission_thread = threading.Thread(
             target=self._run_mission,
@@ -109,6 +117,7 @@ class ArrakisController:
         self.adapter.reset()
         self.video_service.reset()
         self.telemetry_hub.reset(self.adapter.get_snapshot())
+        self.transition_diagnostics.reset()
         self.state_machine.reset()
         logger.info("Reset complete")
 
@@ -138,6 +147,11 @@ class ArrakisController:
             logger.warning("Geofence abort triggered during phase=%s", phase)
             self.state_machine.abort("ABORT_GEOFENCE", "route-derived geofence breached")
             self.adapter.abort("geofence breach")
+        self.transition_diagnostics.observe(
+            self.state_machine.phase,
+            self.telemetry_hub.telemetry_snapshot(),
+            self.state_machine.abort_reason,
+        )
         self.snapshot_recorder.record(self._assemble_state_payload())
 
     def _on_video(self, frame: VideoFrame) -> None:
@@ -152,6 +166,7 @@ class ArrakisController:
             abort_reason=status.abort_reason,
             route_preview=status.route_preview,
             current_leg=current_leg,
+            transition=self.transition_diagnostics.snapshot(),
         )
 
     def _run_mission(self, cancel_event: threading.Event) -> None:

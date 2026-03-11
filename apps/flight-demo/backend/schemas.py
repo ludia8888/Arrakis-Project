@@ -65,6 +65,15 @@ class AdapterBootstrapStatus(BaseModel):
     home_ready: bool
     mission_ready: bool
     last_telemetry_at: float | None
+    last_heartbeat_at: float | None = None
+    last_mode_at: float | None = None
+    last_position_at: float | None = None
+    last_home_at: float | None = None
+    telemetry_age_s: float | None = None
+    heartbeat_age_s: float | None = None
+    mode_age_s: float | None = None
+    position_age_s: float | None = None
+    home_age_s: float | None = None
     reason: str | None
 
 
@@ -130,6 +139,22 @@ class SimulatorState(BaseModel):
     video_latency_ms: float
 
 
+class TransitionDiagnostics(BaseModel):
+    active: bool
+    started_at: float | None
+    finished_at: float | None
+    duration_s: float | None
+    entry_phase: MissionPhase | None
+    entry_mode: str | None
+    landing_entry_mode: str | None
+    completion: str | None
+    min_airspeed_mps: float | None
+    max_airspeed_mps: float | None
+    min_home_distance_m: float | None
+    max_alt_m: float | None
+    samples: int
+
+
 class StatePayload(BaseModel):
     timestamp: float
     mission_phase: MissionPhase
@@ -138,6 +163,7 @@ class StatePayload(BaseModel):
     route_progress: RouteProgress
     detector: DetectorState
     simulator: SimulatorState
+    transition: TransitionDiagnostics
     geofence: GeofencePolygon | None
     route_home: LatLon | None
     outbound: list[LatLon]

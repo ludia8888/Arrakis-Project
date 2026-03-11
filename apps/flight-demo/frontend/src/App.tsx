@@ -56,13 +56,41 @@ type StatePayload = {
     video_latency_ms: number;
     camera_connected: boolean;
   };
+  transition: {
+    active: boolean;
+    started_at: number | null;
+    finished_at: number | null;
+    duration_s: number | null;
+    entry_phase: string | null;
+    entry_mode: string | null;
+    landing_entry_mode: string | null;
+    completion: string | null;
+    min_airspeed_mps: number | null;
+    max_airspeed_mps: number | null;
+    min_home_distance_m: number | null;
+    max_alt_m: number | null;
+    samples: number;
+  };
   geofence: { coordinates: LatLon[] } | null;
   route_home: LatLon | null;
   outbound: LatLon[];
   return_path: LatLon[];
 };
 
-const API_BASE = "http://127.0.0.1:8010";
+type ConfigPayload = {
+  home: LatLon;
+  bootstrap: {
+    mission_ready: boolean;
+    reason: string | null;
+  };
+  adapter: string;
+  startup_error: string | null;
+};
+
+const API_BASE =
+  import.meta.env.VITE_ARRAKIS_API_BASE?.replace(/\/$/, "") ??
+  `${window.location.protocol}//${window.location.hostname}:8010`;
+const WS_STATE_URL = `${API_BASE.replace(/^http/, "ws")}/ws/state`;
 const MAP_STYLE: StyleSpecification = {
   version: 8,
   sources: {
@@ -96,13 +124,50 @@ function App() {
   const [preview, setPreview] = useState<RoutePreview | null>(null);
   const [previewReady, setPreviewReady] = useState(false);
   const [state, setState] = useState<StatePayload | null>(null);
+  const [config, setConfig] = useState<ConfigPayload | null>(null);
   const [status, setStatus] = useState("Click the map to define a route.");
+  const configRefreshRef = useRef<number | null>(null);
+  const wsReconnectRef = useRef<number | null>(null);
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/config`)
-      .then((response) => response.json())
-      .then((payload) => setHome(payload.home))
-      .catch(() => setStatus("Backend config request failed."));
+    let cancelled = false;
+
+    async function fetchConfig() {
+      try {
+        const response = await fetch(`${API_BASE}/api/config`);
+        if (!response.ok) {
+          throw new Error("config request failed");
+        }
+        const payload = (await response.json()) as ConfigPayload;
+        if (cancelled) {
+          return;
+        }
+        setConfig(payload);
+        setHome(payload.home);
+        if (payload.startup_error) {
+          setStatus(`Backend degraded: ${payload.startup_error}`);
+        } else if (!payload.bootstrap.mission_ready && payload.bootstrap.reason) {
+          setStatus(`Vehicle bootstrap pending: ${payload.bootstrap.reason}`);
+        }
+      } catch {
+        if (!cancelled) {
+          setStatus("Backend config request failed.");
+        }
+      }
+    }
+
+    void fetchConfig();
+    configRefreshRef.current = window.setInterval(() => {
+      void fetchConfig();
+    }, 5000);
+
+    return () => {
+      cancelled = true;
+      if (configRefreshRef.current !== null) {
+        window.clearInterval(configRefreshRef.current);
+        configRefreshRef.current = null;
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -231,19 +296,56 @@ function App() {
   }, [mapReady, preview]);
 
   useEffect(() => {
-    const socket = new WebSocket("ws://127.0.0.1:8010/ws/state");
-    socket.onmessage = (event) => {
-      const payload = JSON.parse(event.data) as StatePayload;
-      setState(payload);
-      if (mapRef.current && mapReady) {
-        updateLineSource(mapRef.current, "route", payload.outbound);
-        updateLineSource(mapRef.current, "return", payload.return_path);
-        updatePolygonSource(mapRef.current, "geofence", payload.geofence?.coordinates ?? []);
-        updatePointSource(mapRef.current, "drone", [{ lat: payload.telemetry.lat, lon: payload.telemetry.lon }]);
+    let disposed = false;
+    let socket: WebSocket | null = null;
+
+    const scheduleReconnect = () => {
+      if (disposed || wsReconnectRef.current !== null) {
+        return;
       }
+      wsReconnectRef.current = window.setTimeout(() => {
+        wsReconnectRef.current = null;
+        connectSocket();
+      }, 1000);
     };
-    socket.onerror = () => setStatus("State WebSocket disconnected.");
-    return () => socket.close();
+
+    const connectSocket = () => {
+      if (disposed) {
+        return;
+      }
+      socket = new WebSocket(WS_STATE_URL);
+      socket.onopen = () => setStatus((current) => (current.includes("disconnected") ? "State stream connected." : current));
+      socket.onmessage = (event) => {
+        const payload = JSON.parse(event.data) as StatePayload;
+        setState(payload);
+        if (mapRef.current && mapReady) {
+          updateLineSource(mapRef.current, "route", payload.outbound);
+          updateLineSource(mapRef.current, "return", payload.return_path);
+          updatePolygonSource(mapRef.current, "geofence", payload.geofence?.coordinates ?? []);
+          updatePointSource(mapRef.current, "drone", [{ lat: payload.telemetry.lat, lon: payload.telemetry.lon }]);
+        }
+      };
+      socket.onerror = () => {
+        setStatus("State WebSocket disconnected. Reconnecting...");
+      };
+      socket.onclose = () => {
+        if (!disposed) {
+          setStatus("State WebSocket disconnected. Reconnecting...");
+          scheduleReconnect();
+        }
+      };
+    };
+
+    connectSocket();
+
+    return () => {
+      disposed = true;
+      if (wsReconnectRef.current !== null) {
+        window.clearTimeout(wsReconnectRef.current);
+        wsReconnectRef.current = null;
+      }
+      socket?.close();
+    };
   }, [mapReady]);
 
   async function handleSetRoute() {
@@ -286,6 +388,21 @@ function App() {
 
   const events = useMemo(() => state?.detector.recent_events ?? [], [state]);
   const detections = useMemo(() => state?.detector.current_detections ?? [], [state]);
+  const missionActive =
+    state != null &&
+    !["IDLE", "COMPLETE", "ABORT_GEOFENCE", "ABORT_MANUAL", "RTL_BATTERY"].includes(state.mission_phase);
+  const startupBlocked = Boolean(config?.startup_error);
+  const bootstrapReady = Boolean(config?.bootstrap.mission_ready);
+  const routeBlockedReason =
+    config?.startup_error ??
+    (!bootstrapReady ? config?.bootstrap.reason ?? "vehicle bootstrap not ready" : null) ??
+    (missionActive ? "mission already active" : null);
+  const startBlockedReason =
+    config?.startup_error ??
+    (!previewReady ? "set a route first" : null) ??
+    (!bootstrapReady ? config?.bootstrap.reason ?? "vehicle bootstrap not ready" : null) ??
+    (missionActive ? "mission already active" : null);
+  const commandBlockedReason = config?.startup_error ?? (!bootstrapReady ? config?.bootstrap.reason ?? "vehicle bootstrap not ready" : null);
 
   return (
     <main className="shell">
@@ -299,17 +416,40 @@ function App() {
           </p>
         </div>
         <div className="actions">
-          <button onClick={handleSetRoute}>Set Route</button>
-          <button onClick={() => postMissionAction("/api/mission/start", "Mission started.")} disabled={!previewReady}>
+          <button onClick={handleSetRoute} disabled={Boolean(routeBlockedReason)}>
+            Set Route
+          </button>
+          <button onClick={() => postMissionAction("/api/mission/start", "Mission started.")} disabled={Boolean(startBlockedReason)}>
             Start Mission
           </button>
-          <button onClick={() => postMissionAction("/api/mission/rtl", "Return-to-home requested.")}>Return Home</button>
-          <button onClick={() => postMissionAction("/api/mission/abort", "Mission abort requested.")}>Abort</button>
+          <button
+            onClick={() => postMissionAction("/api/mission/rtl", "Return-to-home requested.")}
+            disabled={Boolean(commandBlockedReason)}
+          >
+            Return Home
+          </button>
+          <button
+            onClick={() => postMissionAction("/api/mission/abort", "Mission abort requested.")}
+            disabled={Boolean(commandBlockedReason)}
+          >
+            Abort
+          </button>
           <button
             onClick={handleReset}
           >
             Reset
           </button>
+          <div className="action-flags">
+            <StatusFlag label="Adapter" tone={startupBlocked ? "danger" : "ok"} value={startupBlocked ? "degraded" : config?.adapter ?? "loading"} />
+            <StatusFlag
+              label="Bootstrap"
+              tone={bootstrapReady ? "ok" : "warn"}
+              value={bootstrapReady ? "ready" : config?.bootstrap.reason ?? "pending"}
+            />
+            <StatusFlag label="Mission" tone={missionActive ? "warn" : "ok"} value={missionActive ? state?.mission_phase ?? "active" : "idle"} />
+          </div>
+          {routeBlockedReason ? <p className="action-hint">Route locked: {routeBlockedReason}</p> : null}
+          {startBlockedReason ? <p className="action-hint">Start blocked: {startBlockedReason}</p> : null}
           <p className="status">{status}</p>
         </div>
       </section>
@@ -375,6 +515,32 @@ function App() {
             />
           </dl>
           <div className="event-list">
+            <h3>Recovery / Landing Diagnostics</h3>
+            <dl className="stats">
+              <Metric label="Transition Active" value={state?.transition.active ? "yes" : "no"} />
+              <Metric label="Entry Phase" value={state?.transition.entry_phase ?? "-"} />
+              <Metric label="Entry Mode" value={state?.transition.entry_mode ?? "-"} />
+              <Metric label="Landing Mode" value={state?.transition.landing_entry_mode ?? "-"} />
+              <Metric
+                label="Transition Duration"
+                value={state?.transition.duration_s != null ? `${state.transition.duration_s.toFixed(1)} s` : "-"}
+              />
+              <Metric
+                label="Min Airspeed"
+                value={state?.transition.min_airspeed_mps != null ? `${state.transition.min_airspeed_mps.toFixed(1)} m/s` : "-"}
+              />
+              <Metric
+                label="Min Home Distance"
+                value={state?.transition.min_home_distance_m != null ? `${state.transition.min_home_distance_m.toFixed(1)} m` : "-"}
+              />
+              <Metric
+                label="Max Altitude"
+                value={state?.transition.max_alt_m != null ? `${state.transition.max_alt_m.toFixed(1)} m` : "-"}
+              />
+              <Metric label="Completion" value={state?.transition.completion ?? "-"} />
+            </dl>
+          </div>
+          <div className="event-list">
             <h3>Recent Detector Events</h3>
             {events.length === 0 ? (
               <p className="event-empty">No detector events yet.</p>
@@ -399,6 +565,23 @@ function Metric({ label, value, alert = false }: { label: string; value: string;
     <div className={`metric ${alert ? "metric-alert" : ""}`}>
       <dt>{label}</dt>
       <dd>{value}</dd>
+    </div>
+  );
+}
+
+function StatusFlag({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: "ok" | "warn" | "danger";
+}) {
+  return (
+    <div className={`status-flag status-flag-${tone}`}>
+      <span>{label}</span>
+      <strong>{value}</strong>
     </div>
   );
 }
