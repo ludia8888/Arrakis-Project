@@ -158,12 +158,26 @@ cd apps/flight-demo/sim_runtime
 ./bootstrap_ubuntu_vm_runtime.sh
 ```
 
+Provision the VM workspace:
+
+```bash
+cd apps/flight-demo/sim_runtime
+./provision_ubuntu_vm_workspace.sh
+```
+
 Inside the VM, verify the runtime after cloning/building ArduPilot and `ardupilot_gazebo`:
 
 ```bash
 cd apps/flight-demo/sim_runtime
 ./check_ubuntu_vm_runtime.sh
 ```
+
+Recommended UTM settings:
+- Ubuntu 22.04 or 24.04 arm64 guest
+- 6+ CPU cores
+- 8 GB RAM minimum
+- Bridged networking if possible
+- If bridged networking is unavailable, use shared networking and note the guest IP before writing host `runtime.env`
 
 Recommended split:
 - Ubuntu VM:
@@ -182,11 +196,56 @@ ARRAKIS_ARDUPILOT_CONNECTION=udp:<vm-ip>:14550
 ARRAKIS_ARDUPILOT_VIDEO_SOURCE=udp://<vm-ip>:5600
 ```
 
+You can generate that file automatically on the macOS host:
+
+```bash
+cd apps/flight-demo/sim_runtime
+./write_vm_host_runtime_env.sh <vm-ip>
+```
+
 The backend launcher does not need to change:
 
 ```bash
 cd apps/flight-demo/sim_runtime
 ./run_backend_ardupilot.sh
+```
+
+Suggested VM run order:
+
+VM Terminal 1:
+
+```bash
+cd apps/flight-demo/sim_runtime
+./run_gazebo_zephyr.sh
+```
+
+VM Terminal 2:
+
+```bash
+cd apps/flight-demo/sim_runtime
+./run_ardupilot_zephyr.sh
+```
+
+VM Terminal 3 if camera transport needs an explicit enable:
+
+```bash
+cd apps/flight-demo/sim_runtime
+./enable_camera_stream.sh
+```
+
+Host Terminal 1:
+
+```bash
+cd apps/flight-demo/sim_runtime
+./write_vm_host_runtime_env.sh <vm-ip>
+./run_backend_ardupilot.sh
+```
+
+Host Terminal 2:
+
+```bash
+cd apps/flight-demo/sim_runtime
+../../.venv/bin/python smoke_ardupilot_sitl.py
 ```
 
 ## Failure triggers for Rosetta path
