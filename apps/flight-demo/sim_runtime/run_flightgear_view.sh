@@ -13,7 +13,23 @@ if [[ ! -x "$ARRAKIS_FLIGHTGEAR_SCRIPT" ]]; then
   exit 1
 fi
 
+if [[ ! -x "$ARRAKIS_FLIGHTGEAR_BIN" ]]; then
+  echo "[sim-runtime] FlightGear binary missing or not executable at $ARRAKIS_FLIGHTGEAR_BIN" >&2
+  echo "[sim-runtime] install FlightGear on the host or set ARRAKIS_FLIGHTGEAR_BIN" >&2
+  exit 1
+fi
+
+shim_dir="$(mktemp -d "${TMPDIR:-/tmp}/arrakis-fgfs.XXXXXX")"
+trap 'rm -rf "$shim_dir"' EXIT
+cat >"$shim_dir/fgfs" <<EOF
+#!/usr/bin/env bash
+exec "$ARRAKIS_FLIGHTGEAR_BIN" "\$@"
+EOF
+chmod +x "$shim_dir/fgfs"
+export PATH="$shim_dir:$PATH"
+
 echo "[sim-runtime] launching FlightGear view-only helper"
+echo "[sim-runtime] using FlightGear binary $ARRAKIS_FLIGHTGEAR_BIN"
 printf '[sim-runtime] command: %q ' "$ARRAKIS_FLIGHTGEAR_SCRIPT"
 printf '\n'
 cd "$ARRAKIS_ARDUPILOT_DIR"

@@ -19,6 +19,11 @@ runtime_load_env() {
     elif [[ "$value" == \'*\' && "$value" == *\' ]]; then
       value="${value:1:${#value}-2}"
     fi
+    value="${value//\$\{HOME\}/$HOME}"
+    value="${value//\$HOME/$HOME}"
+    if [[ "$value" == ~/* ]]; then
+      value="$HOME/${value#~/}"
+    fi
     printf -v "$key" '%s' "$value"
     export "$key"
   done < "$env_file"
@@ -48,6 +53,7 @@ fi
 : "${ARRAKIS_ARDUPILOT_OUT:=127.0.0.1:14550}"
 : "${ARRAKIS_MAVPROXY_ARGS:=}"
 : "${ARRAKIS_FLIGHTGEAR_SCRIPT:=$ARRAKIS_ARDUPILOT_DIR/Tools/autotest/fg_plane_view.sh}"
+: "${ARRAKIS_FLIGHTGEAR_BIN:=/Applications/FlightGear.app/Contents/MacOS/FlightGear}"
 
 runtime_require_dir() {
   local path="$1"
@@ -78,4 +84,5 @@ runtime_print_summary() {
   echo "[sim-runtime] OUT=$ARRAKIS_ARDUPILOT_OUT"
   echo "[sim-runtime] MAVPROXY_ARGS=${ARRAKIS_MAVPROXY_ARGS:-<unset>}"
   echo "[sim-runtime] FLIGHTGEAR_SCRIPT=$ARRAKIS_FLIGHTGEAR_SCRIPT"
+  echo "[sim-runtime] FLIGHTGEAR_BIN=$ARRAKIS_FLIGHTGEAR_BIN"
 }

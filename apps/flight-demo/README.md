@@ -117,6 +117,7 @@ cd apps/flight-demo
 - macOS bootstrap: [`sim_runtime/bootstrap_macos_runtime.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/bootstrap_macos_runtime.sh)
 - Primary QuadPlane SITL launcher: [`sim_runtime/run_ardupilot_quadplane.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/run_ardupilot_quadplane.sh)
 - Optional FlightGear view-only helper: [`sim_runtime/run_flightgear_view.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/run_flightgear_view.sh)
+- Host FlightGear binary path for the macOS cask: `ARRAKIS_FLIGHTGEAR_BIN=/Applications/FlightGear.app/Contents/MacOS/FlightGear`
 - Ubuntu VM bootstrap: [`sim_runtime/bootstrap_ubuntu_vm_runtime.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/bootstrap_ubuntu_vm_runtime.sh)
 - Ubuntu VM workspace provisioner: [`sim_runtime/provision_ubuntu_vm_workspace.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/provision_ubuntu_vm_workspace.sh)
 - Ubuntu VM runtime check: [`sim_runtime/check_ubuntu_vm_runtime.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/check_ubuntu_vm_runtime.sh)
@@ -127,6 +128,7 @@ cd apps/flight-demo
 - Real adapter backend launcher: [`sim_runtime/run_backend_ardupilot.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/run_backend_ardupilot.sh)
 - Real ArduPilot adapter smoke once SITL is up: [`sim_runtime/smoke_ardupilot_sitl.py`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/smoke_ardupilot_sitl.py)
 - `ARRAKIS_VTOL_LANDING_APPROACH_MIN_M` defaults to `140m` to avoid short-approach QuadPlane landing warnings.
+- `runtime.env` values are loaded through [`sim_runtime/common.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/common.sh), which expands `$HOME`, `${HOME}`, and `~/` for host/guest mixed setups.
 - Experimental Gazebo helpers remain in `sim_runtime`, but the primary runtime is now `sim_vehicle.py -f quadplane`.
 - `POST /api/mission/reset` clears mission state, route preview, detector events, and adapter state for repeatable demos
 - `POST /api/mission/reset` first cancels any active mission execution thread before clearing adapter/video/state
