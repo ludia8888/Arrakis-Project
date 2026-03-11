@@ -5,10 +5,8 @@ SIM_ROOT="$(cd "$(dirname "$0")" && pwd)"
 APP_ROOT="$(cd "$SIM_ROOT/.." && pwd)"
 REPO_ROOT="$(cd "$APP_ROOT/../.." && pwd)"
 
-if [[ -f "$SIM_ROOT/runtime.env" ]]; then
-  # shellcheck disable=SC1091
-  source "$SIM_ROOT/runtime.env"
-fi
+# shellcheck disable=SC1091
+source "$SIM_ROOT/common.sh"
 
 export ARRAKIS_FLIGHT_ADAPTER=ardupilot
 : "${ARRAKIS_ARDUPILOT_CONNECTION:=udp:127.0.0.1:14550}"

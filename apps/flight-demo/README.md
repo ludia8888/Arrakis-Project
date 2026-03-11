@@ -126,6 +126,7 @@ cd apps/flight-demo
 - Runtime env template: [`sim_runtime/runtime.env.example`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/runtime.env.example)
 - Real adapter backend launcher: [`sim_runtime/run_backend_ardupilot.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/run_backend_ardupilot.sh)
 - Real ArduPilot adapter smoke once SITL is up: [`sim_runtime/smoke_ardupilot_sitl.py`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/smoke_ardupilot_sitl.py)
+- `ARRAKIS_VTOL_LANDING_APPROACH_MIN_M` defaults to `140m` to avoid short-approach QuadPlane landing warnings.
 - Experimental Gazebo helpers remain in `sim_runtime`, but the primary runtime is now `sim_vehicle.py -f quadplane`.
 - `POST /api/mission/reset` clears mission state, route preview, detector events, and adapter state for repeatable demos
 - `POST /api/mission/reset` first cancels any active mission execution thread before clearing adapter/video/state

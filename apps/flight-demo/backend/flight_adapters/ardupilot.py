@@ -24,6 +24,7 @@ from config import (
     ARDUPILOT_TELEMETRY_HZ,
     ARDUPILOT_VIDEO_SOURCE,
     CRUISE_ALT_M,
+    VTOL_LANDING_APPROACH_MIN_M,
 )
 from schemas import AdapterBootstrapStatus, LatLon, TelemetrySnapshot
 
@@ -39,6 +40,23 @@ def _distance_m(a: LatLon, b: LatLon) -> float:
     dx = (b.lon - a.lon) * lon_scale
     dy = (b.lat - a.lat) * lat_scale
     return math.hypot(dx, dy)
+
+
+def _project_point_from_home(home: LatLon, reference: LatLon, distance_m: float) -> LatLon:
+    lat_scale = 111_320.0
+    lon_scale = math.cos(math.radians(home.lat)) * 111_320.0
+    dx = (reference.lon - home.lon) * lon_scale
+    dy = (reference.lat - home.lat) * lat_scale
+    norm = math.hypot(dx, dy)
+    if norm < 1.0:
+        dx = distance_m
+        dy = 0.0
+        norm = distance_m
+    scale = distance_m / norm
+    return LatLon(
+        lat=home.lat + (dy * scale) / lat_scale,
+        lon=home.lon + (dx * scale) / lon_scale,
+    )
 
 
 @dataclass
@@ -548,11 +566,23 @@ class ArduPilotAdapter(FlightControllerAdapter):
         cruise_alt_m: float,
     ) -> None:
         master = self._require_master()
+        effective_return_path = list(return_path)
+        if effective_return_path:
+            last_return = effective_return_path[-1]
+            landing_distance = _distance_m(home, last_return)
+            if landing_distance < VTOL_LANDING_APPROACH_MIN_M:
+                adjusted = _project_point_from_home(home, last_return, VTOL_LANDING_APPROACH_MIN_M)
+                logger.info(
+                    "Adjusting final return waypoint for VTOL landing approach distance original=%.1fm adjusted=%.1fm",
+                    landing_distance,
+                    VTOL_LANDING_APPROACH_MIN_M,
+                )
+                effective_return_path[-1] = adjusted
         home_seq = 0
         takeoff_seq = 1
         outbound_start = 2
         return_start = outbound_start + len(outbound)
-        landing_seq = return_start + len(return_path)
+        landing_seq = return_start + len(effective_return_path)
         mission_items = [
             master.mav.mission_item_int_encode(
                 self._target_system,
@@ -587,7 +617,7 @@ class ArduPilotAdapter(FlightControllerAdapter):
                 float(takeoff_alt_m),
             ),
         ]
-        for offset, point in enumerate(outbound + return_path, start=outbound_start):
+        for offset, point in enumerate(outbound + effective_return_path, start=outbound_start):
             mission_items.append(
                 master.mav.mission_item_int_encode(
                     self._target_system,

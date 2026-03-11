@@ -2,9 +2,30 @@
 set -euo pipefail
 
 SIM_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+runtime_load_env() {
+  local env_file="$1"
+  local line key value
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    [[ "$line" =~ ^[[:space:]]*$ ]] && continue
+    [[ "$line" =~ ^[[:space:]]*# ]] && continue
+    [[ "$line" != *=* ]] && continue
+    key="${line%%=*}"
+    value="${line#*=}"
+    key="${key#"${key%%[![:space:]]*}"}"
+    key="${key%"${key##*[![:space:]]}"}"
+    if [[ "$value" == \"*\" && "$value" == *\" ]]; then
+      value="${value:1:${#value}-2}"
+    elif [[ "$value" == \'*\' && "$value" == *\' ]]; then
+      value="${value:1:${#value}-2}"
+    fi
+    printf -v "$key" '%s' "$value"
+    export "$key"
+  done < "$env_file"
+}
+
 if [[ -f "$SIM_ROOT/runtime.env" ]]; then
-  # shellcheck disable=SC1091
-  source "$SIM_ROOT/runtime.env"
+  runtime_load_env "$SIM_ROOT/runtime.env"
 fi
 
 if [[ -d "$HOME/.local/bin" ]]; then

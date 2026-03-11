@@ -38,7 +38,8 @@ The primary env values are:
 - `ARRAKIS_ARDUPILOT_DIR`
 - `ARRAKIS_ARDUPILOT_FRAME=quadplane`
 - `ARRAKIS_ARDUPILOT_DEFAULTS=apps/flight-demo/sim_runtime/params/quadplane_demo.parm`
-- `ARRAKIS_ARDUPILOT_CONNECTION=udp:127.0.0.1:14550`
+- `ARRAKIS_ARDUPILOT_CONNECTION=udp:127.0.0.1:14551`
+- `ARRAKIS_VTOL_LANDING_APPROACH_MIN_M=140`
 - `ARRAKIS_ARDUPILOT_VIDEO_SOURCE=`  
   Keep this empty for the current path because FlightGear is view-only and does not feed the browser video panel.
 
@@ -46,7 +47,8 @@ Important:
 - `sim_vehicle.py -f quadplane` already injects the stock `default_params/quadplane.parm` internally. `ARRAKIS_ARDUPILOT_DEFAULTS` should therefore point only to Arrakis-specific override params.
 - `sim_vehicle.py --out` is a MAVProxy forwarding path, not a direct ArduPilot output path.
 - On Ubuntu VM guests, `mavproxy.py` must be on `PATH`. This project now assumes `$HOME/.local/bin` is exported.
-- In QEMU user-networking mode, the guest should forward MAVLink to the host-reachable address `10.0.2.2:14550`, while the macOS host backend listens on `udp:0.0.0.0:14550`.
+- In QEMU user-networking mode, the guest should forward MAVLink to the host-reachable address `10.0.2.2:14551`, while the macOS host backend listens on `udp:0.0.0.0:14551`.
+- `run_backend_ardupilot.sh` loads `runtime.env` through [`common.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/common.sh), so quoted values such as `ARRAKIS_MAVPROXY_ARGS="--daemon --non-interactive --nowait"` are supported.
 
 Bootstrap a local macOS runtime:
 
