@@ -24,6 +24,12 @@ This app is a separate demo from the existing YOLO browser overlay.
   - video latency and copy-overhead management
   - provisional detector degrade thresholds pending SITL/Jetson profiling
 
+## Perception model swapping
+
+- Image inference backends are now treated as swappable components behind the detector service.
+- Backend notes live at [`arrakis_core/perception_backends/README.md`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/backend/arrakis_core/perception_backends/README.md)
+- To override the active model path explicitly, set `ARRAKIS_DETECTOR_MODEL_PATH`
+
 ## Current scope boundary
 
 - v1 ships a working Arrakis architecture and a full mock-demo path first.

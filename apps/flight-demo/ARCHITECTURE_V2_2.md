@@ -67,6 +67,7 @@
   - `safety_manager`
   - `telemetry_hub`
   - `detector_service`
+  - `perception_backends`
 - mission phase는 아래 문자열로 고정한다.
   - `IDLE`
   - `ARMING`
@@ -83,6 +84,8 @@
   - `COMPLETE`
 - 상태 머신은 Arrakis core가 소유한다.
 - adapter는 “명령 실행 + telemetry/video 공급”만 담당한다.
+- detector service는 queueing, cadence, event aggregation을 담당하고, 실제 모델 추론은 `perception_backends` 경계 뒤로 숨긴다.
+- 즉 이미지 인식 모델은 비행 스택과 마찬가지로 교체 가능한 backend로 취급한다.
 
 ### 4. Route와 Geofence 정책
 
@@ -149,11 +152,15 @@
   - fallback width target: `960`
   - target stream fps: `12`
 - detector 정책:
-  - model resolution order: `best.pt -> yolo26s.pt`
+  - model backend selection order: `ARRAKIS_DETECTOR_MODEL_PATH -> best.pt -> yolo26s.pt`
   - classes: `person`, `vehicle`
   - default `imgsz=960`
   - default cadence: `2프레임당 1회`
   - fallback: `imgsz=768` 또는 `3프레임당 1회`
+- detector 구현 규칙:
+  - `DetectorService`는 public runtime API를 유지한다.
+  - 실제 추론 엔진은 `YoloPerceptionBackend`, `SyntheticPerceptionBackend` 같은 backend 클래스로 분리한다.
+  - 향후 `ONNX`, `TensorRT`, remote inference도 같은 경계에 추가한다.
 - degrade rules:
   - `sim_rtf < 0.9` 5초 지속 시 detector degrade step 1
   - `sim_rtf < 0.7` 또는 MJPEG latency 급등 시 detector degrade step 2

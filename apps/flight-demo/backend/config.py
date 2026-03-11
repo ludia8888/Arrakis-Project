@@ -1,15 +1,20 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-DEFAULT_MODEL_CANDIDATES = [
-    REPO_ROOT / "best.pt",
-    REPO_ROOT / "runs" / "visdrone" / "yolo26s-person-vehicle-p100" / "weights" / "best.pt",
-    REPO_ROOT / "yolo26s.pt",
-]
+ENV_MODEL_PATH = os.getenv("ARRAKIS_DETECTOR_MODEL_PATH")
+DEFAULT_MODEL_CANDIDATES = (
+    ([Path(ENV_MODEL_PATH).expanduser()] if ENV_MODEL_PATH else [])
+    + [
+        REPO_ROOT / "best.pt",
+        REPO_ROOT / "runs" / "visdrone" / "yolo26s-person-vehicle-p100" / "weights" / "best.pt",
+        REPO_ROOT / "yolo26s.pt",
+    ]
+)
 
 
 @dataclass(frozen=True)

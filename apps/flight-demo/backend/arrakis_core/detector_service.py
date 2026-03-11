@@ -4,24 +4,13 @@ import queue
 import threading
 import time
 from dataclasses import dataclass, field
-from pathlib import Path
-
-import cv2
 
 from config import DEFAULT_MODEL_CANDIDATES
 from schemas import DetectionBox, DetectorEvent
 
-try:
-    from ultralytics import YOLO
-except ImportError:  # pragma: no cover
-    YOLO = None
-
-
-def resolve_model_path() -> Path | None:
-    for path in DEFAULT_MODEL_CANDIDATES:
-        if path.exists():
-            return path
-    return None
+from .perception_backends.base import InferenceResult, PerceptionBackend, resolve_model_path
+from .perception_backends.synthetic_backend import SyntheticPerceptionBackend
+from .perception_backends.yolo_backend import YoloPerceptionBackend
 
 
 @dataclass
@@ -39,14 +28,9 @@ class DetectorService:
         self.runtime = DetectorRuntime()
         self._queue: queue.Queue = queue.Queue(maxsize=1)
         self._lock = threading.Lock()
-        self._model = None
-        self._model_path = resolve_model_path()
-        if YOLO and self._model_path and self._model_path.suffix == ".pt":
-            try:
-                self._model = YOLO(str(self._model_path))
-                self.runtime.mode = f"yolo:{self._model_path.name}"
-            except Exception:
-                self.runtime.mode = "synthetic"
+        self._fallback_backend = SyntheticPerceptionBackend()
+        self._active_backend = self._create_backend()
+        self.runtime.mode = self._active_backend.mode
         threading.Thread(target=self._loop, daemon=True).start()
 
     def submit(self, frame, metadata: dict[str, object]) -> None:
@@ -92,59 +76,32 @@ class DetectorService:
             if frame_count % cadence != 0:
                 continue
             started = time.time()
-            detections = self._infer(frame, metadata, degrade)
+            result = self._infer(frame, metadata, degrade)
             inference_ms = (time.time() - started) * 1000.0
             events = [
                 DetectorEvent(timestamp=time.time(), label=det.label, confidence=det.confidence, note="visible in camera")
-                for det in detections
+                for det in result.detections
             ]
             with self._lock:
+                self.runtime.mode = result.mode
                 self.runtime.last_inference_ms = inference_ms
-                self.runtime.current_detections = detections
+                self.runtime.current_detections = result.detections
                 merged = [*self.runtime.recent_events, *events]
                 cutoff = time.time() - 10.0
                 self.runtime.recent_events = [event for event in merged if event.timestamp >= cutoff][-20:]
 
-    def _infer(self, frame, metadata: dict[str, object], degrade: int) -> list[DetectionBox]:
-        if self._model is not None:
-            target = 960 if degrade == 0 else 768
-            result = self._model.predict(frame, imgsz=target, verbose=False, conf=0.25)[0]
-            detections: list[DetectionBox] = []
-            for box in result.boxes or []:
-                x1, y1, x2, y2 = box.xyxy[0].tolist()
-                label = str(result.names[int(box.cls.item())])
-                if label not in {"person", "vehicle"}:
-                    continue
-                detections.append(
-                    DetectionBox(
-                        label=label,
-                        confidence=float(box.conf.item()),
-                        x1=float(x1 / frame.shape[1]),
-                        y1=float(y1 / frame.shape[0]),
-                        x2=float(x2 / frame.shape[1]),
-                        y2=float(y2 / frame.shape[0]),
-                    )
-                )
-            if detections:
-                return detections
-            synthetic = self._synthetic_detections(metadata)
-            if synthetic:
-                return synthetic
+    def _create_backend(self) -> PerceptionBackend:
+        model_path = resolve_model_path(DEFAULT_MODEL_CANDIDATES)
+        if model_path and model_path.suffix == ".pt":
+            try:
+                return YoloPerceptionBackend(model_path)
+            except Exception:
+                return self._fallback_backend
+        return self._fallback_backend
 
-        return self._synthetic_detections(metadata)
-
-    def _synthetic_detections(self, metadata: dict[str, object]) -> list[DetectionBox]:
-        synthetic = metadata.get("synthetic_detections", [])
-        detections = []
-        for item in synthetic:
-            detections.append(
-                DetectionBox(
-                    label=item["label"],
-                    confidence=float(item["confidence"]),
-                    x1=float(item["x1"]),
-                    y1=float(item["y1"]),
-                    x2=float(item["x2"]),
-                    y2=float(item["y2"]),
-                )
-            )
-        return detections
+    def _infer(self, frame, metadata: dict[str, object], degrade: int) -> InferenceResult:
+        result = self._active_backend.infer(frame, metadata, degrade)
+        if result.detections:
+            return result
+        fallback = self._fallback_backend.infer(frame, metadata, degrade)
+        return fallback if fallback.detections else result
