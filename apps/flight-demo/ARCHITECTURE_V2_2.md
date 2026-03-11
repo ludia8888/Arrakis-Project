@@ -158,6 +158,11 @@
   - `sim_rtf < 0.9` 5초 지속 시 detector degrade step 1
   - `sim_rtf < 0.7` 또는 MJPEG latency 급등 시 detector degrade step 2
   - degrade는 detector와 MJPEG 품질만 낮추고 mission loop는 유지
+- 위 `RTF` 기준값은 현재 `provisional`이다.
+  - mock adapter의 `sim_rtf`는 실제 SITL/Gazebo/Jetson 환경을 대변하지 않는다.
+  - ArduPilot SITL이 실제로 붙은 뒤, M4 Rosetta 경로와 Ubuntu VM fallback 경로에서 먼저 재측정한다.
+  - Jetson 경로에서는 별도 프로파일링을 수행하고 threshold를 다시 보정한다.
+  - 최종 degrade 정책은 `RTF` 하나만이 아니라 `video_latency_ms`, detector inference time, frame drop rate도 함께 본다.
 - `WS /ws/state`는 `5 Hz`로 고정한다.
 - WebSocket payload schema는 아래로 고정한다.
   - `timestamp`
@@ -307,3 +312,14 @@
   2. unnecessary copy 제거
   3. shared memory 또는 single-copy transport 검토
 - 이 변경은 adapter/video worker 경계 안에서 끝내고, Arrakis core와 frontend API는 유지한다.
+
+### 4. Detector Degrade Threshold Calibration
+
+- 현재 코드에 들어간 detector degrade 기준은 `정책 자리 표시자`에 가깝다.
+- 목적은 “비행 루프보다 detector 품질을 먼저 낮춘다”는 제어 우선순위를 고정하는 것이다.
+- 하지만 실제 수치는 다음 환경에서 각각 실측 후 다시 정해야 한다.
+  - mock adapter
+  - M4 + Rosetta + ArduPilot SITL + Gazebo
+  - Ubuntu VM fallback
+  - Jetson 목표 런타임
+- 따라서 현재의 `0.9 / 0.7` 기준은 설계상 초기값일 뿐, 제품 수준 threshold로 간주하지 않는다.

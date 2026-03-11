@@ -22,6 +22,7 @@ This app is a separate demo from the existing YOLO browser overlay.
   - ArduPilot + Gazebo + Apple Silicon Rosetta risks
   - MAVSDK vs `pymavlink` fallback strategy
   - video latency and copy-overhead management
+  - provisional detector degrade thresholds pending SITL/Jetson profiling
 
 ## Current scope boundary
 
