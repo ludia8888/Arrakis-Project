@@ -50,8 +50,6 @@ class MissionExecutor:
             logger.info("Mission cancelled during TAKEOFF_MC")
             return
 
-        self.state_machine.mark_phase("TRANSITION_FW", reason="takeoff complete, switching to fixed-wing")
-        self.adapter.transition_to_fixedwing()
         self.adapter.upload_roundtrip_mission(
             {
                 "outbound": [point.model_dump() for point in route_preview.outbound],
@@ -60,6 +58,8 @@ class MissionExecutor:
             },
         )
         self.adapter.start_mission()
+        self.state_machine.mark_phase("TRANSITION_FW", reason="mission uploaded, switching to fixed-wing in AUTO")
+        self.adapter.transition_to_fixedwing()
         self.state_machine.mark_phase("OUTBOUND", reason="mission uploaded and started")
         logger.info("Entered OUTBOUND")
 

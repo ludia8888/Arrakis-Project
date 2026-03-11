@@ -16,6 +16,7 @@ fi
 : "${ARRAKIS_ARDUPILOT_VEHICLE:=ArduPlane}"
 : "${ARRAKIS_ARDUPILOT_FRAME:=gazebo-zephyr}"
 : "${ARRAKIS_ARDUPILOT_MODEL:=JSON}"
+: "${ARRAKIS_ARDUPILOT_DEFAULTS:=Tools/autotest/default_params/gazebo-zephyr.parm,Tools/autotest/default_params/quadplane.parm,apps/flight-demo/sim_runtime/params/zephyr_quadplane_demo.parm}"
 : "${ARRAKIS_ARDUPILOT_MAP:=1}"
 : "${ARRAKIS_ARDUPILOT_CONSOLE:=1}"
 
@@ -44,4 +45,5 @@ runtime_print_summary() {
   echo "[sim-runtime] GZ_WORLD=$ARRAKIS_GZ_WORLD"
   echo "[sim-runtime] GZ_CAMERA_ENABLE_TOPIC=${ARRAKIS_GZ_CAMERA_ENABLE_TOPIC:-<unset>}"
   echo "[sim-runtime] VEHICLE=$ARRAKIS_ARDUPILOT_VEHICLE FRAME=$ARRAKIS_ARDUPILOT_FRAME MODEL=$ARRAKIS_ARDUPILOT_MODEL"
+  echo "[sim-runtime] DEFAULTS=$ARRAKIS_ARDUPILOT_DEFAULTS"
 }

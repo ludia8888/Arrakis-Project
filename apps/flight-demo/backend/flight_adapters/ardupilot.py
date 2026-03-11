@@ -16,6 +16,7 @@ from config import (
     ARDUPILOT_DEFAULT_HOME_LON,
     ARDUPILOT_HEARTBEAT_TIMEOUT,
     ARDUPILOT_MODE_AUTO,
+    ARDUPILOT_MODE_GUIDED,
     ARDUPILOT_MODE_LOITER,
     ARDUPILOT_MODE_QLAND,
     ARDUPILOT_MODE_QLOITER,
@@ -89,6 +90,9 @@ class ArduPilotAdapter(FlightControllerAdapter):
         self._route_leg = "idle"
         self._target_component = 1
         self._target_system = 1
+        self._last_statustext: str | None = None
+        self._last_command_ack: tuple[int, int, float] | None = None
+        self._home_initialized = False
         logger.info("ArduPilotAdapter initialized connection=%s video_source=%s", self._connection, self._video_source)
 
     def connect(self) -> None:
@@ -128,19 +132,26 @@ class ArduPilotAdapter(FlightControllerAdapter):
         )
 
     def arm(self) -> None:
+        self._set_mode(ARDUPILOT_MODE_QLOITER)
         self._send_command(
             self._mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM,
             [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         )
+        self._wait_for_command_ack(self._mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM, "arm/disarm command")
         self._wait_for(lambda s: s.armed, "vehicle arm")
 
     def takeoff_multicopter(self, target_alt_m: float) -> None:
-        self._set_mode(ARDUPILOT_MODE_QLOITER)
+        baseline_alt_m = self.get_snapshot().alt_m
+        self._set_mode(ARDUPILOT_MODE_GUIDED)
         self._send_command(
             self._mavutil.mavlink.MAV_CMD_NAV_TAKEOFF,
             [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, target_alt_m],
         )
-        self._wait_for(lambda s: s.alt_m >= target_alt_m * 0.7, f"takeoff alt {target_alt_m:.1f}m")
+        self._wait_for_command_ack(self._mavutil.mavlink.MAV_CMD_NAV_TAKEOFF, "takeoff command")
+        self._wait_for(
+            lambda s: (s.alt_m - baseline_alt_m) >= target_alt_m * 0.7,
+            f"takeoff climb {target_alt_m:.1f}m from baseline {baseline_alt_m:.1f}m",
+        )
 
     def upload_roundtrip_mission(self, route_spec: dict[str, object]) -> None:
         outbound = [LatLon(**item) if isinstance(item, dict) else item for item in route_spec.get("outbound", [])]
@@ -161,12 +172,14 @@ class ArduPilotAdapter(FlightControllerAdapter):
             self._mavutil.mavlink.MAV_CMD_MISSION_START,
             [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         )
+        self._wait_for_command_ack(self._mavutil.mavlink.MAV_CMD_MISSION_START, "mission start command")
 
     def transition_to_fixedwing(self) -> None:
         self._send_command(
             self._mavutil.mavlink.MAV_CMD_DO_VTOL_TRANSITION,
             [float(self._mavutil.mavlink.MAV_VTOL_STATE_FW), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         )
+        self._wait_for_command_ack(self._mavutil.mavlink.MAV_CMD_DO_VTOL_TRANSITION, "fixed-wing transition")
         self._set_vtol_hint("FW")
 
     def prepare_multicopter_recovery(self, recovery_spec: dict[str, object]) -> None:
@@ -179,6 +192,7 @@ class ArduPilotAdapter(FlightControllerAdapter):
             self._mavutil.mavlink.MAV_CMD_DO_VTOL_TRANSITION,
             [float(self._mavutil.mavlink.MAV_VTOL_STATE_MC), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         )
+        self._wait_for_command_ack(self._mavutil.mavlink.MAV_CMD_DO_VTOL_TRANSITION, "multicopter transition")
         self._set_vtol_hint("MC")
         with suppress(Exception):
             self._set_mode(ARDUPILOT_MODE_QLOITER)
@@ -201,6 +215,9 @@ class ArduPilotAdapter(FlightControllerAdapter):
         self._outbound_count = 0
         self._return_count = 0
         self._route_leg = "idle"
+        self._last_statustext = None
+        self._last_command_ack = None
+        self._home_initialized = False
         with self._state_lock:
             self._state = _State(lat=self._home.lat, lon=self._home.lon)
         if self._master is not None:
@@ -338,12 +355,13 @@ class ArduPilotAdapter(FlightControllerAdapter):
                 self._state.lat = msg.lat / 1e7
                 self._state.lon = msg.lon / 1e7
                 self._state.alt_m = msg.relative_alt / 1000.0
+                if not self._home_initialized:
+                    self._home = LatLon(lat=self._state.lat, lon=self._state.lon)
                 if hasattr(msg, "vx") and hasattr(msg, "vy"):
                     self._state.groundspeed_mps = math.hypot(msg.vx, msg.vy) / 100.0
             elif msg_type == "VFR_HUD":
                 self._state.airspeed_mps = float(msg.airspeed)
                 self._state.groundspeed_mps = float(msg.groundspeed)
-                self._state.alt_m = float(msg.alt)
             elif msg_type == "SYS_STATUS" and getattr(msg, "battery_remaining", -1) >= 0:
                 self._state.battery_percent = float(msg.battery_remaining)
             elif msg_type == "MISSION_CURRENT":
@@ -352,10 +370,22 @@ class ArduPilotAdapter(FlightControllerAdapter):
                     self._route_leg = "return" if msg.seq >= self._outbound_count else "outbound"
             elif msg_type == "HOME_POSITION":
                 self._home = LatLon(lat=msg.latitude / 1e7, lon=msg.longitude / 1e7)
+                self._home_initialized = True
             elif msg_type == "NAMED_VALUE_FLOAT":
                 name = msg.name.decode("utf-8", errors="ignore").strip("\x00")
                 if name.upper() in {"RTF", "SIM_RTF"}:
                     self._state.sim_rtf = float(msg.value)
+        if msg_type == "COMMAND_ACK":
+            command = int(getattr(msg, "command", -1))
+            result = int(getattr(msg, "result", -1))
+            self._last_command_ack = (command, result, time.time())
+            logger.info("COMMAND_ACK command=%s result=%s", command, result)
+        elif msg_type == "STATUSTEXT":
+            text = getattr(msg, "text", b"")
+            if isinstance(text, bytes):
+                text = text.decode("utf-8", errors="ignore")
+            self._last_statustext = text.strip("\x00")
+            logger.warning("STATUSTEXT severity=%s text=%s", getattr(msg, "severity", "?"), self._last_statustext)
 
     def _set_mode(self, mode_name: str) -> None:
         master = self._require_master()
@@ -371,6 +401,7 @@ class ArduPilotAdapter(FlightControllerAdapter):
 
     def _send_command(self, command: int, params: list[float]) -> None:
         master = self._require_master()
+        self._last_command_ack = None
         with self._io_lock:
             master.mav.command_long_send(
                 self._target_system,
@@ -432,7 +463,30 @@ class ArduPilotAdapter(FlightControllerAdapter):
             if predicate(snapshot):
                 return
             time.sleep(0.1)
-        raise TimeoutError(f"Timed out waiting for {description}")
+        context = []
+        if self._last_statustext:
+            context.append(f"last_statustext={self._last_statustext}")
+        if self._last_command_ack:
+            command, result, _ = self._last_command_ack
+            context.append(f"last_command_ack=({command},{result})")
+        context.append(f"flight_mode={self.get_snapshot().flight_mode}")
+        raise TimeoutError(f"Timed out waiting for {description} ({', '.join(context)})")
+
+    def _wait_for_command_ack(self, command: int, description: str) -> None:
+        deadline = time.time() + self._command_timeout
+        while time.time() < deadline:
+            ack = self._last_command_ack
+            if ack is not None and ack[0] == command:
+                result = ack[1]
+                accepted = self._mavutil.mavlink.MAV_RESULT_ACCEPTED
+                in_progress = self._mavutil.mavlink.MAV_RESULT_IN_PROGRESS
+                if result not in {accepted, in_progress}:
+                    raise RuntimeError(
+                        f"{description} rejected result={result} statustext={self._last_statustext or 'n/a'}"
+                    )
+                return
+            time.sleep(0.05)
+        raise TimeoutError(f"Timed out waiting for {description} ack statustext={self._last_statustext or 'n/a'}")
 
     def _set_vtol_hint(self, value: str) -> None:
         with self._state_lock:
