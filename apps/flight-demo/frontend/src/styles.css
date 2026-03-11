@@ -1,0 +1,228 @@
+@import "maplibre-gl/dist/maplibre-gl.css";
+
+:root {
+  color-scheme: dark;
+  --bg: #0d1820;
+  --panel: #122633;
+  --panel-soft: rgba(18, 38, 51, 0.86);
+  --text: #f4efe6;
+  --muted: #a9c0c8;
+  --accent: #f4a261;
+  --accent-2: #2a9d8f;
+  --danger: #e76f51;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(42, 157, 143, 0.25), transparent 28%),
+    radial-gradient(circle at top right, rgba(244, 162, 97, 0.18), transparent 24%),
+    linear-gradient(180deg, #081116 0%, var(--bg) 100%);
+  color: var(--text);
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
+}
+
+button {
+  appearance: none;
+  border: none;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #102028;
+  font: inherit;
+  font-weight: 700;
+  padding: 0.8rem 1.2rem;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.shell {
+  width: min(1500px, calc(100vw - 32px));
+  margin: 0 auto;
+  padding: 24px 0 40px;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 20px;
+  align-items: start;
+  margin-bottom: 20px;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+}
+
+.hero h1 {
+  font-size: clamp(2rem, 4vw, 4rem);
+  line-height: 0.95;
+  margin: 0 0 12px;
+}
+
+.lede,
+.status,
+.panel-header p,
+.event-empty {
+  color: var(--muted);
+}
+
+.actions,
+.panel {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--panel-soft);
+  backdrop-filter: blur(20px);
+  border-radius: 28px;
+  padding: 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.24);
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.actions .status {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr 0.85fr;
+  gap: 20px;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: baseline;
+  margin-bottom: 12px;
+}
+
+.panel-header h2 {
+  margin: 0;
+}
+
+.map-node {
+  height: 680px;
+  border-radius: 22px;
+  overflow: hidden;
+}
+
+.video-stage {
+  position: relative;
+  border-radius: 22px;
+  overflow: hidden;
+  background: #000;
+  aspect-ratio: 16 / 9;
+}
+
+.video-feed,
+.overlay-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.video-feed {
+  object-fit: cover;
+}
+
+.overlay-layer {
+  pointer-events: none;
+}
+
+.detection {
+  position: absolute;
+  border: 3px solid;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.detection span {
+  position: absolute;
+  top: -30px;
+  left: 0;
+  background: rgba(0, 0, 0, 0.72);
+  color: white;
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.detection-person {
+  border-color: #ffd166;
+}
+
+.detection-vehicle {
+  border-color: #80d0ff;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.metric {
+  border-radius: 18px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.metric dt {
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.metric dd {
+  margin: 8px 0 0;
+  font-weight: 700;
+}
+
+.metric-alert {
+  outline: 2px solid var(--danger);
+}
+
+.event-list {
+  margin-top: 18px;
+}
+
+.event-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0;
+  display: grid;
+  gap: 8px;
+}
+
+.event-list li {
+  border-left: 3px solid var(--accent);
+  padding-left: 10px;
+  color: var(--muted);
+}
+
+@media (max-width: 1200px) {
+  .hero,
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .map-node {
+    height: 480px;
+  }
+}

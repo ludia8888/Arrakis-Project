@@ -7,3 +7,7 @@ best.pt
 last.pt
 epoch*.pt
 runs/
+apps/flight-demo/frontend/node_modules/
+apps/flight-demo/frontend/dist/
+apps/flight-demo/frontend/*.tsbuildinfo
+apps/flight-demo/backend/.venv/
