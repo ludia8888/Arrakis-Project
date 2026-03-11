@@ -33,7 +33,14 @@ class TelemetryHub:
             return self._telemetry
 
     def on_telemetry(self, snapshot: TelemetrySnapshot, route_preview: RoutePreview | None) -> SafetyDecision:
-        geofence_breached = not geofence_contains(route_preview.geofence if route_preview else None, snapshot)
+        geofence_eligible = bool(
+            route_preview
+            and snapshot.telemetry_fresh
+            and snapshot.mode_valid
+            and snapshot.position_valid
+            and snapshot.home_valid
+        )
+        geofence_breached = geofence_eligible and not geofence_contains(route_preview.geofence if route_preview else None, snapshot)
         updated = snapshot.model_copy(update={"geofence_breached": geofence_breached})
         with self._lock:
             self._telemetry = updated
@@ -41,10 +48,11 @@ class TelemetryHub:
         self.video_service.set_degrade_from_rtf(updated.sim_rtf)
         if geofence_breached:
             logger.warning("Geofence breach detected at lat=%.6f lon=%.6f", updated.lat, updated.lon)
-        if should_trigger_battery_rtl(updated):
+        battery_rtl = updated.telemetry_fresh and updated.mode_valid and should_trigger_battery_rtl(updated)
+        if battery_rtl:
             logger.warning("Battery threshold crossed at %.1f%%", updated.battery_percent)
 
         return SafetyDecision(
-            trigger_battery_rtl=should_trigger_battery_rtl(updated),
+            trigger_battery_rtl=battery_rtl,
             trigger_geofence_abort=geofence_breached,
         )

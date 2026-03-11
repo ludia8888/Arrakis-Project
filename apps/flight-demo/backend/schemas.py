@@ -56,6 +56,18 @@ class RecoverySpec(BaseModel):
     timeout_seconds: float
 
 
+class AdapterBootstrapStatus(BaseModel):
+    connected: bool
+    heartbeat_received: bool
+    telemetry_fresh: bool
+    mode_ready: bool
+    position_ready: bool
+    home_ready: bool
+    mission_ready: bool
+    last_telemetry_at: float | None
+    reason: str | None
+
+
 class TelemetrySnapshot(BaseModel):
     timestamp: float
     lat: float
@@ -71,6 +83,10 @@ class TelemetrySnapshot(BaseModel):
     home_distance_m: float
     geofence_breached: bool
     sim_rtf: float
+    telemetry_fresh: bool = False
+    mode_valid: bool = False
+    position_valid: bool = False
+    home_valid: bool = False
 
 
 class DetectionBox(BaseModel):

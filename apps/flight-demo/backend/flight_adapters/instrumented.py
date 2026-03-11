@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import time
 
-from schemas import LatLon, TelemetrySnapshot
+from schemas import AdapterBootstrapStatus, LatLon, TelemetrySnapshot
 
 from .base import FlightControllerAdapter, VideoFrame, validate_adapter_contract
 
@@ -24,12 +24,14 @@ class InstrumentedFlightAdapter(FlightControllerAdapter):
         return self._adapter
 
     def health_status(self) -> dict[str, object]:
+        bootstrap = self.bootstrap_status()
         return {
             "adapter": self._adapter.__class__.__name__,
             "connected": self._connected,
             "last_error": self._last_error,
             "last_call": self._last_call,
             "last_call_ms": self._last_call_ms,
+            "bootstrap": bootstrap.model_dump(),
         }
 
     def connect(self) -> None:
@@ -86,6 +88,9 @@ class InstrumentedFlightAdapter(FlightControllerAdapter):
 
     def get_home(self) -> LatLon:
         return self._call("get_home", self._adapter.get_home)
+
+    def bootstrap_status(self) -> AdapterBootstrapStatus:
+        return self._call("bootstrap_status", self._adapter.bootstrap_status)
 
     def _call(self, name: str, fn, *args, **kwargs):
         log = self._logger.debug if name in self._DEBUG_METHODS else self._logger.info

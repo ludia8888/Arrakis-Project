@@ -15,6 +15,7 @@ This app is a separate demo from the existing YOLO browser overlay.
 - MJPEG camera stream
 - WebSocket state feed at 5 Hz
 - Route-derived geofence generation
+- Real-adapter telemetry/home bootstrap gating before route upload and mission start
 - Person/vehicle detector service with model fallback
 - Reset endpoint for repeatable demo runs
 - Module-scoped `arrakis.*` loggers for core, adapters, and perception backends
@@ -48,6 +49,8 @@ This app is a separate demo from the existing YOLO browser overlay.
 
 - v1 ships a working Arrakis architecture and a full mock-demo path first.
 - Real ArduPilot SITL execution is now wired through a first `pymavlink` adapter implementation, but still needs SITL-on-this-machine validation.
+- Real mission execution is gated on fresh telemetry, valid GPS position, valid home position, and a known flight mode.
+- For mission-oriented adapters, route home is normalized to the current vehicle home instead of trusting the frontend payload.
 - The architecture already assumes:
   - ArduPilot first
   - PX4-compatible adapter boundary later

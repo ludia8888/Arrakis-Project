@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Callable, Protocol, runtime_checkable
 
-from schemas import LatLon, TelemetrySnapshot
+from schemas import AdapterBootstrapStatus, LatLon, TelemetrySnapshot
 
 
 @dataclass
@@ -36,6 +36,7 @@ class FlightControllerAdapterContract(Protocol):
     def stream_telemetry(self, callback: Callable[[TelemetrySnapshot], None]) -> None: ...
     def stream_video(self, callback: Callable[[VideoFrame], None]) -> None: ...
     def get_home(self) -> LatLon: ...
+    def bootstrap_status(self) -> AdapterBootstrapStatus: ...
 
 
 REQUIRED_ADAPTER_METHODS = (
@@ -57,6 +58,7 @@ REQUIRED_ADAPTER_METHODS = (
     "stream_telemetry",
     "stream_video",
     "get_home",
+    "bootstrap_status",
 )
 
 
@@ -125,3 +127,6 @@ class FlightControllerAdapter(ABC):
 
     @abstractmethod
     def get_home(self) -> LatLon: ...
+
+    @abstractmethod
+    def bootstrap_status(self) -> AdapterBootstrapStatus: ...

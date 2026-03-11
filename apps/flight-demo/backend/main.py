@@ -13,7 +13,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
 from arrakis_core.controller import ArrakisController
-from arrakis_core.route_planner import build_route_preview
 from flight_adapters.ardupilot import ArduPilotAdapter
 from flight_adapters.instrumented import InstrumentedFlightAdapter
 from flight_adapters.mock import MockAdapter
@@ -61,8 +60,10 @@ app.add_middleware(
 def get_config(request: Request) -> dict[str, object]:
     controller = get_controller_from_scope(request)
     home = controller.adapter.get_home()
+    bootstrap = controller.adapter.bootstrap_status()
     return {
         "home": home.model_dump(),
+        "bootstrap": bootstrap.model_dump(),
         "adapter": os.getenv("ARRAKIS_FLIGHT_ADAPTER", "mock"),
     }
 
@@ -105,7 +106,7 @@ def set_route(payload: RouteRequest, request: Request) -> RoutePreview:
     controller = get_controller_from_scope(request)
     logger.info("HTTP set_route called")
     try:
-        preview = build_route_preview(payload)
+        preview = controller.build_route_preview(payload)
         return controller.set_route(preview)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc

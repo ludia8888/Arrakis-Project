@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 
-from schemas import LatLon, TelemetrySnapshot
+from schemas import AdapterBootstrapStatus, LatLon, TelemetrySnapshot
 
 from .base import FlightControllerAdapter
 
@@ -34,3 +34,4 @@ class PX4Adapter(FlightControllerAdapter):
     def stream_telemetry(self, callback): raise NotImplementedError
     def stream_video(self, callback): raise NotImplementedError
     def get_home(self) -> LatLon: raise NotImplementedError
+    def bootstrap_status(self) -> AdapterBootstrapStatus: raise NotImplementedError

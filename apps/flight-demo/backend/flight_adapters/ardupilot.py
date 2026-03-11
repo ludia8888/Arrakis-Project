@@ -25,7 +25,7 @@ from config import (
     ARDUPILOT_VIDEO_SOURCE,
     CRUISE_ALT_M,
 )
-from schemas import LatLon, TelemetrySnapshot
+from schemas import AdapterBootstrapStatus, LatLon, TelemetrySnapshot
 
 from .base import FlightControllerAdapter, VideoFrame
 
@@ -55,6 +55,9 @@ class _State:
     mission_index: int = -1
     geofence_breached: bool = False
     sim_rtf: float = 1.0
+    mode_valid: bool = False
+    position_valid: bool = False
+    home_valid: bool = False
 
 
 class ArduPilotAdapter(FlightControllerAdapter):
@@ -97,6 +100,8 @@ class ArduPilotAdapter(FlightControllerAdapter):
         self._last_statustext: str | None = None
         self._last_command_ack: tuple[int, int, float] | None = None
         self._home_initialized = False
+        self._heartbeat_received = False
+        self._last_telemetry_at: float | None = None
         logger.info("ArduPilotAdapter initialized connection=%s video_source=%s", self._connection, self._video_source)
 
     def connect(self) -> None:
@@ -120,8 +125,6 @@ class ArduPilotAdapter(FlightControllerAdapter):
         self._master = master
         self._target_system = master.target_system or 1
         self._target_component = master.target_component or 1
-        with self._state_lock:
-            self._state.flight_mode = "STANDBY"
         self._request_data_streams()
         self._running = True
         self._telemetry_thread = threading.Thread(target=self._telemetry_loop, name="arrakis-ardupilot-telemetry", daemon=True)
@@ -239,6 +242,8 @@ class ArduPilotAdapter(FlightControllerAdapter):
         self._last_statustext = None
         self._last_command_ack = None
         self._home_initialized = False
+        self._heartbeat_received = False
+        self._last_telemetry_at = None
         with self._state_lock:
             self._state = _State(lat=self._home.lat, lon=self._home.lon)
         if self._master is not None:
@@ -250,6 +255,10 @@ class ArduPilotAdapter(FlightControllerAdapter):
         with self._state_lock:
             state = self._state
             home = self._home
+            telemetry_fresh = bool(
+                self._last_telemetry_at is not None
+                and (time.time() - self._last_telemetry_at) <= max(2.5, 2.0 / self._telemetry_hz)
+            )
         return TelemetrySnapshot(
             timestamp=time.time(),
             lat=state.lat,
@@ -262,9 +271,15 @@ class ArduPilotAdapter(FlightControllerAdapter):
             flight_mode=state.flight_mode,
             vtol_state=state.vtol_state,
             mission_index=state.mission_index,
-            home_distance_m=_distance_m(home, LatLon(lat=state.lat, lon=state.lon)),
+            home_distance_m=_distance_m(home, LatLon(lat=state.lat, lon=state.lon))
+            if state.position_valid and state.home_valid
+            else 0.0,
             geofence_breached=state.geofence_breached,
             sim_rtf=state.sim_rtf,
+            telemetry_fresh=telemetry_fresh,
+            mode_valid=state.mode_valid,
+            position_valid=state.position_valid,
+            home_valid=state.home_valid,
         )
 
     def current_leg(self) -> str:
@@ -281,7 +296,36 @@ class ArduPilotAdapter(FlightControllerAdapter):
 
     def get_home(self) -> LatLon:
         with self._state_lock:
+            if not self._home_initialized and self._state.position_valid:
+                return LatLon(lat=self._state.lat, lon=self._state.lon)
             return self._home
+
+    def bootstrap_status(self) -> AdapterBootstrapStatus:
+        snapshot = self.get_snapshot()
+        connected = self._master is not None and self._heartbeat_received
+        mission_ready = connected and snapshot.telemetry_fresh and snapshot.mode_valid and snapshot.position_valid and snapshot.home_valid
+        reason: str | None = None
+        if not connected:
+            reason = "waiting for heartbeat"
+        elif not snapshot.telemetry_fresh:
+            reason = "waiting for fresh telemetry"
+        elif not snapshot.mode_valid:
+            reason = "waiting for valid flight mode"
+        elif not snapshot.position_valid:
+            reason = "waiting for valid GPS position"
+        elif not snapshot.home_valid:
+            reason = "waiting for valid home position"
+        return AdapterBootstrapStatus(
+            connected=connected,
+            heartbeat_received=self._heartbeat_received,
+            telemetry_fresh=snapshot.telemetry_fresh,
+            mode_ready=snapshot.mode_valid,
+            position_ready=snapshot.position_valid,
+            home_ready=snapshot.home_valid,
+            mission_ready=mission_ready,
+            last_telemetry_at=self._last_telemetry_at,
+            reason=reason,
+        )
 
     def _load_dependencies(self) -> None:
         if self._mavutil is None:
@@ -368,14 +412,18 @@ class ArduPilotAdapter(FlightControllerAdapter):
         msg_type = msg.get_type()
         if msg_type == "BAD_DATA":
             return
+        self._last_telemetry_at = time.time()
         with self._state_lock:
             if msg_type == "HEARTBEAT":
+                self._heartbeat_received = True
                 self._state.armed = bool(msg.base_mode & self._mavutil.mavlink.MAV_MODE_FLAG_SAFETY_ARMED)
                 self._state.flight_mode = self._mavutil.mode_string_v10(msg)
+                self._state.mode_valid = self._state.flight_mode.upper() != "DISCONNECTED"
             elif msg_type == "GLOBAL_POSITION_INT":
                 self._state.lat = msg.lat / 1e7
                 self._state.lon = msg.lon / 1e7
                 self._state.alt_m = msg.relative_alt / 1000.0
+                self._state.position_valid = bool(msg.lat or msg.lon)
                 if not self._home_initialized:
                     self._home = LatLon(lat=self._state.lat, lon=self._state.lon)
                 if hasattr(msg, "vx") and hasattr(msg, "vy"):
@@ -401,6 +449,7 @@ class ArduPilotAdapter(FlightControllerAdapter):
             elif msg_type == "HOME_POSITION":
                 self._home = LatLon(lat=msg.latitude / 1e7, lon=msg.longitude / 1e7)
                 self._home_initialized = True
+                self._state.home_valid = True
             elif msg_type == "NAMED_VALUE_FLOAT":
                 name = msg.name.decode("utf-8", errors="ignore").strip("\x00")
                 if name.upper() in {"RTF", "SIM_RTF"}:

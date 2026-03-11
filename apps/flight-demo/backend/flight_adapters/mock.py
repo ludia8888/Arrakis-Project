@@ -11,7 +11,7 @@ import cv2
 import numpy as np
 
 from config import CRUISE_ALT_M, RECOVERY_ALT_M, TAKEOFF_ALT_M, VideoConfig
-from schemas import LatLon, TelemetrySnapshot
+from schemas import AdapterBootstrapStatus, LatLon, TelemetrySnapshot
 
 from .base import FlightControllerAdapter, VideoFrame
 
@@ -189,6 +189,19 @@ class MockAdapter(FlightControllerAdapter):
     def get_home(self) -> LatLon:
         return self.home
 
+    def bootstrap_status(self) -> AdapterBootstrapStatus:
+        return AdapterBootstrapStatus(
+            connected=self._running,
+            heartbeat_received=self._running,
+            telemetry_fresh=self._running,
+            mode_ready=True,
+            position_ready=True,
+            home_ready=True,
+            mission_ready=self._running,
+            last_telemetry_at=time.time(),
+            reason=None if self._running else "mock adapter is not connected",
+        )
+
     def _snapshot_locked(self) -> TelemetrySnapshot:
         return TelemetrySnapshot(
             timestamp=time.time(),
@@ -205,6 +218,10 @@ class MockAdapter(FlightControllerAdapter):
             home_distance_m=_distance_m(self.home, LatLon(lat=self.state.lat, lon=self.state.lon)),
             geofence_breached=self.state.geofence_breached,
             sim_rtf=self.state.sim_rtf,
+            telemetry_fresh=True,
+            mode_valid=True,
+            position_valid=True,
+            home_valid=True,
         )
 
     def _telemetry_loop(self) -> None:

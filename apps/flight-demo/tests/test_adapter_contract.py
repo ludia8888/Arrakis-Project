@@ -44,6 +44,9 @@ def assert_adapter_contract(adapter, timeout_seconds: float = 2.0) -> None:
     assert isinstance(snapshot, TelemetrySnapshot)
     assert snapshot.armed is True
     assert adapter.current_leg() in {"idle", "outbound", "return"}
+    bootstrap = adapter.bootstrap_status()
+    assert bootstrap.connected is True
+    assert bootstrap.mission_ready is True
 
     deadline = time.time() + timeout_seconds
     while time.time() < deadline and (not telemetry_events or not video_events):

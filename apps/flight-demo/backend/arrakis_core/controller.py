@@ -4,8 +4,9 @@ import logging
 import threading
 from contextlib import suppress
 
+from arrakis_core.route_planner import build_route_preview
 from flight_adapters.base import FlightControllerAdapter, VideoFrame, validate_adapter_contract
-from schemas import RoutePreview, TelemetrySnapshot
+from schemas import RoutePreview, RouteRequest, TelemetrySnapshot
 
 from .mission_executor import MissionExecutor
 from .mission_state_machine import MissionStateMachine
@@ -50,7 +51,30 @@ class ArrakisController:
         )
         return self.state_machine.set_route(preview, self._mission_active())
 
+    def build_route_preview(self, request: RouteRequest) -> RoutePreview:
+        bootstrap = self.adapter.bootstrap_status()
+        if not (bootstrap.telemetry_fresh and bootstrap.position_ready and bootstrap.home_ready):
+            raise RuntimeError(
+                f"Vehicle home/telemetry not ready. Wait before setting route ({bootstrap.reason or 'unknown reason'})."
+            )
+        runtime_home = self.adapter.get_home()
+        if runtime_home != request.home:
+            logger.info(
+                "Overriding requested route home lat=%.6f lon=%.6f with vehicle home lat=%.6f lon=%.6f",
+                request.home.lat,
+                request.home.lon,
+                runtime_home.lat,
+                runtime_home.lon,
+            )
+        normalized_request = request.model_copy(update={"home": runtime_home})
+        return build_route_preview(normalized_request)
+
     def start_mission(self) -> None:
+        bootstrap = self.adapter.bootstrap_status()
+        if not bootstrap.mission_ready:
+            raise RuntimeError(
+                f"Vehicle telemetry bootstrap incomplete. Mission start is blocked ({bootstrap.reason or 'unknown reason'})."
+            )
         self.state_machine.start_mission(self._mission_active())
         cancel_event = threading.Event()
         mission_thread = threading.Thread(

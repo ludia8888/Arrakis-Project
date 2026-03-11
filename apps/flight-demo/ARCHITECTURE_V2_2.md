@@ -41,7 +41,8 @@
   - `get_snapshot()`
   - `current_leg()`
   - `stream_telemetry(callback)`
-  - `stream_video(callback)`
+- `stream_video(callback)`
+- `bootstrap_status()`
 - `stream_video(callback)`가 camera source의 유일한 공통 진입점이다.
   - ArduPilot v1의 primary runtime path는 `sim_vehicle.py -f quadplane`이므로, 기본 실비행 검증에서는 video source가 비어 있을 수 있다.
   - Gazebo camera source 연결은 이후 실험 경로에서 다시 붙일 수 있다.
@@ -59,6 +60,13 @@
   - `home_distance_m`
   - `geofence_breached`
   - `sim_rtf`
+  - `telemetry_fresh`
+  - `mode_valid`
+  - `position_valid`
+  - `home_valid`
+- real adapter는 `connected`와 `mission_ready`를 구분해야 한다.
+  - heartbeat만 받은 상태로는 mission start를 허용하지 않는다.
+  - `mission_ready`는 fresh telemetry, valid GPS position, valid home position, known flight mode를 모두 만족할 때만 `true`
 - v1 구현은 `ArduPilotAdapter`만 제공한다.
 - `PX4Adapter`는 같은 인터페이스를 따르는 향후 구현 대상으로만 남긴다.
 - 현재 첫 concrete `ArduPilotAdapter` 구현은 `pymavlink`를 사용한다.
@@ -111,6 +119,8 @@
 - 사용자는 지도에서 2~12개의 waypoint를 찍는다.
 - `route_planner`는 outbound route와 reversed return route를 자동 생성한다.
 - geofence source는 사용자 입력이 아니라 `route 기반 자동 생성`으로 고정한다.
+- mission-oriented adapter에서는 route preview 생성 전 bootstrap gating을 통과해야 한다.
+- route의 `home`은 frontend payload를 그대로 신뢰하지 않고, 현재 vehicle home/telemetry 기준으로 정규화한다.
 - 생성 규칙:
   - home + outbound + return 전체 polyline을 기준으로 corridor polygon 생성
   - corridor half-width 기본값: `120m`
@@ -119,6 +129,8 @@
 - 프론트는 route 생성 직후 geofence polygon을 항상 표시한다.
 - v1에서는 사용자가 geofence를 직접 그리지 않는다.
 - `safety_manager`는 adapter snapshot의 위치와 generated geofence polygon을 사용해 breach를 판단한다.
+- bootstrap 이전의 stale/default snapshot으로 geofence abort가 발동하면 안 된다.
+  - geofence 판단은 `telemetry_fresh`, `mode_valid`, `position_valid`, `home_valid`가 모두 참일 때만 수행한다.
 
 ### 5. Recovery/Transition 정책
 
