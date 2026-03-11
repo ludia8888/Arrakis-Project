@@ -24,19 +24,17 @@ echo "[sim-runtime] sim_vehicle.py (PATH): $(command -v sim_vehicle.py || echo m
 echo "[sim-runtime] sim_vehicle.py (configured): $(test -f "$SIM_VEHICLE_PATH" && echo "$SIM_VEHICLE_PATH" || echo missing)"
 echo "[sim-runtime] ardupilot: $(command -v ardupilot || echo missing)"
 echo "[sim-runtime] ardupilot dir: $(test -d "$ARRAKIS_ARDUPILOT_DIR" && echo "$ARRAKIS_ARDUPILOT_DIR" || echo missing)"
-echo "[sim-runtime] ardupilot_gazebo dir: $(test -d "$ARRAKIS_ARDUPILOT_GAZEBO_DIR" && echo "$ARRAKIS_ARDUPILOT_GAZEBO_DIR" || echo missing)"
-echo "[sim-runtime] gz: $(command -v gz || echo missing)"
-echo "[sim-runtime] gazebo: $(command -v gazebo || echo missing)"
+echo "[sim-runtime] flightgear helper: $(test -x "$ARRAKIS_FLIGHTGEAR_SCRIPT" && echo "$ARRAKIS_FLIGHTGEAR_SCRIPT" || echo missing)"
+echo "[sim-runtime] fgfs: $(command -v fgfs || echo missing)"
 echo "[sim-runtime] python3: $(command -v python3 || echo missing)"
 echo "[sim-runtime] repo sim_runtime dir: $ROOT_DIR"
 
 cat <<'EOF'
 
-Expected minimum for local Rosetta smoke:
+Expected minimum for local QuadPlane smoke:
 - Apple Silicon host may show arch=arm64
-- Rosetta should be installed if Gazebo/ArduPilot x86 path is used
 - sim_vehicle.py should be available
-- gz or gazebo should be available
+- FlightGear is optional and view-only
 
-If sim_vehicle.py or gz/gazebo is missing, install/runtime prep is still pending.
+If sim_vehicle.py is missing, runtime prep is still pending.
 EOF

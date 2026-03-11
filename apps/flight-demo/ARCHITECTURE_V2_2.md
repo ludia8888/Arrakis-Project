@@ -6,6 +6,7 @@
 - 목표는 사용자가 지도에서 코스를 지정하면 `VTOL 고정익`이 `수직 이륙 -> 고정익 전환 -> outbound -> return -> 감속/회복 -> 멀티콥터 전환 -> 수직 착륙`을 수행하고, 브라우저에서 `지도 + 상태 패널 + 시뮬레이터 영상 + 탐지 이벤트`를 보여주는 것이다.
 - v1은 `단일 VTOL 기체`, `왕복 자율 순찰`, `시뮬레이터 영상`, `탐지`, `battery RTL`, `geofence abort`까지만 포함한다.
 - ArduPilot/PX4 차이는 adapter 안에 가두고, Arrakis core는 공통 인터페이스와 공통 상태 스키마만 본다.
+- 현재 선택된 실비행 runtime 경로는 `sim_vehicle.py -f quadplane`이며, `FlightGear`는 view-only 시각화로 취급한다.
 
 ## Key Changes
 
@@ -16,7 +17,7 @@
   - `frontend`: 지도, 영상, 상태 패널, 컨트롤
   - `arrakis_core`: route planner, mission state machine, safety manager, telemetry hub
   - `flight_adapters`: `ArduPilotAdapter`, `PX4Adapter` 자리
-  - `sim_runtime`: SITL/Gazebo 실행 스크립트와 환경 문서
+  - `sim_runtime`: SITL/FlightGear 실행 스크립트와 환경 문서
 - 규칙:
   - 프론트는 adapter를 직접 모른다.
   - mission/state machine은 flight stack 전용 API를 직접 호출하지 않는다.
@@ -42,7 +43,8 @@
   - `stream_telemetry(callback)`
   - `stream_video(callback)`
 - `stream_video(callback)`가 camera source의 유일한 공통 진입점이다.
-  - ArduPilot v1은 Gazebo 카메라 source를 adapter 내부에서 구독/수집
+  - ArduPilot v1의 primary runtime path는 `sim_vehicle.py -f quadplane`이므로, 기본 실비행 검증에서는 video source가 비어 있을 수 있다.
+  - Gazebo camera source 연결은 이후 실험 경로에서 다시 붙일 수 있다.
   - detector_service와 MJPEG worker는 adapter video stream만 소비
 - telemetry snapshot schema는 아래로 고정한다.
   - `timestamp`
@@ -315,6 +317,8 @@
 
 ### 1. ArduPilot + Gazebo + M4 (Rosetta) 궁합
 
+- 현재 primary runtime은 `sim_vehicle.py -f quadplane`이다.
+- 따라서 Gazebo 관련 항목은 camera integration을 다시 시도할 때의 실험 경로 리스크로 본다.
 - ArduPilot SITL은 PX4보다 최신 Gazebo(Harmonic/Garden)와의 연동이 약간 더 까다로울 수 있다.
 - `ardupilot_gazebo` 플러그인이 x86_64 환경(Rosetta)에서 컴파일될 때 그래픽 드라이버 이슈가 생길 수 있으므로, Step 1 스모크 테스트에서 이를 최우선으로 검증한다.
 - Rosetta 경로에서 Gazebo 플러그인이 불안정하거나 카메라 transport가 흔들리면, 로컬 그래픽 스택을 억지로 붙잡지 않는다.

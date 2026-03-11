@@ -108,22 +108,19 @@ cd apps/flight-demo
 - Simulator runtime docs live under `apps/flight-demo/sim_runtime`
 - Environment probe: [`sim_runtime/check_environment.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/check_environment.sh)
 - macOS bootstrap: [`sim_runtime/bootstrap_macos_runtime.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/bootstrap_macos_runtime.sh)
-- Gazebo Harmonic installer: [`sim_runtime/install_gz_harmonic.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/install_gz_harmonic.sh)
-- Rosetta shell helper: [`sim_runtime/open_rosetta_shell.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/open_rosetta_shell.sh)
+- Primary QuadPlane SITL launcher: [`sim_runtime/run_ardupilot_quadplane.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/run_ardupilot_quadplane.sh)
+- Optional FlightGear view-only helper: [`sim_runtime/run_flightgear_view.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/run_flightgear_view.sh)
 - Ubuntu VM bootstrap: [`sim_runtime/bootstrap_ubuntu_vm_runtime.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/bootstrap_ubuntu_vm_runtime.sh)
 - Ubuntu VM workspace provisioner: [`sim_runtime/provision_ubuntu_vm_workspace.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/provision_ubuntu_vm_workspace.sh)
 - Ubuntu VM runtime check: [`sim_runtime/check_ubuntu_vm_runtime.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/check_ubuntu_vm_runtime.sh)
 - Host runtime.env writer for VM mode: [`sim_runtime/write_vm_host_runtime_env.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/write_vm_host_runtime_env.sh)
 - QEMU VM bootstrap: [`sim_runtime/bootstrap_qemu_vm.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/bootstrap_qemu_vm.sh)
 - QEMU VM launcher: [`sim_runtime/run_qemu_vm.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/run_qemu_vm.sh)
-- ardupilot_gazebo build helper: [`sim_runtime/build_ardupilot_gazebo.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/build_ardupilot_gazebo.sh)
 - Runtime env template: [`sim_runtime/runtime.env.example`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/runtime.env.example)
-- Gazebo launcher: [`sim_runtime/run_gazebo_zephyr.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/run_gazebo_zephyr.sh)
-- SITL launcher: [`sim_runtime/run_ardupilot_zephyr.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/run_ardupilot_zephyr.sh)
-- Camera enable helper: [`sim_runtime/enable_camera_stream.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/enable_camera_stream.sh)
 - Real adapter backend launcher: [`sim_runtime/run_backend_ardupilot.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/run_backend_ardupilot.sh)
 - Real ArduPilot adapter smoke once SITL is up: [`sim_runtime/smoke_ardupilot_sitl.py`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/smoke_ardupilot_sitl.py)
+- Experimental Gazebo helpers remain in `sim_runtime`, but the primary runtime is now `sim_vehicle.py -f quadplane`.
 - `POST /api/mission/reset` clears mission state, route preview, detector events, and adapter state for repeatable demos
 - `POST /api/mission/reset` first cancels any active mission execution thread before clearing adapter/video/state
 - FastAPI creates and tears down the controller through app lifespan rather than an import-time global
-- Rosetta/Gazebo/ArduPilot risk notes and VM fallback policy are documented in `apps/flight-demo/sim_runtime/README.md`
+- QuadPlane runtime and VM fallback policy are documented in `apps/flight-demo/sim_runtime/README.md`

@@ -14,11 +14,14 @@ fi
 : "${ARRAKIS_GZ_VERBOSE:=4}"
 : "${ARRAKIS_GZ_CAMERA_ENABLE_TOPIC:=}"
 : "${ARRAKIS_ARDUPILOT_VEHICLE:=ArduPlane}"
-: "${ARRAKIS_ARDUPILOT_FRAME:=gazebo-zephyr}"
-: "${ARRAKIS_ARDUPILOT_MODEL:=JSON}"
-: "${ARRAKIS_ARDUPILOT_DEFAULTS:=Tools/autotest/default_params/gazebo-zephyr.parm,Tools/autotest/default_params/quadplane.parm,apps/flight-demo/sim_runtime/params/zephyr_quadplane_demo.parm}"
+: "${ARRAKIS_ARDUPILOT_FRAME:=quadplane}"
+: "${ARRAKIS_ARDUPILOT_MODEL:=}"
+: "${ARRAKIS_ARDUPILOT_DEFAULTS:=Tools/autotest/default_params/quadplane.parm,apps/flight-demo/sim_runtime/params/quadplane_demo.parm}"
 : "${ARRAKIS_ARDUPILOT_MAP:=1}"
 : "${ARRAKIS_ARDUPILOT_CONSOLE:=1}"
+: "${ARRAKIS_ARDUPILOT_WIPE:=1}"
+: "${ARRAKIS_ARDUPILOT_OUT:=127.0.0.1:14550}"
+: "${ARRAKIS_FLIGHTGEAR_SCRIPT:=$ARRAKIS_ARDUPILOT_DIR/Tools/autotest/fg_plane_view.sh}"
 
 runtime_require_dir() {
   local path="$1"
@@ -46,4 +49,6 @@ runtime_print_summary() {
   echo "[sim-runtime] GZ_CAMERA_ENABLE_TOPIC=${ARRAKIS_GZ_CAMERA_ENABLE_TOPIC:-<unset>}"
   echo "[sim-runtime] VEHICLE=$ARRAKIS_ARDUPILOT_VEHICLE FRAME=$ARRAKIS_ARDUPILOT_FRAME MODEL=$ARRAKIS_ARDUPILOT_MODEL"
   echo "[sim-runtime] DEFAULTS=$ARRAKIS_ARDUPILOT_DEFAULTS"
+  echo "[sim-runtime] OUT=$ARRAKIS_ARDUPILOT_OUT"
+  echo "[sim-runtime] FLIGHTGEAR_SCRIPT=$ARRAKIS_FLIGHTGEAR_SCRIPT"
 }

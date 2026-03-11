@@ -15,7 +15,7 @@ if [[ "$(uname -m)" == "arm64" ]] && ! /usr/bin/pgrep oahd >/dev/null 2>&1; then
 fi
 
 echo "[sim-runtime] installing local runtime prerequisites via Homebrew"
-brew install rapidjson opencv gstreamer cmake pkg-config python@3.12 || true
+brew install rapidjson opencv gstreamer cmake pkg-config python@3.12 flightgear || true
 
 cat <<'EOF'
 
@@ -27,13 +27,16 @@ Next manual steps:
    cd "$HOME/Developer/ardupilot"
    git submodule update --init --recursive
 
-2. Clone ardupilot_gazebo:
-   git clone https://github.com/ArduPilot/ardupilot_gazebo.git "$HOME/Developer/ardupilot_gazebo"
-
-3. Copy runtime template:
+2. Copy runtime template:
    cd /Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime
    cp runtime.env.example runtime.env
 
-4. Then run:
+3. Primary runtime path:
+   ./run_ardupilot_quadplane.sh
+
+4. Optional view-only FlightGear:
+   ./run_flightgear_view.sh
+
+5. Then run:
    ./check_environment.sh
 EOF
