@@ -68,6 +68,7 @@
   - `mission_executor`
   - `safety_manager`
   - `telemetry_hub`
+  - `state_payload_assembler`
   - `video_service`
   - `detector_service`
   - `perception_backends`
@@ -90,7 +91,8 @@
 - adapter는 “명령 실행 + telemetry/video 공급”만 담당한다.
 - detector service는 queueing, cadence, event aggregation을 담당하고, 실제 모델 추론은 `perception_backends` 경계 뒤로 숨긴다.
 - 즉 이미지 인식 모델은 비행 스택과 마찬가지로 교체 가능한 backend로 취급한다.
-- `telemetry_hub`는 telemetry/safety/payload 조립만 담당한다.
+- `telemetry_hub`는 telemetry/safety 상태만 소유한다.
+- `state_payload_assembler`는 telemetry, route progress, detector/simulator state를 프론트용 `StatePayload`로 조립한다.
 - `video_service`는 camera frame, detector runtime, JPEG/MJPEG용 video state를 담당한다.
 - `reset()`은 실행 중 mission thread를 먼저 취소하고 정리한 뒤 adapter/video/state를 초기화해야 한다.
 
@@ -202,6 +204,8 @@
     - `video_fps`
     - `video_latency_ms`
 - `recent_events`는 최근 10초, 최대 20개로 제한한다.
+- FastAPI 앱은 import 시점에 controller를 전역 생성하지 않는다.
+  - controller/adapter는 app lifespan에서 생성하고 shutdown 시 정리한다.
 
 ### 7. 프론트엔드 UX
 

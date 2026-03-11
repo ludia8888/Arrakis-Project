@@ -7,6 +7,7 @@ This app is a separate demo from the existing YOLO browser overlay.
 - Separate backend and frontend app under `apps/flight-demo`
 - Arrakis-owned mission/state-machine layer
 - Dedicated mission executor for round-trip orchestration
+- Dedicated state payload assembler for frontend-facing state JSON
 - Dedicated video service for camera/detector/JPEG state
 - Flight controller adapter boundary
 - Working mock adapter path for local UI/demo development
@@ -69,4 +70,5 @@ The frontend expects the backend at `http://127.0.0.1:8010`.
 - Simulator runtime docs live under `apps/flight-demo/sim_runtime`
 - `POST /api/mission/reset` clears mission state, route preview, detector events, and adapter state for repeatable demos
 - `POST /api/mission/reset` first cancels any active mission execution thread before clearing adapter/video/state
+- FastAPI creates and tears down the controller through app lifespan rather than an import-time global
 - Rosetta/Gazebo/ArduPilot risk notes and VM fallback policy are documented in `apps/flight-demo/sim_runtime/README.md`

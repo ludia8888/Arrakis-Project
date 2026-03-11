@@ -8,6 +8,7 @@ from schemas import RoutePreview, TelemetrySnapshot
 
 from .mission_executor import MissionExecutor
 from .mission_state_machine import MissionStateMachine
+from .state_payload_assembler import StatePayloadAssembler
 from .telemetry_hub import TelemetryHub
 from .video_service import VideoService
 
@@ -23,6 +24,7 @@ class ArrakisController:
         self.adapter.connect()
         self.video_service = VideoService()
         self.telemetry_hub = TelemetryHub(self.adapter.get_snapshot(), self.video_service)
+        self.state_payload_assembler = StatePayloadAssembler(self.video_service)
         self.mission_executor = MissionExecutor(
             adapter=self.adapter,
             state_machine=self.state_machine,
@@ -67,10 +69,15 @@ class ArrakisController:
         self.telemetry_hub.reset(self.adapter.get_snapshot())
         self.state_machine.reset()
 
+    def shutdown(self) -> None:
+        with suppress(Exception):
+            self.reset()
+
     def state_payload(self):
         status = self.state_machine.snapshot()
         current_leg = self.adapter.current_leg()
-        return self.telemetry_hub.state_payload(
+        return self.state_payload_assembler.build(
+            telemetry=self.telemetry_hub.telemetry_snapshot(),
             mission_phase=status.phase,
             abort_reason=status.abort_reason,
             route_preview=status.route_preview,
