@@ -59,6 +59,8 @@
   - `sim_rtf`
 - v1 구현은 `ArduPilotAdapter`만 제공한다.
 - `PX4Adapter`는 같은 인터페이스를 따르는 향후 구현 대상으로만 남긴다.
+- 현재 첫 concrete `ArduPilotAdapter` 구현은 `pymavlink`를 사용한다.
+  - 이유: ArduPilot의 VTOL transition과 mission upload를 raw MAVLink로 먼저 닫는 편이 구동 리스크가 낮기 때문이다.
 
 ### 3. Arrakis Core
 

@@ -11,7 +11,7 @@ This app is a separate demo from the existing YOLO browser overlay.
 - Dedicated video service for camera/detector/JPEG state
 - Flight controller adapter boundary
 - Working mock adapter path for local UI/demo development
-- ArduPilot-first adapter placeholder
+- ArduPilot-first real adapter scaffold with `pymavlink` control path
 - MJPEG camera stream
 - WebSocket state feed at 5 Hz
 - Route-derived geofence generation
@@ -47,12 +47,12 @@ This app is a separate demo from the existing YOLO browser overlay.
 ## Current scope boundary
 
 - v1 ships a working Arrakis architecture and a full mock-demo path first.
-- Real ArduPilot SITL integration is intentionally the next step, not something hidden behind the current mock adapter.
+- Real ArduPilot SITL execution is now wired through a first `pymavlink` adapter implementation, but still needs SITL-on-this-machine validation.
 - The architecture already assumes:
   - ArduPilot first
   - PX4-compatible adapter boundary later
   - simulator video entering only through the adapter
-  - `MAVSDK` as the first control client, with `pymavlink` available as the fallback path for ArduPilot-specific VTOL commands if needed
+  - the first concrete ArduPilot control client is `pymavlink`, keeping room for a future MAVSDK-backed adapter if it proves reliable enough
 
 ## Backend
 

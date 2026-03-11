@@ -11,17 +11,20 @@ This folder exists to isolate flight-stack-specific behavior from the Arrakis mi
 
 ## ArduPilot implementation direction
 
-- Start with `MAVSDK` for connection, telemetry, arm/takeoff, and mission execution where it works cleanly.
+- The first concrete adapter implementation uses `pymavlink` directly.
+- Reason: VTOL transition, mission upload, and mode control are more predictable through raw MAVLink on ArduPilot than through a MAVSDK-first path.
 - Do not assume PX4-level feature parity for VTOL operations.
 - Validate these behaviors explicitly in ArduPilot SITL:
   - fixed-wing transition
   - multicopter recovery transition
   - mission-level VTOL landing behavior
   - return-to-home behavior during VTOL phases
-- If ArduPilot VTOL transitions are not exposed reliably through MAVSDK, keep the adapter API unchanged and use `pymavlink` internally for:
+- If a higher-level control client is added later, keep the adapter API unchanged and treat that client as an internal implementation detail.
+- The current `pymavlink` path is responsible for:
   - `DO_VTOL_TRANSITION`
   - mode changes
-  - any recovery/landing command sequence that needs lower-level control
+  - mission upload/start
+  - recovery/RTL/QLAND command delivery
 
 ## Video transport direction
 
