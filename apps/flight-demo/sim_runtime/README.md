@@ -28,6 +28,33 @@ This demo is built to keep the Arrakis mission/state machine independent from th
 - 5 minute round-trip run completes without severe RTF collapse
 - Gazebo plugin path stays stable enough to provide camera frames continuously
 
+## Local smoke commands
+
+Environment probe:
+
+```bash
+cd apps/flight-demo/sim_runtime
+./check_environment.sh
+```
+
+Adapter smoke once SITL is already running:
+
+```bash
+cd apps/flight-demo/sim_runtime
+../../.venv/bin/python smoke_ardupilot_sitl.py
+```
+
+Optional camera verification:
+
+```bash
+ARRAKIS_ARDUPILOT_VIDEO_SOURCE=0 ../../.venv/bin/python smoke_ardupilot_sitl.py
+```
+
+Notes:
+- `smoke_ardupilot_sitl.py` only verifies the adapter contract path on top of a running SITL connection.
+- It does not launch SITL or Gazebo for you.
+- Video is only checked if `ARRAKIS_ARDUPILOT_VIDEO_SOURCE` is set.
+
 ## Failure triggers for Rosetta path
 
 - GUI FPS stays below 20
