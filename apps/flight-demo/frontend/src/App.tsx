@@ -1,9 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FeatureCollection } from "geojson";
-import maplibregl, { LngLatLike, Map } from "maplibre-gl";
+import maplibregl, { LngLatBounds, LngLatLike, Map, type StyleSpecification } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 type LatLon = { lat: number; lon: number };
+type RoutePreview = {
+  home: LatLon;
+  outbound: LatLon[];
+  return_path: LatLon[];
+  geofence: { coordinates: LatLon[] };
+  cruise_alt_m: number;
+};
 
 type Detection = {
   label: "person" | "vehicle";
@@ -56,6 +63,28 @@ type StatePayload = {
 };
 
 const API_BASE = "http://127.0.0.1:8010";
+const MAP_STYLE: StyleSpecification = {
+  version: 8,
+  sources: {
+    osm: {
+      type: "raster",
+      tiles: [
+        "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        "https://b.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        "https://c.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      ],
+      tileSize: 256,
+      attribution: "© OpenStreetMap contributors",
+    },
+  },
+  layers: [
+    {
+      id: "osm",
+      type: "raster",
+      source: "osm",
+    },
+  ],
+};
 
 function App() {
   const mapRef = useRef<Map | null>(null);
@@ -64,6 +93,7 @@ function App() {
   const [mapReady, setMapReady] = useState(false);
   const [home, setHome] = useState<LatLon | null>(null);
   const [waypoints, setWaypoints] = useState<LatLon[]>([]);
+  const [preview, setPreview] = useState<RoutePreview | null>(null);
   const [previewReady, setPreviewReady] = useState(false);
   const [state, setState] = useState<StatePayload | null>(null);
   const [status, setStatus] = useState("Click the map to define a route.");
@@ -81,11 +111,11 @@ function App() {
     }
     const map = new maplibregl.Map({
       container: mapNodeRef.current,
-      style: "https://demotiles.maplibre.org/style.json",
+      style: MAP_STYLE,
       center: [home.lon, home.lat] as LngLatLike,
       zoom: 15,
-      pitch: 40,
-      bearing: -10,
+      pitch: 28,
+      bearing: -8,
     });
     map.on("load", () => {
       map.addSource("route", { type: "geojson", data: emptyFeatureCollection() });
@@ -93,13 +123,14 @@ function App() {
       map.addSource("geofence", { type: "geojson", data: emptyFeatureCollection() });
       map.addSource("home", { type: "geojson", data: emptyFeatureCollection() });
       map.addSource("drone", { type: "geojson", data: emptyFeatureCollection() });
+      map.addSource("waypoints", { type: "geojson", data: emptyFeatureCollection() });
       map.addLayer({
         id: "geofence-fill",
         type: "fill",
         source: "geofence",
         paint: {
           "fill-color": "#f4a261",
-          "fill-opacity": 0.14,
+          "fill-opacity": 0.08,
         },
       });
       map.addLayer({
@@ -108,20 +139,34 @@ function App() {
         source: "geofence",
         paint: {
           "line-color": "#f4a261",
-          "line-width": 2,
+          "line-width": 3,
+          "line-dasharray": [3, 2],
         },
       });
       map.addLayer({
         id: "route-line",
         type: "line",
         source: "route",
-        paint: { "line-color": "#2a9d8f", "line-width": 4 },
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: { "line-color": "#2a9d8f", "line-width": 5 },
       });
       map.addLayer({
         id: "return-line",
         type: "line",
         source: "return",
-        paint: { "line-color": "#e76f51", "line-width": 4, "line-dasharray": [2, 2] },
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: { "line-color": "#e76f51", "line-width": 5, "line-dasharray": [2, 2] },
+      });
+      map.addLayer({
+        id: "waypoint-points",
+        type: "circle",
+        source: "waypoints",
+        paint: {
+          "circle-color": "#f4efe6",
+          "circle-radius": 5,
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#2a9d8f",
+        },
       });
       map.addLayer({
         id: "home-point",
@@ -147,6 +192,7 @@ function App() {
       });
       setMapReady(true);
     });
+    map.on("error", () => setStatus("Map tile loading error."));
     map.on("click", (event) => {
       setWaypoints((prev) => {
         if (prev.length >= 12) {
@@ -168,7 +214,21 @@ function App() {
     }
     updatePointSource(mapRef.current, "home", [home]);
     updateLineSource(mapRef.current, "route", waypoints);
-  }, [home, waypoints, mapReady]);
+    updatePointSource(mapRef.current, "waypoints", waypoints);
+    if (!previewReady && waypoints.length) {
+      fitMapToPoints(mapRef.current, [home, ...waypoints]);
+    }
+  }, [home, waypoints, mapReady, previewReady]);
+
+  useEffect(() => {
+    if (!mapRef.current || !mapReady || !preview) {
+      return;
+    }
+    updateLineSource(mapRef.current, "route", preview.outbound);
+    updateLineSource(mapRef.current, "return", preview.return_path);
+    updatePolygonSource(mapRef.current, "geofence", preview.geofence.coordinates);
+    fitMapToRoute(mapRef.current, preview.home, preview.outbound, preview.return_path, preview.geofence.coordinates);
+  }, [mapReady, preview]);
 
   useEffect(() => {
     const socket = new WebSocket("ws://127.0.0.1:8010/ws/state");
@@ -201,6 +261,8 @@ function App() {
       setStatus(payload.detail ?? "Route preview failed.");
       return;
     }
+    const payload = (await response.json()) as RoutePreview;
+    setPreview(payload);
     setPreviewReady(true);
     setStatus("Route ready. Start mission when you are ready.");
   }
@@ -218,6 +280,7 @@ function App() {
   async function handleReset() {
     await postMissionAction("/api/mission/reset", "Mission state reset.");
     setWaypoints([]);
+    setPreview(null);
     setPreviewReady(false);
   }
 
@@ -401,6 +464,20 @@ function updatePointSource(map: Map, id: string, coords: LatLon[]) {
       properties: {},
     })),
   });
+}
+
+function fitMapToPoints(map: Map, coords: LatLon[]) {
+  if (!coords.length) return;
+  const bounds = coords.reduce(
+    (acc, point) => acc.extend([point.lon, point.lat]),
+    new LngLatBounds([coords[0].lon, coords[0].lat], [coords[0].lon, coords[0].lat]),
+  );
+  map.fitBounds(bounds, { padding: 80, duration: 700, maxZoom: 16.5 });
+}
+
+function fitMapToRoute(map: Map, home: LatLon, outbound: LatLon[], returnPath: LatLon[], geofence: LatLon[]) {
+  const points = [home, ...outbound, ...returnPath, ...geofence];
+  fitMapToPoints(map, points);
 }
 
 export default App;

@@ -108,18 +108,31 @@ button:disabled {
   display: flex;
   justify-content: space-between;
   gap: 16px;
-  align-items: baseline;
+  align-items: flex-start;
   margin-bottom: 12px;
 }
 
 .panel-header h2 {
   margin: 0;
+  flex: 0 0 auto;
+}
+
+.panel-header p {
+  margin: 0;
+  max-width: 38ch;
+}
+
+.map-panel .panel-header {
+  display: grid;
+  gap: 8px;
 }
 
 .map-node {
   height: 680px;
   border-radius: 22px;
   overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(190, 218, 226, 0.08), rgba(14, 29, 37, 0.22));
 }
 
 .video-stage {
