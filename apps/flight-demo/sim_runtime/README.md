@@ -37,6 +37,17 @@ cd apps/flight-demo/sim_runtime
 ./check_environment.sh
 ```
 
+Runtime env template:
+
+```bash
+cd apps/flight-demo/sim_runtime
+cp runtime.env.example runtime.env
+```
+
+Update `runtime.env` so these paths match your machine:
+- `ARRAKIS_ARDUPILOT_DIR`
+- `ARRAKIS_ARDUPILOT_GAZEBO_DIR`
+
 Adapter smoke once SITL is already running:
 
 ```bash
@@ -54,6 +65,41 @@ Notes:
 - `smoke_ardupilot_sitl.py` only verifies the adapter contract path on top of a running SITL connection.
 - It does not launch SITL or Gazebo for you.
 - Video is only checked if `ARRAKIS_ARDUPILOT_VIDEO_SOURCE` is set.
+
+## Local run sequence
+
+Terminal 1, Gazebo:
+
+```bash
+cd apps/flight-demo/sim_runtime
+./run_gazebo_zephyr.sh
+```
+
+Terminal 2, ArduPilot SITL:
+
+```bash
+cd apps/flight-demo/sim_runtime
+./run_ardupilot_zephyr.sh
+```
+
+Terminal 3, backend on the real adapter:
+
+```bash
+cd apps/flight-demo/sim_runtime
+./run_backend_ardupilot.sh
+```
+
+Terminal 4, adapter smoke:
+
+```bash
+cd apps/flight-demo/sim_runtime
+../../.venv/bin/python smoke_ardupilot_sitl.py
+```
+
+If Rosetta/Gazebo becomes unstable:
+- keep the backend/app layer on macOS
+- move Gazebo + SITL into Ubuntu VM
+- point `ARRAKIS_ARDUPILOT_CONNECTION` and `ARRAKIS_ARDUPILOT_VIDEO_SOURCE` at the VM-exposed endpoints
 
 ## Failure triggers for Rosetta path
 

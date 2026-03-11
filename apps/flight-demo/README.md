@@ -107,6 +107,10 @@ cd apps/flight-demo
 
 - Simulator runtime docs live under `apps/flight-demo/sim_runtime`
 - Environment probe: [`sim_runtime/check_environment.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/check_environment.sh)
+- Runtime env template: [`sim_runtime/runtime.env.example`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/runtime.env.example)
+- Gazebo launcher: [`sim_runtime/run_gazebo_zephyr.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/run_gazebo_zephyr.sh)
+- SITL launcher: [`sim_runtime/run_ardupilot_zephyr.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/run_ardupilot_zephyr.sh)
+- Real adapter backend launcher: [`sim_runtime/run_backend_ardupilot.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/run_backend_ardupilot.sh)
 - Real ArduPilot adapter smoke once SITL is up: [`sim_runtime/smoke_ardupilot_sitl.py`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/smoke_ardupilot_sitl.py)
 - `POST /api/mission/reset` clears mission state, route preview, detector events, and adapter state for repeatable demos
 - `POST /api/mission/reset` first cancels any active mission execution thread before clearing adapter/video/state
