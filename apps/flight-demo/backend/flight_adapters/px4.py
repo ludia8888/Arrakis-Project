@@ -1,14 +1,20 @@
 from __future__ import annotations
 
+import logging
+
 from schemas import LatLon, TelemetrySnapshot
 
 from .base import FlightControllerAdapter
+
+
+logger = logging.getLogger("arrakis.adapter.px4")
 
 
 class PX4Adapter(FlightControllerAdapter):
     """Future adapter stub kept to preserve the cross-stack boundary."""
 
     def __init__(self) -> None:
+        logger.info("PX4Adapter scaffold instantiated")
         raise NotImplementedError("PX4Adapter is intentionally not implemented in the ArduPilot-first v1 demo.")
 
     def connect(self) -> None: raise NotImplementedError

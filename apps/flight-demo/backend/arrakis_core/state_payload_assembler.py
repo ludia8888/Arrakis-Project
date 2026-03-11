@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import logging
 import time
 
 from schemas import LatLon, RoutePreview, RouteProgress, StatePayload, TelemetrySnapshot
 
 from .video_service import VideoService
+
+
+logger = logging.getLogger("arrakis.state_assembler")
 
 
 class StatePayloadAssembler:
@@ -27,7 +31,7 @@ class StatePayloadAssembler:
             current_waypoint_index=telemetry.mission_index,
             next_waypoint=self._next_waypoint(route_preview, telemetry.mission_index),
         )
-        return StatePayload(
+        payload = StatePayload(
             timestamp=time.time(),
             mission_phase=mission_phase,
             abort_reason=abort_reason,
@@ -40,6 +44,13 @@ class StatePayloadAssembler:
             outbound=route_preview.outbound if route_preview else [],
             return_path=route_preview.return_path if route_preview else [],
         )
+        logger.debug(
+            "Built state payload phase=%s current_leg=%s mission_index=%d",
+            mission_phase,
+            current_leg,
+            telemetry.mission_index,
+        )
+        return payload
 
     def _next_waypoint(self, route_preview: RoutePreview | None, mission_index: int) -> LatLon | None:
         if not route_preview:

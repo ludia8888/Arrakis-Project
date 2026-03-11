@@ -17,6 +17,11 @@ This app is a separate demo from the existing YOLO browser overlay.
 - Route-derived geofence generation
 - Person/vehicle detector service with model fallback
 - Reset endpoint for repeatable demo runs
+- Module-scoped `arrakis.*` loggers for core, adapters, and perception backends
+- Optional JSONL state snapshot dump via `ARRAKIS_STATE_DUMP_PATH`
+- Adapter contract smoke test at `tests/test_adapter_contract.py`
+- Health endpoint at `GET /api/health`
+- Local CI script at [`check.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/check.sh)
 
 ## Architecture spec
 
@@ -32,6 +37,12 @@ This app is a separate demo from the existing YOLO browser overlay.
 - Image inference backends are now treated as swappable components behind the detector service.
 - Backend notes live at [`arrakis_core/perception_backends/README.md`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/backend/arrakis_core/perception_backends/README.md)
 - To override the active model path explicitly, set `ARRAKIS_DETECTOR_MODEL_PATH`
+
+## Logging and state dump
+
+- Set `ARRAKIS_LOG_LEVEL` to control backend log verbosity
+- Set `ARRAKIS_STATE_DUMP_PATH` to persist `StatePayload` snapshots as JSONL for postmortem analysis
+- Adapter calls are instrumented through a wrapper so logs include call/return timing per public adapter method
 
 ## Current scope boundary
 
@@ -64,6 +75,33 @@ npm run dev
 ```
 
 The frontend expects the backend at `http://127.0.0.1:8010`.
+
+## Adapter contract smoke test
+
+```bash
+cd apps/flight-demo
+../../.venv/bin/python -m pytest tests/test_adapter_contract.py
+```
+
+- `test_mock_adapter_contract_smoke` runs by default
+- `test_ardupilot_adapter_contract_smoke` is opt-in via `ARRAKIS_TEST_REAL_ARDUPILOT=1`
+- Adapter contract is guarded both by `ABC` and runtime validation via `FlightControllerAdapterContract`
+
+## Local CI
+
+```bash
+cd apps/flight-demo
+./check.sh
+```
+
+- Runs backend `py_compile`
+- Builds the frontend
+- Runs adapter contract smoke tests
+- Runs a mock full round trip and verifies state dump output
+
+## Health endpoint
+
+- `GET /api/health` returns adapter status, detector mode, last telemetry timestamp, simulator status, and process memory high-water mark
 
 ## Runtime notes
 

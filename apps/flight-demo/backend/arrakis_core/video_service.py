@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import threading
 from dataclasses import dataclass
 
@@ -10,6 +11,9 @@ from flight_adapters.base import VideoFrame
 from schemas import DetectorState, SimulatorState
 
 from .detector_service import DetectorService
+
+
+logger = logging.getLogger("arrakis.video")
 
 
 @dataclass
@@ -40,6 +44,7 @@ class VideoService:
                 width=width,
                 height=height,
             )
+        logger.info("Video service reset")
 
     def latest_jpeg(self) -> bytes:
         with self._lock:

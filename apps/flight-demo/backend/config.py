@@ -6,7 +6,9 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
+LOG_LEVEL = os.getenv("ARRAKIS_LOG_LEVEL", "INFO").upper()
 ENV_MODEL_PATH = os.getenv("ARRAKIS_DETECTOR_MODEL_PATH")
+STATE_DUMP_PATH = os.getenv("ARRAKIS_STATE_DUMP_PATH")
 DEFAULT_MODEL_CANDIDATES = (
     ([Path(ENV_MODEL_PATH).expanduser()] if ENV_MODEL_PATH else [])
     + [

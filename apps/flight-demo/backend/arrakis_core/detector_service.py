@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import queue
 import threading
 import time
@@ -11,6 +12,9 @@ from schemas import DetectionBox, DetectorEvent
 from .perception_backends.base import InferenceResult, PerceptionBackend, resolve_model_path
 from .perception_backends.synthetic_backend import SyntheticPerceptionBackend
 from .perception_backends.yolo_backend import YoloPerceptionBackend
+
+
+logger = logging.getLogger("arrakis.detector")
 
 
 @dataclass
@@ -31,6 +35,7 @@ class DetectorService:
         self._fallback_backend = SyntheticPerceptionBackend()
         self._active_backend = self._create_backend()
         self.runtime.mode = self._active_backend.mode
+        logger.info("Detector backend selected: %s", self.runtime.mode)
         threading.Thread(target=self._loop, daemon=True).start()
 
     def submit(self, frame, metadata: dict[str, object]) -> None:
@@ -47,6 +52,8 @@ class DetectorService:
 
     def set_degrade_step(self, step: int) -> None:
         with self._lock:
+            if self.runtime.degrade_step != step:
+                logger.info("Detector degrade step %d -> %d", self.runtime.degrade_step, step)
             self.runtime.degrade_step = step
 
     def export(self) -> DetectorRuntime:
@@ -65,6 +72,7 @@ class DetectorService:
             self.runtime.last_inference_ms = 0.0
             self.runtime.current_detections = []
             self.runtime.recent_events = []
+        logger.info("Detector runtime cleared")
 
     def _loop(self) -> None:
         frame_count = 0
@@ -89,14 +97,24 @@ class DetectorService:
                 merged = [*self.runtime.recent_events, *events]
                 cutoff = time.time() - 10.0
                 self.runtime.recent_events = [event for event in merged if event.timestamp >= cutoff][-20:]
+            logger.debug(
+                "Inference complete mode=%s detections=%d latency=%.1fms queue_age=%.1fms",
+                result.mode,
+                len(result.detections),
+                inference_ms,
+                (time.time() - submitted_at) * 1000.0,
+            )
 
     def _create_backend(self) -> PerceptionBackend:
         model_path = resolve_model_path(DEFAULT_MODEL_CANDIDATES)
         if model_path and model_path.suffix == ".pt":
             try:
+                logger.info("Attempting YOLO backend with model=%s", model_path)
                 return YoloPerceptionBackend(model_path)
-            except Exception:
+            except Exception as exc:
+                logger.exception("YOLO backend init failed, falling back to synthetic: %s", exc)
                 return self._fallback_backend
+        logger.info("No valid model found, using synthetic backend")
         return self._fallback_backend
 
     def _infer(self, frame, metadata: dict[str, object], degrade: int) -> InferenceResult:

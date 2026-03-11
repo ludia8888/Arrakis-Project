@@ -95,6 +95,12 @@
 - `state_payload_assembler`는 telemetry, route progress, detector/simulator state를 프론트용 `StatePayload`로 조립한다.
 - `video_service`는 camera frame, detector runtime, JPEG/MJPEG용 video state를 담당한다.
 - `reset()`은 실행 중 mission thread를 먼저 취소하고 정리한 뒤 adapter/video/state를 초기화해야 한다.
+- 각 구조화된 모듈은 `arrakis.*` 네임스페이스 logger를 가져야 한다.
+  - 예: `arrakis.controller`, `arrakis.executor`, `arrakis.adapter.ardupilot`
+  - 모듈 경계를 넘는 호출은 호출 전/후와 소요 시간을 로그로 남긴다.
+- adapter public 메서드 계측은 wrapper/proxy로 일괄 적용해, 새 adapter 구현이 들어와도 같은 로그 계약을 유지한다.
+- adapter 계약은 `ABC`에만 의존하지 않는다.
+  - `FlightControllerAdapterContract` runtime protocol validator를 통해 초기화 시점에 계약 위반을 바로 실패시킨다.
 
 ### 4. Route와 Geofence 정책
 
@@ -206,6 +212,12 @@
 - `recent_events`는 최근 10초, 최대 20개로 제한한다.
 - FastAPI 앱은 import 시점에 controller를 전역 생성하지 않는다.
   - controller/adapter는 app lifespan에서 생성하고 shutdown 시 정리한다.
+- `ARRAKIS_STATE_DUMP_PATH`가 설정되면 `StatePayload`를 JSONL로 파일에 기록한다.
+  - 목적은 이상 동작 후 phase, telemetry, detector, simulator 상태를 재구성하는 블랙박스다.
+- `GET /api/health`는 adapter 연결 상태, detector 상태, 마지막 telemetry 시각, simulator 상태, process memory를 반환한다.
+  - 데모 시작 전 시스템 정상 여부를 빠르게 확인하는 용도다.
+- 로컬 검증 기준 경로는 `check.sh`다.
+  - backend compile, frontend build, adapter smoke test, mock full round trip을 한 번에 수행한다.
 
 ### 7. 프론트엔드 UX
 
@@ -285,6 +297,9 @@
   - battery threshold RTL 재현
   - geofence abort 재현
   - 영상 + detection overlay 동시 표시
+- adapter contract:
+  - `pytest tests/test_adapter_contract.py` 하나로 smoke test를 시작할 수 있어야 한다.
+  - 최소 검증은 `connect -> arm -> get_snapshot -> current_leg -> telemetry/video callback` 순서로 수행한다.
 
 ## Assumptions
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import threading
 from dataclasses import dataclass
 
@@ -8,6 +9,9 @@ from schemas import MissionPhase, RoutePreview
 
 TERMINAL_PHASES = {"IDLE", "COMPLETE", "ABORT_GEOFENCE", "ABORT_MANUAL"}
 INTERRUPT_PHASES = {"ABORT_GEOFENCE", "ABORT_MANUAL", "RTL_BATTERY"}
+
+
+logger = logging.getLogger("arrakis.state_machine")
 
 
 @dataclass(frozen=True)
@@ -36,9 +40,20 @@ class MissionStateMachine:
         with self._lock:
             if mission_active and self._phase not in TERMINAL_PHASES:
                 raise RuntimeError("Mission is active. Reset or abort before uploading a new route.")
+            previous = self._phase
             self._route_preview = preview
             self._phase = "IDLE"
             self._abort_reason = None
+            if previous != self._phase:
+                logger.info(
+                    "Phase transition %s -> %s reason=route loaded outbound=%d return=%d",
+                    previous,
+                    self._phase,
+                    len(preview.outbound),
+                    len(preview.return_path),
+                )
+            else:
+                logger.info("Route loaded in phase=%s outbound=%d return=%d", self._phase, len(preview.outbound), len(preview.return_path))
             return preview
 
     def require_route(self) -> RoutePreview:
@@ -56,14 +71,19 @@ class MissionStateMachine:
             if self._phase not in TERMINAL_PHASES:
                 raise RuntimeError("Mission is not in a startable state.")
             self._abort_reason = None
+            logger.info("Mission start accepted from phase=%s", self._phase)
             return self._route_preview
 
-    def mark_phase(self, phase: MissionPhase) -> None:
+    def mark_phase(self, phase: MissionPhase, reason: str | None = None) -> None:
         with self._lock:
+            previous = self._phase
             self._phase = phase
+            if previous != phase:
+                logger.info("Phase transition %s -> %s reason=%s", previous, phase, reason or "unspecified")
 
     def abort(self, phase: MissionPhase, reason: str) -> None:
         with self._lock:
+            logger.warning("Abort transition %s -> %s reason=%s", self._phase, phase, reason)
             self._phase = phase
             self._abort_reason = reason
 
@@ -73,10 +93,15 @@ class MissionStateMachine:
 
     def complete(self) -> None:
         with self._lock:
+            logger.info("Phase transition %s -> COMPLETE reason=landing complete", self._phase)
             self._phase = "COMPLETE"
 
     def reset(self) -> None:
         with self._lock:
+            if self._phase != "IDLE":
+                logger.info("Phase transition %s -> IDLE reason=state machine reset", self._phase)
+            else:
+                logger.info("State machine reset while already in IDLE")
             self._phase = "IDLE"
             self._abort_reason = None
             self._route_preview = None

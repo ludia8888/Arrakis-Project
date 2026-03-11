@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import logging
 from schemas import DetectionBox
 
 from .base import InferenceResult, PerceptionBackend
+
+
+logger = logging.getLogger("arrakis.perception.synthetic")
 
 
 class SyntheticPerceptionBackend(PerceptionBackend):
@@ -11,6 +15,7 @@ class SyntheticPerceptionBackend(PerceptionBackend):
         return "synthetic"
 
     def infer(self, frame, metadata: dict[str, object], degrade_step: int) -> InferenceResult:
+        logger.debug("Running synthetic inference degrade_step=%d metadata_items=%d", degrade_step, len(metadata.get("synthetic_detections", [])))
         detections: list[DetectionBox] = []
         for item in metadata.get("synthetic_detections", []):
             detections.append(

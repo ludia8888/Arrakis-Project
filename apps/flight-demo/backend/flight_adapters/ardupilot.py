@@ -1,8 +1,13 @@
 from __future__ import annotations
 
+import logging
+
 from schemas import LatLon, TelemetrySnapshot
 
 from .base import FlightControllerAdapter, VideoFrame
+
+
+logger = logging.getLogger("arrakis.adapter.ardupilot")
 
 
 class ArduPilotAdapter(FlightControllerAdapter):
@@ -19,6 +24,7 @@ class ArduPilotAdapter(FlightControllerAdapter):
     """
 
     def __init__(self) -> None:
+        logger.info("ArduPilotAdapter scaffold instantiated")
         raise NotImplementedError("ArduPilotAdapter is scaffolded but not wired in this v1 build.")
 
     def connect(self) -> None: raise NotImplementedError

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import math
 import threading
 import time
@@ -13,6 +14,9 @@ from config import CRUISE_ALT_M, RECOVERY_ALT_M, TAKEOFF_ALT_M, VideoConfig
 from schemas import LatLon, TelemetrySnapshot
 
 from .base import FlightControllerAdapter, VideoFrame
+
+
+logger = logging.getLogger("arrakis.adapter.mock")
 
 
 def _project(home: LatLon, point: LatLon) -> tuple[float, float]:
@@ -73,15 +77,18 @@ class MockAdapter(FlightControllerAdapter):
         if self._running:
             return
         self._running = True
+        logger.info("Starting mock adapter loops")
         threading.Thread(target=self._telemetry_loop, daemon=True).start()
         threading.Thread(target=self._video_loop, daemon=True).start()
 
     def arm(self) -> None:
+        logger.info("Mock arm")
         with self._lock:
             self.state.armed = True
             self.state.flight_mode = "ARMED"
 
     def takeoff_multicopter(self, target_alt_m: float) -> None:
+        logger.info("Mock takeoff_multicopter target_alt_m=%.1f", target_alt_m)
         with self._lock:
             self.state.flight_mode = "TAKEOFF"
             self.state.vtol_state = "MC"
@@ -92,12 +99,14 @@ class MockAdapter(FlightControllerAdapter):
     def upload_roundtrip_mission(self, route_spec: dict[str, object]) -> None:
         outbound = [LatLon(**item) if isinstance(item, dict) else item for item in route_spec["outbound"]]
         return_path = [LatLon(**item) if isinstance(item, dict) else item for item in route_spec["return_path"]]
+        logger.info("Mock upload_roundtrip_mission outbound=%d return=%d", len(outbound), len(return_path))
         with self._lock:
             self._mission_points = outbound + return_path
             self._route_leg = "outbound"
             self.state.mission_index = 0
 
     def start_mission(self) -> None:
+        logger.info("Mock start_mission")
         with self._lock:
             self.state.flight_mode = "MISSION"
             self.state.vtol_state = "FW"
@@ -106,6 +115,7 @@ class MockAdapter(FlightControllerAdapter):
             self.state.groundspeed_mps = 20.0
 
     def transition_to_fixedwing(self) -> None:
+        logger.info("Mock transition_to_fixedwing")
         with self._lock:
             self.state.vtol_state = "FW"
             self.state.flight_mode = "TRANSITION_FW"
@@ -114,12 +124,14 @@ class MockAdapter(FlightControllerAdapter):
             self.state.alt_m = max(self.state.alt_m, CRUISE_ALT_M)
 
     def prepare_multicopter_recovery(self, recovery_spec: dict[str, object]) -> None:
+        logger.info("Mock prepare_multicopter_recovery target_alt_m=%s", recovery_spec.get("target_alt_m", RECOVERY_ALT_M))
         with self._lock:
             self._recovery_active = True
             self.state.flight_mode = "LOITER"
             self.state.alt_m = recovery_spec.get("target_alt_m", RECOVERY_ALT_M)
 
     def transition_to_multicopter(self) -> None:
+        logger.info("Mock transition_to_multicopter")
         with self._lock:
             self._recovery_active = False
             self.state.vtol_state = "MC"
@@ -128,6 +140,7 @@ class MockAdapter(FlightControllerAdapter):
             self.state.groundspeed_mps = 8.0
 
     def return_to_home(self) -> None:
+        logger.info("Mock return_to_home")
         with self._lock:
             self._returning_home = True
             self.state.flight_mode = "RTL"
@@ -136,17 +149,20 @@ class MockAdapter(FlightControllerAdapter):
             self.state.groundspeed_mps = max(self.state.groundspeed_mps, 14.0)
 
     def land_vertical(self) -> None:
+        logger.info("Mock land_vertical")
         with self._lock:
             self._landing_active = True
             self.state.flight_mode = "LAND"
             self.state.vtol_state = "MC"
 
     def abort(self, reason: str) -> None:
+        logger.warning("Mock abort reason=%s", reason)
         self.return_to_home()
         with self._lock:
             self.state.flight_mode = f"ABORT:{reason}"
 
     def reset(self) -> None:
+        logger.info("Mock reset")
         with self._lock:
             self.state = SimState(lat=self.home.lat, lon=self.home.lon)
             self._mission_points = []
@@ -160,9 +176,11 @@ class MockAdapter(FlightControllerAdapter):
             return self._snapshot_locked()
 
     def stream_telemetry(self, callback: Callable[[TelemetrySnapshot], None]) -> None:
+        logger.info("Mock telemetry subscriber registered")
         self._telemetry_callbacks.append(callback)
 
     def stream_video(self, callback: Callable[[VideoFrame], None]) -> None:
+        logger.info("Mock video subscriber registered")
         self._video_callbacks.append(callback)
 
     def get_home(self) -> LatLon:
