@@ -36,6 +36,9 @@ class InstrumentedFlightAdapter(FlightControllerAdapter):
         self._call("connect", self._adapter.connect)
         self._connected = True
 
+    def mission_execution_style(self) -> str:
+        return self._call("mission_execution_style", self._adapter.mission_execution_style)
+
     def arm(self) -> None:
         self._call("arm", self._adapter.arm)
 

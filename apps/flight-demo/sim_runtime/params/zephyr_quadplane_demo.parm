@@ -1,2 +1,3 @@
 Q_ENABLE         1
 ARMING_CHECK     0
+MIS_RESTART      1

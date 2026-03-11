@@ -134,6 +134,10 @@ class ArrakisController:
         try:
             logger.info("Mission executor started")
             self.mission_executor.run_roundtrip_mission(cancel_event)
+        except Exception as exc:
+            logger.exception("Mission executor crashed: %s", exc)
+            if self.state_machine.phase not in {"ABORT_MANUAL", "ABORT_GEOFENCE", "RTL_BATTERY", "COMPLETE"}:
+                self.state_machine.abort("ABORT_MANUAL", f"mission executor failed: {exc}")
         finally:
             logger.info("Mission executor finished")
             self._clear_mission_thread(threading.current_thread())

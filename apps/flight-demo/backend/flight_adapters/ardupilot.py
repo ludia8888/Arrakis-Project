@@ -88,6 +88,10 @@ class ArduPilotAdapter(FlightControllerAdapter):
         self._outbound_count = 0
         self._return_count = 0
         self._route_leg = "idle"
+        self._mission_seq_outbound_start = 0
+        self._mission_seq_return_start = 0
+        self._mission_seq_end = 0
+        self._mission_seq_takeoff = 0
         self._target_component = 1
         self._target_system = 1
         self._last_statustext: str | None = None
@@ -131,6 +135,9 @@ class ArduPilotAdapter(FlightControllerAdapter):
             self._target_component,
         )
 
+    def mission_execution_style(self) -> str:
+        return "mission_oriented"
+
     def arm(self) -> None:
         self._set_mode(ARDUPILOT_MODE_QLOITER)
         self._send_command(
@@ -156,15 +163,25 @@ class ArduPilotAdapter(FlightControllerAdapter):
     def upload_roundtrip_mission(self, route_spec: dict[str, object]) -> None:
         outbound = [LatLon(**item) if isinstance(item, dict) else item for item in route_spec.get("outbound", [])]
         return_path = [LatLon(**item) if isinstance(item, dict) else item for item in route_spec.get("return_path", [])]
+        home_raw = route_spec.get("home")
+        home = LatLon(**home_raw) if isinstance(home_raw, dict) else home_raw
+        takeoff_alt_m = float(route_spec.get("takeoff_alt_m", 40.0))
+        cruise_alt_m = float(route_spec.get("cruise_alt_m", CRUISE_ALT_M))
         mission_points = outbound + return_path
         if not mission_points:
             raise ValueError("Roundtrip mission upload requires outbound and return_path points")
-        self._upload_mission_points(mission_points)
+        self._upload_mission_points_mission_oriented(
+            home=home or self._home,
+            outbound=outbound,
+            return_path=return_path,
+            takeoff_alt_m=takeoff_alt_m,
+            cruise_alt_m=cruise_alt_m,
+        )
         self._outbound_count = len(outbound)
         self._return_count = len(return_path)
-        self._route_leg = "outbound"
+        self._route_leg = "takeoff"
         with self._state_lock:
-            self._state.mission_index = 0
+            self._state.mission_index = self._mission_seq_takeoff
 
     def start_mission(self) -> None:
         self._set_mode(ARDUPILOT_MODE_AUTO)
@@ -215,6 +232,10 @@ class ArduPilotAdapter(FlightControllerAdapter):
         self._outbound_count = 0
         self._return_count = 0
         self._route_leg = "idle"
+        self._mission_seq_outbound_start = 0
+        self._mission_seq_return_start = 0
+        self._mission_seq_end = 0
+        self._mission_seq_takeoff = 0
         self._last_statustext = None
         self._last_command_ack = None
         self._home_initialized = False
@@ -367,7 +388,16 @@ class ArduPilotAdapter(FlightControllerAdapter):
             elif msg_type == "MISSION_CURRENT":
                 self._state.mission_index = int(msg.seq)
                 if self._outbound_count > 0:
-                    self._route_leg = "return" if msg.seq >= self._outbound_count else "outbound"
+                    if msg.seq >= self._mission_seq_end:
+                        self._route_leg = "idle"
+                    elif msg.seq >= self._mission_seq_return_start:
+                        self._route_leg = "return"
+                    elif msg.seq >= self._mission_seq_outbound_start:
+                        self._route_leg = "outbound"
+                    elif msg.seq >= self._mission_seq_takeoff:
+                        self._route_leg = "takeoff"
+                    else:
+                        self._route_leg = "idle"
             elif msg_type == "HOME_POSITION":
                 self._home = LatLon(lat=msg.latitude / 1e7, lon=msg.longitude / 1e7)
                 self._home_initialized = True
@@ -443,6 +473,125 @@ class ArduPilotAdapter(FlightControllerAdapter):
         accepted = self._mavutil.mavlink.MAV_MISSION_ACCEPTED
         if result not in (None, accepted):
             raise RuntimeError(f"Mission upload rejected with ack type={result}")
+
+    def _upload_mission_points_mission_oriented(
+        self,
+        *,
+        home: LatLon,
+        outbound: list[LatLon],
+        return_path: list[LatLon],
+        takeoff_alt_m: float,
+        cruise_alt_m: float,
+    ) -> None:
+        master = self._require_master()
+        home_seq = 0
+        takeoff_seq = 1
+        outbound_start = 2
+        return_start = outbound_start + len(outbound)
+        mission_items = [
+            master.mav.mission_item_int_encode(
+                self._target_system,
+                self._target_component,
+                home_seq,
+                self._mavutil.mavlink.MAV_FRAME_GLOBAL_INT,
+                self._mavutil.mavlink.MAV_CMD_NAV_WAYPOINT,
+                0,
+                1,
+                0.0,
+                0.0,
+                0.0,
+                float("nan"),
+                int(home.lat * 1e7),
+                int(home.lon * 1e7),
+                0.0,
+            ),
+            master.mav.mission_item_int_encode(
+                self._target_system,
+                self._target_component,
+                takeoff_seq,
+                self._mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT,
+                self._mavutil.mavlink.MAV_CMD_NAV_VTOL_TAKEOFF,
+                0,
+                1,
+                0.0,
+                0.0,
+                0.0,
+                float("nan"),
+                int(home.lat * 1e7),
+                int(home.lon * 1e7),
+                float(takeoff_alt_m),
+            ),
+        ]
+        for offset, point in enumerate(outbound + return_path, start=outbound_start):
+            mission_items.append(
+                master.mav.mission_item_int_encode(
+                    self._target_system,
+                    self._target_component,
+                    offset,
+                    self._mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT,
+                    self._mavutil.mavlink.MAV_CMD_NAV_WAYPOINT,
+                    0,
+                    1,
+                    0.0,
+                    0.0,
+                    0.0,
+                    float("nan"),
+                    int(point.lat * 1e7),
+                    int(point.lon * 1e7),
+                    float(cruise_alt_m),
+                )
+            )
+        with self._io_lock:
+            master.waypoint_clear_all_send()
+            time.sleep(0.2)
+            master.waypoint_count_send(len(mission_items))
+            for _ in range(len(mission_items)):
+                request = self._recv_expected_locked({"MISSION_REQUEST", "MISSION_REQUEST_INT"}, self._command_timeout)
+                seq = int(request.seq)
+                master.mav.send(mission_items[seq])
+            ack = self._recv_expected_locked({"MISSION_ACK"}, self._command_timeout)
+            with suppress(Exception):
+                master.waypoint_set_current_send(takeoff_seq)
+            with suppress(Exception):
+                self._log_uploaded_mission_locked(len(mission_items))
+        result = getattr(ack, "type", None)
+        accepted = self._mavutil.mavlink.MAV_MISSION_ACCEPTED
+        if result not in (None, accepted):
+            raise RuntimeError(f"Mission upload rejected with ack type={result}")
+        logger.info(
+            "Uploaded ArduPilot mission takeoff_seq=%s outbound_start=%s return_start=%s count=%s",
+            takeoff_seq,
+            outbound_start,
+            return_start,
+            len(mission_items),
+        )
+        self._mission_seq_takeoff = takeoff_seq
+        self._mission_seq_outbound_start = outbound_start
+        self._mission_seq_return_start = return_start
+        self._mission_seq_end = len(mission_items)
+
+    def _log_uploaded_mission_locked(self, mission_count: int) -> None:
+        master = self._require_master()
+        master.waypoint_request_list_send()
+        count_msg = self._recv_expected_locked({"MISSION_COUNT"}, self._command_timeout)
+        vehicle_count = int(getattr(count_msg, "count", -1))
+        commands: list[str] = []
+        for seq in range(max(vehicle_count, 0)):
+            master.waypoint_request_send(seq)
+            item = self._recv_expected_locked({"MISSION_ITEM", "MISSION_ITEM_INT"}, self._command_timeout)
+            command = int(getattr(item, "command", -1))
+            frame = int(getattr(item, "frame", -1))
+            if item.get_type() == "MISSION_ITEM_INT":
+                alt = float(getattr(item, "z", 0.0))
+            else:
+                alt = float(getattr(item, "z", 0.0))
+            commands.append(f"{seq}:{command}@frame{frame}:alt{alt:.1f}")
+        logger.info(
+            "Vehicle mission readback requested_count=%s vehicle_count=%s items=%s",
+            mission_count,
+            vehicle_count,
+            commands,
+        )
 
     def _recv_expected_locked(self, msg_types: set[str], timeout_seconds: float) -> Any:
         deadline = time.time() + timeout_seconds

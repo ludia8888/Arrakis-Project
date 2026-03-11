@@ -18,6 +18,7 @@ class VideoFrame:
 
 @runtime_checkable
 class FlightControllerAdapterContract(Protocol):
+    def mission_execution_style(self) -> str: ...
     def connect(self) -> None: ...
     def arm(self) -> None: ...
     def takeoff_multicopter(self, target_alt_m: float) -> None: ...
@@ -38,6 +39,7 @@ class FlightControllerAdapterContract(Protocol):
 
 
 REQUIRED_ADAPTER_METHODS = (
+    "mission_execution_style",
     "connect",
     "arm",
     "takeoff_multicopter",
@@ -70,6 +72,9 @@ def validate_adapter_contract(adapter: object) -> FlightControllerAdapterContrac
 
 
 class FlightControllerAdapter(ABC):
+    @abstractmethod
+    def mission_execution_style(self) -> str: ...
+
     @abstractmethod
     def connect(self) -> None: ...
 

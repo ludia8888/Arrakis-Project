@@ -92,7 +92,7 @@ class DetectorEvent(BaseModel):
 class RouteProgress(BaseModel):
     outbound_total: int
     return_total: int
-    current_leg: Literal["outbound", "return", "idle"]
+    current_leg: Literal["takeoff", "outbound", "return", "idle"]
     current_waypoint_index: int
     next_waypoint: LatLon | None
 
@@ -126,4 +126,3 @@ class StatePayload(BaseModel):
     route_home: LatLon | None
     outbound: list[LatLon]
     return_path: list[LatLon]
-

@@ -65,7 +65,7 @@ controller.start_mission()
 
 start = time.time()
 phase_history = []
-while time.time() - start < 30:
+while time.time() - start < 45:
     payload = controller.state_payload()
     if not phase_history or phase_history[-1] != payload.mission_phase:
         phase_history.append(payload.mission_phase)

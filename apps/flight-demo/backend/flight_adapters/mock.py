@@ -81,6 +81,9 @@ class MockAdapter(FlightControllerAdapter):
         threading.Thread(target=self._telemetry_loop, daemon=True).start()
         threading.Thread(target=self._video_loop, daemon=True).start()
 
+    def mission_execution_style(self) -> str:
+        return "stepwise"
+
     def arm(self) -> None:
         logger.info("Mock arm")
         with self._lock:

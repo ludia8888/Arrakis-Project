@@ -30,7 +30,7 @@ type StatePayload = {
     geofence_breached: boolean;
   };
   route_progress: {
-    current_leg: "outbound" | "return" | "idle";
+    current_leg: "takeoff" | "outbound" | "return" | "idle";
     current_waypoint_index: number;
     outbound_total: number;
     return_total: number;
