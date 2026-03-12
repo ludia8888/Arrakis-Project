@@ -125,6 +125,12 @@ cd apps/flight-demo
 - Primary QuadPlane SITL launcher: [`sim_runtime/run_ardupilot_quadplane.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/run_ardupilot_quadplane.sh)
 - Optional FlightGear view-only helper: [`sim_runtime/run_flightgear_view.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/run_flightgear_view.sh)
 - Host FlightGear binary path for the macOS cask: `ARRAKIS_FLIGHTGEAR_BIN=/Applications/FlightGear.app/Contents/MacOS/FlightGear`
+- Host MAVProxy often lives in `$HOME/Library/Python/<ver>/bin/mavproxy.py`; `common.sh` auto-discovers it, but `ARRAKIS_MAVPROXY_BIN` can override when needed.
+- QuadPlane runtime now expects ArduPilot's `fg_quad_view.sh` helper plus `sim_vehicle.py --enable-fgview`, otherwise FlightGear will open but stay desynced from the live vehicle state.
+- FlightGear defaults to an external chase-style view through:
+  - `ARRAKIS_FLIGHTGEAR_VIEW_NUMBER=2`
+  - `ARRAKIS_FLIGHTGEAR_INTERNAL_VIEW=0`
+  - `ARRAKIS_FLIGHTGEAR_CHASE_DISTANCE_M=-18`
 - Ubuntu VM bootstrap: [`sim_runtime/bootstrap_ubuntu_vm_runtime.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/bootstrap_ubuntu_vm_runtime.sh)
 - Ubuntu VM workspace provisioner: [`sim_runtime/provision_ubuntu_vm_workspace.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/provision_ubuntu_vm_workspace.sh)
 - Ubuntu VM runtime check: [`sim_runtime/check_ubuntu_vm_runtime.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/check_ubuntu_vm_runtime.sh)

@@ -42,16 +42,25 @@ The primary env values are:
 - `ARRAKIS_VTOL_LANDING_APPROACH_MIN_M=140`
 - `ARRAKIS_ARDUPILOT_VIDEO_SOURCE=`  
   Keep this empty for the current path because FlightGear is view-only and does not feed the browser video panel.
+- `ARRAKIS_FLIGHTGEAR_SCRIPT=$HOME/Developer/ardupilot/Tools/autotest/fg_quad_view.sh`
 - `ARRAKIS_FLIGHTGEAR_BIN=/Applications/FlightGear.app/Contents/MacOS/FlightGear`
+- `ARRAKIS_FLIGHTGEAR_VIEW_NUMBER=2`
+- `ARRAKIS_FLIGHTGEAR_INTERNAL_VIEW=0`
+- `ARRAKIS_FLIGHTGEAR_CHASE_DISTANCE_M=-18`
 
 Important:
 - `sim_vehicle.py -f quadplane` already injects the stock `default_params/quadplane.parm` internally. `ARRAKIS_ARDUPILOT_DEFAULTS` should therefore point only to Arrakis-specific override params.
 - `sim_vehicle.py --out` is a MAVProxy forwarding path, not a direct ArduPilot output path.
-- On Ubuntu VM guests, `mavproxy.py` must be on `PATH`. This project now assumes `$HOME/.local/bin` is exported.
+- `sim_vehicle.py` shells out to `mavproxy.py`. On macOS hosts this often lives under `$HOME/Library/Python/<ver>/bin`, while Ubuntu VM guests usually use `$HOME/.local/bin`.
+- `common.sh` now auto-discovers `mavproxy.py` and prepends its directory to `PATH`, but you can also set `ARRAKIS_MAVPROXY_BIN` explicitly if needed.
 - In QEMU user-networking mode, the guest should forward MAVLink to the host-reachable address `10.0.2.2:14551`, while the macOS host backend listens on `udp:0.0.0.0:14551`.
 - `run_backend_ardupilot.sh` loads `runtime.env` through [`common.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/common.sh), so quoted values such as `ARRAKIS_MAVPROXY_ARGS="--daemon --non-interactive --nowait"` are supported.
 - `common.sh` also expands `$HOME`, `${HOME}`, and leading `~/` in `runtime.env`, so host/guest env files can safely use absolute home-based paths.
+- `sim_vehicle.py -f quadplane` must run with `--enable-fgview`, otherwise FlightGear opens but never receives live FDM updates.
 - `run_flightgear_view.sh` injects a temporary `fgfs` shim that points at `ARRAKIS_FLIGHTGEAR_BIN`, because the macOS cask installs `FlightGear.app` without a `fgfs` binary on `PATH`.
+- `run_flightgear_view.sh` now defaults to the ArduPilot `fg_quad_view.sh` helper and forces a chase-style external view, because the plane helper opens in a misleading near-cockpit/internal view for this demo.
+- If `mavproxy.py` still fails with missing module errors on macOS hosts, install the runtime dependencies in the same user Python environment:
+  `python3 -m pip install --user --break-system-packages MAVProxy future gnureadline`
 
 Bootstrap a local macOS runtime:
 

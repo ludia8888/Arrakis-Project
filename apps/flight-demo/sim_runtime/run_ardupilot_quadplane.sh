@@ -6,6 +6,7 @@ SIM_ROOT="$(cd "$(dirname "$0")" && pwd)"
 source "$SIM_ROOT/common.sh"
 
 runtime_require_dir "$ARRAKIS_ARDUPILOT_DIR" "ardupilot dir"
+runtime_require_mavproxy
 runtime_print_summary
 
 SIM_VEHICLE="$ARRAKIS_ARDUPILOT_DIR/Tools/autotest/sim_vehicle.py"
@@ -18,6 +19,7 @@ CMD=(
   python3 "$SIM_VEHICLE"
   -v "$ARRAKIS_ARDUPILOT_VEHICLE"
   -f "$ARRAKIS_ARDUPILOT_FRAME"
+  --enable-fgview
   --add-param-file "$ARRAKIS_ARDUPILOT_DEFAULTS"
   --out "$ARRAKIS_ARDUPILOT_OUT"
 )

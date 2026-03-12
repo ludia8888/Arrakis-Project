@@ -26,6 +26,8 @@ echo "[sim-runtime] ardupilot: $(command -v ardupilot || echo missing)"
 echo "[sim-runtime] ardupilot dir: $(test -d "$ARRAKIS_ARDUPILOT_DIR" && echo "$ARRAKIS_ARDUPILOT_DIR" || echo missing)"
 echo "[sim-runtime] flightgear helper: $(test -x "$ARRAKIS_FLIGHTGEAR_SCRIPT" && echo "$ARRAKIS_FLIGHTGEAR_SCRIPT" || echo missing)"
 echo "[sim-runtime] fgfs: $(command -v fgfs || echo missing)"
+echo "[sim-runtime] mavproxy.py (PATH): $(command -v mavproxy.py || echo missing)"
+echo "[sim-runtime] mavproxy.py (resolved): $(runtime_resolve_mavproxy_bin || echo missing)"
 echo "[sim-runtime] python3: $(command -v python3 || echo missing)"
 echo "[sim-runtime] repo sim_runtime dir: $ROOT_DIR"
 

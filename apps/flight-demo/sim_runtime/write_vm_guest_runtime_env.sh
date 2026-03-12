@@ -17,12 +17,13 @@ ARRAKIS_ARDUPILOT_CONSOLE=0
 ARRAKIS_ARDUPILOT_WIPE=1
 ARRAKIS_ARDUPILOT_OUT=${HOST_IP}:${MAVLINK_PORT}
 ARRAKIS_MAVPROXY_ARGS="--daemon --non-interactive --nowait"
+ARRAKIS_MAVPROXY_BIN=$HOME/.local/bin/mavproxy.py
 ARRAKIS_ARDUPILOT_CONNECTION=udp:0.0.0.0:${MAVLINK_PORT}
 ARRAKIS_VTOL_LANDING_APPROACH_MIN_M=140
 ARRAKIS_ARDUPILOT_VIDEO_SOURCE=
-ARRAKIS_FLIGHTGEAR_SCRIPT=${HOME}/Developer/ardupilot/Tools/autotest/fg_plane_view.sh
+ARRAKIS_FLIGHTGEAR_SCRIPT=${HOME}/Developer/ardupilot/Tools/autotest/fg_quad_view.sh
 EOF
 
 echo "[sim-runtime] wrote guest runtime env to $RUNTIME_ENV"
 echo "[sim-runtime] guest MAVProxy out: ${HOST_IP}:${MAVLINK_PORT}"
-echo "[sim-runtime] guest PATH should include \$HOME/.local/bin for mavproxy.py"
+echo "[sim-runtime] guest MAVProxy bin: \$HOME/.local/bin/mavproxy.py"

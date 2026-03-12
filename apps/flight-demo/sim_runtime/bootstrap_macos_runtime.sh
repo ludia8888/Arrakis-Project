@@ -17,6 +17,11 @@ fi
 echo "[sim-runtime] installing local runtime prerequisites via Homebrew"
 brew install rapidjson opencv gstreamer cmake pkg-config python@3.12 flightgear || true
 
+if ! command -v mavproxy.py >/dev/null 2>&1; then
+  echo "[sim-runtime] installing MAVProxy runtime deps into the Python user environment"
+  python3 -m pip install --user --break-system-packages MAVProxy future gnureadline || true
+fi
+
 cat <<'EOF'
 
 [sim-runtime] bootstrap completed
@@ -39,4 +44,9 @@ Next manual steps:
 
 5. Then run:
    ./check_environment.sh
+
+If `sim_vehicle.py` still reports `mavproxy.py` missing, set:
+  ARRAKIS_MAVPROXY_BIN=$HOME/Library/Python/3.12/bin/mavproxy.py
+If `mavproxy.py` fails with missing module errors, ensure the same user environment has:
+  python3 -m pip install --user --break-system-packages MAVProxy future gnureadline
 EOF
