@@ -125,8 +125,11 @@ cd apps/flight-demo
 - Primary QuadPlane SITL launcher: [`sim_runtime/run_ardupilot_quadplane.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/run_ardupilot_quadplane.sh)
 - Optional FlightGear view-only helper: [`sim_runtime/run_flightgear_view.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/run_flightgear_view.sh)
 - Host FlightGear binary path for the macOS cask: `ARRAKIS_FLIGHTGEAR_BIN=/Applications/FlightGear.app/Contents/MacOS/FlightGear`
+- FlightGear is now launched directly through `fgfs` arguments instead of the ArduPilot helper shell scripts.
+- The current viewer is still a surrogate fixed-wing model (`Rascal110-JSBSim`), not a true quadplane 3D asset.
 - Host MAVProxy often lives in `$HOME/Library/Python/<ver>/bin/mavproxy.py`; `common.sh` auto-discovers it, but `ARRAKIS_MAVPROXY_BIN` can override when needed.
-- QuadPlane runtime now expects ArduPilot's `fg_quad_view.sh` helper plus `sim_vehicle.py --enable-fgview`, otherwise FlightGear will open but stay desynced from the live vehicle state.
+- QuadPlane runtime now expects `sim_vehicle.py --enable-fgview`. For visualization, `run_flightgear_view.sh` launches `FlightGear` directly with a surrogate fixed-wing model to avoid the misleading `ArduCopter` helper and to suppress the heavy aircraft splash screen.
+- On macOS hosts, `run_flightgear_view.sh` also unsets the app bundle's default `FG_LAUNCHER=1` so the direct `fgfs` arguments are not ignored.
 - FlightGear defaults to an external chase-style view through:
   - `ARRAKIS_FLIGHTGEAR_VIEW_NUMBER=2`
   - `ARRAKIS_FLIGHTGEAR_INTERNAL_VIEW=0`

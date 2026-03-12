@@ -42,8 +42,13 @@ The primary env values are:
 - `ARRAKIS_VTOL_LANDING_APPROACH_MIN_M=140`
 - `ARRAKIS_ARDUPILOT_VIDEO_SOURCE=`  
   Keep this empty for the current path because FlightGear is view-only and does not feed the browser video panel.
-- `ARRAKIS_FLIGHTGEAR_SCRIPT=$HOME/Developer/ardupilot/Tools/autotest/fg_quad_view.sh`
 - `ARRAKIS_FLIGHTGEAR_BIN=/Applications/FlightGear.app/Contents/MacOS/FlightGear`
+- `ARRAKIS_FLIGHTGEAR_AIRCRAFT=Rascal110-JSBSim`
+- `ARRAKIS_FLIGHTGEAR_AIRCRAFT_DIR=$HOME/Developer/ardupilot/Tools/autotest/aircraft`
+- `ARRAKIS_FLIGHTGEAR_NATIVE_FDM_PORT=5503`
+- `ARRAKIS_FLIGHTGEAR_AIRPORT=YSCB`
+- `ARRAKIS_FLIGHTGEAR_GEOMETRY=1280x720`
+- `ARRAKIS_FLIGHTGEAR_DISABLE_SPLASH=1`
 - `ARRAKIS_FLIGHTGEAR_VIEW_NUMBER=2`
 - `ARRAKIS_FLIGHTGEAR_INTERNAL_VIEW=0`
 - `ARRAKIS_FLIGHTGEAR_CHASE_DISTANCE_M=-18`
@@ -57,8 +62,10 @@ Important:
 - `run_backend_ardupilot.sh` loads `runtime.env` through [`common.sh`](/Users/isihyeon/Desktop/Arrakis-Project/apps/flight-demo/sim_runtime/common.sh), so quoted values such as `ARRAKIS_MAVPROXY_ARGS="--daemon --non-interactive --nowait"` are supported.
 - `common.sh` also expands `$HOME`, `${HOME}`, and leading `~/` in `runtime.env`, so host/guest env files can safely use absolute home-based paths.
 - `sim_vehicle.py -f quadplane` must run with `--enable-fgview`, otherwise FlightGear opens but never receives live FDM updates.
-- `run_flightgear_view.sh` injects a temporary `fgfs` shim that points at `ARRAKIS_FLIGHTGEAR_BIN`, because the macOS cask installs `FlightGear.app` without a `fgfs` binary on `PATH`.
-- `run_flightgear_view.sh` now defaults to the ArduPilot `fg_quad_view.sh` helper and forces a chase-style external view, because the plane helper opens in a misleading near-cockpit/internal view for this demo.
+- `run_flightgear_view.sh` now launches `FlightGear` directly rather than going through `fg_plane_view.sh` or `fg_quad_view.sh`.
+- The current external view still uses a surrogate fixed-wing model (`Rascal110-JSBSim`), because the ArduPilot autotest assets do not ship a real quadplane 3D model for FlightGear.
+- `ARRAKIS_FLIGHTGEAR_DISABLE_SPLASH=1` suppresses the heavy aircraft splash screen so the view reaches the live scene faster.
+- On macOS, the FlightGear app bundle injects `FG_LAUNCHER=1` through `Info.plist`. `run_flightgear_view.sh` explicitly unsets it so `--aircraft`, `--fdm`, and other direct `fgfs` arguments are honored.
 - If `mavproxy.py` still fails with missing module errors on macOS hosts, install the runtime dependencies in the same user Python environment:
   `python3 -m pip install --user --break-system-packages MAVProxy future gnureadline`
 
