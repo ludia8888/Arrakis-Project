@@ -269,30 +269,33 @@ function App() {
     mapRef.current = map;
     return () => {
       setMapReady(false);
+      mapRef.current = null;
       map.remove();
     };
   }, [home]);
 
   useEffect(() => {
-    if (!home || !mapRef.current || !mapReady) {
+    const map = getUsableMap(mapRef.current, mapReady);
+    if (!home || !map) {
       return;
     }
-    updatePointSource(mapRef.current, "home", [home]);
-    updateLineSource(mapRef.current, "route", waypoints);
-    updatePointSource(mapRef.current, "waypoints", waypoints);
+    updatePointSource(map, "home", [home]);
+    updateLineSource(map, "route", waypoints);
+    updatePointSource(map, "waypoints", waypoints);
     if (!previewReady && waypoints.length) {
-      fitMapToPoints(mapRef.current, [home, ...waypoints]);
+      fitMapToPoints(map, [home, ...waypoints]);
     }
   }, [home, waypoints, mapReady, previewReady]);
 
   useEffect(() => {
-    if (!mapRef.current || !mapReady || !preview) {
+    const map = getUsableMap(mapRef.current, mapReady);
+    if (!map || !preview) {
       return;
     }
-    updateLineSource(mapRef.current, "route", preview.outbound);
-    updateLineSource(mapRef.current, "return", preview.return_path);
-    updatePolygonSource(mapRef.current, "geofence", preview.geofence.coordinates);
-    fitMapToRoute(mapRef.current, preview.home, preview.outbound, preview.return_path, preview.geofence.coordinates);
+    updateLineSource(map, "route", preview.outbound);
+    updateLineSource(map, "return", preview.return_path);
+    updatePolygonSource(map, "geofence", preview.geofence.coordinates);
+    fitMapToRoute(map, preview.home, preview.outbound, preview.return_path, preview.geofence.coordinates);
   }, [mapReady, preview]);
 
   useEffect(() => {
@@ -318,11 +321,12 @@ function App() {
       socket.onmessage = (event) => {
         const payload = JSON.parse(event.data) as StatePayload;
         setState(payload);
-        if (mapRef.current && mapReady) {
-          updateLineSource(mapRef.current, "route", payload.outbound);
-          updateLineSource(mapRef.current, "return", payload.return_path);
-          updatePolygonSource(mapRef.current, "geofence", payload.geofence?.coordinates ?? []);
-          updatePointSource(mapRef.current, "drone", [{ lat: payload.telemetry.lat, lon: payload.telemetry.lon }]);
+        const map = getUsableMap(mapRef.current, mapReady);
+        if (map) {
+          updateLineSource(map, "route", payload.outbound);
+          updateLineSource(map, "return", payload.return_path);
+          updatePolygonSource(map, "geofence", payload.geofence?.coordinates ?? []);
+          updatePointSource(map, "drone", [{ lat: payload.telemetry.lat, lon: payload.telemetry.lon }]);
         }
       };
       socket.onerror = () => {
@@ -647,6 +651,19 @@ function updatePointSource(map: Map, id: string, coords: LatLon[]) {
       properties: {},
     })),
   });
+}
+
+function getUsableMap(map: Map | null, mapReady: boolean): Map | null {
+  if (!map || !mapReady) {
+    return null;
+  }
+  if (typeof map.getSource !== "function") {
+    return null;
+  }
+  if (typeof map.isStyleLoaded === "function" && !map.isStyleLoaded()) {
+    return null;
+  }
+  return map;
 }
 
 function fitMapToPoints(map: Map, coords: LatLon[]) {
