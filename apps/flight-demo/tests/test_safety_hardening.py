@@ -16,6 +16,7 @@ BACKEND_DIR = Path(__file__).resolve().parents[1] / "backend"
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
+from airframe_profile import AirframeProfile
 from arrakis_core.controller import ArrakisController
 from arrakis_core.mission_state_machine import INTERRUPT_PHASES, MissionStateMachine
 from arrakis_core.telemetry_hub import SafetyDecision, TelemetryHub
@@ -93,7 +94,7 @@ class TestMissionStateMachineStarting:
             ],
             cruise_alt_m=60.0,
         )
-        preview = build_route_preview(request)
+        preview = build_route_preview(request, AirframeProfile())
         sm.set_route(preview, mission_active=False)
         sm.start_mission(mission_active=False)
         assert sm.phase == "STARTING", f"Expected STARTING, got {sm.phase}"
@@ -122,7 +123,7 @@ class TestTelemetryLostDetection:
         """C-4: fresh→stale should trigger telemetry_lost."""
         from arrakis_core.video_service import VideoService
         vs = VideoService()
-        hub = TelemetryHub(self._make_snapshot(fresh=False), vs)
+        hub = TelemetryHub(self._make_snapshot(fresh=False), vs, AirframeProfile())
 
         # Send fresh telemetry
         decision1 = hub.on_telemetry(self._make_snapshot(fresh=True), None, "OUTBOUND")
@@ -136,7 +137,7 @@ class TestTelemetryLostDetection:
         """C-4: stale→stale should NOT trigger."""
         from arrakis_core.video_service import VideoService
         vs = VideoService()
-        hub = TelemetryHub(self._make_snapshot(fresh=False), vs)
+        hub = TelemetryHub(self._make_snapshot(fresh=False), vs, AirframeProfile())
 
         # Stale → stale: no trigger
         decision = hub.on_telemetry(self._make_snapshot(fresh=False), None, "OUTBOUND")
@@ -152,8 +153,9 @@ class TestControllerSafetyAtomicity:
 
     def test_only_one_trigger_fires(self):
         """C-3: If both battery_rtl and geofence fire, only one action taken."""
-        adapter = InstrumentedFlightAdapter(MockAdapter(), logger_name="test")
-        controller = ArrakisController(adapter)
+        profile = AirframeProfile()
+        adapter = InstrumentedFlightAdapter(MockAdapter(profile), logger_name="test")
+        controller = ArrakisController(adapter, profile)
 
         # Verify _SAFETY_SUPPRESS_PHASES is properly defined
         assert "IDLE" in controller._SAFETY_SUPPRESS_PHASES
@@ -173,9 +175,10 @@ class TestMissionExecutorCancelDisarm:
     """C-1: Cancel during arm phase must disarm the vehicle."""
 
     def test_cancel_during_arm_calls_abort(self):
-        adapter = InstrumentedFlightAdapter(MockAdapter(), logger_name="test")
+        profile = AirframeProfile()
+        adapter = InstrumentedFlightAdapter(MockAdapter(profile), logger_name="test")
         adapter.connect()
-        controller = ArrakisController(adapter)
+        controller = ArrakisController(adapter, profile)
 
         # Set up route
         from arrakis_core.route_planner import build_route_preview
@@ -186,7 +189,7 @@ class TestMissionExecutorCancelDisarm:
                 LatLon(lat=37.575, lon=126.985),
             ],
         )
-        preview = build_route_preview(request)
+        preview = build_route_preview(request, profile)
         controller.set_route(preview)
 
         # Create cancel event that's already set
@@ -211,7 +214,8 @@ class TestCompleteGuard:
 
     def test_wait_for_landing_skips_complete_on_interrupt(self):
         """Verify _wait_for_landing doesn't call complete() during interrupt."""
-        adapter = InstrumentedFlightAdapter(MockAdapter(), logger_name="test")
+        profile = AirframeProfile()
+        adapter = InstrumentedFlightAdapter(MockAdapter(profile), logger_name="test")
         adapter.connect()
 
         sm = MissionStateMachine()
@@ -223,7 +227,7 @@ class TestCompleteGuard:
                 LatLon(lat=37.575, lon=126.985),
             ],
         )
-        preview = build_route_preview(request)
+        preview = build_route_preview(request, profile)
         sm.set_route(preview, mission_active=False)
         sm.start_mission(mission_active=False)
 
@@ -386,8 +390,9 @@ class TestControllerLifecycle:
     """Integration test: full controller lifecycle with all safety fixes."""
 
     def test_create_set_route_start_abort_reset(self):
-        adapter = InstrumentedFlightAdapter(MockAdapter(), logger_name="test")
-        controller = ArrakisController(adapter)
+        profile = AirframeProfile()
+        adapter = InstrumentedFlightAdapter(MockAdapter(profile), logger_name="test")
+        controller = ArrakisController(adapter, profile)
 
         # Verify startup
         assert controller.startup_error is None
@@ -401,7 +406,7 @@ class TestControllerLifecycle:
                 LatLon(lat=37.575, lon=126.985),
             ],
         )
-        preview = build_route_preview(request)
+        preview = build_route_preview(request, profile)
         result = controller.set_route(preview)
         assert result is not None
 
@@ -445,7 +450,7 @@ def test_sitl_full_integration():
     """
     from flight_adapters.ardupilot import ArduPilotAdapter
 
-    adapter = ArduPilotAdapter()
+    adapter = ArduPilotAdapter(AirframeProfile())
     instrumented = InstrumentedFlightAdapter(adapter, logger_name="test.sitl")
     instrumented.connect()
 

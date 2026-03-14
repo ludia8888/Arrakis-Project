@@ -5,7 +5,7 @@ from math import cos, radians
 
 from shapely import LineString, Point
 
-from config import GEOFENCE_HALF_WIDTH_M, HOME_BUBBLE_RADIUS_M, WAYPOINT_TURN_BUBBLE_RADIUS_M
+from airframe_profile import AirframeProfile
 from schemas import GeofencePolygon, LatLon, RoutePreview, RouteRequest
 
 
@@ -24,17 +24,17 @@ def _to_latlon(home: LatLon, x: float, y: float) -> LatLon:
     return LatLon(lat=home.lat + y / lat_scale, lon=home.lon + x / lon_scale)
 
 
-def build_route_preview(request: RouteRequest) -> RoutePreview:
-    logger.info("Building route preview waypoints=%d cruise_alt=%.1f", len(request.waypoints), request.cruise_alt_m)
+def build_route_preview(request: RouteRequest, profile: AirframeProfile) -> RoutePreview:
+    logger.info("Building route preview waypoints=%d cruise_alt=%.1f profile=%s", len(request.waypoints), request.cruise_alt_m, profile.name)
     outbound = request.waypoints
     return_path = list(reversed(request.waypoints))
     polyline = [request.home, *outbound, *return_path, request.home]
     line = LineString([_to_xy(request.home, point) for point in polyline])
-    fence = line.buffer(GEOFENCE_HALF_WIDTH_M, cap_style=1, join_style=1)
-    fence = fence.union(Point(0, 0).buffer(HOME_BUBBLE_RADIUS_M))
+    fence = line.buffer(profile.geometry.geofence_half_width_m, cap_style=1, join_style=1)
+    fence = fence.union(Point(0, 0).buffer(profile.geometry.home_bubble_radius_m))
     for waypoint in outbound:
         waypoint_xy = _to_xy(request.home, waypoint)
-        fence = fence.union(Point(*waypoint_xy).buffer(WAYPOINT_TURN_BUBBLE_RADIUS_M))
+        fence = fence.union(Point(*waypoint_xy).buffer(profile.geometry.waypoint_turn_bubble_radius_m))
     coordinates = [_to_latlon(request.home, x, y) for x, y in fence.exterior.coords[:-1]]
     preview = RoutePreview(
         home=request.home,

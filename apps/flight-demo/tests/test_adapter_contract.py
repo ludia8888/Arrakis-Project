@@ -12,6 +12,7 @@ BACKEND_DIR = Path(__file__).resolve().parents[1] / "backend"
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
+from airframe_profile import AirframeProfile
 from flight_adapters.mock import MockAdapter
 from flight_adapters.instrumented import InstrumentedFlightAdapter
 from flight_adapters.base import validate_adapter_contract
@@ -62,7 +63,8 @@ def assert_adapter_contract(adapter, timeout_seconds: float = 2.0) -> None:
 
 
 def test_mock_adapter_contract_smoke() -> None:
-    assert_adapter_contract(InstrumentedFlightAdapter(MockAdapter(), logger_name="arrakis.adapter.mock"))
+    profile = AirframeProfile()
+    assert_adapter_contract(InstrumentedFlightAdapter(MockAdapter(profile), logger_name="arrakis.adapter.mock"))
 
 
 @pytest.mark.skipif(
@@ -72,4 +74,4 @@ def test_mock_adapter_contract_smoke() -> None:
 def test_ardupilot_adapter_contract_smoke() -> None:
     from flight_adapters.ardupilot import ArduPilotAdapter
 
-    assert_adapter_contract(ArduPilotAdapter(), timeout_seconds=5.0)
+    assert_adapter_contract(ArduPilotAdapter(AirframeProfile()), timeout_seconds=5.0)

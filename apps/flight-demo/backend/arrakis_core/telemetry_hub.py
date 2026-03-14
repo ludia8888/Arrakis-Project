@@ -3,6 +3,8 @@ from __future__ import annotations
 import logging
 import threading
 from dataclasses import dataclass
+
+from airframe_profile import AirframeProfile
 from schemas import MissionPhase, RoutePreview, TelemetrySnapshot
 
 from .safety_manager import geofence_contains, should_trigger_battery_rtl
@@ -19,8 +21,9 @@ class SafetyDecision:
     trigger_telemetry_lost: bool
 
 class TelemetryHub:
-    def __init__(self, initial_snapshot: TelemetrySnapshot, video_service: VideoService) -> None:
+    def __init__(self, initial_snapshot: TelemetrySnapshot, video_service: VideoService, profile: AirframeProfile) -> None:
         self.video_service = video_service
+        self.profile = profile
         self._lock = threading.Lock()
         self._telemetry = initial_snapshot
         self._was_telemetry_fresh = False
@@ -54,6 +57,7 @@ class TelemetryHub:
             snapshot,
             phase,
             route_home,
+            profile=self.profile,
         )
         updated = snapshot.model_copy(update={"geofence_breached": geofence_breached})
         with self._lock:
@@ -62,7 +66,7 @@ class TelemetryHub:
         self.video_service.set_degrade_from_rtf(updated.sim_rtf)
         if geofence_breached:
             logger.warning("Geofence breach detected at lat=%.6f lon=%.6f", updated.lat, updated.lon)
-        battery_rtl = updated.telemetry_fresh and updated.mode_valid and should_trigger_battery_rtl(updated)
+        battery_rtl = updated.telemetry_fresh and updated.mode_valid and should_trigger_battery_rtl(updated, profile=self.profile)
         if battery_rtl:
             logger.warning("Battery threshold crossed at %.1f%%", updated.battery_percent)
 

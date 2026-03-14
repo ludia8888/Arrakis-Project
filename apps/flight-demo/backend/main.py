@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from airframe_profile import AirframeProfile, load_profile
 from arrakis_core.controller import ArrakisController
 from flight_adapters.ardupilot import ArduPilotAdapter
 from flight_adapters.instrumented import InstrumentedFlightAdapter
@@ -24,18 +25,19 @@ from schemas import RoutePreview, RouteRequest
 logger = logging.getLogger("arrakis.api")
 
 
-def create_adapter():
+def create_adapter(profile: AirframeProfile):
     adapter_name = os.getenv("ARRAKIS_FLIGHT_ADAPTER", "mock")
     if adapter_name == "ardupilot":
-        return InstrumentedFlightAdapter(ArduPilotAdapter(), logger_name="arrakis.adapter.ardupilot")
-    return InstrumentedFlightAdapter(MockAdapter(), logger_name="arrakis.adapter.mock")
+        return InstrumentedFlightAdapter(ArduPilotAdapter(profile), logger_name="arrakis.adapter.ardupilot")
+    return InstrumentedFlightAdapter(MockAdapter(profile), logger_name="arrakis.adapter.mock")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     configure_logging()
-    logger.info("App startup")
-    app.state.controller = ArrakisController(create_adapter())
+    profile = load_profile()
+    logger.info("App startup — airframe profile=%s", profile.name)
+    app.state.controller = ArrakisController(create_adapter(profile), profile)
     try:
         yield
     finally:
@@ -91,6 +93,7 @@ def get_config(request: Request) -> dict[str, object]:
         "home": home.model_dump(),
         "bootstrap": bootstrap.model_dump(),
         "adapter": os.getenv("ARRAKIS_FLIGHT_ADAPTER", "mock"),
+        "airframe_profile": controller.profile.name,
         "startup_error": controller.startup_error,
     }
 

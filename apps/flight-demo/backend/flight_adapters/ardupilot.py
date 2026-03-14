@@ -9,6 +9,7 @@ from contextlib import suppress
 from dataclasses import dataclass
 from typing import Any, Callable
 
+from airframe_profile import AirframeProfile
 from config import (
     ARDUPILOT_COMMAND_TIMEOUT,
     ARDUPILOT_CONNECTION,
@@ -23,8 +24,6 @@ from config import (
     ARDUPILOT_MODE_RTL,
     ARDUPILOT_TELEMETRY_HZ,
     ARDUPILOT_VIDEO_SOURCE,
-    CRUISE_ALT_M,
-    VTOL_LANDING_APPROACH_MIN_M,
 )
 from schemas import AdapterBootstrapStatus, LatLon, TelemetrySnapshot
 
@@ -99,7 +98,8 @@ class ArduPilotAdapter(FlightControllerAdapter):
     adapter contract exposed in base.py.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, profile: AirframeProfile) -> None:
+        self._profile = profile
         self._connection = ARDUPILOT_CONNECTION
         self._video_source = ARDUPILOT_VIDEO_SOURCE
         self._heartbeat_timeout = ARDUPILOT_HEARTBEAT_TIMEOUT
@@ -210,7 +210,7 @@ class ArduPilotAdapter(FlightControllerAdapter):
         home_raw = route_spec.get("home")
         home = LatLon(**home_raw) if isinstance(home_raw, dict) else home_raw
         takeoff_alt_m = float(route_spec.get("takeoff_alt_m", 40.0))
-        cruise_alt_m = float(route_spec.get("cruise_alt_m", CRUISE_ALT_M))
+        cruise_alt_m = float(route_spec.get("cruise_alt_m", self._profile.altitudes.cruise_m))
         mission_points = outbound + return_path
         if not mission_points:
             raise ValueError("Roundtrip mission upload requires outbound and return_path points")
@@ -586,7 +586,7 @@ class ArduPilotAdapter(FlightControllerAdapter):
                     float("nan"),
                     int(point.lat * 1e7),
                     int(point.lon * 1e7),
-                    float(CRUISE_ALT_M),
+                    float(self._profile.altitudes.cruise_m),
                 )
                 master.mav.send(item)
             ack = self._recv_expected_locked({"MISSION_ACK"}, self._command_timeout)
@@ -609,12 +609,12 @@ class ArduPilotAdapter(FlightControllerAdapter):
         if effective_return_path:
             last_return = effective_return_path[-1]
             landing_distance = _distance_m(home, last_return)
-            if landing_distance < VTOL_LANDING_APPROACH_MIN_M:
-                adjusted = _project_point_from_home(home, last_return, VTOL_LANDING_APPROACH_MIN_M)
+            if landing_distance < self._profile.timing.vtol_landing_approach_min_m:
+                adjusted = _project_point_from_home(home, last_return, self._profile.timing.vtol_landing_approach_min_m)
                 logger.info(
                     "Adjusting final return waypoint for VTOL landing approach distance original=%.1fm adjusted=%.1fm",
                     landing_distance,
-                    VTOL_LANDING_APPROACH_MIN_M,
+                    self._profile.timing.vtol_landing_approach_min_m,
                 )
                 effective_return_path[-1] = adjusted
         home_seq = 0

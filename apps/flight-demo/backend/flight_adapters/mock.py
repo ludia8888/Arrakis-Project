@@ -10,7 +10,8 @@ from typing import Callable
 import cv2
 import numpy as np
 
-from config import CRUISE_ALT_M, RECOVERY_ALT_M, TAKEOFF_ALT_M, VideoConfig
+from airframe_profile import AirframeProfile
+from config import VideoConfig
 from schemas import AdapterBootstrapStatus, LatLon, TelemetrySnapshot
 
 from .base import FlightControllerAdapter, VideoFrame
@@ -54,7 +55,8 @@ class SimState:
 
 
 class MockAdapter(FlightControllerAdapter):
-    def __init__(self) -> None:
+    def __init__(self, profile: AirframeProfile) -> None:
+        self._profile = profile
         self.home = LatLon(lat=37.5665, lon=126.9780)
         self.state = SimState(lat=self.home.lat, lon=self.home.lon)
         self._video_callbacks: list[Callable[[VideoFrame], None]] = []
@@ -96,8 +98,8 @@ class MockAdapter(FlightControllerAdapter):
             self.state.flight_mode = "TAKEOFF"
             self.state.vtol_state = "MC"
             self.state.alt_m = max(self.state.alt_m, target_alt_m)
-            self.state.airspeed_mps = 4.0
-            self.state.groundspeed_mps = 4.0
+            self.state.airspeed_mps = self._profile.speeds.takeoff_airspeed_mps
+            self.state.groundspeed_mps = self._profile.speeds.takeoff_groundspeed_mps
 
     def upload_roundtrip_mission(self, route_spec: dict[str, object]) -> None:
         outbound = [LatLon(**item) if isinstance(item, dict) else item for item in route_spec["outbound"]]
@@ -113,25 +115,25 @@ class MockAdapter(FlightControllerAdapter):
         with self._lock:
             self.state.flight_mode = "MISSION"
             self.state.vtol_state = "FW"
-            self.state.alt_m = CRUISE_ALT_M
-            self.state.airspeed_mps = 22.0
-            self.state.groundspeed_mps = 20.0
+            self.state.alt_m = self._profile.altitudes.cruise_m
+            self.state.airspeed_mps = self._profile.speeds.cruise_airspeed_mps
+            self.state.groundspeed_mps = self._profile.speeds.cruise_groundspeed_mps
 
     def transition_to_fixedwing(self) -> None:
         logger.info("Mock transition_to_fixedwing")
         with self._lock:
             self.state.vtol_state = "FW"
             self.state.flight_mode = "TRANSITION_FW"
-            self.state.airspeed_mps = 18.0
-            self.state.groundspeed_mps = 16.0
-            self.state.alt_m = max(self.state.alt_m, CRUISE_ALT_M)
+            self.state.airspeed_mps = self._profile.speeds.transition_fw_airspeed_mps
+            self.state.groundspeed_mps = self._profile.speeds.transition_fw_groundspeed_mps
+            self.state.alt_m = max(self.state.alt_m, self._profile.altitudes.cruise_m)
 
     def prepare_multicopter_recovery(self, recovery_spec: dict[str, object]) -> None:
-        logger.info("Mock prepare_multicopter_recovery target_alt_m=%s", recovery_spec.get("target_alt_m", RECOVERY_ALT_M))
+        logger.info("Mock prepare_multicopter_recovery target_alt_m=%s", recovery_spec.get("target_alt_m", self._profile.altitudes.recovery_m))
         with self._lock:
             self._recovery_active = True
             self.state.flight_mode = "LOITER"
-            self.state.alt_m = recovery_spec.get("target_alt_m", RECOVERY_ALT_M)
+            self.state.alt_m = recovery_spec.get("target_alt_m", self._profile.altitudes.recovery_m)
 
     def transition_to_multicopter(self) -> None:
         logger.info("Mock transition_to_multicopter")
@@ -139,8 +141,8 @@ class MockAdapter(FlightControllerAdapter):
             self._recovery_active = False
             self.state.vtol_state = "MC"
             self.state.flight_mode = "TRANSITION_MC"
-            self.state.airspeed_mps = 9.0
-            self.state.groundspeed_mps = 8.0
+            self.state.airspeed_mps = self._profile.speeds.transition_mc_airspeed_mps
+            self.state.groundspeed_mps = self._profile.speeds.transition_mc_groundspeed_mps
 
     def return_to_home(self) -> None:
         logger.info("Mock return_to_home")
@@ -148,8 +150,8 @@ class MockAdapter(FlightControllerAdapter):
             self._returning_home = True
             self.state.flight_mode = "RTL"
             self.state.vtol_state = "FW"
-            self.state.airspeed_mps = max(self.state.airspeed_mps, 16.0)
-            self.state.groundspeed_mps = max(self.state.groundspeed_mps, 14.0)
+            self.state.airspeed_mps = max(self.state.airspeed_mps, self._profile.speeds.rtl_min_airspeed_mps)
+            self.state.groundspeed_mps = max(self.state.groundspeed_mps, self._profile.speeds.rtl_min_groundspeed_mps)
 
     def land_vertical(self) -> None:
         logger.info("Mock land_vertical")
@@ -263,11 +265,12 @@ class MockAdapter(FlightControllerAdapter):
         return step >= distance - 1.0
 
     def _step_locked(self, dt: float) -> None:
-        self.state.battery_percent = max(0.0, self.state.battery_percent - 0.02 * dt * max(self.state.airspeed_mps, 2.0))
+        sp = self._profile.speeds
+        self.state.battery_percent = max(0.0, self.state.battery_percent - sp.battery_drain_rate * dt * max(self.state.airspeed_mps, 2.0))
         if self._landing_active:
-            self.state.alt_m = max(0.0, self.state.alt_m - 6.0 * dt)
-            self.state.airspeed_mps = 4.0
-            self.state.groundspeed_mps = 3.0
+            self.state.alt_m = max(0.0, self.state.alt_m - sp.landing_descent_mps * dt)
+            self.state.airspeed_mps = sp.landing_airspeed_mps
+            self.state.groundspeed_mps = sp.landing_groundspeed_mps
             if self.state.alt_m <= 0.5:
                 self.state.alt_m = 0.0
                 self.state.armed = False
@@ -276,23 +279,23 @@ class MockAdapter(FlightControllerAdapter):
             return
 
         if self._recovery_active:
-            self.state.airspeed_mps = max(10.0, self.state.airspeed_mps - 2.8 * dt)
-            self.state.groundspeed_mps = max(8.0, self.state.groundspeed_mps - 2.2 * dt)
-            self._move_towards_locked(self.home, max(self.state.groundspeed_mps, 6.0), dt)
-            self.state.alt_m = RECOVERY_ALT_M
+            self.state.airspeed_mps = max(sp.recovery_min_airspeed_mps, self.state.airspeed_mps - sp.recovery_decel_airspeed_mps2 * dt)
+            self.state.groundspeed_mps = max(sp.recovery_min_groundspeed_mps, self.state.groundspeed_mps - sp.recovery_decel_groundspeed_mps2 * dt)
+            self._move_towards_locked(self.home, max(self.state.groundspeed_mps, sp.recovery_movement_speed_mps), dt)
+            self.state.alt_m = self._profile.altitudes.recovery_m
             return
 
         if self._returning_home:
-            self._move_towards_locked(self.home, max(self.state.groundspeed_mps, 12.0), dt)
-            if _distance_m(self.home, LatLon(lat=self.state.lat, lon=self.state.lon)) <= 20.0:
+            self._move_towards_locked(self.home, max(self.state.groundspeed_mps, sp.rtl_movement_speed_mps), dt)
+            if _distance_m(self.home, LatLon(lat=self.state.lat, lon=self.state.lon)) <= sp.rtl_arrival_distance_m:
                 self._returning_home = False
-                self.state.airspeed_mps = 12.0
-                self.state.groundspeed_mps = 10.0
+                self.state.airspeed_mps = sp.rtl_arrival_airspeed_mps
+                self.state.groundspeed_mps = sp.rtl_arrival_groundspeed_mps
             return
 
         if self._mission_points and self.state.mission_index >= 0:
             target = self._mission_points[min(self.state.mission_index, len(self._mission_points) - 1)]
-            reached = self._move_towards_locked(target, max(self.state.groundspeed_mps, 16.0), dt)
+            reached = self._move_towards_locked(target, max(self.state.groundspeed_mps, sp.mission_movement_speed_mps), dt)
             if reached:
                 self.state.mission_index += 1
                 if self.state.mission_index >= len(self._mission_points):

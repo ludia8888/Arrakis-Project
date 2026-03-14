@@ -4,6 +4,7 @@ import logging
 import threading
 from contextlib import suppress
 
+from airframe_profile import AirframeProfile
 from arrakis_core.route_planner import build_route_preview
 from flight_adapters.base import FlightControllerAdapter, VideoFrame, validate_adapter_contract
 from schemas import RoutePreview, RouteRequest, TelemetrySnapshot
@@ -21,22 +22,23 @@ logger = logging.getLogger("arrakis.controller")
 
 
 class ArrakisController:
-    def __init__(self, adapter: FlightControllerAdapter) -> None:
+    def __init__(self, adapter: FlightControllerAdapter, profile: AirframeProfile) -> None:
         self.adapter = validate_adapter_contract(adapter)
+        self.profile = profile
         self.state_machine = MissionStateMachine()
         self._mission_lock = threading.Lock()
         self._mission_thread: threading.Thread | None = None
         self._mission_cancel: threading.Event | None = None
         self.startup_error: str | None = None
 
-        logger.info("Initializing controller with adapter=%s", adapter.__class__.__name__)
+        logger.info("Initializing controller with adapter=%s profile=%s", adapter.__class__.__name__, profile.name)
         try:
             self.adapter.connect()
         except Exception as exc:
             self.startup_error = f"{type(exc).__name__}: {exc}"
             logger.exception("Adapter connect failed during controller initialization: %s", exc)
         self.video_service = VideoService()
-        self.telemetry_hub = TelemetryHub(self.adapter.get_snapshot(), self.video_service)
+        self.telemetry_hub = TelemetryHub(self.adapter.get_snapshot(), self.video_service, profile)
         self.state_payload_assembler = StatePayloadAssembler(self.video_service)
         self.snapshot_recorder = StateSnapshotRecorder()
         self.transition_diagnostics = TransitionDiagnosticsTracker()
@@ -44,6 +46,7 @@ class ArrakisController:
             adapter=self.adapter,
             state_machine=self.state_machine,
             telemetry_hub=self.telemetry_hub,
+            profile=profile,
         )
         self.adapter.stream_telemetry(self._on_telemetry)
         self.adapter.stream_video(self._on_video)
@@ -74,7 +77,7 @@ class ArrakisController:
                 runtime_home.lon,
             )
         normalized_request = request.model_copy(update={"home": runtime_home})
-        return build_route_preview(normalized_request)
+        return build_route_preview(normalized_request, self.profile)
 
     def start_mission(self) -> None:
         bootstrap = self.adapter.bootstrap_status()

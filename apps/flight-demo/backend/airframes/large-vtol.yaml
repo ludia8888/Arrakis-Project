@@ -1,0 +1,69 @@
+# Arrakis Airframe Profile: Large VTOL QuadPlane
+# Profile for large VTOL platforms (3m+ wingspan, 10-25kg MTOW).
+# Wider turn radii, higher altitudes, more conservative safety margins.
+
+name: large-vtol
+description: "Large VTOL quadplane (3m+ wingspan, 10-25kg MTOW)"
+
+altitudes:
+  takeoff_m: 60.0
+  cruise_m: 90.0
+  recovery_m: 75.0
+
+geometry:
+  loiter_radius_m: 55.0
+  home_bubble_radius_m: 120.0
+  home_operation_bubble_radius_m: 240.0
+  outbound_startup_bubble_radius_m: 340.0
+  geofence_half_width_m: 180.0
+  waypoint_turn_bubble_radius_m: 230.0
+  home_arrival_radius_m: 180.0
+
+safety:
+  battery_rtl_threshold_percent: 25.0
+
+recovery:
+  primary:
+    speed_threshold_mps: 18.0
+    home_distance_threshold_m: 120.0
+    altitude_deviation_m: 15.0
+    dwell_seconds: 4.0
+    timeout_seconds: 35.0
+  fallback:
+    speed_threshold_mps: 22.0
+    home_distance_threshold_m: 160.0
+    altitude_deviation_m: 25.0
+    dwell_seconds: 3.0
+    timeout_seconds: 25.0
+
+timing:
+  takeoff_timeout_seconds: 60.0
+  transition_timeout_seconds: 35.0
+  landing_timeout_seconds: 120.0
+  vtol_landing_approach_min_m: 200.0
+
+speeds:
+  cruise_airspeed_mps: 28.0
+  cruise_groundspeed_mps: 25.0
+  takeoff_airspeed_mps: 3.0
+  takeoff_groundspeed_mps: 3.0
+  transition_fw_airspeed_mps: 22.0
+  transition_fw_groundspeed_mps: 20.0
+  transition_mc_airspeed_mps: 10.0
+  transition_mc_groundspeed_mps: 9.0
+  rtl_min_airspeed_mps: 20.0
+  rtl_min_groundspeed_mps: 18.0
+  landing_descent_mps: 4.0
+  landing_airspeed_mps: 3.0
+  landing_groundspeed_mps: 2.5
+  recovery_decel_airspeed_mps2: 2.0
+  recovery_decel_groundspeed_mps2: 1.6
+  recovery_min_airspeed_mps: 12.0
+  recovery_min_groundspeed_mps: 10.0
+  recovery_movement_speed_mps: 8.0
+  rtl_movement_speed_mps: 15.0
+  rtl_arrival_airspeed_mps: 14.0
+  rtl_arrival_groundspeed_mps: 12.0
+  rtl_arrival_distance_m: 30.0
+  mission_movement_speed_mps: 20.0
+  battery_drain_rate: 0.03

@@ -5,7 +5,7 @@ from math import cos, radians
 
 from shapely import Point, Polygon
 
-from config import BATTERY_RTL_THRESHOLD, HOME_OPERATION_BUBBLE_RADIUS_M, OUTBOUND_STARTUP_BUBBLE_RADIUS_M
+from airframe_profile import AirframeProfile
 from schemas import GeofencePolygon, MissionPhase, TelemetrySnapshot
 
 
@@ -28,6 +28,8 @@ def geofence_contains(
     telemetry: TelemetrySnapshot,
     phase: MissionPhase,
     route_home: tuple[float, float] | None = None,
+    *,
+    profile: AirframeProfile,
 ) -> bool:
     if geofence is None:
         return True
@@ -40,28 +42,28 @@ def geofence_contains(
     if route_home and phase in HOME_OPERATION_PHASES:
         home_lat, home_lon = route_home
         distance_m = _distance_m(home_lat, home_lon, telemetry.lat, telemetry.lon)
-        if distance_m <= HOME_OPERATION_BUBBLE_RADIUS_M:
+        if distance_m <= profile.geometry.home_operation_bubble_radius_m:
             logger.info(
                 "Geofence tolerated for phase=%s lat=%.6f lon=%.6f distance=%.1fm threshold=%.1fm",
                 phase,
                 telemetry.lat,
                 telemetry.lon,
                 distance_m,
-                HOME_OPERATION_BUBBLE_RADIUS_M,
+                profile.geometry.home_operation_bubble_radius_m,
             )
             return True
 
     if route_home and phase == "OUTBOUND" and telemetry.mission_index <= OUTBOUND_STARTUP_MAX_MISSION_INDEX:
         home_lat, home_lon = route_home
         distance_m = _distance_m(home_lat, home_lon, telemetry.lat, telemetry.lon)
-        if distance_m <= OUTBOUND_STARTUP_BUBBLE_RADIUS_M:
+        if distance_m <= profile.geometry.outbound_startup_bubble_radius_m:
             logger.info(
                 "Geofence tolerated for outbound startup lat=%.6f lon=%.6f mission_idx=%d distance=%.1fm threshold=%.1fm",
                 telemetry.lat,
                 telemetry.lon,
                 telemetry.mission_index,
                 distance_m,
-                OUTBOUND_STARTUP_BUBBLE_RADIUS_M,
+                profile.geometry.outbound_startup_bubble_radius_m,
             )
             return True
 
@@ -75,8 +77,9 @@ def geofence_contains(
     return False
 
 
-def should_trigger_battery_rtl(telemetry: TelemetrySnapshot) -> bool:
-    triggered = telemetry.battery_percent <= BATTERY_RTL_THRESHOLD
+def should_trigger_battery_rtl(telemetry: TelemetrySnapshot, *, profile: AirframeProfile) -> bool:
+    threshold = profile.safety.battery_rtl_threshold_percent
+    triggered = telemetry.battery_percent <= threshold
     if triggered:
-        logger.warning("Battery RTL condition met battery=%.1f threshold=%.1f", telemetry.battery_percent, BATTERY_RTL_THRESHOLD)
+        logger.warning("Battery RTL condition met battery=%.1f threshold=%.1f", telemetry.battery_percent, threshold)
     return triggered

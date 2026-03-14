@@ -1,0 +1,69 @@
+# Arrakis Airframe Profile: Default VTOL QuadPlane
+# Baseline profile for medium VTOL quadplane (~1.5m wingspan, 3-5kg MTOW).
+# All values match the original hardcoded defaults — no behavioral change.
+
+name: default-vtol
+description: "Default VTOL quadplane (~1.5m wingspan, 3-5kg MTOW)"
+
+altitudes:
+  takeoff_m: 40.0          # MC vertical climb target
+  cruise_m: 60.0           # FW cruise / mission waypoint altitude
+  recovery_m: 50.0         # Loiter altitude before MC transition
+
+geometry:
+  loiter_radius_m: 35.0                    # Orbit radius during recovery loiter
+  home_bubble_radius_m: 80.0               # Geofence safe zone around home
+  home_operation_bubble_radius_m: 160.0     # Geofence tolerance during takeoff/landing phases
+  outbound_startup_bubble_radius_m: 220.0   # Geofence tolerance during initial FW transition
+  geofence_half_width_m: 120.0             # Route corridor half-width
+  waypoint_turn_bubble_radius_m: 155.0     # Buffer zone around each waypoint for turning
+  home_arrival_radius_m: 120.0             # Distance to consider mission "near home"
+
+safety:
+  battery_rtl_threshold_percent: 20.0      # Battery % that triggers automatic RTL
+
+recovery:
+  primary:
+    speed_threshold_mps: 14.0              # Must decelerate below this
+    home_distance_threshold_m: 80.0        # Must be within this distance of home
+    altitude_deviation_m: 12.0             # Max deviation from recovery altitude
+    dwell_seconds: 3.0                     # Must hold stable for this duration
+    timeout_seconds: 25.0                  # Max wait before escalating to fallback
+  fallback:
+    speed_threshold_mps: 17.0              # Relaxed speed threshold
+    home_distance_threshold_m: 110.0       # Relaxed distance threshold
+    altitude_deviation_m: 18.0             # Relaxed altitude tolerance
+    dwell_seconds: 2.0                     # Shorter dwell requirement
+    timeout_seconds: 18.0                  # Shorter timeout before abort
+
+timing:
+  takeoff_timeout_seconds: 45.0            # Max wait for MC climb to 70% altitude
+  transition_timeout_seconds: 25.0         # Max wait for FW transition confirmation
+  landing_timeout_seconds: 90.0            # Max wait for landing completion
+  vtol_landing_approach_min_m: 140.0       # Minimum final approach distance for VTOL landing
+
+speeds:
+  cruise_airspeed_mps: 22.0
+  cruise_groundspeed_mps: 20.0
+  takeoff_airspeed_mps: 4.0
+  takeoff_groundspeed_mps: 4.0
+  transition_fw_airspeed_mps: 18.0
+  transition_fw_groundspeed_mps: 16.0
+  transition_mc_airspeed_mps: 9.0
+  transition_mc_groundspeed_mps: 8.0
+  rtl_min_airspeed_mps: 16.0
+  rtl_min_groundspeed_mps: 14.0
+  landing_descent_mps: 6.0
+  landing_airspeed_mps: 4.0
+  landing_groundspeed_mps: 3.0
+  recovery_decel_airspeed_mps2: 2.8
+  recovery_decel_groundspeed_mps2: 2.2
+  recovery_min_airspeed_mps: 10.0
+  recovery_min_groundspeed_mps: 8.0
+  recovery_movement_speed_mps: 6.0
+  rtl_movement_speed_mps: 12.0
+  rtl_arrival_airspeed_mps: 12.0
+  rtl_arrival_groundspeed_mps: 10.0
+  rtl_arrival_distance_m: 20.0
+  mission_movement_speed_mps: 16.0
+  battery_drain_rate: 0.02

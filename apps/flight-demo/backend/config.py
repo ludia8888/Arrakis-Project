@@ -41,41 +41,4 @@ class VideoConfig:
     fallback_width: int = 960
 
 
-@dataclass(frozen=True)
-class RecoveryThresholds:
-    speed_threshold_mps: float
-    home_distance_threshold_m: float
-    altitude_deviation_m: float
-    dwell_seconds: float
-    timeout_seconds: float
-
-
-PRIMARY_RECOVERY = RecoveryThresholds(
-    speed_threshold_mps=14.0,
-    home_distance_threshold_m=80.0,
-    altitude_deviation_m=12.0,
-    dwell_seconds=3.0,
-    timeout_seconds=25.0,
-)
-
-FALLBACK_RECOVERY = RecoveryThresholds(
-    speed_threshold_mps=17.0,
-    home_distance_threshold_m=110.0,
-    altitude_deviation_m=18.0,
-    dwell_seconds=2.0,
-    timeout_seconds=18.0,
-)
-
-TAKEOFF_ALT_M = 40.0
-CRUISE_ALT_M = 60.0
-RECOVERY_ALT_M = 50.0
-LOITER_RADIUS_M = 35.0
-HOME_BUBBLE_RADIUS_M = 80.0
-HOME_OPERATION_BUBBLE_RADIUS_M = 160.0
-OUTBOUND_STARTUP_BUBBLE_RADIUS_M = 220.0
-GEOFENCE_HALF_WIDTH_M = 120.0
-WAYPOINT_TURN_BUBBLE_RADIUS_M = 155.0
-BATTERY_RTL_THRESHOLD = 20.0
-VTOL_LANDING_APPROACH_MIN_M = float(os.getenv("ARRAKIS_VTOL_LANDING_APPROACH_MIN_M", "140"))
-LANDING_TIMEOUT_SECONDS = float(os.getenv("ARRAKIS_LANDING_TIMEOUT_SECONDS", "90"))
 WEBSOCKET_HZ = 5

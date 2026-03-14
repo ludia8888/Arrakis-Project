@@ -5,15 +5,7 @@ import threading
 import time
 from contextlib import suppress
 
-from config import (
-    BATTERY_RTL_THRESHOLD,
-    FALLBACK_RECOVERY,
-    LANDING_TIMEOUT_SECONDS,
-    LOITER_RADIUS_M,
-    PRIMARY_RECOVERY,
-    RECOVERY_ALT_M,
-    TAKEOFF_ALT_M,
-)
+from airframe_profile import AirframeProfile
 from flight_adapters.base import FlightControllerAdapter
 
 from .mission_state_machine import INTERRUPT_PHASES, MissionStateMachine
@@ -32,10 +24,12 @@ class MissionExecutor:
         adapter: FlightControllerAdapter,
         state_machine: MissionStateMachine,
         telemetry_hub: TelemetryHub,
+        profile: AirframeProfile,
     ) -> None:
         self.adapter = adapter
         self.state_machine = state_machine
         self.telemetry_hub = telemetry_hub
+        self.profile = profile
 
     def run_roundtrip_mission(self, cancel_event: threading.Event) -> None:
         route_preview = self.state_machine.require_route()
@@ -56,7 +50,7 @@ class MissionExecutor:
             return
 
         self.state_machine.mark_phase("TAKEOFF_MC", reason="arm complete, takeoff requested")
-        self.adapter.takeoff_multicopter(TAKEOFF_ALT_M)
+        self.adapter.takeoff_multicopter(self.profile.altitudes.takeoff_m)
         if self._sleep_with_cancel(cancel_event, 1.0):
             logger.info("Mission cancelled during TAKEOFF_MC")
             return
@@ -83,7 +77,7 @@ class MissionExecutor:
             if current_leg == "return" and self.state_machine.phase != "RETURN":
                 self.state_machine.mark_phase("RETURN", reason="adapter reported return leg")
                 logger.info("Leg transitioned to RETURN")
-            if current_leg == "idle" and telemetry.home_distance_m <= 120:
+            if current_leg == "idle" and telemetry.home_distance_m <= self.profile.geometry.home_arrival_radius_m:
                 break
             if self._sleep_with_cancel(cancel_event, 0.2):
                 logger.info("Mission cancelled during route progression")
@@ -94,11 +88,11 @@ class MissionExecutor:
         self.adapter.prepare_multicopter_recovery(
             {
                 "recovery_center": route_preview.home.model_dump(),
-                "target_alt_m": RECOVERY_ALT_M,
-                "loiter_radius_m": LOITER_RADIUS_M,
+                "target_alt_m": self.profile.altitudes.recovery_m,
+                "loiter_radius_m": self.profile.geometry.loiter_radius_m,
             },
         )
-        if not self._wait_for_recovery(PRIMARY_RECOVERY, cancel_event):
+        if not self._wait_for_recovery(self.profile.recovery.primary, cancel_event):
             if self.state_machine.abort_reason:
                 logger.warning("Primary recovery ended due to abort reason=%s", self.state_machine.abort_reason)
                 return
@@ -107,7 +101,7 @@ class MissionExecutor:
                 return
             logger.warning("Primary recovery timed out, attempting fallback recovery")
             self.adapter.return_to_home()
-            if not self._wait_for_recovery(FALLBACK_RECOVERY, cancel_event):
+            if not self._wait_for_recovery(self.profile.recovery.fallback, cancel_event):
                 if cancel_event.is_set():
                     logger.info("Mission cancelled during fallback recovery")
                     return
@@ -131,7 +125,7 @@ class MissionExecutor:
                 "outbound": [point.model_dump() for point in route_preview.outbound],
                 "return_path": [point.model_dump() for point in route_preview.return_path],
                 "geofence": [point.model_dump() for point in route_preview.geofence.coordinates],
-                "takeoff_alt_m": TAKEOFF_ALT_M,
+                "takeoff_alt_m": self.profile.altitudes.takeoff_m,
                 "cruise_alt_m": route_preview.cruise_alt_m,
             },
         )
@@ -139,15 +133,15 @@ class MissionExecutor:
         self.state_machine.mark_phase("TAKEOFF_MC", reason="ArduPilot mission started with NAV_VTOL_TAKEOFF")
         if not self._wait_for_condition(
             cancel_event,
-            timeout_seconds=45.0,
+            timeout_seconds=self.profile.timing.takeoff_timeout_seconds,
             description="mission takeoff climb",
-            predicate=lambda telemetry: telemetry.alt_m >= TAKEOFF_ALT_M * 0.7,
+            predicate=lambda telemetry: telemetry.alt_m >= self.profile.altitudes.takeoff_m * 0.7,
         ):
             return
         self.state_machine.mark_phase("TRANSITION_FW", reason="ArduPilot mission progressing through VTOL transition")
         if not self._wait_for_condition(
             cancel_event,
-            timeout_seconds=25.0,
+            timeout_seconds=self.profile.timing.transition_timeout_seconds,
             description="mission outbound leg",
             predicate=lambda telemetry: self.adapter.current_leg() == "outbound",
         ):
@@ -186,7 +180,7 @@ class MissionExecutor:
                 )
                 self._wait_for_landing(cancel_event)
                 return
-            if current_leg == "idle" and not telemetry.armed and telemetry.home_distance_m <= 120:
+            if current_leg == "idle" and not telemetry.armed and telemetry.home_distance_m <= self.profile.geometry.home_arrival_radius_m:
                 if self.state_machine.phase not in INTERRUPT_PHASES:
                     self.state_machine.complete()
                     logger.info("Mission reached COMPLETE after mission-driven landing disarm")
@@ -209,14 +203,14 @@ class MissionExecutor:
                 self.state_machine.abort("ABORT_GEOFENCE", "route-derived geofence breached")
                 logger.warning("Recovery failed due to geofence breach")
                 return False
-            if telemetry.battery_percent <= BATTERY_RTL_THRESHOLD:
+            if telemetry.battery_percent <= self.profile.safety.battery_rtl_threshold_percent:
                 self.state_machine.abort("RTL_BATTERY", "battery threshold reached")
                 logger.warning("Recovery failed due to battery threshold at %.1f%%", telemetry.battery_percent)
                 return False
             conditions_met = (
                 telemetry.airspeed_mps <= thresholds.speed_threshold_mps
                 and telemetry.home_distance_m <= thresholds.home_distance_threshold_m
-                and abs(telemetry.alt_m - RECOVERY_ALT_M) <= thresholds.altitude_deviation_m
+                and abs(telemetry.alt_m - self.profile.altitudes.recovery_m) <= thresholds.altitude_deviation_m
             )
             if conditions_met:
                 stable_since = stable_since or time.time()
@@ -237,7 +231,7 @@ class MissionExecutor:
         return False
 
     def _wait_for_landing(self, cancel_event: threading.Event) -> bool:
-        deadline = time.time() + LANDING_TIMEOUT_SECONDS
+        deadline = time.time() + self.profile.timing.landing_timeout_seconds
         while True:
             if cancel_event.is_set():
                 logger.info("Mission cancelled during LANDING")
@@ -248,7 +242,7 @@ class MissionExecutor:
             if telemetry.telemetry_fresh and telemetry.position_valid and telemetry.alt_m <= 0.5:
                 break
             if time.time() >= deadline:
-                reason = f"timed out waiting for landing after {LANDING_TIMEOUT_SECONDS:.0f}s"
+                reason = f"timed out waiting for landing after {self.profile.timing.landing_timeout_seconds:.0f}s"
                 logger.error(
                     "Landing wait timed out mode=%s armed=%s alt=%.2f home_distance=%.1f",
                     telemetry.flight_mode,
@@ -301,7 +295,7 @@ class MissionExecutor:
                 self.state_machine.abort("ABORT_GEOFENCE", "route-derived geofence breached")
                 logger.warning("Condition wait failed due to geofence breach description=%s", description)
                 return False
-            if telemetry.battery_percent <= BATTERY_RTL_THRESHOLD:
+            if telemetry.battery_percent <= self.profile.safety.battery_rtl_threshold_percent:
                 self.state_machine.abort("RTL_BATTERY", "battery threshold reached")
                 logger.warning("Condition wait failed due to battery threshold description=%s", description)
                 return False
