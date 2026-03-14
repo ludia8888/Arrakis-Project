@@ -63,8 +63,9 @@ class MissionExecutor:
             },
         )
         self.adapter.start_mission()
-        self.state_machine.mark_phase("TRANSITION_FW", reason="mission uploaded, switching to fixed-wing in AUTO")
-        self.adapter.transition_to_fixedwing()
+        if self.profile.is_vtol:
+            self.state_machine.mark_phase("TRANSITION_FW", reason="mission uploaded, switching to fixed-wing in AUTO")
+            self.adapter.transition_to_fixedwing()
         self.state_machine.mark_phase("OUTBOUND", reason="mission uploaded and started")
         logger.info("Entered OUTBOUND")
 
@@ -83,38 +84,40 @@ class MissionExecutor:
                 logger.info("Mission cancelled during route progression")
                 return
 
-        self.state_machine.mark_phase("PRE_MC_RECOVERY", reason="route complete, preparing multicopter recovery")
-        logger.info("Entered PRE_MC_RECOVERY")
-        self.adapter.prepare_multicopter_recovery(
-            {
-                "recovery_center": route_preview.home.model_dump(),
-                "target_alt_m": self.profile.altitudes.recovery_m,
-                "loiter_radius_m": self.profile.geometry.loiter_radius_m,
-            },
-        )
-        if not self._wait_for_recovery(self.profile.recovery.primary, cancel_event):
-            if self.state_machine.abort_reason:
-                logger.warning("Primary recovery ended due to abort reason=%s", self.state_machine.abort_reason)
-                return
-            if cancel_event.is_set():
-                logger.info("Mission cancelled during primary recovery")
-                return
-            logger.warning("Primary recovery timed out, attempting fallback recovery")
-            self.adapter.return_to_home()
-            if not self._wait_for_recovery(self.profile.recovery.fallback, cancel_event):
-                if cancel_event.is_set():
-                    logger.info("Mission cancelled during fallback recovery")
+        if self.profile.is_vtol:
+            self.state_machine.mark_phase("PRE_MC_RECOVERY", reason="route complete, preparing multicopter recovery")
+            logger.info("Entered PRE_MC_RECOVERY")
+            self.adapter.prepare_multicopter_recovery(
+                {
+                    "recovery_center": route_preview.home.model_dump(),
+                    "target_alt_m": self.profile.altitudes.recovery_m,
+                    "loiter_radius_m": self.profile.geometry.loiter_radius_m,
+                },
+            )
+            if not self._wait_for_recovery(self.profile.recovery.primary, cancel_event):
+                if self.state_machine.abort_reason:
+                    logger.warning("Primary recovery ended due to abort reason=%s", self.state_machine.abort_reason)
                     return
-                self.state_machine.abort("ABORT_MANUAL", "operator intervention required after recovery fallback")
-                logger.error("Fallback recovery failed, operator intervention required")
+                if cancel_event.is_set():
+                    logger.info("Mission cancelled during primary recovery")
+                    return
+                logger.warning("Primary recovery timed out, attempting fallback recovery")
+                self.adapter.return_to_home()
+                if not self._wait_for_recovery(self.profile.recovery.fallback, cancel_event):
+                    if cancel_event.is_set():
+                        logger.info("Mission cancelled during fallback recovery")
+                        return
+                    self.state_machine.abort("ABORT_MANUAL", "operator intervention required after recovery fallback")
+                    logger.error("Fallback recovery failed, operator intervention required")
+                    return
+
+            self.state_machine.mark_phase("TRANSITION_MC", reason="recovery thresholds satisfied")
+            self.adapter.transition_to_multicopter()
+            if self._sleep_with_cancel(cancel_event, 1.0):
+                logger.info("Mission cancelled during TRANSITION_MC")
                 return
 
-        self.state_machine.mark_phase("TRANSITION_MC", reason="recovery thresholds satisfied")
-        self.adapter.transition_to_multicopter()
-        if self._sleep_with_cancel(cancel_event, 1.0):
-            logger.info("Mission cancelled during TRANSITION_MC")
-            return
-        self.state_machine.mark_phase("LANDING", reason="multicopter transition complete, vertical landing requested")
+        self.state_machine.mark_phase("LANDING", reason="vertical landing requested")
         self.adapter.land_vertical()
         self._wait_for_landing(cancel_event)
 
@@ -130,7 +133,8 @@ class MissionExecutor:
             },
         )
         self.adapter.start_mission()
-        self.state_machine.mark_phase("TAKEOFF_MC", reason="ArduPilot mission started with NAV_VTOL_TAKEOFF")
+        takeoff_reason = "ArduPilot mission started with NAV_VTOL_TAKEOFF" if self.profile.is_vtol else "ArduPilot mission started with NAV_TAKEOFF"
+        self.state_machine.mark_phase("TAKEOFF_MC", reason=takeoff_reason)
         if not self._wait_for_condition(
             cancel_event,
             timeout_seconds=self.profile.timing.takeoff_timeout_seconds,
@@ -138,7 +142,8 @@ class MissionExecutor:
             predicate=lambda telemetry: telemetry.alt_m >= self.profile.altitudes.takeoff_m * 0.7,
         ):
             return
-        self.state_machine.mark_phase("TRANSITION_FW", reason="ArduPilot mission progressing through VTOL transition")
+        if self.profile.is_vtol:
+            self.state_machine.mark_phase("TRANSITION_FW", reason="ArduPilot mission progressing through VTOL transition")
         if not self._wait_for_condition(
             cancel_event,
             timeout_seconds=self.profile.timing.transition_timeout_seconds,
@@ -166,14 +171,15 @@ class MissionExecutor:
                     telemetry.home_distance_m,
                     telemetry.alt_m,
                 )
-                self.state_machine.mark_phase(
-                    "PRE_MC_RECOVERY",
-                    reason=f"ArduPilot mission entered landing phase ({current_leg}/{telemetry.flight_mode})",
-                )
-                self.state_machine.mark_phase(
-                    "TRANSITION_MC",
-                    reason="ArduPilot mission is handling multicopter recovery/transition",
-                )
+                if self.profile.is_vtol:
+                    self.state_machine.mark_phase(
+                        "PRE_MC_RECOVERY",
+                        reason=f"ArduPilot mission entered landing phase ({current_leg}/{telemetry.flight_mode})",
+                    )
+                    self.state_machine.mark_phase(
+                        "TRANSITION_MC",
+                        reason="ArduPilot mission is handling multicopter recovery/transition",
+                    )
                 self.state_machine.mark_phase(
                     "LANDING",
                     reason=f"monitoring mission-driven ArduPilot landing in {telemetry.flight_mode}",

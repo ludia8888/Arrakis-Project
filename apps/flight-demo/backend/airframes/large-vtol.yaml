@@ -3,6 +3,7 @@
 # Wider turn radii, higher altitudes, more conservative safety margins.
 
 name: large-vtol
+airframe_type: vtol
 description: "Large VTOL quadplane (3m+ wingspan, 10-25kg MTOW)"
 
 altitudes:

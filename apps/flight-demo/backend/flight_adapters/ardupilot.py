@@ -18,6 +18,7 @@ from config import (
     ARDUPILOT_HEARTBEAT_TIMEOUT,
     ARDUPILOT_MODE_AUTO,
     ARDUPILOT_MODE_GUIDED,
+    ARDUPILOT_MODE_LAND,
     ARDUPILOT_MODE_LOITER,
     ARDUPILOT_MODE_QLAND,
     ARDUPILOT_MODE_QLOITER,
@@ -183,7 +184,8 @@ class ArduPilotAdapter(FlightControllerAdapter):
         return "mission_oriented"
 
     def arm(self) -> None:
-        self._set_mode(ARDUPILOT_MODE_QLOITER)
+        pre_arm_mode = ARDUPILOT_MODE_QLOITER if self._profile.is_vtol else ARDUPILOT_MODE_LOITER
+        self._set_mode(pre_arm_mode)
         self._send_command(
             self._mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM,
             [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
@@ -263,7 +265,8 @@ class ArduPilotAdapter(FlightControllerAdapter):
         self._route_leg = "return"
 
     def land_vertical(self) -> None:
-        self._set_mode(ARDUPILOT_MODE_QLAND)
+        land_mode = ARDUPILOT_MODE_QLAND if self._profile.is_vtol else ARDUPILOT_MODE_LAND
+        self._set_mode(land_mode)
         self._set_vtol_hint("MC")
 
     def abort(self, reason: str) -> None:
@@ -606,7 +609,7 @@ class ArduPilotAdapter(FlightControllerAdapter):
     ) -> None:
         master = self._require_master()
         effective_return_path = list(return_path)
-        if effective_return_path:
+        if self._profile.is_vtol and effective_return_path:
             last_return = effective_return_path[-1]
             landing_distance = _distance_m(home, last_return)
             if landing_distance < self._profile.timing.vtol_landing_approach_min_m:
@@ -644,7 +647,7 @@ class ArduPilotAdapter(FlightControllerAdapter):
                 self._target_component,
                 takeoff_seq,
                 self._mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT,
-                self._mavutil.mavlink.MAV_CMD_NAV_VTOL_TAKEOFF,
+                self._mavutil.mavlink.MAV_CMD_NAV_VTOL_TAKEOFF if self._profile.is_vtol else self._mavutil.mavlink.MAV_CMD_NAV_TAKEOFF,
                 0,
                 1,
                 0.0,
@@ -681,7 +684,7 @@ class ArduPilotAdapter(FlightControllerAdapter):
                 self._target_component,
                 landing_seq,
                 self._mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT,
-                self._mavutil.mavlink.MAV_CMD_NAV_VTOL_LAND,
+                self._mavutil.mavlink.MAV_CMD_NAV_VTOL_LAND if self._profile.is_vtol else self._mavutil.mavlink.MAV_CMD_NAV_LAND,
                 0,
                 1,
                 0.0,

@@ -114,7 +114,7 @@ class MockAdapter(FlightControllerAdapter):
         logger.info("Mock start_mission")
         with self._lock:
             self.state.flight_mode = "MISSION"
-            self.state.vtol_state = "FW"
+            self.state.vtol_state = "FW" if self._profile.is_vtol else "MC"
             self.state.alt_m = self._profile.altitudes.cruise_m
             self.state.airspeed_mps = self._profile.speeds.cruise_airspeed_mps
             self.state.groundspeed_mps = self._profile.speeds.cruise_groundspeed_mps
@@ -149,7 +149,7 @@ class MockAdapter(FlightControllerAdapter):
         with self._lock:
             self._returning_home = True
             self.state.flight_mode = "RTL"
-            self.state.vtol_state = "FW"
+            self.state.vtol_state = "FW" if self._profile.is_vtol else "MC"
             self.state.airspeed_mps = max(self.state.airspeed_mps, self._profile.speeds.rtl_min_airspeed_mps)
             self.state.groundspeed_mps = max(self.state.groundspeed_mps, self._profile.speeds.rtl_min_groundspeed_mps)
 

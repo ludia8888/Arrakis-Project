@@ -1,0 +1,72 @@
+# Arrakis Airframe Profile: Default Quadcopter
+# Baseline profile for a standard quadcopter (~350-550mm, 1-3kg MTOW).
+# No fixed-wing transitions, no recovery phase — direct multicopter flight.
+
+name: default-quadcopter
+airframe_type: quadcopter
+description: "Default quadcopter (~350-550mm, 1-3kg MTOW)"
+
+altitudes:
+  takeoff_m: 30.0           # Vertical climb target
+  cruise_m: 50.0            # Mission waypoint altitude
+  recovery_m: 40.0          # Unused for quadcopter (valid placeholder)
+
+geometry:
+  loiter_radius_m: 15.0                     # Hover orbit radius (tighter than VTOL)
+  home_bubble_radius_m: 50.0                # Geofence safe zone around home
+  home_operation_bubble_radius_m: 100.0     # Geofence tolerance during takeoff/landing
+  outbound_startup_bubble_radius_m: 150.0   # Geofence tolerance during initial climb
+  geofence_half_width_m: 80.0               # Route corridor half-width
+  waypoint_turn_bubble_radius_m: 100.0      # Buffer zone around waypoints
+  home_arrival_radius_m: 60.0               # Distance to consider "near home"
+
+safety:
+  battery_rtl_threshold_percent: 25.0       # More conservative (quadcopters drain faster)
+
+recovery:
+  # Unused for quadcopter — MissionExecutor skips recovery phase entirely.
+  # Values set to valid defaults to avoid validation errors.
+  primary:
+    speed_threshold_mps: 5.0
+    home_distance_threshold_m: 50.0
+    altitude_deviation_m: 10.0
+    dwell_seconds: 2.0
+    timeout_seconds: 15.0
+  fallback:
+    speed_threshold_mps: 8.0
+    home_distance_threshold_m: 80.0
+    altitude_deviation_m: 15.0
+    dwell_seconds: 1.0
+    timeout_seconds: 10.0
+
+timing:
+  takeoff_timeout_seconds: 30.0             # Faster takeoff expected
+  transition_timeout_seconds: 10.0          # Unused (no FW transition)
+  landing_timeout_seconds: 60.0             # Shorter landing
+  vtol_landing_approach_min_m: 0.0          # No VTOL approach needed
+
+speeds:
+  cruise_airspeed_mps: 12.0
+  cruise_groundspeed_mps: 10.0
+  takeoff_airspeed_mps: 3.0
+  takeoff_groundspeed_mps: 3.0
+  transition_fw_airspeed_mps: 0.0           # Unused (no FW transition)
+  transition_fw_groundspeed_mps: 0.0        # Unused
+  transition_mc_airspeed_mps: 0.0           # Unused (no MC transition)
+  transition_mc_groundspeed_mps: 0.0        # Unused
+  rtl_min_airspeed_mps: 8.0
+  rtl_min_groundspeed_mps: 6.0
+  landing_descent_mps: 3.0
+  landing_airspeed_mps: 2.0
+  landing_groundspeed_mps: 1.5
+  recovery_decel_airspeed_mps2: 0.0         # Unused (no recovery)
+  recovery_decel_groundspeed_mps2: 0.0      # Unused
+  recovery_min_airspeed_mps: 0.0            # Unused
+  recovery_min_groundspeed_mps: 0.0         # Unused
+  recovery_movement_speed_mps: 0.0          # Unused
+  rtl_movement_speed_mps: 8.0
+  rtl_arrival_airspeed_mps: 6.0
+  rtl_arrival_groundspeed_mps: 5.0
+  rtl_arrival_distance_m: 10.0
+  mission_movement_speed_mps: 10.0
+  battery_drain_rate: 0.03                  # Higher drain rate for quadcopter

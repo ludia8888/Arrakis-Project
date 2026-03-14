@@ -3,6 +3,7 @@
 # All values match the original hardcoded defaults — no behavioral change.
 
 name: default-vtol
+airframe_type: vtol
 description: "Default VTOL quadplane (~1.5m wingspan, 3-5kg MTOW)"
 
 altitudes:

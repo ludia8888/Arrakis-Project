@@ -1,15 +1,16 @@
-"""Airframe profile system for VTOL drone parameter management.
+"""Airframe profile system for drone parameter management.
 
 Provides a structured, validated configuration model for airframe-specific
-flight parameters. Profiles are loaded from YAML files and threaded through
-the system via explicit dependency injection.
+flight parameters. Supports VTOL quadplanes and standard quadcopters.
+Profiles are loaded from YAML files and threaded through the system via
+explicit dependency injection.
 
 Usage:
     # Load by environment variable (ARRAKIS_AIRFRAME_PROFILE)
     profile = load_profile()
 
     # Load by name (looks in backend/airframes/{name}.yaml)
-    profile = load_profile("large-vtol")
+    profile = load_profile("default-quadcopter")
 
     # Load by file path
     profile = load_profile("/path/to/custom.yaml")
@@ -20,9 +21,12 @@ from __future__ import annotations
 import logging
 import os
 from pathlib import Path
+from typing import Literal
 
 import yaml
 from pydantic import BaseModel, ConfigDict, model_validator
+
+AirframeType = Literal["vtol", "quadcopter"]
 
 logger = logging.getLogger("arrakis.airframe")
 
@@ -151,6 +155,7 @@ class AirframeProfile(BaseModel):
 
     name: str = "default-vtol"
     description: str = "Default VTOL quadplane profile"
+    airframe_type: AirframeType = "vtol"
     altitudes: AltitudeConfig = AltitudeConfig()
     geometry: GeometryConfig = GeometryConfig()
     safety: SafetyConfig = SafetyConfig()
@@ -158,17 +163,39 @@ class AirframeProfile(BaseModel):
     timing: TimingConfig = TimingConfig()
     speeds: SpeedConfig = SpeedConfig()
 
+    @property
+    def is_vtol(self) -> bool:
+        """True for VTOL quadplanes that require FW/MC transitions."""
+        return self.airframe_type == "vtol"
+
     @model_validator(mode="after")
     def validate_physical_consistency(self) -> AirframeProfile:
         errors: list[str] = []
 
-        # Recovery altitude must be between takeoff and cruise
-        if not (self.altitudes.takeoff_m <= self.altitudes.recovery_m <= self.altitudes.cruise_m):
-            errors.append(
-                f"altitude ordering violated: takeoff({self.altitudes.takeoff_m}m) "
-                f"<= recovery({self.altitudes.recovery_m}m) "
-                f"<= cruise({self.altitudes.cruise_m}m)"
-            )
+        if self.airframe_type == "vtol":
+            # VTOL: recovery altitude must be between takeoff and cruise
+            if not (self.altitudes.takeoff_m <= self.altitudes.recovery_m <= self.altitudes.cruise_m):
+                errors.append(
+                    f"altitude ordering violated: takeoff({self.altitudes.takeoff_m}m) "
+                    f"<= recovery({self.altitudes.recovery_m}m) "
+                    f"<= cruise({self.altitudes.cruise_m}m)"
+                )
+
+            # VTOL: primary recovery thresholds should be tighter than fallback
+            if self.recovery.primary.speed_threshold_mps > self.recovery.fallback.speed_threshold_mps:
+                errors.append(
+                    f"primary recovery speed_threshold({self.recovery.primary.speed_threshold_mps}mps) "
+                    f"should be <= fallback({self.recovery.fallback.speed_threshold_mps}mps)"
+                )
+        else:
+            # Quadcopter: just validate takeoff <= cruise (no recovery phase)
+            if self.altitudes.takeoff_m > self.altitudes.cruise_m:
+                errors.append(
+                    f"takeoff altitude ({self.altitudes.takeoff_m}m) "
+                    f"must be <= cruise altitude ({self.altitudes.cruise_m}m)"
+                )
+
+        # Common validations (all airframe types)
 
         # Home bubble must fit inside home operation bubble
         if self.geometry.home_bubble_radius_m > self.geometry.home_operation_bubble_radius_m:
@@ -182,13 +209,6 @@ class AirframeProfile(BaseModel):
             errors.append(
                 f"home_operation_bubble_radius({self.geometry.home_operation_bubble_radius_m}m) "
                 f"must be <= outbound_startup_bubble_radius({self.geometry.outbound_startup_bubble_radius_m}m)"
-            )
-
-        # Primary recovery thresholds should be tighter than fallback
-        if self.recovery.primary.speed_threshold_mps > self.recovery.fallback.speed_threshold_mps:
-            errors.append(
-                f"primary recovery speed_threshold({self.recovery.primary.speed_threshold_mps}mps) "
-                f"should be <= fallback({self.recovery.fallback.speed_threshold_mps}mps)"
             )
 
         # Geofence corridor must be at least as wide as the loiter radius
