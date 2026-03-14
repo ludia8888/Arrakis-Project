@@ -444,26 +444,16 @@ _sitl_skip = pytest.mark.skipif(
 
 
 @_sitl_skip
-def test_sitl_full_integration():
-    """End-to-end SITL test: connect → bootstrap → arm → concurrent ACK → abort → reset.
+def test_sitl_full_integration(sitl_connection):
+    """End-to-end SITL test: connect → bootstrap → arm → concurrent ACK → hardening → abort.
 
-    Uses a single TCP connection since SITL only accepts one client at a time.
+    Uses the session-scoped ``sitl_connection`` fixture from conftest.py
+    to share a single TCP connection across all SITL tests.
     """
-    from flight_adapters.ardupilot import ArduPilotAdapter
-
-    adapter = ArduPilotAdapter(AirframeProfile())
-    instrumented = InstrumentedFlightAdapter(adapter, logger_name="test.sitl")
-    instrumented.connect()
+    adapter, instrumented = sitl_connection
 
     # --- Phase 1: Bootstrap ---
-    deadline = time.time() + 15.0
-    bootstrap = None
-    while time.time() < deadline:
-        bootstrap = instrumented.bootstrap_status()
-        if bootstrap.mission_ready:
-            break
-        time.sleep(0.5)
-
+    bootstrap = instrumented.bootstrap_status()
     assert bootstrap.connected, "Should be connected"
     assert bootstrap.heartbeat_received, "Should have heartbeat"
     assert bootstrap.telemetry_fresh, "Telemetry should be fresh"
@@ -474,7 +464,6 @@ def test_sitl_full_integration():
     print(f"  Bootstrap OK: mode={snapshot.flight_mode} home_valid={snapshot.home_valid}")
 
     # --- Phase 2: Force-arm via MAVLink (bypass prearm checks for SITL) ---
-    # MAV_CMD_COMPONENT_ARM_DISARM with param2=21196.0 forces arm
     mavutil = adapter._mavutil
     with adapter._io_lock:
         adapter._require_master().mav.command_long_send(
@@ -486,7 +475,6 @@ def test_sitl_full_integration():
             21196.0,   # param2: force arm magic number
             0.0, 0.0, 0.0, 0.0, 0.0,
         )
-    # Wait for armed state
     arm_deadline = time.time() + 10.0
     while time.time() < arm_deadline:
         snapshot = instrumented.get_snapshot()
@@ -516,12 +504,34 @@ def test_sitl_full_integration():
     assert not errors, f"C-5: Concurrent _pending_acks access errors: {errors}"
     print("  C-5 concurrent ACK access OK")
 
-    # --- Phase 4: Abort (disarm) ---
+    # --- Phase 4: Hardening field verification ---
+    # Fix 1: Heartbeat watchdog
+    assert hasattr(adapter, "_last_heartbeat_mono"), "Fix 1: heartbeat watchdog field"
+    assert adapter._last_heartbeat_mono > 0, "Heartbeat should have been received"
+    assert hasattr(adapter, "_heartbeat_watchdog_timeout_s"), "Fix 1: watchdog timeout field"
+    print(f"  Phase 4a OK: heartbeat_mono={adapter._last_heartbeat_mono:.1f}")
+
+    # Fix 9: Monotonic timestamps
+    assert hasattr(adapter, "_last_telemetry_mono"), "Fix 9: monotonic telemetry"
+    assert adapter._last_telemetry_mono > 0
+    print(f"  Phase 4b OK: telemetry_mono={adapter._last_telemetry_mono:.1f}")
+
+    # Fix 10: GPS validation
+    gps_snapshot = instrumented.get_snapshot()
+    assert -90.0 <= gps_snapshot.lat <= 90.0, f"Lat invalid: {gps_snapshot.lat}"
+    assert -180.0 <= gps_snapshot.lon <= 180.0, f"Lon invalid: {gps_snapshot.lon}"
+    print(f"  Phase 4c OK: GPS lat={gps_snapshot.lat:.6f} lon={gps_snapshot.lon:.6f}")
+
+    # Fix 3: Connection loss flag
+    assert adapter._connection_lost is False, "Should not be lost while connected"
+    print("  Phase 4d OK: _connection_lost=False")
+
+    # Fix 8: Pre-arm error list exists
+    assert isinstance(adapter._prearm_errors, list), "Fix 8: prearm errors list"
+    print(f"  Phase 4e OK: prearm_errors={adapter._prearm_errors}")
+
+    # --- Phase 5: Abort (disarm) ---
     instrumented.abort("test disarm")
     time.sleep(2.0)
     snapshot = instrumented.get_snapshot()
     print(f"  Abort OK: armed={snapshot.armed} mode={snapshot.flight_mode}")
-
-    # --- Phase 5: Reset ---
-    instrumented.reset()
-    print("  Reset OK")

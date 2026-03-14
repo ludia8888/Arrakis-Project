@@ -12,6 +12,7 @@ BACKEND = ROOT / "backend"
 if str(BACKEND) not in sys.path:
     sys.path.insert(0, str(BACKEND))
 
+from airframe_profile import AirframeProfile, load_profile
 from flight_adapters.ardupilot import ArduPilotAdapter
 from flight_adapters.instrumented import InstrumentedFlightAdapter
 
@@ -24,7 +25,8 @@ def main() -> int:
     telemetry_events: list[object] = []
     video_events: list[object] = []
 
-    adapter = InstrumentedFlightAdapter(ArduPilotAdapter(), logger_name="arrakis.adapter.ardupilot")
+    profile = load_profile("default-vtol")
+    adapter = InstrumentedFlightAdapter(ArduPilotAdapter(profile), logger_name="arrakis.adapter.ardupilot")
     adapter.stream_telemetry(telemetry_events.append)
     adapter.stream_video(video_events.append)
 
