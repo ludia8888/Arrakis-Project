@@ -15,6 +15,7 @@ from config import VideoConfig
 from schemas import AdapterBootstrapStatus, LatLon, TelemetrySnapshot
 
 from .base import FlightControllerAdapter, VideoFrame
+from .fault_injector import FaultInjector, FaultProfile
 
 
 logger = logging.getLogger("arrakis.adapter.mock")
@@ -55,7 +56,28 @@ class SimState:
 
 
 class MockAdapter(FlightControllerAdapter):
-    def __init__(self, profile: AirframeProfile) -> None:
+    """Mock flight controller for testing and simulation.
+
+    All fault injection is disabled by default. Pass a FaultProfile to enable
+    realistic simulation of GPS noise, wind, comm loss, non-linear battery,
+    and gradual takeoff dynamics.
+
+    Usage:
+        # Default — no faults (identical to current behavior)
+        adapter = MockAdapter(profile)
+
+        # Realistic outdoor conditions
+        adapter = MockAdapter(profile, fault_profile=FaultProfile.realistic())
+
+        # Extreme stress testing
+        adapter = MockAdapter(profile, fault_profile=FaultProfile.stress())
+    """
+
+    def __init__(
+        self,
+        profile: AirframeProfile,
+        fault_profile: FaultProfile | None = None,
+    ) -> None:
         self._profile = profile
         self.home = LatLon(lat=37.5665, lon=126.9780)
         self.state = SimState(lat=self.home.lat, lon=self.home.lon)
@@ -74,6 +96,13 @@ class MockAdapter(FlightControllerAdapter):
             {"label": "vehicle", "x": 160.0, "y": 220.0, "vx": 8.0, "vy": 0.0, "w": 120.0, "h": 60.0},
             {"label": "person", "x": 900.0, "y": 380.0, "vx": -5.0, "vy": 0.0, "w": 36.0, "h": 96.0},
         ]
+        # Fault injection (disabled by default for backward compatibility)
+        self._fault_injector: FaultInjector | None = None
+        if fault_profile is not None:
+            self._fault_injector = FaultInjector(fault_profile)
+        # Takeoff state for gradual climb dynamics
+        self._takeoff_target_alt: float | None = None
+        self._gps_valid = True  # tracks GPS validity for snapshot
 
     def connect(self) -> None:
         if self._running:
@@ -87,17 +116,36 @@ class MockAdapter(FlightControllerAdapter):
         return "stepwise"
 
     def arm(self) -> None:
+        if self._fault_injector and self._fault_injector.should_drop_command():
+            logger.warning("Mock arm: command dropped by comm fault injection")
+            return
+        if self._fault_injector:
+            delay = self._fault_injector.command_delay()
+            if delay > 0:
+                time.sleep(delay)
         logger.info("Mock arm")
         with self._lock:
             self.state.armed = True
             self.state.flight_mode = "ARMED"
 
     def takeoff_multicopter(self, target_alt_m: float) -> None:
+        if self._fault_injector and self._fault_injector.should_drop_command():
+            logger.warning("Mock takeoff: command dropped by comm fault injection")
+            return
+        if self._fault_injector:
+            delay = self._fault_injector.command_delay()
+            if delay > 0:
+                time.sleep(delay)
         logger.info("Mock takeoff_multicopter target_alt_m=%.1f", target_alt_m)
         with self._lock:
             self.state.flight_mode = "TAKEOFF"
             self.state.vtol_state = "MC"
-            self.state.alt_m = max(self.state.alt_m, target_alt_m)
+            # Fault injection: gradual climb instead of instant jump
+            if self._fault_injector and self._fault_injector.profile.takeoff.enabled:
+                self._takeoff_target_alt = target_alt_m
+                self._fault_injector.reset_takeoff()
+            else:
+                self.state.alt_m = max(self.state.alt_m, target_alt_m)
             self.state.airspeed_mps = self._profile.speeds.takeoff_airspeed_mps
             self.state.groundspeed_mps = self._profile.speeds.takeoff_groundspeed_mps
 
@@ -111,6 +159,13 @@ class MockAdapter(FlightControllerAdapter):
             self.state.mission_index = 0
 
     def start_mission(self) -> None:
+        if self._fault_injector and self._fault_injector.should_drop_command():
+            logger.warning("Mock start_mission: command dropped by comm fault injection")
+            return
+        if self._fault_injector:
+            delay = self._fault_injector.command_delay()
+            if delay > 0:
+                time.sleep(delay)
         logger.info("Mock start_mission")
         with self._lock:
             self.state.flight_mode = "MISSION"
@@ -120,6 +175,9 @@ class MockAdapter(FlightControllerAdapter):
             self.state.groundspeed_mps = self._profile.speeds.cruise_groundspeed_mps
 
     def transition_to_fixedwing(self) -> None:
+        if self._fault_injector and self._fault_injector.should_drop_command():
+            logger.warning("Mock transition_to_fixedwing: command dropped by comm fault injection")
+            return
         logger.info("Mock transition_to_fixedwing")
         with self._lock:
             self.state.vtol_state = "FW"
@@ -136,6 +194,9 @@ class MockAdapter(FlightControllerAdapter):
             self.state.alt_m = recovery_spec.get("target_alt_m", self._profile.altitudes.recovery_m)
 
     def transition_to_multicopter(self) -> None:
+        if self._fault_injector and self._fault_injector.should_drop_command():
+            logger.warning("Mock transition_to_multicopter: command dropped by comm fault injection")
+            return
         logger.info("Mock transition_to_multicopter")
         with self._lock:
             self._recovery_active = False
@@ -175,6 +236,10 @@ class MockAdapter(FlightControllerAdapter):
             self._recovery_active = False
             self._landing_active = False
             self._returning_home = False
+            self._takeoff_target_alt = None
+            self._gps_valid = True
+            if self._fault_injector:
+                self._fault_injector.reset_takeoff()
 
     def get_snapshot(self) -> TelemetrySnapshot:
         with self._lock:
@@ -215,11 +280,22 @@ class MockAdapter(FlightControllerAdapter):
         )
 
     def _snapshot_locked(self) -> TelemetrySnapshot:
+        lat = self.state.lat
+        lon = self.state.lon
+        alt = self.state.alt_m
+        position_valid = True
+
+        # Apply GPS noise and dropout if fault injection enabled
+        fi = self._fault_injector
+        if fi:
+            lat, lon, alt, position_valid = fi.apply_gps_noise(lat, lon, alt)
+            self._gps_valid = position_valid
+
         return TelemetrySnapshot(
             timestamp=time.time(),
-            lat=self.state.lat,
-            lon=self.state.lon,
-            alt_m=self.state.alt_m,
+            lat=lat,
+            lon=lon,
+            alt_m=alt,
             airspeed_mps=self.state.airspeed_mps,
             groundspeed_mps=self.state.groundspeed_mps,
             battery_percent=max(self.state.battery_percent, 0.0),
@@ -227,12 +303,14 @@ class MockAdapter(FlightControllerAdapter):
             flight_mode=self.state.flight_mode,
             vtol_state=self.state.vtol_state,
             mission_index=self.state.mission_index,
-            home_distance_m=_distance_m(self.home, LatLon(lat=self.state.lat, lon=self.state.lon)),
+            home_distance_m=_distance_m(self.home, LatLon(lat=lat, lon=lon))
+            if position_valid
+            else float("inf"),
             geofence_breached=self.state.geofence_breached,
             sim_rtf=self.state.sim_rtf,
             telemetry_fresh=True,
             mode_valid=True,
-            position_valid=True,
+            position_valid=position_valid,
             home_valid=True,
         )
 
@@ -266,7 +344,46 @@ class MockAdapter(FlightControllerAdapter):
 
     def _step_locked(self, dt: float) -> None:
         sp = self._profile.speeds
-        self.state.battery_percent = max(0.0, self.state.battery_percent - sp.battery_drain_rate * dt * max(self.state.airspeed_mps, 2.0))
+        fi = self._fault_injector
+
+        # Battery drain: non-linear if fault injection enabled, else linear
+        if fi:
+            is_maneuvering = self.state.flight_mode in {"TAKEOFF", "TRANSITION_FW", "TRANSITION_MC", "LAND"}
+            self.state.battery_percent = fi.compute_battery_drain(
+                self.state.battery_percent, dt, self.state.airspeed_mps, is_maneuvering,
+            )
+        else:
+            self.state.battery_percent = max(
+                0.0, self.state.battery_percent - sp.battery_drain_rate * dt * max(self.state.airspeed_mps, 2.0)
+            )
+
+        # Takeoff dynamics: gradual climb if fault-injected
+        if self._takeoff_target_alt is not None and fi:
+            new_alt, reached = fi.compute_takeoff_altitude(
+                self._takeoff_target_alt, self.state.alt_m, dt,
+            )
+            self.state.alt_m = new_alt
+            if reached:
+                self._takeoff_target_alt = None
+
+        # Wind effect on ground speed
+        if fi and self.state.groundspeed_mps > 0:
+            heading_rad = math.atan2(
+                self.state.lon - self.home.lon, self.state.lat - self.home.lat,
+            )
+            effective_gs, _drift = fi.compute_wind_effect(
+                self.state.groundspeed_mps, heading_rad,
+            )
+            self.state.groundspeed_mps = effective_gs
+
+        # Sensor noise on altitude and airspeed
+        if fi:
+            noisy_alt, noisy_airspeed = fi.apply_sensor_noise(
+                self.state.alt_m, self.state.airspeed_mps,
+            )
+            self.state.alt_m = noisy_alt
+            self.state.airspeed_mps = noisy_airspeed
+
         if self._landing_active:
             self.state.alt_m = max(0.0, self.state.alt_m - sp.landing_descent_mps * dt)
             self.state.airspeed_mps = sp.landing_airspeed_mps

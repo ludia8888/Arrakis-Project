@@ -39,6 +39,9 @@ class MissionExecutor:
             return
         self.state_machine.mark_phase("ARMING", reason="mission executor started arming sequence")
         self.adapter.arm()
+        # Fix 12: battery check after arm
+        if not self._check_battery_threshold():
+            return
         if self._sleep_with_cancel(cancel_event, 1.0):
             logger.info("Mission cancelled during ARMING, disarming vehicle")
             with suppress(Exception):
@@ -51,6 +54,9 @@ class MissionExecutor:
 
         self.state_machine.mark_phase("TAKEOFF_MC", reason="arm complete, takeoff requested")
         self.adapter.takeoff_multicopter(self.profile.altitudes.takeoff_m)
+        # Fix 12: battery check after takeoff
+        if not self._check_battery_threshold():
+            return
         if self._sleep_with_cancel(cancel_event, 1.0):
             logger.info("Mission cancelled during TAKEOFF_MC")
             return
@@ -66,6 +72,9 @@ class MissionExecutor:
         if self.profile.is_vtol:
             self.state_machine.mark_phase("TRANSITION_FW", reason="mission uploaded, switching to fixed-wing in AUTO")
             self.adapter.transition_to_fixedwing()
+            # Fix 12: battery check after FW transition
+            if not self._check_battery_threshold():
+                return
         self.state_machine.mark_phase("OUTBOUND", reason="mission uploaded and started")
         logger.info("Entered OUTBOUND")
 
@@ -75,6 +84,12 @@ class MissionExecutor:
                 return
             current_leg = self.adapter.current_leg()
             telemetry = self.telemetry_hub.telemetry_snapshot()
+            # Fix 11: GPS health gate — suspend position-based decisions when GPS invalid
+            if not telemetry.position_valid and telemetry.armed:
+                logger.warning("GPS invalid during %s, suspending phase transitions", self.state_machine.phase)
+                if self._sleep_with_cancel(cancel_event, 1.0):
+                    return
+                continue
             if current_leg == "return" and self.state_machine.phase != "RETURN":
                 self.state_machine.mark_phase("RETURN", reason="adapter reported return leg")
                 logger.info("Leg transitioned to RETURN")
@@ -133,6 +148,9 @@ class MissionExecutor:
             },
         )
         self.adapter.start_mission()
+        # Fix 12: battery check after mission start
+        if not self._check_battery_threshold():
+            return
         takeoff_reason = "ArduPilot mission started with NAV_VTOL_TAKEOFF" if self.profile.is_vtol else "ArduPilot mission started with NAV_TAKEOFF"
         self.state_machine.mark_phase("TAKEOFF_MC", reason=takeoff_reason)
         if not self._wait_for_condition(
@@ -160,6 +178,12 @@ class MissionExecutor:
                 return
             current_leg = self.adapter.current_leg()
             telemetry = self.telemetry_hub.telemetry_snapshot()
+            # Fix 11: GPS health gate — suspend position-based decisions when GPS invalid
+            if not telemetry.position_valid and telemetry.armed:
+                logger.warning("GPS invalid during %s (mission-oriented), suspending phase transitions", self.state_machine.phase)
+                if self._sleep_with_cancel(cancel_event, 1.0):
+                    return
+                continue
             if current_leg == "return" and self.state_machine.phase != "RETURN":
                 self.state_machine.mark_phase("RETURN", reason="adapter reported return leg")
                 logger.info("Leg transitioned to RETURN")
@@ -261,6 +285,23 @@ class MissionExecutor:
                     self.adapter.abort(reason)
                 except Exception:
                     logger.exception("Adapter abort failed after landing timeout")
+                # Fix 13: monitor armed state after abort for 5 seconds
+                disarm_deadline = time.time() + 5.0
+                while time.time() < disarm_deadline:
+                    post_abort_telem = self.telemetry_hub.telemetry_snapshot()
+                    if not post_abort_telem.armed:
+                        logger.info("Vehicle disarmed after landing timeout abort")
+                        break
+                    time.sleep(0.5)
+                else:
+                    post_abort_telem = self.telemetry_hub.telemetry_snapshot()
+                    if post_abort_telem.armed:
+                        logger.critical(
+                            "MANUAL INTERVENTION REQUIRED: vehicle still armed after landing timeout abort "
+                            "mode=%s alt=%.2f",
+                            post_abort_telem.flight_mode,
+                            post_abort_telem.alt_m,
+                        )
                 return False
             if self._sleep_with_cancel(cancel_event, 0.2):
                 logger.info("Mission cancelled while waiting for landing")
@@ -274,6 +315,26 @@ class MissionExecutor:
 
     def _ardupilot_autoland_active(self, telemetry) -> bool:
         return telemetry.flight_mode.upper() in ARDUPILOT_AUTOLAND_MODES
+
+    # Fix 12: battery threshold check between critical flight commands
+    def _check_battery_threshold(self) -> bool:
+        """Check battery level and trigger RTL if below threshold.
+
+        Returns True if battery is OK, False if RTL was triggered.
+        """
+        telemetry = self.telemetry_hub.telemetry_snapshot()
+        if telemetry.battery_percent <= self.profile.safety.battery_rtl_threshold_percent:
+            logger.warning(
+                "Battery below RTL threshold (%.1f%% <= %.1f%%) during %s, triggering RTL",
+                telemetry.battery_percent,
+                self.profile.safety.battery_rtl_threshold_percent,
+                self.state_machine.phase,
+            )
+            self.state_machine.abort("RTL_BATTERY", "battery threshold reached during transition")
+            with suppress(Exception):
+                self.adapter.return_to_home()
+            return False
+        return True
 
     def _sleep_with_cancel(self, cancel_event: threading.Event, duration_seconds: float, step_seconds: float = 0.1) -> bool:
         deadline = time.time() + duration_seconds

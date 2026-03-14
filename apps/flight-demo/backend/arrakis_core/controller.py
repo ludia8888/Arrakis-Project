@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import threading
 from contextlib import suppress
+from typing import Callable
 
 from airframe_profile import AirframeProfile
 from arrakis_core.route_planner import build_route_preview
@@ -30,6 +31,9 @@ class ArrakisController:
         self._mission_thread: threading.Thread | None = None
         self._mission_cancel: threading.Event | None = None
         self.startup_error: str | None = None
+        # Fix 14: concurrent abort protection
+        self._abort_lock = threading.Lock()
+        self._abort_in_progress = False
 
         logger.info("Initializing controller with adapter=%s profile=%s", adapter.__class__.__name__, profile.name)
         try:
@@ -101,8 +105,9 @@ class ArrakisController:
 
     def abort(self, reason: str = "manual operator abort") -> None:
         logger.warning("Abort requested: %s", reason)
-        self.state_machine.abort("ABORT_MANUAL", reason)
-        self.adapter.abort(reason)
+        if not self._guarded_abort("ABORT_MANUAL", reason, lambda: self.adapter.abort(reason)):
+            logger.info("Abort already in progress, skipping duplicate abort for: %s", reason)
+            return
         self._cancel_active_mission(join_timeout=1.5)
 
     def rtl(self) -> None:
@@ -122,6 +127,9 @@ class ArrakisController:
         self.telemetry_hub.reset(self.adapter.get_snapshot())
         self.transition_diagnostics.reset()
         self.state_machine.reset()
+        # Fix 14: reset abort flag
+        with self._abort_lock:
+            self._abort_in_progress = False
         logger.info("Reset complete")
 
     def shutdown(self) -> None:
@@ -144,28 +152,48 @@ class ArrakisController:
         route_preview = self.state_machine.route_preview
         phase = self.state_machine.phase
         decision = self.telemetry_hub.on_telemetry(snapshot, route_preview, phase)
-        # Safety triggers: only one fires per callback (if/elif), all abort phases suppressed
+        # Fix 14: safety triggers use _guarded_abort to prevent concurrent abort race conditions
         if decision.trigger_battery_rtl and phase not in self._SAFETY_SUPPRESS_PHASES:
             logger.warning("Battery RTL triggered at %.1f%% during phase=%s", snapshot.battery_percent, phase)
-            self.state_machine.abort("RTL_BATTERY", "battery threshold reached")
-            with suppress(Exception):
-                self.adapter.return_to_home()
+            self._guarded_abort("RTL_BATTERY", "battery threshold reached", lambda: self.adapter.return_to_home())
         elif decision.trigger_geofence_abort and phase not in self._SAFETY_SUPPRESS_PHASES:
             logger.warning("Geofence abort triggered during phase=%s", phase)
-            self.state_machine.abort("ABORT_GEOFENCE", "route-derived geofence breached")
-            with suppress(Exception):
-                self.adapter.abort("geofence breach")
+            self._guarded_abort("ABORT_GEOFENCE", "route-derived geofence breached", lambda: self.adapter.abort("geofence breach"))
         elif decision.trigger_telemetry_lost and phase not in self._SAFETY_SUPPRESS_PHASES:
             logger.warning("Telemetry lost during phase=%s, triggering RTL", phase)
-            self.state_machine.abort("RTL_BATTERY", "telemetry data lost during flight")
-            with suppress(Exception):
-                self.adapter.return_to_home()
+            self._guarded_abort("RTL_BATTERY", "telemetry data lost during flight", lambda: self.adapter.return_to_home())
         self.transition_diagnostics.observe(
             self.state_machine.phase,
             self.telemetry_hub.telemetry_snapshot(),
             self.state_machine.abort_reason,
         )
         self.snapshot_recorder.record(self._assemble_state_payload())
+
+    # Fix 14: serialized abort to prevent concurrent abort race conditions
+    def _guarded_abort(self, phase: str, reason: str, action: Callable) -> bool:
+        """Execute an abort action with mutual exclusion.
+
+        Returns True if this call performed the abort, False if an abort was
+        already in progress (duplicate suppressed).
+        """
+        with self._abort_lock:
+            if self._abort_in_progress:
+                logger.info("Abort already in progress, suppressing duplicate phase=%s reason=%s", phase, reason)
+                return False
+            self._abort_in_progress = True
+        try:
+            self.state_machine.abort(phase, reason)
+            with suppress(Exception):
+                action()
+        finally:
+            # Auto-reset after 2 seconds (allow next abort if needed)
+            def _reset_abort_flag():
+                import time as _time
+                _time.sleep(2.0)
+                with self._abort_lock:
+                    self._abort_in_progress = False
+            threading.Thread(target=_reset_abort_flag, daemon=True).start()
+        return True
 
     def _on_video(self, frame: VideoFrame) -> None:
         self.video_service.on_video(frame)

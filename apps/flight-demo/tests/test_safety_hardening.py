@@ -271,16 +271,16 @@ class TestStaleTelemetryAltGuard:
 # ---------------------------------------------------------------------------
 
 class TestCommandAckRace:
-    """C-5: _last_command_ack must be protected by _state_lock."""
+    """C-5: Command ACKs must be protected by _state_lock (Fix 2: per-command dict)."""
 
     def test_send_command_clears_ack_under_lock(self):
-        """Verify _send_command clears _last_command_ack under state_lock."""
+        """Verify _send_command clears pending ACK under state_lock."""
         import inspect
         from flight_adapters.ardupilot import ArduPilotAdapter
         source = inspect.getsource(ArduPilotAdapter._send_command)
-        # _state_lock must appear before _last_command_ack assignment
+        # _state_lock must appear before _pending_acks.pop
         assert "self._state_lock" in source, "C-5: _send_command should use _state_lock"
-        assert "self._last_command_ack = None" in source
+        assert "_pending_acks" in source, "Fix 2: should use _pending_acks dict"
 
     def test_wait_for_ack_reads_under_lock(self):
         """Verify _wait_for_command_ack reads under state_lock."""
@@ -288,6 +288,7 @@ class TestCommandAckRace:
         from flight_adapters.ardupilot import ArduPilotAdapter
         source = inspect.getsource(ArduPilotAdapter._wait_for_command_ack)
         assert "self._state_lock" in source, "C-5: _wait_for_command_ack should use _state_lock"
+        assert "_pending_acks" in source, "Fix 2: should use _pending_acks dict"
 
 
 # ---------------------------------------------------------------------------
@@ -495,14 +496,14 @@ def test_sitl_full_integration():
     assert snapshot.armed is True, f"Vehicle should be armed (mode={snapshot.flight_mode})"
     print(f"  Force-Arm OK: armed={snapshot.armed} mode={snapshot.flight_mode}")
 
-    # --- Phase 3: C-5 concurrent _last_command_ack reads under lock ---
+    # --- Phase 3: C-5 concurrent _pending_acks reads under lock (Fix 2) ---
     errors = []
 
     def read_ack():
         try:
             for _ in range(100):
                 with adapter._state_lock:
-                    _ = adapter._last_command_ack
+                    _ = dict(adapter._pending_acks)
                 time.sleep(0.001)
         except Exception as e:
             errors.append(str(e))
@@ -512,7 +513,7 @@ def test_sitl_full_integration():
         t.start()
     for t in threads:
         t.join()
-    assert not errors, f"C-5: Concurrent _last_command_ack access errors: {errors}"
+    assert not errors, f"C-5: Concurrent _pending_acks access errors: {errors}"
     print("  C-5 concurrent ACK access OK")
 
     # --- Phase 4: Abort (disarm) ---
