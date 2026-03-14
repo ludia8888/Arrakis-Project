@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 MissionPhase = Literal[
     "IDLE",
+    "STARTING",
     "ARMING",
     "TAKEOFF_MC",
     "TRANSITION_FW",
@@ -23,8 +24,8 @@ MissionPhase = Literal[
 
 
 class LatLon(BaseModel):
-    lat: float
-    lon: float
+    lat: float = Field(ge=-90.0, le=90.0)
+    lon: float = Field(ge=-180.0, le=180.0)
 
 
 class GeofencePolygon(BaseModel):
@@ -34,7 +35,7 @@ class GeofencePolygon(BaseModel):
 class RouteRequest(BaseModel):
     home: LatLon
     waypoints: list[LatLon] = Field(min_length=2, max_length=12)
-    cruise_alt_m: float = 60.0
+    cruise_alt_m: float = Field(default=60.0, ge=10.0, le=500.0)
 
 
 class RoutePreview(BaseModel):

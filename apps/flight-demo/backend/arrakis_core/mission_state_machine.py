@@ -71,7 +71,8 @@ class MissionStateMachine:
             if self._phase not in TERMINAL_PHASES:
                 raise RuntimeError("Mission is not in a startable state.")
             self._abort_reason = None
-            logger.info("Mission start accepted from phase=%s", self._phase)
+            self._phase = "STARTING"
+            logger.info("Mission start accepted, phase set to STARTING")
             return self._route_preview
 
     def mark_phase(self, phase: MissionPhase, reason: str | None = None) -> None:

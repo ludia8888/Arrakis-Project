@@ -9,7 +9,7 @@ from flight_adapters.base import FlightControllerAdapter, VideoFrame, validate_a
 from schemas import RoutePreview, RouteRequest, TelemetrySnapshot
 
 from .mission_executor import MissionExecutor
-from .mission_state_machine import MissionStateMachine
+from .mission_state_machine import INTERRUPT_PHASES, MissionStateMachine
 from .state_payload_assembler import StatePayloadAssembler
 from .state_snapshot_recorder import StateSnapshotRecorder
 from .telemetry_hub import TelemetryHub
@@ -135,18 +135,28 @@ class ArrakisController:
     def latest_jpeg(self) -> bytes:
         return self.video_service.latest_jpeg()
 
+    _SAFETY_SUPPRESS_PHASES = INTERRUPT_PHASES | {"LANDING", "COMPLETE", "IDLE", "STARTING"}
+
     def _on_telemetry(self, snapshot: TelemetrySnapshot) -> None:
         route_preview = self.state_machine.route_preview
         phase = self.state_machine.phase
         decision = self.telemetry_hub.on_telemetry(snapshot, route_preview, phase)
-        if decision.trigger_battery_rtl and phase not in {"RTL_BATTERY", "LANDING", "COMPLETE"}:
+        # Safety triggers: only one fires per callback (if/elif), all abort phases suppressed
+        if decision.trigger_battery_rtl and phase not in self._SAFETY_SUPPRESS_PHASES:
             logger.warning("Battery RTL triggered at %.1f%% during phase=%s", snapshot.battery_percent, phase)
             self.state_machine.abort("RTL_BATTERY", "battery threshold reached")
-            self.adapter.return_to_home()
-        if decision.trigger_geofence_abort and phase not in {"ABORT_GEOFENCE", "LANDING", "COMPLETE"}:
+            with suppress(Exception):
+                self.adapter.return_to_home()
+        elif decision.trigger_geofence_abort and phase not in self._SAFETY_SUPPRESS_PHASES:
             logger.warning("Geofence abort triggered during phase=%s", phase)
             self.state_machine.abort("ABORT_GEOFENCE", "route-derived geofence breached")
-            self.adapter.abort("geofence breach")
+            with suppress(Exception):
+                self.adapter.abort("geofence breach")
+        elif decision.trigger_telemetry_lost and phase not in self._SAFETY_SUPPRESS_PHASES:
+            logger.warning("Telemetry lost during phase=%s, triggering RTL", phase)
+            self.state_machine.abort("RTL_BATTERY", "telemetry data lost during flight")
+            with suppress(Exception):
+                self.adapter.return_to_home()
         self.transition_diagnostics.observe(
             self.state_machine.phase,
             self.telemetry_hub.telemetry_snapshot(),
@@ -176,6 +186,8 @@ class ArrakisController:
         except Exception as exc:
             logger.exception("Mission executor crashed: %s", exc)
             if self.state_machine.phase not in {"ABORT_MANUAL", "ABORT_GEOFENCE", "RTL_BATTERY", "COMPLETE"}:
+                with suppress(Exception):
+                    self.adapter.return_to_home()
                 self.state_machine.abort("ABORT_MANUAL", f"mission executor failed: {exc}")
         finally:
             logger.info("Mission executor finished")

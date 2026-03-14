@@ -313,7 +313,7 @@ class ArduPilotAdapter(FlightControllerAdapter):
             mission_index=state.mission_index,
             home_distance_m=_distance_m(home, LatLon(lat=state.lat, lon=state.lon))
             if state.position_valid and state.home_valid
-            else 0.0,
+            else float("inf"),
             geofence_breached=state.geofence_breached,
             sim_rtf=state.sim_rtf,
             telemetry_fresh=telemetry_fresh,
@@ -488,9 +488,6 @@ class ArduPilotAdapter(FlightControllerAdapter):
                     self._last_position_at = now
                 if not self._home_initialized:
                     self._home = LatLon(lat=self._state.lat, lon=self._state.lon)
-                    self._state.home_valid = self._state.position_valid
-                    if self._state.home_valid:
-                        self._last_home_at = now
                 if hasattr(msg, "vx") and hasattr(msg, "vy"):
                     self._state.groundspeed_mps = math.hypot(msg.vx, msg.vy) / 100.0
             elif msg_type == "VFR_HUD":
@@ -510,12 +507,12 @@ class ArduPilotAdapter(FlightControllerAdapter):
                 name = msg.name.decode("utf-8", errors="ignore").strip("\x00")
                 if name.upper() in {"RTF", "SIM_RTF"}:
                     self._state.sim_rtf = float(msg.value)
-        if msg_type == "COMMAND_ACK":
-            command = int(getattr(msg, "command", -1))
-            result = int(getattr(msg, "result", -1))
-            self._last_command_ack = (command, result, time.time())
-            logger.info("COMMAND_ACK command=%s result=%s", command, result)
-        elif msg_type == "STATUSTEXT":
+            elif msg_type == "COMMAND_ACK":
+                command = int(getattr(msg, "command", -1))
+                result = int(getattr(msg, "result", -1))
+                self._last_command_ack = (command, result, time.time())
+                logger.info("COMMAND_ACK command=%s result=%s", command, result)
+        if msg_type == "STATUSTEXT":
             text = getattr(msg, "text", b"")
             if isinstance(text, bytes):
                 text = text.decode("utf-8", errors="ignore")
@@ -554,7 +551,8 @@ class ArduPilotAdapter(FlightControllerAdapter):
 
     def _send_command(self, command: int, params: list[float]) -> None:
         master = self._require_master()
-        self._last_command_ack = None
+        with self._state_lock:
+            self._last_command_ack = None
         with self._io_lock:
             master.mav.command_long_send(
                 self._target_system,
@@ -752,11 +750,21 @@ class ArduPilotAdapter(FlightControllerAdapter):
     def _recv_expected_locked(self, msg_types: set[str], timeout_seconds: float) -> Any:
         deadline = time.time() + timeout_seconds
         master = self._require_master()
+        last_emit = 0.0
         while time.time() < deadline:
             msg = master.recv_match(blocking=True, timeout=0.5)
             if msg is None:
                 continue
             self._handle_message(msg)
+            # Emit telemetry callbacks while io_lock is held (RLock allows re-entry)
+            # to prevent telemetry staleness during long mission uploads (C-2 fix)
+            now = time.time()
+            if now - last_emit >= 1.0 / self._telemetry_hz:
+                snapshot = self.get_snapshot()
+                for cb in list(self._telemetry_callbacks):
+                    with suppress(Exception):
+                        cb(snapshot)
+                last_emit = now
             if msg.get_type() in msg_types:
                 return msg
         raise TimeoutError(f"Timed out waiting for MAVLink message types={sorted(msg_types)}")
@@ -780,7 +788,8 @@ class ArduPilotAdapter(FlightControllerAdapter):
     def _wait_for_command_ack(self, command: int, description: str) -> None:
         deadline = time.time() + self._command_timeout
         while time.time() < deadline:
-            ack = self._last_command_ack
+            with self._state_lock:
+                ack = self._last_command_ack
             if ack is not None and ack[0] == command:
                 result = ack[1]
                 accepted = self._mavutil.mavlink.MAV_RESULT_ACCEPTED

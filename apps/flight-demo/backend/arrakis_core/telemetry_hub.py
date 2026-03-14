@@ -16,16 +16,19 @@ logger = logging.getLogger("arrakis.telemetry")
 class SafetyDecision:
     trigger_battery_rtl: bool
     trigger_geofence_abort: bool
+    trigger_telemetry_lost: bool
 
 class TelemetryHub:
     def __init__(self, initial_snapshot: TelemetrySnapshot, video_service: VideoService) -> None:
         self.video_service = video_service
         self._lock = threading.Lock()
         self._telemetry = initial_snapshot
+        self._was_telemetry_fresh = False
 
     def reset(self, snapshot: TelemetrySnapshot) -> None:
         with self._lock:
             self._telemetry = snapshot
+            self._was_telemetry_fresh = False
         logger.info("Telemetry hub reset")
 
     def telemetry_snapshot(self) -> TelemetrySnapshot:
@@ -63,7 +66,14 @@ class TelemetryHub:
         if battery_rtl:
             logger.warning("Battery threshold crossed at %.1f%%", updated.battery_percent)
 
+        # Detect telemetry freshness loss: was fresh, now stale
+        telemetry_lost = self._was_telemetry_fresh and not snapshot.telemetry_fresh
+        self._was_telemetry_fresh = snapshot.telemetry_fresh
+        if telemetry_lost:
+            logger.warning("Telemetry freshness lost during phase=%s", phase)
+
         return SafetyDecision(
             trigger_battery_rtl=battery_rtl,
             trigger_geofence_abort=geofence_breached,
+            trigger_telemetry_lost=telemetry_lost,
         )

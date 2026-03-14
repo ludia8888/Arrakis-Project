@@ -10,7 +10,8 @@ from typing import Iterator
 
 from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from arrakis_core.controller import ArrakisController
 from flight_adapters.ardupilot import ArduPilotAdapter
@@ -46,14 +47,39 @@ def get_controller_from_scope(scope) -> ArrakisController:
     return scope.app.state.controller
 
 
+_ALLOWED_ORIGINS = [
+    "http://127.0.0.1:4173",
+    "http://localhost:4173",
+    "http://127.0.0.1:5173",
+    "http://localhost:5173",
+]
+
+_API_KEY = os.getenv("ARRAKIS_API_KEY")
+
+
+class _ApiKeyMiddleware(BaseHTTPMiddleware):
+    """Optional Bearer-token gate. Active only when ARRAKIS_API_KEY is set."""
+
+    async def dispatch(self, request: Request, call_next):
+        if request.url.path in {"/api/health", "/docs", "/openapi.json"}:
+            return await call_next(request)
+        auth = request.headers.get("Authorization", "")
+        if not auth.startswith("Bearer ") or auth[7:] != _API_KEY:
+            return JSONResponse(status_code=401, content={"detail": "invalid or missing API key"})
+        return await call_next(request)
+
+
 app = FastAPI(title="Arrakis VTOL Demo", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+if _API_KEY:
+    app.add_middleware(_ApiKeyMiddleware)
+    logger.info("API key authentication enabled")
 
 
 @app.get("/api/config")

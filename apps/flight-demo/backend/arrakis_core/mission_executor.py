@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import threading
 import time
+from contextlib import suppress
 
 from config import (
     BATTERY_RTL_THRESHOLD,
@@ -45,7 +46,9 @@ class MissionExecutor:
         self.state_machine.mark_phase("ARMING", reason="mission executor started arming sequence")
         self.adapter.arm()
         if self._sleep_with_cancel(cancel_event, 1.0):
-            logger.info("Mission cancelled during ARMING")
+            logger.info("Mission cancelled during ARMING, disarming vehicle")
+            with suppress(Exception):
+                self.adapter.abort("cancelled during arm")
             return
 
         if execution_style == "mission_oriented":
@@ -184,8 +187,11 @@ class MissionExecutor:
                 self._wait_for_landing(cancel_event)
                 return
             if current_leg == "idle" and not telemetry.armed and telemetry.home_distance_m <= 120:
-                self.state_machine.complete()
-                logger.info("Mission reached COMPLETE after mission-driven landing disarm")
+                if self.state_machine.phase not in INTERRUPT_PHASES:
+                    self.state_machine.complete()
+                    logger.info("Mission reached COMPLETE after mission-driven landing disarm")
+                else:
+                    logger.info("Mission-driven disarm but phase=%s is interrupt, skipping complete()", self.state_machine.phase)
                 return
             if self._sleep_with_cancel(cancel_event, 0.2):
                 logger.info("Mission cancelled during route progression")
@@ -237,7 +243,9 @@ class MissionExecutor:
                 logger.info("Mission cancelled during LANDING")
                 return False
             telemetry = self.telemetry_hub.telemetry_snapshot()
-            if not telemetry.armed or telemetry.alt_m <= 0.5:
+            if not telemetry.armed:
+                break
+            if telemetry.telemetry_fresh and telemetry.position_valid and telemetry.alt_m <= 0.5:
                 break
             if time.time() >= deadline:
                 reason = f"timed out waiting for landing after {LANDING_TIMEOUT_SECONDS:.0f}s"
@@ -257,8 +265,11 @@ class MissionExecutor:
             if self._sleep_with_cancel(cancel_event, 0.2):
                 logger.info("Mission cancelled while waiting for landing")
                 return False
-        self.state_machine.complete()
-        logger.info("Mission reached COMPLETE")
+        if self.state_machine.phase not in INTERRUPT_PHASES:
+            self.state_machine.complete()
+            logger.info("Mission reached COMPLETE")
+        else:
+            logger.info("Landing finished but phase=%s is an interrupt phase, skipping complete()", self.state_machine.phase)
         return True
 
     def _ardupilot_autoland_active(self, telemetry) -> bool:
