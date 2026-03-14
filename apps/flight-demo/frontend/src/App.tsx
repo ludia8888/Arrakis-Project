@@ -128,7 +128,9 @@ function App() {
   const [status, setStatus] = useState("Click the map to define a route.");
   const configRefreshRef = useRef<number | null>(null);
   const wsReconnectRef = useRef<number | null>(null);
+  const prevMapDataRef = useRef<string>("");
 
+  // ── Config polling ──
   useEffect(() => {
     let cancelled = false;
 
@@ -170,6 +172,7 @@ function App() {
     };
   }, []);
 
+  // ── Map initialization ──
   useEffect(() => {
     if (!mapNodeRef.current || !home || mapRef.current) {
       return;
@@ -194,8 +197,8 @@ function App() {
         type: "fill",
         source: "geofence",
         paint: {
-          "fill-color": "#f4a261",
-          "fill-opacity": 0.08,
+          "fill-color": "#d4a24e",
+          "fill-opacity": 0.06,
         },
       });
       map.addLayer({
@@ -203,9 +206,9 @@ function App() {
         type: "line",
         source: "geofence",
         paint: {
-          "line-color": "#f4a261",
-          "line-width": 3,
-          "line-dasharray": [3, 2],
+          "line-color": "#d4a24e",
+          "line-width": 2,
+          "line-dasharray": [4, 3],
         },
       });
       map.addLayer({
@@ -213,24 +216,24 @@ function App() {
         type: "line",
         source: "route",
         layout: { "line-cap": "round", "line-join": "round" },
-        paint: { "line-color": "#2a9d8f", "line-width": 5 },
+        paint: { "line-color": "#25b89a", "line-width": 4 },
       });
       map.addLayer({
         id: "return-line",
         type: "line",
         source: "return",
         layout: { "line-cap": "round", "line-join": "round" },
-        paint: { "line-color": "#e76f51", "line-width": 5, "line-dasharray": [2, 2] },
+        paint: { "line-color": "#d94545", "line-width": 3, "line-dasharray": [3, 2] },
       });
       map.addLayer({
         id: "waypoint-points",
         type: "circle",
         source: "waypoints",
         paint: {
-          "circle-color": "#f4efe6",
+          "circle-color": "#e4ddd0",
           "circle-radius": 5,
           "circle-stroke-width": 2,
-          "circle-stroke-color": "#2a9d8f",
+          "circle-stroke-color": "#25b89a",
         },
       });
       map.addLayer({
@@ -238,10 +241,10 @@ function App() {
         type: "circle",
         source: "home",
         paint: {
-          "circle-color": "#264653",
-          "circle-radius": 8,
-          "circle-stroke-width": 2,
-          "circle-stroke-color": "#fff",
+          "circle-color": "#d4a24e",
+          "circle-radius": 9,
+          "circle-stroke-width": 3,
+          "circle-stroke-color": "#0a0f14",
         },
       });
       map.addLayer({
@@ -250,9 +253,9 @@ function App() {
         source: "drone",
         paint: {
           "circle-color": "#fff",
-          "circle-radius": 8,
+          "circle-radius": 7,
           "circle-stroke-width": 3,
-          "circle-stroke-color": "#1d3557",
+          "circle-stroke-color": "#0a0f14",
         },
       });
       setMapReady(true);
@@ -274,6 +277,7 @@ function App() {
     };
   }, [home]);
 
+  // ── Update map sources on waypoint/home change ──
   useEffect(() => {
     const map = getUsableMap(mapRef.current, mapReady);
     if (!home || !map) {
@@ -287,6 +291,7 @@ function App() {
     }
   }, [home, waypoints, mapReady, previewReady]);
 
+  // ── Update map on preview change ──
   useEffect(() => {
     const map = getUsableMap(mapRef.current, mapReady);
     if (!map || !preview) {
@@ -298,6 +303,7 @@ function App() {
     fitMapToRoute(map, preview.home, preview.outbound, preview.return_path, preview.geofence.coordinates);
   }, [mapReady, preview]);
 
+  // ── WebSocket state stream ──
   useEffect(() => {
     let disposed = false;
     let socket: WebSocket | null = null;
@@ -323,10 +329,18 @@ function App() {
         setState(payload);
         const map = getUsableMap(mapRef.current, mapReady);
         if (map) {
-          updateLineSource(map, "route", payload.outbound);
-          updateLineSource(map, "return", payload.return_path);
-          updatePolygonSource(map, "geofence", payload.geofence?.coordinates ?? []);
+          // Drone position: always update (changes every frame)
           updatePointSource(map, "drone", [{ lat: payload.telemetry.lat, lon: payload.telemetry.lon }]);
+
+          // Route/return/geofence: only update when data actually changes
+          const fenceCoords = payload.geofence?.coordinates ?? [];
+          const mapDataKey = `${payload.outbound.length}|${payload.return_path.length}|${fenceCoords.length}|${payload.outbound[0]?.lat ?? 0}|${payload.return_path[0]?.lat ?? 0}`;
+          if (mapDataKey !== prevMapDataRef.current) {
+            prevMapDataRef.current = mapDataKey;
+            updateLineSource(map, "route", payload.outbound);
+            updateLineSource(map, "return", payload.return_path);
+            updatePolygonSource(map, "geofence", fenceCoords);
+          }
         }
       };
       socket.onerror = () => {
@@ -352,6 +366,7 @@ function App() {
     };
   }, [mapReady]);
 
+  // ── Mission actions ──
   async function handleSetRoute() {
     if (!home || waypoints.length < 2) {
       setStatus("Pick at least 2 waypoints.");
@@ -390,6 +405,7 @@ function App() {
     setPreviewReady(false);
   }
 
+  // ── Derived state ──
   const events = useMemo(() => state?.detector.recent_events ?? [], [state]);
   const detections = useMemo(() => state?.detector.current_detections ?? [], [state]);
   const missionActive =
@@ -408,187 +424,308 @@ function App() {
     (missionActive ? "mission already active" : null);
   const commandBlockedReason = config?.startup_error ?? (!bootstrapReady ? config?.bootstrap.reason ?? "vehicle bootstrap not ready" : null);
 
+  const phaseClass = missionActive
+    ? state?.mission_phase.startsWith("ABORT") || state?.mission_phase.startsWith("RTL")
+      ? state?.mission_phase.startsWith("RTL")
+        ? "phase-rtl"
+        : "phase-abort"
+      : "phase-active"
+    : "phase-idle";
+
   return (
-    <main className="shell">
-      <section className="hero">
-        <div>
-          <p className="eyebrow">Arrakis VTOL Mission Demo</p>
-          <h1>Map a route, watch the VTOL run it, and inspect mission state live.</h1>
-          <p className="lede">
-            This demo isolates Arrakis mission logic from the flight controller so ArduPilot can be swapped later
-            without rewriting the UI or state machine.
-          </p>
+    <div className="gcs">
+      {/* ═══ TOP BAR ═══ */}
+      <header className="topbar">
+        <div className="brand">
+          <span className="logo-mark">A</span>
+          <span className="logo-text">ARRAKIS</span>
+          <span className="logo-sub">GCS</span>
         </div>
-        <div className="actions">
-          <button onClick={handleSetRoute} disabled={Boolean(routeBlockedReason)}>
-            Set Route
-          </button>
-          <button onClick={() => postMissionAction("/api/mission/start", "Mission started.")} disabled={Boolean(startBlockedReason)}>
-            Start Mission
-          </button>
-          <button
-            onClick={() => postMissionAction("/api/mission/rtl", "Return-to-home requested.")}
-            disabled={Boolean(commandBlockedReason)}
-          >
-            Return Home
-          </button>
-          <button
-            onClick={() => postMissionAction("/api/mission/abort", "Mission abort requested.")}
-            disabled={Boolean(commandBlockedReason)}
-          >
-            Abort
-          </button>
-          <button
-            onClick={handleReset}
-          >
-            Reset
-          </button>
-          <div className="action-flags">
-            <StatusFlag label="Adapter" tone={startupBlocked ? "danger" : "ok"} value={startupBlocked ? "degraded" : config?.adapter ?? "loading"} />
-            <StatusFlag
-              label="Bootstrap"
-              tone={bootstrapReady ? "ok" : "warn"}
-              value={bootstrapReady ? "ready" : config?.bootstrap.reason ?? "pending"}
-            />
-            <StatusFlag label="Mission" tone={missionActive ? "warn" : "ok"} value={missionActive ? state?.mission_phase ?? "active" : "idle"} />
-          </div>
-          {routeBlockedReason ? <p className="action-hint">Route locked: {routeBlockedReason}</p> : null}
-          {startBlockedReason ? <p className="action-hint">Start blocked: {startBlockedReason}</p> : null}
-          <p className="status">{status}</p>
+
+        <div className="system-indicators">
+          <Indicator
+            label="Adapter"
+            value={startupBlocked ? "DEGRADED" : config?.adapter ?? "..."}
+            tone={startupBlocked ? "danger" : "ok"}
+          />
+          <Indicator
+            label="Bootstrap"
+            value={bootstrapReady ? "READY" : config?.bootstrap.reason ?? "PENDING"}
+            tone={bootstrapReady ? "ok" : "warn"}
+          />
+          <Indicator
+            label="Mission"
+            value={missionActive ? state?.mission_phase ?? "ACTIVE" : "IDLE"}
+            tone={missionActive ? "warn" : "ok"}
+          />
         </div>
-      </section>
 
-      <section className="grid">
-        <article className="panel map-panel">
-          <div className="panel-header">
-            <h2>Route Planner</h2>
-            <p>Click the map to drop 2-12 waypoints. Geofence is generated automatically from the route.</p>
-          </div>
-          <div ref={mapNodeRef} className="map-node" />
-        </article>
+        <div className="topbar-right">
+          <span className={`phase-badge ${phaseClass}`}>
+            {state?.mission_phase ?? "IDLE"}
+          </span>
+          <Clock />
+        </div>
+      </header>
 
-        <article className="panel video-panel">
-          <div className="panel-header">
-            <h2>Simulator Camera</h2>
-            <p>Live MJPEG feed with detection overlay from the Arrakis backend.</p>
+      {/* ═══ WORKSPACE ═══ */}
+      <div className="workspace">
+        {/* ── Left Panel: Controls + Telemetry ── */}
+        <aside className="panel-left">
+          {/* Mission Controls */}
+          <div className="panel-section">
+            <div className="section-header">Mission Control</div>
+            <div className="control-grid">
+              <button className="btn-primary" onClick={handleSetRoute} disabled={Boolean(routeBlockedReason)}>
+                Set Route
+              </button>
+              <button
+                className="btn-primary"
+                onClick={() => postMissionAction("/api/mission/start", "Mission started.")}
+                disabled={Boolean(startBlockedReason)}
+              >
+                Start Mission
+              </button>
+              <button
+                className="btn-warn"
+                onClick={() => postMissionAction("/api/mission/rtl", "Return-to-home requested.")}
+                disabled={Boolean(commandBlockedReason)}
+              >
+                Return Home
+              </button>
+              <button
+                className="btn-danger"
+                onClick={() => postMissionAction("/api/mission/abort", "Mission abort requested.")}
+                disabled={Boolean(commandBlockedReason)}
+              >
+                Abort
+              </button>
+              <button className="btn-reset" onClick={handleReset}>
+                Reset
+              </button>
+            </div>
+            <div className="blocked-hints">
+              {routeBlockedReason && <span className="blocked-hint">Route: {routeBlockedReason}</span>}
+              {startBlockedReason && <span className="blocked-hint">Start: {startBlockedReason}</span>}
+            </div>
+            <div className="status-message">{status}</div>
           </div>
-          <div className="video-stage" ref={videoPanelRef}>
-            <img src={`${API_BASE}/api/video/mjpeg`} alt="Simulator camera" className="video-feed" />
-            <div className="overlay-layer">
-              {detections.map((detection, index) => (
-                <div
-                  key={`${detection.label}-${index}`}
-                  className={`detection detection-${detection.label}`}
-                  style={{
-                    left: `${detection.x1 * 100}%`,
-                    top: `${detection.y1 * 100}%`,
-                    width: `${(detection.x2 - detection.x1) * 100}%`,
-                    height: `${(detection.y2 - detection.y1) * 100}%`,
-                  }}
-                >
-                  <span>
-                    {detection.label} {Math.round(detection.confidence * 100)}%
-                  </span>
-                </div>
-              ))}
+
+          {/* Flight Telemetry */}
+          <div className="panel-section">
+            <div className="section-header">Flight Telemetry</div>
+            <div className="telem-grid">
+              <TelemetryCell label="Phase" value={state?.mission_phase ?? "IDLE"} />
+              <TelemetryCell label="VTOL State" value={state?.telemetry.vtol_state ?? "-"} />
+              <TelemetryCell label="Battery" value={state ? `${state.telemetry.battery_percent.toFixed(1)}%` : "-"} />
+              <TelemetryCell label="Airspeed" value={state ? `${state.telemetry.airspeed_mps.toFixed(1)} m/s` : "-"} />
+              <TelemetryCell label="Altitude" value={state ? `${state.telemetry.alt_m.toFixed(1)} m` : "-"} />
+              <TelemetryCell label="Home Dist" value={state ? `${state.telemetry.home_distance_m.toFixed(0)} m` : "-"} />
+              <TelemetryCell
+                label="Geofence"
+                value={state?.telemetry.geofence_breached ? "BREACHED" : "Inside"}
+                alert={Boolean(state?.telemetry.geofence_breached)}
+              />
+              <TelemetryCell label="Leg" value={state?.route_progress.current_leg ?? "-"} />
+              <TelemetryCell label="WP Index" value={state ? String(state.route_progress.current_waypoint_index) : "-"} />
+              <TelemetryCell label="Abort" value={state?.abort_reason ?? "none"} />
             </div>
           </div>
-        </article>
 
-        <article className="panel status-panel">
-          <div className="panel-header">
-            <h2>Mission State</h2>
-            <p>Telemetry, simulator health, recovery progress, and detector events.</p>
+          {/* Recovery Diagnostics */}
+          <div className="panel-section">
+            <div className="section-header">Recovery Diagnostics</div>
+            <div className="transition-grid">
+              <TransitionCell label="Active" value={state?.transition.active ? "YES" : "NO"} />
+              <TransitionCell label="Entry Phase" value={state?.transition.entry_phase ?? "-"} />
+              <TransitionCell label="Entry Mode" value={state?.transition.entry_mode ?? "-"} />
+              <TransitionCell label="Landing" value={state?.transition.landing_entry_mode ?? "-"} />
+              <TransitionCell
+                label="Duration"
+                value={state?.transition.duration_s != null ? `${state.transition.duration_s.toFixed(1)}s` : "-"}
+              />
+              <TransitionCell
+                label="Min Speed"
+                value={state?.transition.min_airspeed_mps != null ? `${state.transition.min_airspeed_mps.toFixed(1)}` : "-"}
+              />
+              <TransitionCell
+                label="Min Dist"
+                value={state?.transition.min_home_distance_m != null ? `${state.transition.min_home_distance_m.toFixed(0)}m` : "-"}
+              />
+              <TransitionCell
+                label="Max Alt"
+                value={state?.transition.max_alt_m != null ? `${state.transition.max_alt_m.toFixed(1)}m` : "-"}
+              />
+              <TransitionCell label="Completion" value={state?.transition.completion ?? "-"} />
+            </div>
           </div>
-          <dl className="stats">
-            <Metric label="Phase" value={state?.mission_phase ?? "IDLE"} />
-            <Metric label="VTOL State" value={state?.telemetry.vtol_state ?? "-"} />
-            <Metric label="Battery" value={state ? `${state.telemetry.battery_percent.toFixed(1)}%` : "-"} />
-            <Metric label="Airspeed" value={state ? `${state.telemetry.airspeed_mps.toFixed(1)} m/s` : "-"} />
-            <Metric label="Altitude" value={state ? `${state.telemetry.alt_m.toFixed(1)} m` : "-"} />
-            <Metric label="RTF" value={state ? state.simulator.rtf.toFixed(2) : "-"} />
-            <Metric label="Video FPS" value={state ? state.simulator.video_fps.toFixed(1) : "-"} />
-            <Metric label="Video Latency" value={state ? `${state.simulator.video_latency_ms.toFixed(0)} ms` : "-"} />
-            <Metric label="Leg" value={state?.route_progress.current_leg ?? "-"} />
-            <Metric label="Waypoint Index" value={state ? String(state.route_progress.current_waypoint_index) : "-"} />
-            <Metric label="Abort Reason" value={state?.abort_reason ?? "none"} />
-            <Metric
-              label="Geofence"
-              value={state?.telemetry.geofence_breached ? "BREACHED" : "inside"}
-              alert={Boolean(state?.telemetry.geofence_breached)}
-            />
-          </dl>
-          <div className="event-list">
-            <h3>Recovery / Landing Diagnostics</h3>
-            <dl className="stats">
-              <Metric label="Transition Active" value={state?.transition.active ? "yes" : "no"} />
-              <Metric label="Entry Phase" value={state?.transition.entry_phase ?? "-"} />
-              <Metric label="Entry Mode" value={state?.transition.entry_mode ?? "-"} />
-              <Metric label="Landing Mode" value={state?.transition.landing_entry_mode ?? "-"} />
-              <Metric
-                label="Transition Duration"
-                value={state?.transition.duration_s != null ? `${state.transition.duration_s.toFixed(1)} s` : "-"}
-              />
-              <Metric
-                label="Min Airspeed"
-                value={state?.transition.min_airspeed_mps != null ? `${state.transition.min_airspeed_mps.toFixed(1)} m/s` : "-"}
-              />
-              <Metric
-                label="Min Home Distance"
-                value={state?.transition.min_home_distance_m != null ? `${state.transition.min_home_distance_m.toFixed(1)} m` : "-"}
-              />
-              <Metric
-                label="Max Altitude"
-                value={state?.transition.max_alt_m != null ? `${state.transition.max_alt_m.toFixed(1)} m` : "-"}
-              />
-              <Metric label="Completion" value={state?.transition.completion ?? "-"} />
-            </dl>
-          </div>
-          <div className="event-list">
-            <h3>Recent Detector Events</h3>
-            {events.length === 0 ? (
-              <p className="event-empty">No detector events yet.</p>
-            ) : (
-              <ul>
-                {events.slice().reverse().map((event, index) => (
-                  <li key={`${event.timestamp}-${index}`}>
-                    <strong>{event.label}</strong> {Math.round(event.confidence * 100)}% · {event.note}
-                  </li>
+        </aside>
+
+        {/* ── Center: Map ── */}
+        <div className="map-container">
+          <div ref={mapNodeRef} className="map-canvas" />
+          {waypoints.length > 0 && (
+            <div className="map-waypoint-count">
+              WP {waypoints.length}/12
+            </div>
+          )}
+          {!previewReady && waypoints.length < 2 && (
+            <div className="map-hint">Click map to place waypoints</div>
+          )}
+        </div>
+
+        {/* ── Right Panel: Camera + Events ── */}
+        <aside className="panel-right">
+          {/* Camera Feed */}
+          <div className="camera-section">
+            <div className="camera-header">
+              <h3>Camera Feed</h3>
+              <span className="cam-live">LIVE</span>
+            </div>
+            <div className="video-stage" ref={videoPanelRef}>
+              <img src={`${API_BASE}/api/video/mjpeg`} alt="Simulator camera" className="video-feed" />
+              <div className="overlay-layer">
+                {detections.map((detection, index) => (
+                  <div
+                    key={`${detection.label}-${index}`}
+                    className={`detection detection-${detection.label}`}
+                    style={{
+                      left: `${detection.x1 * 100}%`,
+                      top: `${detection.y1 * 100}%`,
+                      width: `${(detection.x2 - detection.x1) * 100}%`,
+                      height: `${(detection.y2 - detection.y1) * 100}%`,
+                    }}
+                  >
+                    <span>
+                      {detection.label} {Math.round(detection.confidence * 100)}%
+                    </span>
+                  </div>
                 ))}
+              </div>
+            </div>
+            <div className="camera-stats">
+              <div className="cam-stat">
+                <span className="cam-stat-label">FPS</span>
+                <span className="cam-stat-value">{state ? state.simulator.video_fps.toFixed(1) : "-"}</span>
+              </div>
+              <div className="cam-stat">
+                <span className="cam-stat-label">Latency</span>
+                <span className="cam-stat-value">{state ? `${state.simulator.video_latency_ms.toFixed(0)}ms` : "-"}</span>
+              </div>
+              <div className="cam-stat">
+                <span className="cam-stat-label">Objects</span>
+                <span className="cam-stat-value">{state ? state.detector.objects_visible : "-"}</span>
+              </div>
+              <div className="cam-stat">
+                <span className="cam-stat-label">Inference</span>
+                <span className="cam-stat-value">{state ? `${state.detector.last_inference_ms.toFixed(0)}ms` : "-"}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* AI Detection Events */}
+          <div className="events-section">
+            <div className="events-header">
+              AI Detections
+              {events.length > 0 && <span className="event-count">{events.length}</span>}
+            </div>
+            {events.length === 0 ? (
+              <p className="events-empty">No detector events yet.</p>
+            ) : (
+              <ul className="event-list-items">
+                {events
+                  .slice()
+                  .reverse()
+                  .map((event, index) => (
+                    <li key={`${event.timestamp}-${index}`} className="event-item">
+                      <span className={`event-label event-label-${event.label}`}>{event.label}</span>
+                      <span className="event-note">{event.note}</span>
+                      <span className="event-confidence">{Math.round(event.confidence * 100)}%</span>
+                    </li>
+                  ))}
               </ul>
             )}
           </div>
-        </article>
-      </section>
-    </main>
-  );
-}
+        </aside>
+      </div>
 
-function Metric({ label, value, alert = false }: { label: string; value: string; alert?: boolean }) {
-  return (
-    <div className={`metric ${alert ? "metric-alert" : ""}`}>
-      <dt>{label}</dt>
-      <dd>{value}</dd>
+      {/* ═══ BOTTOM TELEMETRY STRIP ═══ */}
+      <footer className="telemetry-strip">
+        <StripItem label="Phase" value={state?.mission_phase ?? "IDLE"} />
+        <StripItem label="BAT" value={state ? `${state.telemetry.battery_percent.toFixed(1)}%` : "-"}
+          tone={state && state.telemetry.battery_percent < 30 ? "alert" : undefined} />
+        <StripItem label="ALT" value={state ? `${state.telemetry.alt_m.toFixed(1)}m` : "-"} />
+        <StripItem label="SPD" value={state ? `${state.telemetry.airspeed_mps.toFixed(1)}m/s` : "-"} />
+        <StripItem label="DIST" value={state ? `${state.telemetry.home_distance_m.toFixed(0)}m` : "-"} />
+        <StripItem label="LEG" value={state?.route_progress.current_leg ?? "-"} />
+        <StripItem
+          label="FENCE"
+          value={state?.telemetry.geofence_breached ? "BREACHED" : "OK"}
+          tone={state?.telemetry.geofence_breached ? "alert" : "ok"}
+        />
+        <StripItem label="RTF" value={state ? state.simulator.rtf.toFixed(2) : "-"} />
+        <StripItem label="VTOL" value={state?.telemetry.vtol_state ?? "-"} />
+        <StripItem label="MODE" value={state?.telemetry.flight_mode ?? "-"} />
+      </footer>
     </div>
   );
 }
 
-function StatusFlag({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: string;
-  tone: "ok" | "warn" | "danger";
-}) {
+/* ── Sub-components ── */
+
+function Indicator({ label, value, tone }: { label: string; value: string; tone: "ok" | "warn" | "danger" }) {
   return (
-    <div className={`status-flag status-flag-${tone}`}>
-      <span>{label}</span>
-      <strong>{value}</strong>
+    <div className={`indicator indicator-${tone}`}>
+      <span className="indicator-dot" />
+      <span className="indicator-label">{label}</span>
+      <span className="indicator-value">{value}</span>
     </div>
   );
 }
+
+function TelemetryCell({ label, value, alert = false }: { label: string; value: string; alert?: boolean }) {
+  return (
+    <div className={`telem-cell${alert ? " telem-cell-alert" : ""}`}>
+      <span className="telem-label">{label}</span>
+      <span className="telem-value">{value}</span>
+    </div>
+  );
+}
+
+function TransitionCell({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="transition-cell">
+      <span className="transition-label">{label}</span>
+      <span className="transition-value">{value}</span>
+    </div>
+  );
+}
+
+function StripItem({ label, value, tone }: { label: string; value: string; tone?: "ok" | "alert" | "warn" }) {
+  const cls = tone ? ` strip-value-${tone}` : "";
+  return (
+    <div className="strip-item">
+      <span className="strip-label">{label}</span>
+      <span className={`strip-value${cls}`}>{value}</span>
+    </div>
+  );
+}
+
+function Clock() {
+  const [time, setTime] = useState(formatTime());
+  useEffect(() => {
+    const id = window.setInterval(() => setTime(formatTime()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
+  return <span className="clock">{time}</span>;
+}
+
+function formatTime() {
+  const now = new Date();
+  return now.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+}
+
+/* ── Map helpers ── */
 
 function emptyFeatureCollection(): FeatureCollection {
   return {
