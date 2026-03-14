@@ -42,13 +42,14 @@ cd "$PROJECT_ROOT"
 python -m pytest tests/ -v --timeout=60 -k "not sitl and not ARRAKIS_TEST_REAL" \
   2>&1 | tail -5
 
-# 4. Run SITL integration tests
+# 4. Run SITL integration tests (including flight sequences)
 echo ""
 echo "[4/4] Running SITL integration tests..."
 ARRAKIS_ARDUPILOT_CONNECTION="tcp:127.0.0.1:$PORT" \
 ARRAKIS_ARDUPILOT_HEARTBEAT_TIMEOUT=120 \
+ARRAKIS_ARDUPILOT_COMMAND_TIMEOUT=45 \
 ARRAKIS_TEST_REAL_ARDUPILOT=1 \
-  python -m pytest tests/ -v -k "sitl" --timeout=300 \
+  python -m pytest tests/ -v -k "sitl" --timeout=600 \
   2>&1
 
 RESULT=$?

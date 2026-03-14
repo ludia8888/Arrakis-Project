@@ -25,58 +25,12 @@ BACKEND_DIR = Path(__file__).resolve().parents[1] / "backend"
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
+from conftest import force_arm_sitl as _force_arm, force_disarm_sitl as _force_disarm
+
 _sitl_skip = pytest.mark.skipif(
     os.getenv("ARRAKIS_TEST_REAL_ARDUPILOT") != "1",
     reason="SITL integration tests require running ArduPilot simulator",
 )
-
-
-# ---------------------------------------------------------------------------
-# Helper utilities
-# ---------------------------------------------------------------------------
-
-def _force_arm(adapter):
-    """Force-arm via MAVLink (bypass prearm checks for SITL)."""
-    mavutil = adapter._mavutil
-    with adapter._io_lock:
-        adapter._require_master().mav.command_long_send(
-            adapter._target_system,
-            adapter._target_component,
-            mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM,
-            0,
-            1.0,       # param1: 1=arm
-            21196.0,   # param2: force arm
-            0.0, 0.0, 0.0, 0.0, 0.0,
-        )
-    deadline = time.time() + 15.0
-    while time.time() < deadline:
-        snapshot = adapter.get_snapshot()
-        if snapshot.armed:
-            return True
-        time.sleep(0.5)
-    return False
-
-
-def _force_disarm(adapter):
-    """Force-disarm via MAVLink."""
-    mavutil = adapter._mavutil
-    with adapter._io_lock:
-        adapter._require_master().mav.command_long_send(
-            adapter._target_system,
-            adapter._target_component,
-            mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM,
-            0,
-            0.0,       # param1: 0=disarm
-            21196.0,   # param2: force
-            0.0, 0.0, 0.0, 0.0, 0.0,
-        )
-    deadline = time.time() + 10.0
-    while time.time() < deadline:
-        snapshot = adapter.get_snapshot()
-        if not snapshot.armed:
-            return True
-        time.sleep(0.5)
-    return False
 
 
 # ===========================================================================
