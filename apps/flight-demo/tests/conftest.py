@@ -120,6 +120,50 @@ def force_disarm_sitl(adapter) -> bool:
     return False
 
 
+def set_sitl_param(adapter, param_name: str, param_value: float,
+                   param_type: int = 9) -> None:
+    """Set a SITL simulation parameter via MAVLink PARAM_SET.
+
+    Uses MAV_PARAM_TYPE_REAL32 (type=9) by default.
+    Sleeps 0.5s after sending to allow parameter propagation.
+    """
+    with adapter._io_lock:
+        adapter._require_master().mav.param_set_send(
+            adapter._target_system,
+            adapter._target_component,
+            param_name.encode("utf-8"),
+            param_value,
+            param_type,
+        )
+    time.sleep(0.5)
+
+
+def get_sitl_param(adapter, param_name: str,
+                   timeout: float = 5.0) -> float:
+    """Read a SITL parameter value via MAVLink PARAM_REQUEST_READ.
+
+    Returns the float value, or raises TimeoutError if not received.
+    """
+    with adapter._io_lock:
+        adapter._require_master().mav.param_request_read_send(
+            adapter._target_system,
+            adapter._target_component,
+            param_name.encode("utf-8"),
+            -1,
+        )
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        with adapter._io_lock:
+            msg = adapter._require_master().recv_match(
+                type="PARAM_VALUE", blocking=True, timeout=0.5,
+            )
+        if msg is not None and msg.param_id.rstrip("\x00") == param_name:
+            return float(msg.param_value)
+    raise TimeoutError(
+        f"PARAM_VALUE for {param_name} not received within {timeout}s"
+    )
+
+
 # ---------------------------------------------------------------------------
 # Session-scoped SITL adapter (shared across ALL SITL test files)
 # ---------------------------------------------------------------------------
@@ -165,20 +209,79 @@ def sitl_connection():
     time.sleep(1.0)
 
 
+@pytest.fixture(scope="function")
+def sitl_deep_connection():
+    """Function-scoped SITL adapter for destructive tests.
+
+    Creates a fresh ArduPilotAdapter + InstrumentedFlightAdapter on each
+    test invocation, connecting to the SITL **secondary** port (5762) so
+    it does not compete with the session-scoped fixture on port 5760.
+    Used for tests that deliberately break the connection (e.g. comm-loss).
+    """
+    if os.getenv("ARRAKIS_TEST_REAL_ARDUPILOT") != "1":
+        pytest.skip("SITL tests require ARRAKIS_TEST_REAL_ARDUPILOT=1")
+
+    from flight_adapters.ardupilot import ArduPilotAdapter
+    from flight_adapters.instrumented import InstrumentedFlightAdapter
+
+    # Derive secondary port from primary connection string
+    primary = os.getenv("ARRAKIS_ARDUPILOT_CONNECTION", "tcp:127.0.0.1:5760")
+    secondary = primary.replace(":5760", ":5762")
+
+    adapter = ArduPilotAdapter(AirframeProfile())
+    adapter._connection = secondary  # Override to secondary port
+    instrumented = InstrumentedFlightAdapter(adapter, logger_name="test.sitl.deep")
+    instrumented.connect()
+
+    # Wait for bootstrap readiness
+    deadline = time.time() + 90.0
+    while time.time() < deadline:
+        bs = instrumented.bootstrap_status()
+        if bs.mission_ready:
+            break
+        time.sleep(1.0)
+
+    yield adapter, instrumented
+
+    # Teardown: stop threads and close socket (connection may already be broken)
+    try:
+        force_disarm_sitl(adapter)
+    except Exception:
+        pass
+    try:
+        adapter._running = False
+    except Exception:
+        pass
+    try:
+        if adapter._master is not None:
+            adapter._master.close()
+    except Exception:
+        pass
+    time.sleep(1.0)
+
+
 @pytest.fixture(autouse=True)
 def _ensure_disarmed_after_sitl_test(request):
     """Ensure vehicle is disarmed and on ground after each SITL flight test.
 
-    Only activates for tests that use the sitl_connection fixture.
+    Activates for tests that use sitl_connection or sitl_deep_connection.
     Runs force_disarm + waits for ground contact after each test to
     leave vehicle in a clean state for the next test.
     """
     yield
-    # Only act on tests that actually use the SITL connection
-    if "sitl_connection" not in request.fixturenames:
+    # Only act on tests that actually use a SITL connection
+    if ("sitl_connection" not in request.fixturenames
+            and "sitl_deep_connection" not in request.fixturenames):
         return
     try:
-        adapter, _ = request.getfixturevalue("sitl_connection")
+        # Try session-scoped first, then function-scoped
+        adapter = None
+        if "sitl_connection" in request.fixturenames:
+            adapter, _ = request.getfixturevalue("sitl_connection")
+        elif "sitl_deep_connection" in request.fixturenames:
+            adapter, _ = request.getfixturevalue("sitl_deep_connection")
+        if adapter is None:
+            return
         snapshot = adapter.get_snapshot()
         if snapshot.armed:
             force_disarm_sitl(adapter)
