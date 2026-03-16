@@ -88,6 +88,9 @@ class _State:
     sim_rtf: float = 1.0
     mode_valid: bool = False
     position_valid: bool = False
+    gps_sensor_valid: bool = False
+    gps_fix_type: int = 0
+    gps_satellites: int = 0
     home_valid: bool = False
 
 
@@ -142,6 +145,7 @@ class ArduPilotAdapter(FlightControllerAdapter):
         # Fix 9: monotonic timestamps for freshness (immune to NTP clock jumps)
         self._last_telemetry_mono: float | None = None
         self._last_heartbeat_mono: float | None = None
+        self._last_gps_sensor_mono: float | None = None
         # Fix 1+3: heartbeat watchdog and connection loss detection
         self._heartbeat_watchdog_timeout_s = max(self._heartbeat_timeout, 10.0)
         self._connection_lost = False
@@ -376,6 +380,13 @@ class ArduPilotAdapter(FlightControllerAdapter):
             telemetry_fresh=telemetry_fresh,
             mode_valid=state.mode_valid,
             position_valid=state.position_valid,
+            gps_sensor_valid=bool(
+                state.gps_sensor_valid
+                and self._last_gps_sensor_mono is not None
+                and (now_mono - self._last_gps_sensor_mono) <= 5.0
+            ),
+            gps_fix_type=state.gps_fix_type or None,
+            gps_satellites=state.gps_satellites or None,
             home_valid=state.home_valid,
         )
 
@@ -592,6 +603,13 @@ class ArduPilotAdapter(FlightControllerAdapter):
                 else:
                     logger.warning("Rejecting invalid GPS position lat=%.7f lon=%.7f", lat_raw, lon_raw)
                     self._state.position_valid = False
+            elif msg_type == "GPS_RAW_INT":
+                self._last_gps_sensor_mono = now_mono
+                fix_type = int(getattr(msg, "fix_type", 0))
+                satellites = int(getattr(msg, "satellites_visible", 0))
+                self._state.gps_sensor_valid = fix_type >= 3
+                self._state.gps_fix_type = fix_type
+                self._state.gps_satellites = max(satellites, 0)
             elif msg_type == "VFR_HUD":
                 self._state.airspeed_mps = float(msg.airspeed)
                 self._state.groundspeed_mps = float(msg.groundspeed)

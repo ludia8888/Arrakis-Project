@@ -156,6 +156,12 @@ class ArrakisController:
         if decision.trigger_battery_rtl and phase not in self._SAFETY_SUPPRESS_PHASES:
             logger.warning("Battery RTL triggered at %.1f%% during phase=%s", snapshot.battery_percent, phase)
             self._guarded_abort("RTL_BATTERY", "battery threshold reached", lambda: self.adapter.return_to_home())
+        elif decision.trigger_position_loss_rtl and phase not in self._SAFETY_SUPPRESS_PHASES:
+            logger.warning("GPS position lost during phase=%s, triggering RTL", phase)
+            self._guarded_abort("RTL_GPS_LOSS", "gps position lost during flight", lambda: self.adapter.return_to_home())
+        elif decision.trigger_navigation_degraded_rtl and phase not in self._SAFETY_SUPPRESS_PHASES:
+            logger.warning("Navigation degraded during phase=%s, triggering RTL", phase)
+            self._guarded_abort("RTL_NAV_DEGRADED", "navigation degraded during flight", lambda: self.adapter.return_to_home())
         elif decision.trigger_geofence_abort and phase not in self._SAFETY_SUPPRESS_PHASES:
             logger.warning("Geofence abort triggered during phase=%s", phase)
             self._guarded_abort("ABORT_GEOFENCE", "route-derived geofence breached", lambda: self.adapter.abort("geofence breach"))
@@ -208,6 +214,7 @@ class ArrakisController:
             route_preview=status.route_preview,
             current_leg=current_leg,
             transition=self.transition_diagnostics.snapshot(),
+            stress=self.telemetry_hub.stress_envelope(),
         )
 
     def _run_mission(self, cancel_event: threading.Event) -> None:
@@ -216,7 +223,7 @@ class ArrakisController:
             self.mission_executor.run_roundtrip_mission(cancel_event)
         except Exception as exc:
             logger.exception("Mission executor crashed: %s", exc)
-            if self.state_machine.phase not in {"ABORT_MANUAL", "ABORT_GEOFENCE", "RTL_BATTERY", "COMPLETE"}:
+            if self.state_machine.phase not in {"ABORT_MANUAL", "ABORT_GEOFENCE", "RTL_BATTERY", "RTL_GPS_LOSS", "RTL_NAV_DEGRADED", "COMPLETE"}:
                 with suppress(Exception):
                     self.adapter.return_to_home()
                 self.state_machine.abort("ABORT_MANUAL", f"mission executor failed: {exc}")

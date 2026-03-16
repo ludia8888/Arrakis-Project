@@ -9,6 +9,7 @@ import sys
 import threading
 import time
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -38,6 +39,7 @@ class TestSchemaValidation:
         from typing import get_args
         phases = get_args(MissionPhase)
         assert "STARTING" in phases
+        assert "RTL_NAV_DEGRADED" in phases
 
     def test_latlon_rejects_out_of_range(self):
         """H-2: LatLon rejects invalid coordinates."""
@@ -114,7 +116,7 @@ class TestTelemetryLostDetection:
             battery_percent=80.0, armed=True, flight_mode="AUTO",
             vtol_state="FW", mission_index=2, home_distance_m=500.0,
             geofence_breached=False, sim_rtf=1.0, telemetry_fresh=fresh,
-            mode_valid=True, position_valid=True, home_valid=True,
+            mode_valid=True, position_valid=True, gps_sensor_valid=True, home_valid=True,
         )
         defaults.update(kwargs)
         return TelemetrySnapshot(**defaults)
@@ -142,6 +144,286 @@ class TestTelemetryLostDetection:
         # Stale → stale: no trigger
         decision = hub.on_telemetry(self._make_snapshot(fresh=False), None, "OUTBOUND")
         assert not decision.trigger_telemetry_lost
+
+
+class TestPositionLossDetection:
+    """Sustained GPS loss should escalate from hold to RTL."""
+
+    def _make_snapshot(self, valid=True, **kwargs):
+        defaults = dict(
+            timestamp=time.time(), lat=37.5665, lon=126.9780,
+            alt_m=50.0, airspeed_mps=10.0, groundspeed_mps=10.0,
+            battery_percent=80.0, armed=True, flight_mode="AUTO",
+            vtol_state="FW", mission_index=2, home_distance_m=500.0,
+            geofence_breached=False, sim_rtf=1.0, telemetry_fresh=True,
+            mode_valid=True, position_valid=valid, gps_sensor_valid=valid, home_valid=True,
+        )
+        defaults.update(kwargs)
+        return TelemetrySnapshot(**defaults)
+
+    def test_position_loss_requires_sustained_timeout(self, monkeypatch):
+        from arrakis_core import telemetry_hub as telemetry_hub_module
+        from arrakis_core.video_service import VideoService
+
+        monotonic_values = iter((100.0, 103.0, 107.0))
+        last_value = {"value": 107.0}
+
+        def _fake_monotonic():
+            try:
+                last_value["value"] = next(monotonic_values)
+            except StopIteration:
+                pass
+            return last_value["value"]
+
+        monkeypatch.setattr(telemetry_hub_module, "_monotonic", _fake_monotonic)
+
+        hub = TelemetryHub(self._make_snapshot(valid=True), VideoService(), AirframeProfile())
+
+        decision1 = hub.on_telemetry(self._make_snapshot(valid=False), None, "OUTBOUND")
+        decision2 = hub.on_telemetry(self._make_snapshot(valid=False), None, "OUTBOUND")
+        decision3 = hub.on_telemetry(self._make_snapshot(valid=False), None, "OUTBOUND")
+
+        assert not decision1.trigger_position_loss_rtl
+        assert not decision2.trigger_position_loss_rtl
+        assert decision3.trigger_position_loss_rtl
+
+    def test_raw_gps_loss_triggers_even_with_dead_reckoned_position(self, monkeypatch):
+        from arrakis_core import telemetry_hub as telemetry_hub_module
+        from arrakis_core.video_service import VideoService
+
+        monotonic_values = iter((100.0, 103.0, 107.0))
+        last_value = {"value": 107.0}
+
+        def _fake_monotonic():
+            try:
+                last_value["value"] = next(monotonic_values)
+            except StopIteration:
+                pass
+            return last_value["value"]
+
+        monkeypatch.setattr(telemetry_hub_module, "_monotonic", _fake_monotonic)
+
+        hub = TelemetryHub(self._make_snapshot(valid=True), VideoService(), AirframeProfile())
+        base = self._make_snapshot(valid=True, gps_sensor_valid=False)
+
+        decision1 = hub.on_telemetry(base, None, "OUTBOUND")
+        decision2 = hub.on_telemetry(base, None, "OUTBOUND")
+        decision3 = hub.on_telemetry(base, None, "OUTBOUND")
+
+        assert not decision1.trigger_position_loss_rtl
+        assert not decision2.trigger_position_loss_rtl
+        assert decision3.trigger_position_loss_rtl
+
+    def test_position_loss_timer_resets_after_valid_fix(self, monkeypatch):
+        from arrakis_core import telemetry_hub as telemetry_hub_module
+        from arrakis_core.video_service import VideoService
+
+        monotonic_values = iter((100.0, 103.0, 104.0, 105.0, 108.0))
+        last_value = {"value": 108.0}
+
+        def _fake_monotonic():
+            try:
+                last_value["value"] = next(monotonic_values)
+            except StopIteration:
+                pass
+            return last_value["value"]
+
+        monkeypatch.setattr(telemetry_hub_module, "_monotonic", _fake_monotonic)
+
+        hub = TelemetryHub(self._make_snapshot(valid=True), VideoService(), AirframeProfile())
+
+        hub.on_telemetry(self._make_snapshot(valid=False), None, "OUTBOUND")
+        hub.on_telemetry(self._make_snapshot(valid=False), None, "OUTBOUND")
+        hub.on_telemetry(self._make_snapshot(valid=True), None, "OUTBOUND")
+        decision = hub.on_telemetry(self._make_snapshot(valid=False), None, "OUTBOUND")
+        decision_after = hub.on_telemetry(self._make_snapshot(valid=False), None, "OUTBOUND")
+
+        assert not decision.trigger_position_loss_rtl
+        assert not decision_after.trigger_position_loss_rtl
+
+
+class TestNavigationDegradationDetection:
+    """Sustained degraded navigation quality should escalate to RTL."""
+
+    def _make_snapshot(self, **kwargs):
+        defaults = dict(
+            timestamp=time.time(), lat=37.5665, lon=126.9780,
+            alt_m=50.0, airspeed_mps=18.0, groundspeed_mps=18.0,
+            battery_percent=80.0, armed=True, flight_mode="AUTO",
+            vtol_state="FW", mission_index=2, home_distance_m=500.0,
+            geofence_breached=False, sim_rtf=1.0, telemetry_fresh=True,
+            mode_valid=True, position_valid=True, gps_sensor_valid=True,
+            gps_fix_type=3, gps_satellites=10, home_valid=True,
+        )
+        defaults.update(kwargs)
+        return TelemetrySnapshot(**defaults)
+
+    def test_low_satellite_count_requires_sustained_timeout(self, monkeypatch):
+        from arrakis_core import telemetry_hub as telemetry_hub_module
+        from arrakis_core.video_service import VideoService
+
+        monotonic_values = iter((100.0, 103.0, 109.0))
+        last_value = {"value": 109.0}
+
+        def _fake_monotonic():
+            try:
+                last_value["value"] = next(monotonic_values)
+            except StopIteration:
+                pass
+            return last_value["value"]
+
+        monkeypatch.setattr(telemetry_hub_module, "_monotonic", _fake_monotonic)
+
+        hub = TelemetryHub(self._make_snapshot(), VideoService(), AirframeProfile())
+        degraded = self._make_snapshot(gps_satellites=4)
+
+        decision1 = hub.on_telemetry(degraded, None, "OUTBOUND")
+        decision2 = hub.on_telemetry(degraded, None, "OUTBOUND")
+        decision3 = hub.on_telemetry(degraded, None, "OUTBOUND")
+
+        assert not decision1.trigger_navigation_degraded_rtl
+        assert not decision2.trigger_navigation_degraded_rtl
+        assert decision3.trigger_navigation_degraded_rtl
+
+    def test_progress_stall_triggers_navigation_rtl(self, monkeypatch):
+        from arrakis_core import telemetry_hub as telemetry_hub_module
+        from arrakis_core.video_service import VideoService
+
+        monotonic_values = iter((100.0, 103.0, 108.0))
+        last_value = {"value": 108.0}
+
+        def _fake_monotonic():
+            try:
+                last_value["value"] = next(monotonic_values)
+            except StopIteration:
+                pass
+            return last_value["value"]
+
+        monkeypatch.setattr(telemetry_hub_module, "_monotonic", _fake_monotonic)
+
+        profile = AirframeProfile().model_copy(
+            update={
+                "safety": AirframeProfile().safety.model_copy(
+                    update={"progress_stall_timeout_seconds": 2.0}
+                )
+            }
+        )
+        hub = TelemetryHub(self._make_snapshot(), VideoService(), profile)
+        stalled = self._make_snapshot(home_distance_m=120.0, groundspeed_mps=0.8, mission_index=3)
+
+        decision1 = hub.on_telemetry(stalled, None, "OUTBOUND")
+        decision2 = hub.on_telemetry(stalled, None, "OUTBOUND")
+        decision3 = hub.on_telemetry(stalled, None, "OUTBOUND")
+
+        assert not decision1.trigger_navigation_degraded_rtl
+        assert not decision2.trigger_navigation_degraded_rtl
+        assert decision3.trigger_navigation_degraded_rtl
+
+    def test_sensor_inconsistency_triggers_navigation_rtl(self, monkeypatch):
+        from arrakis_core import telemetry_hub as telemetry_hub_module
+        from arrakis_core.video_service import VideoService
+
+        monotonic_values = iter((100.0, 102.5))
+        last_value = {"value": 102.5}
+
+        def _fake_monotonic():
+            try:
+                last_value["value"] = next(monotonic_values)
+            except StopIteration:
+                pass
+            return last_value["value"]
+
+        monkeypatch.setattr(telemetry_hub_module, "_monotonic", _fake_monotonic)
+
+        profile = AirframeProfile().model_copy(
+            update={
+                "safety": AirframeProfile().safety.model_copy(
+                    update={"sensor_inconsistency_timeout_seconds": 2.0}
+                )
+            }
+        )
+        hub = TelemetryHub(self._make_snapshot(timestamp=1000.0), VideoService(), profile)
+        noisy1 = self._make_snapshot(timestamp=1000.5, alt_m=60.0, airspeed_mps=30.0)
+        noisy2 = self._make_snapshot(timestamp=1001.0, alt_m=49.0, airspeed_mps=18.0)
+
+        decision1 = hub.on_telemetry(noisy1, None, "OUTBOUND")
+        decision2 = hub.on_telemetry(noisy2, None, "OUTBOUND")
+
+        assert not decision1.trigger_navigation_degraded_rtl
+        assert decision2.trigger_navigation_degraded_rtl
+
+
+# ---------------------------------------------------------------------------
+# Stress envelope mapping
+# ---------------------------------------------------------------------------
+
+class TestStressEnvelopeMapping:
+    """Stress envelope should summarize compound dry-lab stressors."""
+
+    def _make_snapshot(self, **kwargs):
+        defaults = dict(
+            timestamp=time.time(),
+            lat=37.5665,
+            lon=126.9780,
+            alt_m=50.0,
+            airspeed_mps=18.0,
+            groundspeed_mps=18.0,
+            battery_percent=80.0,
+            armed=True,
+            flight_mode="AUTO",
+            vtol_state="FW",
+            mission_index=2,
+            home_distance_m=500.0,
+            geofence_breached=False,
+            sim_rtf=1.0,
+            telemetry_fresh=True,
+            mode_valid=True,
+            position_valid=True,
+            gps_sensor_valid=True,
+            gps_fix_type=3,
+            gps_satellites=10,
+            home_valid=True,
+        )
+        defaults.update(kwargs)
+        return TelemetrySnapshot(**defaults)
+
+    def test_compound_stress_maps_into_critical_envelope(self):
+        from arrakis_core.video_service import VideoService
+
+        hub = TelemetryHub(self._make_snapshot(timestamp=1000.0), VideoService(), AirframeProfile())
+        first = self._make_snapshot(
+            timestamp=1000.5,
+            airspeed_mps=20.0,
+            groundspeed_mps=0.5,
+            gps_satellites=3,
+            mission_index=3,
+            home_distance_m=520.0,
+        )
+        second = self._make_snapshot(
+            timestamp=1001.0,
+            alt_m=65.0,
+            airspeed_mps=35.0,
+            groundspeed_mps=0.5,
+            gps_satellites=3,
+            mission_index=3,
+            home_distance_m=520.0,
+        )
+
+        hub.on_telemetry(first, None, "OUTBOUND")
+        hub.on_telemetry(second, None, "OUTBOUND")
+        stress = hub.stress_envelope()
+
+        assert stress.level == "critical"
+        assert stress.wind_load_score >= 0.9
+        assert stress.gps_degradation_score >= 0.5
+        assert stress.sensor_noise_score >= 1.0
+        assert stress.progress_stall_score >= 0.8
+        assert set(stress.reasons) == {
+            "wind_load",
+            "gps_degradation",
+            "sensor_noise",
+            "progress_stall",
+        }
 
 
 # ---------------------------------------------------------------------------
@@ -429,8 +711,36 @@ class TestControllerLifecycle:
         # State payload should work
         payload = controller.state_payload()
         assert payload is not None
+        assert payload.stress.level == "nominal"
+        assert payload.stress.overall_score == 0.0
+        assert payload.stress.reasons == []
 
         controller.shutdown()
+
+
+class TestApiHealth:
+    """API health should expose the stress envelope for dry-lab monitoring."""
+
+    def test_health_reports_stress_envelope(self):
+        import main as main_module
+        from flight_adapters.instrumented import InstrumentedFlightAdapter
+
+        profile = AirframeProfile()
+        controller = ArrakisController(
+            InstrumentedFlightAdapter(MockAdapter(profile), logger_name="test.health"),
+            profile,
+        )
+        request = SimpleNamespace(app=SimpleNamespace(state=SimpleNamespace(controller=controller)))
+
+        try:
+            payload = main_module.get_health(request)
+        finally:
+            controller.shutdown()
+
+        assert payload["status"] in {"ok", "degraded"}
+        assert payload["stress"]["level"] == "nominal"
+        assert payload["stress"]["overall_score"] == 0.0
+        assert payload["stress"]["reasons"] == []
 
 
 # ---------------------------------------------------------------------------

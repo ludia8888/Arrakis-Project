@@ -66,6 +66,16 @@ class SafetyConfig(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     battery_rtl_threshold_percent: float = 20.0
+    min_gps_fix_type: int = 3
+    min_gps_satellites: int = 6
+    gps_degraded_rtl_timeout_seconds: float = 8.0
+    min_progress_airspeed_mps: float = 12.0
+    min_progress_groundspeed_mps: float = 4.0
+    progress_min_delta_m: float = 12.0
+    progress_stall_timeout_seconds: float = 12.0
+    sensor_inconsistency_altitude_jump_m: float = 8.0
+    sensor_inconsistency_airspeed_jump_mps: float = 10.0
+    sensor_inconsistency_timeout_seconds: float = 4.0
 
 
 class RecoveryThresholdsConfig(BaseModel):
@@ -223,6 +233,34 @@ class AirframeProfile(BaseModel):
             errors.append(
                 f"battery_rtl_threshold({self.safety.battery_rtl_threshold_percent}%) "
                 f"must be between 5% and 50%"
+            )
+        if self.safety.min_gps_fix_type < 1:
+            errors.append(
+                f"min_gps_fix_type({self.safety.min_gps_fix_type}) must be >= 1"
+            )
+        if self.safety.min_gps_satellites < 0:
+            errors.append(
+                f"min_gps_satellites({self.safety.min_gps_satellites}) must be >= 0"
+            )
+        if self.safety.gps_degraded_rtl_timeout_seconds <= 0:
+            errors.append(
+                "gps_degraded_rtl_timeout_seconds must be > 0"
+            )
+        if self.safety.min_progress_airspeed_mps <= 0 or self.safety.min_progress_groundspeed_mps < 0:
+            errors.append(
+                "progress speed thresholds must be positive"
+            )
+        if self.safety.progress_min_delta_m <= 0 or self.safety.progress_stall_timeout_seconds <= 0:
+            errors.append(
+                "progress stall thresholds must be > 0"
+            )
+        if (
+            self.safety.sensor_inconsistency_altitude_jump_m <= 0
+            or self.safety.sensor_inconsistency_airspeed_jump_mps <= 0
+            or self.safety.sensor_inconsistency_timeout_seconds <= 0
+        ):
+            errors.append(
+                "sensor inconsistency thresholds must be > 0"
             )
 
         if errors:

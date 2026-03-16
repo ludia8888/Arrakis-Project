@@ -311,6 +311,9 @@ class MockAdapter(FlightControllerAdapter):
             telemetry_fresh=True,
             mode_valid=True,
             position_valid=position_valid,
+            gps_sensor_valid=position_valid,
+            gps_fix_type=3 if position_valid else 1,
+            gps_satellites=10 if position_valid else 0,
             home_valid=True,
         )
 
@@ -412,7 +415,7 @@ class MockAdapter(FlightControllerAdapter):
 
         if self._mission_points and self.state.mission_index >= 0:
             target = self._mission_points[min(self.state.mission_index, len(self._mission_points) - 1)]
-            reached = self._move_towards_locked(target, max(self.state.groundspeed_mps, sp.mission_movement_speed_mps), dt)
+            reached = self._move_towards_locked(target, self.state.groundspeed_mps, dt)
             if reached:
                 self.state.mission_index += 1
                 if self.state.mission_index >= len(self._mission_points):

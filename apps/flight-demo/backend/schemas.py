@@ -17,6 +17,8 @@ MissionPhase = Literal[
     "TRANSITION_MC",
     "LANDING",
     "RTL_BATTERY",
+    "RTL_GPS_LOSS",
+    "RTL_NAV_DEGRADED",
     "ABORT_GEOFENCE",
     "ABORT_MANUAL",
     "COMPLETE",
@@ -96,6 +98,9 @@ class TelemetrySnapshot(BaseModel):
     telemetry_fresh: bool = False
     mode_valid: bool = False
     position_valid: bool = False
+    gps_sensor_valid: bool = True
+    gps_fix_type: int | None = None
+    gps_satellites: int | None = None
     home_valid: bool = False
 
 
@@ -156,6 +161,16 @@ class TransitionDiagnostics(BaseModel):
     samples: int
 
 
+class StressEnvelope(BaseModel):
+    level: Literal["nominal", "elevated", "severe", "critical"]
+    overall_score: float = Field(ge=0.0, le=1.0)
+    wind_load_score: float = Field(ge=0.0, le=1.0)
+    gps_degradation_score: float = Field(ge=0.0, le=1.0)
+    sensor_noise_score: float = Field(ge=0.0, le=1.0)
+    progress_stall_score: float = Field(ge=0.0, le=1.0)
+    reasons: list[str]
+
+
 class StatePayload(BaseModel):
     timestamp: float
     mission_phase: MissionPhase
@@ -165,6 +180,7 @@ class StatePayload(BaseModel):
     detector: DetectorState
     simulator: SimulatorState
     transition: TransitionDiagnostics
+    stress: StressEnvelope
     geofence: GeofencePolygon | None
     route_home: LatLon | None
     outbound: list[LatLon]

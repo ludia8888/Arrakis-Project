@@ -71,6 +71,15 @@ type StatePayload = {
     max_alt_m: number | null;
     samples: number;
   };
+  stress: {
+    level: "nominal" | "elevated" | "severe" | "critical";
+    overall_score: number;
+    wind_load_score: number;
+    gps_degradation_score: number;
+    sensor_noise_score: number;
+    progress_stall_score: number;
+    reasons: string[];
+  };
   geofence: { coordinates: LatLon[] } | null;
   route_home: LatLon | null;
   outbound: LatLon[];
@@ -559,6 +568,37 @@ function App() {
               <TransitionCell label="Completion" value={state?.transition.completion ?? "-"} />
             </div>
           </div>
+
+          <div className="panel-section">
+            <div className="section-header">Stress Envelope</div>
+            <div className="transition-grid">
+              <TransitionCell label="Level" value={state?.stress.level ?? "-"} />
+              <TransitionCell
+                label="Overall"
+                value={state?.stress ? state.stress.overall_score.toFixed(2) : "-"}
+              />
+              <TransitionCell
+                label="Wind"
+                value={state?.stress ? state.stress.wind_load_score.toFixed(2) : "-"}
+              />
+              <TransitionCell
+                label="GPS"
+                value={state?.stress ? state.stress.gps_degradation_score.toFixed(2) : "-"}
+              />
+              <TransitionCell
+                label="Sensor"
+                value={state?.stress ? state.stress.sensor_noise_score.toFixed(2) : "-"}
+              />
+              <TransitionCell
+                label="Stall"
+                value={state?.stress ? state.stress.progress_stall_score.toFixed(2) : "-"}
+              />
+              <TransitionCell
+                label="Reasons"
+                value={state?.stress?.reasons.length ? state.stress.reasons.join(", ") : "-"}
+              />
+            </div>
+          </div>
         </aside>
 
         {/* ── Center: Map ── */}
@@ -664,6 +704,17 @@ function App() {
           tone={state?.telemetry.geofence_breached ? "alert" : "ok"}
         />
         <StripItem label="RTF" value={state ? state.simulator.rtf.toFixed(2) : "-"} />
+        <StripItem
+          label="STRESS"
+          value={state?.stress.level ?? "-"}
+          tone={
+            state?.stress.level === "critical"
+              ? "alert"
+              : state?.stress.level === "severe" || state?.stress.level === "elevated"
+                ? "warn"
+                : "ok"
+          }
+        />
         <StripItem label="VTOL" value={state?.telemetry.vtol_state ?? "-"} />
         <StripItem label="MODE" value={state?.telemetry.flight_mode ?? "-"} />
       </footer>

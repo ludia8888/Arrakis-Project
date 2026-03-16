@@ -58,8 +58,8 @@ def _make_route_preview(profile: AirframeProfile, home: LatLon | None = None) ->
         LatLon(lat=home.lat + 0.001, lon=home.lon),
         home,
     ]
-    from schemas import GeoFence
-    geofence = GeoFence(
+    from schemas import GeofencePolygon
+    geofence = GeofencePolygon(
         coordinates=[
             LatLon(lat=home.lat - 0.01, lon=home.lon - 0.01),
             LatLon(lat=home.lat + 0.01, lon=home.lon - 0.01),
@@ -142,6 +142,56 @@ class TestGPSDenialScenarios:
         time.sleep(0.5)
         snap = adapter.get_snapshot()
         assert isinstance(snap, TelemetrySnapshot)
+
+    def test_inflight_total_gps_loss_triggers_rtl_fallback(self, monkeypatch):
+        """Mission controller should RTL on sustained in-flight position loss."""
+        from arrakis_core import telemetry_hub as telemetry_hub_module
+        from flight_adapters.instrumented import InstrumentedFlightAdapter
+
+        monkeypatch.setattr(telemetry_hub_module, "_POSITION_LOSS_RTL_TIMEOUT_S", 0.8)
+
+        profile = load_profile("default-vtol")
+        adapter = InstrumentedFlightAdapter(MockAdapter(profile), logger_name="test")
+        controller = ArrakisController(adapter, profile)
+
+        try:
+            controller.set_route(_make_route_preview(profile))
+            controller.start_mission()
+
+            outbound_deadline = time.time() + 8.0
+            while time.time() < outbound_deadline:
+                if controller.state_machine.phase == "OUTBOUND":
+                    break
+                time.sleep(0.2)
+            assert controller.state_machine.phase == "OUTBOUND", (
+                f"Expected OUTBOUND before GPS loss, got {controller.state_machine.phase}"
+            )
+
+            adapter.wrapped._fault_injector = FaultInjector(
+                FaultProfile(
+                    gps=GPSNoiseConfig(
+                        enabled=True,
+                        horizontal_stddev_m=0.0,
+                        vertical_stddev_m=0.0,
+                        dropout_probability=1.0,
+                        dropout_duration_s=30.0,
+                    ),
+                )
+            )
+
+            rtl_deadline = time.time() + 6.0
+            while time.time() < rtl_deadline:
+                if controller.state_machine.phase == "RTL_GPS_LOSS":
+                    break
+                time.sleep(0.2)
+
+            assert controller.state_machine.phase == "RTL_GPS_LOSS", (
+                f"Expected RTL_GPS_LOSS after sustained GPS loss, got {controller.state_machine.phase}"
+            )
+            assert controller.state_machine.abort_reason == "gps position lost during flight"
+            assert controller.adapter.get_snapshot().flight_mode == "RTL"
+        finally:
+            controller.shutdown()
 
 
 # ---------------------------------------------------------------------------
@@ -226,6 +276,62 @@ class TestWindEffectScenarios:
         fi = FaultInjector(fp)
         gs, _ = fi.compute_wind_effect(20.0, math.radians(0.0))
         assert gs < 10.0, f"Strong headwind should cut ground speed significantly, got {gs}"
+
+    def test_strong_headwind_progress_stall_triggers_rtl_fallback(self):
+        """Sustained headwind stall should trigger navigation-degraded RTL."""
+        from flight_adapters.instrumented import InstrumentedFlightAdapter
+
+        base_profile = load_profile("default-vtol")
+        tuned_profile = base_profile.model_copy(
+            update={
+                "safety": base_profile.safety.model_copy(
+                    update={
+                        "progress_stall_timeout_seconds": 1.0,
+                        "progress_min_delta_m": 5.0,
+                    }
+                )
+            }
+        )
+        fault_profile = FaultProfile(
+            wind=WindConfig(
+                enabled=True,
+                base_speed_mps=30.0,
+                base_heading_deg=0.0,
+                gust_probability=0.0,
+            )
+        )
+        adapter = InstrumentedFlightAdapter(
+            MockAdapter(tuned_profile, fault_profile=fault_profile),
+            logger_name="test.wind",
+        )
+        controller = ArrakisController(adapter, tuned_profile)
+
+        try:
+            controller.set_route(_make_route_preview(tuned_profile))
+            controller.start_mission()
+
+            outbound_deadline = time.time() + 8.0
+            while time.time() < outbound_deadline:
+                if controller.state_machine.phase == "OUTBOUND":
+                    break
+                time.sleep(0.2)
+            assert controller.state_machine.phase == "OUTBOUND", (
+                f"Expected OUTBOUND before wind stall, got {controller.state_machine.phase}"
+            )
+
+            rtl_deadline = time.time() + 6.0
+            while time.time() < rtl_deadline:
+                if controller.state_machine.phase == "RTL_NAV_DEGRADED":
+                    break
+                time.sleep(0.2)
+
+            assert controller.state_machine.phase == "RTL_NAV_DEGRADED", (
+                f"Expected RTL_NAV_DEGRADED after sustained wind stall, got {controller.state_machine.phase}"
+            )
+            assert controller.state_machine.abort_reason == "navigation degraded during flight"
+            assert controller.adapter.get_snapshot().flight_mode == "RTL"
+        finally:
+            controller.shutdown()
 
 
 # ---------------------------------------------------------------------------

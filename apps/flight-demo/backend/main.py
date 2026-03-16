@@ -102,6 +102,7 @@ def get_config(request: Request) -> dict[str, object]:
 def get_health(request: Request) -> dict[str, object]:
     controller = get_controller_from_scope(request)
     telemetry = controller.telemetry_hub.telemetry_snapshot()
+    stress = controller.telemetry_hub.stress_envelope()
     detector = controller.video_service.detector_state()
     simulator = controller.video_service.simulator_state(telemetry.sim_rtf)
     adapter_health = (
@@ -126,6 +127,7 @@ def get_health(request: Request) -> dict[str, object]:
             "vtol_state": telemetry.vtol_state,
             "battery_percent": telemetry.battery_percent,
         },
+        "stress": stress.model_dump(),
         "simulator": simulator.model_dump(),
         "memory": {
             "ru_maxrss": memory,

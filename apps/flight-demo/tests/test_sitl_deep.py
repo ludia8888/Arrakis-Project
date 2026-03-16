@@ -1,13 +1,14 @@
-"""Deep SITL integration tests — 7 critical scenarios.
+"""Deep SITL integration tests — 8 critical scenarios.
 
 Tests long-duration and fault-injection scenarios against ArduPilot SITL:
 1. Full mission completion (takeoff → outbound → return → land → disarm)
 2. Fixed-wing airspeed verification during AUTO mission
 3. Battery failsafe RTL trigger via SITL parameter injection
 4. GPS denial / degradation detection
-5. Communication loss detection via socket close
-6. Battery failsafe E2E: in-flight voltage drop → firmware RTL → landing
-7. Communication loss during active flight: socket close mid-mission
+5. In-flight total GPS loss truth-vs-estimate validation
+6. Communication loss detection via socket close
+7. Battery failsafe E2E: in-flight voltage drop → firmware RTL → landing
+8. Communication loss during active flight: socket close mid-mission
 
 Gated by:
     ARRAKIS_TEST_REAL_ARDUPILOT=1
@@ -26,7 +27,7 @@ import math
 import os
 import sys
 import time
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from pathlib import Path
 
 import pytest
@@ -63,6 +64,12 @@ def _make_nearby_waypoint(
     dlat = (distance_m * math.cos(angle_rad)) / lat_scale
     dlon = (distance_m * math.sin(angle_rad)) / lon_scale
     return {"lat": home_lat + dlat, "lon": home_lon + dlon}
+
+
+def _distance_m_coords(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    lat_scale = 111_320.0
+    lon_scale = math.cos(math.radians(lat1)) * 111_320.0
+    return math.hypot((lat2 - lat1) * lat_scale, (lon2 - lon1) * lon_scale)
 
 
 def _wait_for_disarm(adapter, timeout: float = 60.0) -> bool:
@@ -121,6 +128,31 @@ def _collect_telemetry(adapter, duration_s: float,
         snapshots.append(adapter.get_snapshot())
         time.sleep(interval_s)
     return snapshots
+
+
+def _recv_message(adapter, msg_type: str, timeout: float = 3.0):
+    deadline = time.time() + timeout
+    with adapter._io_lock:
+        while time.time() < deadline:
+            msg = adapter._require_master().recv_match(
+                type=msg_type, blocking=True, timeout=0.5,
+            )
+            if msg is not None:
+                return msg
+    return None
+
+
+def _gps_disable_param(adapter) -> tuple[str, float, float]:
+    for name, disable_value, enable_value in (
+        ("SIM_GPS_DISABLE", 1.0, 0.0),
+        ("SIM_GPS1_ENABLE", 0.0, 1.0),
+    ):
+        try:
+            get_sitl_param(adapter, name, timeout=2.0)
+        except Exception:
+            continue
+        return name, disable_value, enable_value
+    pytest.skip("No GPS disable parameter available in this SITL build")
 
 
 @contextmanager
@@ -604,6 +636,130 @@ class TestSITLGPSDenial:
             snap = adapter.get_snapshot()
             assert snap.position_valid, "Position became invalid with 3 sats"
             print(f"  Position still valid: lat={snap.lat:.6f}")
+
+
+@_sitl_skip
+class TestSITLInFlightGPSLossTruth:
+    """Measure real in-flight GPS loss behavior against simulator truth."""
+
+    def test_total_gps_loss_keeps_mission_moving_but_breaks_exact_truth_alignment(self, sitl_connection):
+        """Mission can keep progressing on dead reckoning, but exact return is not provable.
+
+        This test uses `SIMSTATE` as simulator truth and compares it with
+        `GLOBAL_POSITION_INT`, which continues to be emitted by the EKF after
+        raw GPS is disabled. The expected result in the current stack is:
+
+        1. Mission keeps progressing to return/landing under dead reckoning.
+        2. `position_valid` can remain True even though raw GPS is gone.
+        3. Truth-vs-estimate error grows enough that "exact return guarantee"
+           cannot be claimed.
+        """
+        adapter, _ = sitl_connection
+
+        force_disarm_sitl(adapter)
+        time.sleep(2.0)
+
+        gps_param, disable_value, enable_value = _gps_disable_param(adapter)
+        with _save_and_restore_params(adapter, [gps_param]):
+            try:
+                home = adapter.get_home()
+                _build_short_mission(adapter, distance_m=250.0, bearing_deg=90.0)
+
+                armed = force_arm_sitl(adapter)
+                assert armed, "Failed to arm for in-flight GPS loss test"
+
+                adapter.start_mission()
+                leg = _wait_for_leg(adapter, {"outbound"}, timeout=120.0)
+                assert leg == "outbound", (
+                    f"Did not reach outbound leg before GPS loss. Current leg: {adapter.current_leg()}"
+                )
+
+                baseline_sim = _recv_message(adapter, "SIMSTATE", timeout=5.0)
+                baseline_gpi = _recv_message(adapter, "GLOBAL_POSITION_INT", timeout=5.0)
+                if baseline_sim is None or baseline_gpi is None:
+                    pytest.skip("SIMSTATE/GLOBAL_POSITION_INT not available for truth comparison")
+                baseline_err = _distance_m_coords(
+                    baseline_sim.lat / 1e7,
+                    baseline_sim.lng / 1e7,
+                    baseline_gpi.lat / 1e7,
+                    baseline_gpi.lon / 1e7,
+                )
+                print(f"  Baseline truth error before GPS disable: {baseline_err:.1f}m")
+
+                set_sitl_param(adapter, gps_param, disable_value)
+                print(f"  GPS disabled via {gps_param}={disable_value}")
+
+                truth_errors: list[float] = []
+                truth_home_distances: list[float] = []
+                legs_seen: set[str] = set()
+                gps_sensor_invalid_seen = False
+                dead_reckoned_position_seen = False
+                weak_fix_seen = False
+
+                for idx in range(8):
+                    time.sleep(3.0)
+                    sim = _recv_message(adapter, "SIMSTATE", timeout=3.0)
+                    gpi = _recv_message(adapter, "GLOBAL_POSITION_INT", timeout=3.0)
+                    gps_raw = _recv_message(adapter, "GPS_RAW_INT", timeout=3.0)
+                    snap = adapter.get_snapshot()
+                    legs_seen.add(adapter.current_leg())
+
+                    if sim is not None and gpi is not None:
+                        truth_error = _distance_m_coords(
+                            sim.lat / 1e7,
+                            sim.lng / 1e7,
+                            gpi.lat / 1e7,
+                            gpi.lon / 1e7,
+                        )
+                        truth_home = _distance_m_coords(
+                            home.lat, home.lon, sim.lat / 1e7, sim.lng / 1e7,
+                        )
+                        truth_errors.append(truth_error)
+                        truth_home_distances.append(truth_home)
+                    else:
+                        truth_error = None
+                        truth_home = None
+
+                    if not snap.gps_sensor_valid:
+                        gps_sensor_invalid_seen = True
+                    if snap.position_valid:
+                        dead_reckoned_position_seen = True
+                    if gps_raw is not None and int(getattr(gps_raw, "fix_type", 0)) <= 1:
+                        weak_fix_seen = True
+
+                    print(
+                        f"  Sample {idx}: mode={snap.flight_mode} leg={adapter.current_leg()} "
+                        f"position_valid={snap.position_valid} gps_sensor_valid={snap.gps_sensor_valid} "
+                        f"fix_type={getattr(gps_raw, 'fix_type', None)} "
+                        f"truth_error={truth_error} truth_home={truth_home}"
+                    )
+
+                assert gps_sensor_invalid_seen or weak_fix_seen, (
+                    "Raw GPS loss was not observed after disabling GPS in flight"
+                )
+                assert dead_reckoned_position_seen, (
+                    "Dead-reckoned position did not persist after GPS loss"
+                )
+                assert {"return", "landing"} & legs_seen, (
+                    f"Mission did not continue toward return/landing under GPS loss. Legs: {sorted(legs_seen)}"
+                )
+                assert truth_errors, "No truth-error samples collected after GPS loss"
+                max_truth_error = max(truth_errors)
+                print(f"  Max truth-vs-estimate error after GPS loss: {max_truth_error:.1f}m")
+                if truth_home_distances:
+                    print(
+                        "  Min/last simulator-home distance during degraded return: "
+                        f"{min(truth_home_distances):.1f}m / {truth_home_distances[-1]:.1f}m"
+                    )
+
+                assert max_truth_error >= 15.0, (
+                    f"Truth drift stayed too small ({max_truth_error:.1f}m) to demonstrate loss of exact return guarantee"
+                )
+            finally:
+                with suppress(Exception):
+                    set_sitl_param(adapter, gps_param, enable_value)
+                with suppress(Exception):
+                    force_disarm_sitl(adapter)
 
 
 # ===================================================================

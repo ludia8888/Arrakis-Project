@@ -14,10 +14,16 @@ services:
     ports:
       - "5760:5760"
       - "5762:5762"
+    volumes:
+      - ./sim_runtime/params/quadplane_demo.parm:/arrakis/quadplane_demo.parm:ro
     environment:
       - VEHICLE=ArduPlane
-      - FRAME=quadplane
+      - MODEL=quadplane
       - SPEEDUP=1
+    entrypoint:
+      - /bin/sh
+      - -c
+      - /ardupilot/Tools/autotest/sim_vehicle.py --vehicle $${VEHICLE} -I$${INSTANCE} --custom-location=$${LAT},$${LON},$${ALT},$${DIR} -w --frame $${MODEL} --no-rebuild --no-mavproxy --speedup $${SPEEDUP} --add-param-file /arrakis/quadplane_demo.parm
     healthcheck:
       test: ["CMD-SHELL", "nc -z localhost 5760 || exit 1"]
       interval: 5s
@@ -33,7 +39,7 @@ services:
       - "5770:5760"
     environment:
       - VEHICLE=ArduCopter
-      - FRAME=quad
+      - MODEL=quad
       - SPEEDUP=1
     healthcheck:
       test: ["CMD-SHELL", "nc -z localhost 5760 || exit 1"]
