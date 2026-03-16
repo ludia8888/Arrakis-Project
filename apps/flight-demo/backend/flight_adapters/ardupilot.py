@@ -342,7 +342,9 @@ class ArduPilotAdapter(FlightControllerAdapter):
         if self._master is not None:
             with suppress(Exception):
                 with self._io_lock:
-                    self._master.waypoint_clear_all_send()
+                    self._master.mav.mission_clear_all_send(
+                        self._target_system, self._target_component, 0,
+                    )
 
     def get_snapshot(self) -> TelemetrySnapshot:
         with self._state_lock:
@@ -703,9 +705,13 @@ class ArduPilotAdapter(FlightControllerAdapter):
     def _upload_mission_points(self, points: list[LatLon]) -> None:
         master = self._require_master()
         with self._io_lock:
-            master.waypoint_clear_all_send()
+            master.mav.mission_clear_all_send(
+                self._target_system, self._target_component, 0,
+            )
             time.sleep(0.2)
-            master.waypoint_count_send(len(points))
+            master.mav.mission_count_send(
+                self._target_system, self._target_component, len(points), 0,
+            )
             for _ in range(len(points)):
                 request = self._recv_expected_locked({"MISSION_REQUEST", "MISSION_REQUEST_INT"}, self._command_timeout)
                 seq = int(request.seq)
@@ -714,7 +720,7 @@ class ArduPilotAdapter(FlightControllerAdapter):
                     self._target_system,
                     self._target_component,
                     seq,
-                    self._mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT,
+                    self._mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
                     self._mavutil.mavlink.MAV_CMD_NAV_WAYPOINT,
                     0,
                     1,
@@ -765,7 +771,7 @@ class ArduPilotAdapter(FlightControllerAdapter):
                 self._target_system,
                 self._target_component,
                 home_seq,
-                self._mavutil.mavlink.MAV_FRAME_GLOBAL_INT,
+                self._mavutil.mavlink.MAV_FRAME_GLOBAL,
                 self._mavutil.mavlink.MAV_CMD_NAV_WAYPOINT,
                 0,
                 1,
@@ -781,7 +787,7 @@ class ArduPilotAdapter(FlightControllerAdapter):
                 self._target_system,
                 self._target_component,
                 takeoff_seq,
-                self._mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT,
+                self._mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
                 self._mavutil.mavlink.MAV_CMD_NAV_VTOL_TAKEOFF if self._profile.is_vtol else self._mavutil.mavlink.MAV_CMD_NAV_TAKEOFF,
                 0,
                 1,
@@ -800,7 +806,7 @@ class ArduPilotAdapter(FlightControllerAdapter):
                     self._target_system,
                     self._target_component,
                     offset,
-                    self._mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT,
+                    self._mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
                     self._mavutil.mavlink.MAV_CMD_NAV_WAYPOINT,
                     0,
                     1,
@@ -818,7 +824,7 @@ class ArduPilotAdapter(FlightControllerAdapter):
                 self._target_system,
                 self._target_component,
                 landing_seq,
-                self._mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT,
+                self._mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
                 self._mavutil.mavlink.MAV_CMD_NAV_VTOL_LAND if self._profile.is_vtol else self._mavutil.mavlink.MAV_CMD_NAV_LAND,
                 0,
                 1,
@@ -835,9 +841,13 @@ class ArduPilotAdapter(FlightControllerAdapter):
         total_timeout = min(len(mission_items) * self._command_timeout, 120.0)
         upload_deadline = time.monotonic() + total_timeout
         with self._io_lock:
-            master.waypoint_clear_all_send()
+            master.mav.mission_clear_all_send(
+                self._target_system, self._target_component, 0,
+            )
             time.sleep(0.2)
-            master.waypoint_count_send(len(mission_items))
+            master.mav.mission_count_send(
+                self._target_system, self._target_component, len(mission_items), 0,
+            )
             for _ in range(len(mission_items)):
                 remaining = upload_deadline - time.monotonic()
                 if remaining <= 0:

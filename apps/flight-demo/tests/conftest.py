@@ -195,6 +195,30 @@ def sitl_connection():
             break
         time.sleep(1.0)
 
+    # Extra stabilization: after mission_ready, wait for EKF3 to become
+    # active and for the firmware to be ready to accept missions.
+    # Fresh SITL starts with EKF2 and transitions to EKF3 after ~60-120s.
+    bs = instrumented.bootstrap_status()
+    if not bs.mission_ready:
+        # If still not ready, wait longer (total 180s from connect)
+        deadline2 = time.time() + 120.0
+        while time.time() < deadline2:
+            bs = instrumented.bootstrap_status()
+            if bs.mission_ready:
+                break
+            time.sleep(2.0)
+
+    bs = instrumented.bootstrap_status()
+    print(f"\n[SITL fixture] mission_ready={bs.mission_ready}")
+
+    # Fresh SITL with -w (param wipe) needs ARMING_CHECK=0
+    # to bypass "3D Accel calibration needed" prearm error.
+    try:
+        set_sitl_param(adapter, "ARMING_CHECK", 0)
+    except Exception:
+        pass
+    time.sleep(10.0)
+
     yield adapter, instrumented
 
     # Teardown: ensure disarmed + release TCP connection
