@@ -12,3 +12,4 @@ apps/flight-demo/frontend/dist/
 apps/flight-demo/frontend/*.tsbuildinfo
 apps/flight-demo/backend/.venv/
 apps/flight-demo/sim_runtime/runtime.env
+apps/flight-demo/.claude/
