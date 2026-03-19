@@ -8,7 +8,14 @@ from schemas import MissionPhase, RoutePreview
 
 
 TERMINAL_PHASES = {"IDLE", "COMPLETE", "ABORT_GEOFENCE", "ABORT_MANUAL"}
-INTERRUPT_PHASES = {"ABORT_GEOFENCE", "ABORT_MANUAL", "RTL_BATTERY", "RTL_GPS_LOSS", "RTL_NAV_DEGRADED"}
+INTERRUPT_PHASES = {
+    "ABORT_GEOFENCE",
+    "ABORT_MANUAL",
+    "RTL_BATTERY",
+    "RTL_LINK_LOSS",
+    "RTL_GPS_LOSS",
+    "RTL_NAV_DEGRADED",
+}
 
 
 logger = logging.getLogger("arrakis.state_machine")

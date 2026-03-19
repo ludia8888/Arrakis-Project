@@ -25,7 +25,7 @@ class InstrumentedFlightAdapter(FlightControllerAdapter):
 
     def health_status(self) -> dict[str, object]:
         bootstrap = self.bootstrap_status()
-        return {
+        payload = {
             "adapter": self._adapter.__class__.__name__,
             "connected": self._connected,
             "last_error": self._last_error,
@@ -33,10 +33,17 @@ class InstrumentedFlightAdapter(FlightControllerAdapter):
             "last_call_ms": self._last_call_ms,
             "bootstrap": bootstrap.model_dump(),
         }
+        wrapped_health = getattr(self._adapter, "health_status", None)
+        if callable(wrapped_health):
+            payload["wrapped"] = wrapped_health()
+        return payload
 
     def connect(self) -> None:
         self._call("connect", self._adapter.connect)
         self._connected = True
+
+    def set_event_sink(self, callback) -> None:
+        self._call("set_event_sink", self._adapter.set_event_sink, callback)
 
     def mission_execution_style(self) -> str:
         return self._call("mission_execution_style", self._adapter.mission_execution_style)
@@ -91,6 +98,9 @@ class InstrumentedFlightAdapter(FlightControllerAdapter):
 
     def bootstrap_status(self) -> AdapterBootstrapStatus:
         return self._call("bootstrap_status", self._adapter.bootstrap_status)
+
+    def recover_control_plane(self) -> AdapterBootstrapStatus:
+        return self._call("recover_control_plane", self._adapter.recover_control_plane)
 
     def _call(self, name: str, fn, *args, **kwargs):
         log = self._logger.debug if name in self._DEBUG_METHODS else self._logger.info

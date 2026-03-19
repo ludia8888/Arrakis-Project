@@ -11,7 +11,7 @@ import cv2
 import numpy as np
 
 from airframe_profile import AirframeProfile
-from config import VideoConfig
+from config import ARRAKIS_LINK_PROFILE, VideoConfig
 from schemas import AdapterBootstrapStatus, LatLon, TelemetrySnapshot
 
 from .base import FlightControllerAdapter, VideoFrame
@@ -103,14 +103,31 @@ class MockAdapter(FlightControllerAdapter):
         # Takeoff state for gradual climb dynamics
         self._takeoff_target_alt: float | None = None
         self._gps_valid = True  # tracks GPS validity for snapshot
+        self._link_profile = ARRAKIS_LINK_PROFILE
+        self._event_sink = None
+        self._control_plane_fault = False
+        self._fault_kind: str | None = None
+        self._fault_reason: str | None = None
+        self._fault_at: float | None = None
+        self._recovering = False
+        self._telemetry_blind_age_s: float | None = None
+        self._last_telemetry_at: float | None = None
+        self._last_heartbeat_at: float | None = None
 
     def connect(self) -> None:
         if self._running:
             return
         self._running = True
+        now = time.time()
+        self._last_telemetry_at = now
+        self._last_heartbeat_at = now
         logger.info("Starting mock adapter loops")
         threading.Thread(target=self._telemetry_loop, daemon=True).start()
         threading.Thread(target=self._video_loop, daemon=True).start()
+        self._emit_event("session_connect")
+
+    def set_event_sink(self, callback) -> None:
+        self._event_sink = callback
 
     def mission_execution_style(self) -> str:
         return "stepwise"
@@ -240,6 +257,13 @@ class MockAdapter(FlightControllerAdapter):
             self._gps_valid = True
             if self._fault_injector:
                 self._fault_injector.reset_takeoff()
+        self._telemetry_blind_age_s = None
+        self._control_plane_fault = False
+        self._fault_kind = None
+        self._fault_reason = None
+        self._fault_at = None
+        self._recovering = False
+        self._emit_event("mock_reset")
 
     def get_snapshot(self) -> TelemetrySnapshot:
         with self._lock:
@@ -258,25 +282,76 @@ class MockAdapter(FlightControllerAdapter):
 
     def bootstrap_status(self) -> AdapterBootstrapStatus:
         now = time.time()
+        snapshot = self.get_snapshot()
+        mission_ready = self._running and not self._control_plane_fault and snapshot.telemetry_fresh
         return AdapterBootstrapStatus(
             connected=self._running,
             heartbeat_received=self._running,
-            telemetry_fresh=self._running,
+            telemetry_fresh=snapshot.telemetry_fresh,
+            telemetry_state=snapshot.telemetry_state,
             mode_ready=True,
-            position_ready=True,
+            position_ready=snapshot.position_valid,
             home_ready=True,
-            mission_ready=self._running,
-            last_telemetry_at=now,
-            last_heartbeat_at=now,
+            mission_ready=mission_ready,
+            last_telemetry_at=self._last_telemetry_at or now,
+            last_heartbeat_at=self._last_heartbeat_at or now,
             last_mode_at=now,
-            last_position_at=now,
+            last_position_at=self._last_telemetry_at or now,
             last_home_at=now,
-            telemetry_age_s=0.0,
-            heartbeat_age_s=0.0,
+            telemetry_age_s=snapshot.telemetry_age_s or 0.0,
+            heartbeat_age_s=max(now - (self._last_heartbeat_at or now), 0.0),
             mode_age_s=0.0,
-            position_age_s=0.0,
+            position_age_s=snapshot.telemetry_age_s or 0.0,
             home_age_s=0.0,
-            reason=None if self._running else "mock adapter is not connected",
+            control_plane_fault=self._control_plane_fault,
+            fault_kind=self._fault_kind,
+            fault_reason=self._fault_reason,
+            recovering=self._recovering,
+            link_profile=self._link_profile.name,
+            reason=self._bootstrap_reason(snapshot, mission_ready),
+        )
+
+    def recover_control_plane(self) -> AdapterBootstrapStatus:
+        self._recovering = True
+        self._emit_event("control_plane_recover_attempt")
+        if not self._running:
+            self.connect()
+        self._telemetry_blind_age_s = None
+        self._control_plane_fault = False
+        self._fault_kind = None
+        self._fault_reason = None
+        self._fault_at = None
+        self._recovering = False
+        self._emit_event("control_plane_fault_cleared")
+        return self.bootstrap_status()
+
+    def health_status(self) -> dict[str, object]:
+        bootstrap = self.bootstrap_status()
+        return {
+            "control_plane_fault": self._control_plane_fault,
+            "fault_kind": self._fault_kind,
+            "fault_reason": self._fault_reason,
+            "fault_at": self._fault_at,
+            "recovering": self._recovering,
+            "link_profile": self._link_profile.name,
+            "bootstrap": bootstrap.model_dump(),
+        }
+
+    def postflight_log_metadata(self) -> dict[str, object]:
+        return {"attempted": False, "status": "mock_adapter"}
+
+    def force_telemetry_age(self, age_s: float | None) -> None:
+        self._telemetry_blind_age_s = age_s
+
+    def force_control_plane_fault(self, kind: str, reason: str) -> None:
+        self._control_plane_fault = True
+        self._fault_kind = kind
+        self._fault_reason = reason
+        self._fault_at = time.time()
+        self._emit_event(
+            "control_plane_fault",
+            fault_kind=kind,
+            fault_reason=reason,
         )
 
     def _snapshot_locked(self) -> TelemetrySnapshot:
@@ -291,6 +366,8 @@ class MockAdapter(FlightControllerAdapter):
             lat, lon, alt, position_valid = fi.apply_gps_noise(lat, lon, alt)
             self._gps_valid = position_valid
 
+        age_s = self._telemetry_blind_age_s if self._telemetry_blind_age_s is not None else 0.0
+        telemetry_state = self._telemetry_state_from_age(age_s)
         return TelemetrySnapshot(
             timestamp=time.time(),
             lat=lat,
@@ -308,7 +385,9 @@ class MockAdapter(FlightControllerAdapter):
             else float("inf"),
             geofence_breached=self.state.geofence_breached,
             sim_rtf=self.state.sim_rtf,
-            telemetry_fresh=True,
+            telemetry_fresh=telemetry_state == "fresh",
+            telemetry_age_s=age_s,
+            telemetry_state=telemetry_state,
             mode_valid=True,
             position_valid=position_valid,
             gps_sensor_valid=position_valid,
@@ -323,6 +402,9 @@ class MockAdapter(FlightControllerAdapter):
             now = time.time()
             dt = max(now - last, 0.2)
             last = now
+            self._last_heartbeat_at = now
+            if self._telemetry_blind_age_s is None:
+                self._last_telemetry_at = now
             with self._lock:
                 self._step_locked(dt)
                 snapshot = self._snapshot_locked()
@@ -490,3 +572,23 @@ class MockAdapter(FlightControllerAdapter):
         cv2.line(frame, (cx - 18, cy), (cx + 18, cy), (255, 255, 255), 2)
         cv2.line(frame, (cx, cy - 18), (cx, cy + 18), (255, 255, 255), 2)
         return frame
+
+    def _telemetry_state_from_age(self, age_s: float) -> str:
+        if age_s >= self._link_profile.telemetry_lost_after_s:
+            return "lost"
+        if age_s >= self._link_profile.telemetry_degraded_after_s:
+            return "degraded"
+        return "fresh"
+
+    def _bootstrap_reason(self, snapshot: TelemetrySnapshot, mission_ready: bool) -> str | None:
+        if not self._running:
+            return "mock adapter is not connected"
+        if self._control_plane_fault:
+            return self._fault_reason or "control plane fault active"
+        if mission_ready:
+            return None
+        return f"telemetry state is {snapshot.telemetry_state}"
+
+    def _emit_event(self, event_type: str, **fields) -> None:
+        if self._event_sink is not None:
+            self._event_sink(event_type, fields)

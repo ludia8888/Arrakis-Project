@@ -10,7 +10,15 @@ from schemas import MissionPhase, TelemetrySnapshot, TransitionDiagnostics
 logger = logging.getLogger("arrakis.transition")
 
 WATCH_PHASES = {"RETURN", "PRE_MC_RECOVERY", "TRANSITION_MC", "LANDING"}
-TERMINAL_PHASES = {"COMPLETE", "ABORT_GEOFENCE", "ABORT_MANUAL", "RTL_BATTERY", "RTL_GPS_LOSS", "RTL_NAV_DEGRADED"}
+TERMINAL_PHASES = {
+    "COMPLETE",
+    "ABORT_GEOFENCE",
+    "ABORT_MANUAL",
+    "RTL_BATTERY",
+    "RTL_LINK_LOSS",
+    "RTL_GPS_LOSS",
+    "RTL_NAV_DEGRADED",
+}
 
 
 class TransitionDiagnosticsTracker:

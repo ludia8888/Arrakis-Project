@@ -11,6 +11,7 @@ from typing import Any, Callable
 
 from airframe_profile import AirframeProfile
 from config import (
+    ARRAKIS_LINK_PROFILE,
     ARDUPILOT_COMMAND_TIMEOUT,
     ARDUPILOT_CONNECTION,
     ARDUPILOT_DEFAULT_HOME_LAT,
@@ -104,6 +105,7 @@ class ArduPilotAdapter(FlightControllerAdapter):
 
     def __init__(self, profile: AirframeProfile) -> None:
         self._profile = profile
+        self._link_profile = ARRAKIS_LINK_PROFILE
         self._connection = ARDUPILOT_CONNECTION
         self._video_source = ARDUPILOT_VIDEO_SOURCE
         self._heartbeat_timeout = ARDUPILOT_HEARTBEAT_TIMEOUT
@@ -118,6 +120,8 @@ class ArduPilotAdapter(FlightControllerAdapter):
         self._running = False
         self._telemetry_thread: threading.Thread | None = None
         self._video_thread: threading.Thread | None = None
+        self._gcs_heartbeat_thread: threading.Thread | None = None
+        self._gcs_heartbeat_stop = threading.Event()
         self._master: Any | None = None
         self._mavutil: Any | None = None
         self._cv2: Any | None = None
@@ -146,6 +150,7 @@ class ArduPilotAdapter(FlightControllerAdapter):
         self._last_telemetry_mono: float | None = None
         self._last_heartbeat_mono: float | None = None
         self._last_gps_sensor_mono: float | None = None
+        self._last_home_request_mono: float | None = None
         # Fix 1+3: heartbeat watchdog and connection loss detection
         self._heartbeat_watchdog_timeout_s = max(self._heartbeat_timeout, 10.0)
         self._connection_lost = False
@@ -154,6 +159,12 @@ class ArduPilotAdapter(FlightControllerAdapter):
         self._max_consecutive_empty = _MAX_CONSECUTIVE_EMPTY
         # Fix 8: pre-arm error collection
         self._prearm_errors: list[str] = []
+        self._event_sink: Callable[[str, dict[str, Any]], None] | None = None
+        self._control_plane_fault = False
+        self._fault_kind: str | None = None
+        self._fault_reason: str | None = None
+        self._fault_at: float | None = None
+        self._recovering = False
         logger.info("ArduPilotAdapter initialized connection=%s video_source=%s", self._connection, self._video_source)
 
     def connect(self) -> None:
@@ -189,6 +200,10 @@ class ArduPilotAdapter(FlightControllerAdapter):
         if self._video_source:
             self._video_thread = threading.Thread(target=self._video_loop, name="arrakis-ardupilot-video", daemon=True)
             self._video_thread.start()
+        self._start_gcs_heartbeat_worker()
+        with suppress(Exception):
+            self._request_home_position(force=True)
+        self._emit_event("session_connect", connection=self._connection)
         logger.info(
             "ArduPilot heartbeat received system=%s component=%s",
             self._target_system,
@@ -197,6 +212,9 @@ class ArduPilotAdapter(FlightControllerAdapter):
 
     def mission_execution_style(self) -> str:
         return "mission_oriented"
+
+    def set_event_sink(self, callback: Callable[[str, dict[str, Any]], None] | None) -> None:
+        self._event_sink = callback
 
     def arm(self) -> None:
         self._prearm_errors.clear()  # Fix 8: collect fresh prearm errors
@@ -240,13 +258,52 @@ class ArduPilotAdapter(FlightControllerAdapter):
         mission_points = outbound + return_path
         if not mission_points:
             raise ValueError("Roundtrip mission upload requires outbound and return_path points")
-        self._upload_mission_points_mission_oriented(
-            home=home or self._home,
-            outbound=outbound,
-            return_path=return_path,
-            takeoff_alt_m=takeoff_alt_m,
-            cruise_alt_m=cruise_alt_m,
-        )
+        last_exc: Exception | None = None
+        for attempt in range(1, self._link_profile.mission_upload_retries + 1):
+            self._emit_event(
+                "mission_upload_attempt",
+                attempt=attempt,
+                retries=self._link_profile.mission_upload_retries,
+                outbound_count=len(outbound),
+                return_count=len(return_path),
+            )
+            try:
+                self._upload_mission_points_mission_oriented(
+                    home=home or self._home,
+                    outbound=outbound,
+                    return_path=return_path,
+                    takeoff_alt_m=takeoff_alt_m,
+                    cruise_alt_m=cruise_alt_m,
+                )
+                self._emit_event("mission_upload_verified", attempt=attempt)
+                break
+            except Exception as exc:
+                last_exc = exc
+                is_final = attempt >= self._link_profile.mission_upload_retries
+                self._emit_event(
+                    "mission_upload_failed" if is_final else "mission_upload_retry",
+                    attempt=attempt,
+                    retries=self._link_profile.mission_upload_retries,
+                    exception_class=type(exc).__name__,
+                    message=str(exc),
+                )
+                logger.warning(
+                    "Mission upload attempt %d/%d failed: %s",
+                    attempt,
+                    self._link_profile.mission_upload_retries,
+                    exc,
+                )
+                if is_final:
+                    self._mark_control_plane_fault(
+                        "mission_upload_failed",
+                        f"mission upload failed after {attempt} attempts: {exc}",
+                    )
+                    raise RuntimeError(
+                        f"Mission upload failed after {attempt} attempts: {exc}"
+                    ) from exc
+                time.sleep(0.5 * attempt)
+        if last_exc is not None and self._mission_seq_end <= 0:
+            raise RuntimeError(f"Mission upload did not complete: {last_exc}") from last_exc
         self._outbound_count = len(outbound)
         self._return_count = len(return_path)
         self._route_leg = "takeoff"
@@ -298,6 +355,27 @@ class ArduPilotAdapter(FlightControllerAdapter):
     def return_to_home(self) -> None:
         self._set_mode(ARDUPILOT_MODE_RTL)
         self._route_leg = "return"
+
+    def set_home_to_current(self, timeout: float = 12.0) -> None:
+        snapshot = self.get_snapshot()
+        if not snapshot.position_valid:
+            raise RuntimeError("Cannot set home without a valid position fix")
+        self._send_command_with_retry(
+            self._mavutil.mavlink.MAV_CMD_DO_SET_HOME,
+            [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            "set home to current position",
+        )
+        self._request_home_position(force=True)
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            current = self.get_snapshot()
+            home = self.get_home()
+            bootstrap = self.bootstrap_status()
+            if bootstrap.home_ready and current.position_valid and _distance_m(home, LatLon(lat=current.lat, lon=current.lon)) <= 5.0:
+                return
+            self._request_home_position()
+            time.sleep(0.5)
+        raise TimeoutError("Timed out waiting for updated home position")
 
     def land_vertical(self) -> None:
         land_mode = ARDUPILOT_MODE_QLAND if self._profile.is_vtol else ARDUPILOT_MODE_LAND
@@ -356,10 +434,13 @@ class ArduPilotAdapter(FlightControllerAdapter):
             home = self._home
             # Fix 9: use monotonic clock for freshness (immune to NTP clock jumps)
             now_mono = time.monotonic()
-            telemetry_fresh = bool(
-                self._last_telemetry_mono is not None
-                and (now_mono - self._last_telemetry_mono) <= max(2.5, 2.0 / self._telemetry_hz)
+            telemetry_age_s = (
+                None
+                if self._last_telemetry_mono is None
+                else max(now_mono - self._last_telemetry_mono, 0.0)
             )
+            telemetry_state = self._telemetry_state_for_age(telemetry_age_s)
+            telemetry_fresh = telemetry_state == "fresh"
         return TelemetrySnapshot(
             timestamp=time.time(),
             lat=state.lat,
@@ -378,6 +459,8 @@ class ArduPilotAdapter(FlightControllerAdapter):
             geofence_breached=state.geofence_breached,
             sim_rtf=state.sim_rtf,
             telemetry_fresh=telemetry_fresh,
+            telemetry_age_s=telemetry_age_s,
+            telemetry_state=telemetry_state,
             mode_valid=state.mode_valid,
             position_valid=state.position_valid,
             gps_sensor_valid=bool(
@@ -412,17 +495,29 @@ class ArduPilotAdapter(FlightControllerAdapter):
         snapshot = self.get_snapshot()
         now = time.time()
         connected = self._master is not None and self._heartbeat_received
-        mission_ready = connected and snapshot.telemetry_fresh and snapshot.mode_valid and snapshot.position_valid and snapshot.home_valid
+        if connected and snapshot.position_valid and not snapshot.home_valid:
+            with suppress(Exception):
+                self._request_home_position()
+        mission_ready = (
+            connected
+            and not self._control_plane_fault
+            and snapshot.telemetry_fresh
+            and snapshot.mode_valid
+            and snapshot.position_valid
+            and snapshot.home_valid
+        )
         telemetry_age_s = _age_seconds(self._last_telemetry_at, now)
         heartbeat_age_s = _age_seconds(self._last_heartbeat_at, now)
         mode_age_s = _age_seconds(self._last_mode_at, now)
         position_age_s = _age_seconds(self._last_position_at, now)
         home_age_s = _age_seconds(self._last_home_at, now)
         reason: str | None = None
-        if not connected:
+        if self._control_plane_fault:
+            reason = self._fault_reason or "control plane fault active"
+        elif not connected:
             reason = _bootstrap_wait_reason("heartbeat", self._last_heartbeat_at, now)
         elif not snapshot.telemetry_fresh:
-            reason = _bootstrap_wait_reason("fresh telemetry", self._last_telemetry_at, now)
+            reason = f"waiting for fresh telemetry state={snapshot.telemetry_state} age={telemetry_age_s or 0.0:.1f}s"
         elif not snapshot.mode_valid:
             reason = _bootstrap_wait_reason("valid flight mode", self._last_mode_at, now)
         elif not snapshot.position_valid:
@@ -433,6 +528,7 @@ class ArduPilotAdapter(FlightControllerAdapter):
             connected=connected,
             heartbeat_received=self._heartbeat_received,
             telemetry_fresh=snapshot.telemetry_fresh,
+            telemetry_state=snapshot.telemetry_state,
             mode_ready=snapshot.mode_valid,
             position_ready=snapshot.position_valid,
             home_ready=snapshot.home_valid,
@@ -447,8 +543,104 @@ class ArduPilotAdapter(FlightControllerAdapter):
             mode_age_s=mode_age_s,
             position_age_s=position_age_s,
             home_age_s=home_age_s,
+            control_plane_fault=self._control_plane_fault,
+            fault_kind=self._fault_kind,
+            fault_reason=self._fault_reason,
+            recovering=self._recovering,
+            link_profile=self._link_profile.name,
             reason=reason,
         )
+
+    def health_status(self) -> dict[str, object]:
+        bootstrap = self.bootstrap_status()
+        return {
+            "connected": self._master is not None and self._heartbeat_received,
+            "connection": self._connection,
+            "link_profile": self._link_profile.name,
+            "control_plane_fault": self._control_plane_fault,
+            "fault_kind": self._fault_kind,
+            "fault_reason": self._fault_reason,
+            "fault_at": self._fault_at,
+            "recovering": self._recovering,
+            "bootstrap": bootstrap.model_dump(),
+        }
+
+    def recover_control_plane(self) -> AdapterBootstrapStatus:
+        self._recovering = True
+        self._emit_event(
+            "control_plane_recover_attempt",
+            fault_kind=self._fault_kind,
+            fault_reason=self._fault_reason,
+        )
+        self._stop_runtime_workers()
+        self._reset_connection_state_for_reconnect()
+        try:
+            self.connect()
+            self._request_data_streams()
+            self._request_home_position(force=True)
+            stable_since: float | None = None
+            deadline = time.time() + max(self._link_profile.control_plane_revalidate_s * 2.0, 10.0)
+            while time.time() < deadline:
+                bootstrap = self.bootstrap_status()
+                healthy = (
+                    not bootstrap.control_plane_fault
+                    and bootstrap.telemetry_state == "fresh"
+                    and bootstrap.mode_ready
+                    and bootstrap.position_ready
+                    and bootstrap.home_ready
+                )
+                if healthy:
+                    stable_since = stable_since or time.time()
+                    if time.time() - stable_since >= self._link_profile.control_plane_revalidate_s:
+                        self._clear_control_plane_fault("control plane recovered")
+                        self._start_gcs_heartbeat_worker()
+                        self._recovering = False
+                        result = self.bootstrap_status()
+                        self._emit_event("control_plane_fault_cleared", bootstrap=result.model_dump(mode="json"))
+                        return result
+                else:
+                    stable_since = None
+                time.sleep(0.2)
+            self._mark_control_plane_fault(
+                "recover_timeout",
+                f"control plane did not revalidate within {self._link_profile.control_plane_revalidate_s:.1f}s",
+            )
+            return self.bootstrap_status()
+        except Exception as exc:
+            self._mark_control_plane_fault("recover_failed", f"{type(exc).__name__}: {exc}")
+            raise RuntimeError(f"Control-plane recovery failed: {exc}") from exc
+        finally:
+            self._recovering = False
+
+    def postflight_log_metadata(self) -> dict[str, object]:
+        master = self._master
+        if master is None:
+            return {"attempted": False, "status": "not_connected"}
+        entries: list[dict[str, object]] = []
+        try:
+            with self._io_lock:
+                master.mav.log_request_list_send(self._target_system, self._target_component, 0, 0xFFFF)
+                deadline = time.time() + 2.0
+                while time.time() < deadline:
+                    msg = master.recv_match(type=["LOG_ENTRY"], blocking=True, timeout=0.2)
+                    if msg is None:
+                        continue
+                    entries.append(
+                        {
+                            "id": int(getattr(msg, "id", -1)),
+                            "num_logs": int(getattr(msg, "num_logs", 0)),
+                            "last_log_num": int(getattr(msg, "last_log_num", 0)),
+                            "size": int(getattr(msg, "size", 0)),
+                            "time_utc": int(getattr(msg, "time_utc", 0)),
+                        }
+                    )
+                    num_logs = int(getattr(msg, "num_logs", 0))
+                    if num_logs > 0 and len(entries) >= num_logs:
+                        break
+            return {"attempted": True, "status": "ok", "entries": entries}
+        except Exception as exc:
+            logger.warning("Post-flight log metadata query failed: %s", exc)
+            return {"attempted": True, "status": "failed", "reason": str(exc)}
 
     def _load_dependencies(self) -> None:
         if self._mavutil is None:
@@ -483,6 +675,22 @@ class ArduPilotAdapter(FlightControllerAdapter):
                         1,
                     )
 
+    def _request_home_position(self, *, force: bool = False) -> None:
+        if self._master is None:
+            return
+        now_mono = time.monotonic()
+        if not force and self._last_home_request_mono is not None and (now_mono - self._last_home_request_mono) < 1.0:
+            return
+        self._last_home_request_mono = now_mono
+        with self._io_lock:
+            self._master.mav.command_long_send(
+                self._target_system,
+                self._target_component,
+                self._mavutil.mavlink.MAV_CMD_GET_HOME_POSITION,
+                0,
+                0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            )
+
     def _telemetry_loop(self) -> None:
         next_emit = 0.0
         while self._running and self._master is not None:
@@ -494,9 +702,11 @@ class ArduPilotAdapter(FlightControllerAdapter):
                 except (OSError, IOError) as exc:
                     logger.error("Connection I/O error in telemetry loop: %s", exc)
                     self._connection_lost = True
+                    self._mark_control_plane_fault("io_fault", f"{type(exc).__name__}: {exc}")
                     break
                 except Exception as exc:
                     logger.warning("Unexpected recv_match error: %s", exc)
+                    self._mark_control_plane_fault("recv_match_fault", f"{type(exc).__name__}: {exc}")
                     msg = None
             if msg is not None:
                 self._consecutive_empty_reads = 0
@@ -522,12 +732,14 @@ class ArduPilotAdapter(FlightControllerAdapter):
                         self._heartbeat_watchdog_timeout_s,
                     )
                     self._connection_lost = True
+                    self._mark_control_plane_fault(
+                        "heartbeat_watchdog_timeout",
+                        f"heartbeat age {heartbeat_age:.1f}s exceeded watchdog {self._heartbeat_watchdog_timeout_s:.1f}s",
+                    )
             now = time.time()
             if now >= next_emit:
                 snapshot = self.get_snapshot()
-                for callback in list(self._telemetry_callbacks):
-                    with suppress(Exception):
-                        callback(snapshot)
+                self._emit_telemetry_snapshot(snapshot)
                 next_emit = now + (1.0 / self._telemetry_hz)
 
     def _video_loop(self) -> None:
@@ -668,10 +880,12 @@ class ArduPilotAdapter(FlightControllerAdapter):
             if mode_name not in mode_mapping:
                 raise RuntimeError(f"Flight mode '{mode_name}' is not available on this ArduPilot target")
             master.set_mode(mode_mapping[mode_name])
+        self._emit_event("mode_change_requested", mode=mode_name)
         self._wait_for(
             lambda s: s.flight_mode.upper() == mode_name.upper(),
             f"mode {mode_name}",
         )
+        self._emit_event("mode_change_confirmed", mode=mode_name)
 
     # Fix 5: command retry with exponential backoff
     def _send_command_with_retry(
@@ -711,6 +925,7 @@ class ArduPilotAdapter(FlightControllerAdapter):
         # Fix 2: clear only this command's ACK entry (not all ACKs)
         with self._state_lock:
             self._pending_acks.pop(command, None)
+        self._emit_event("command_send", command=command, params=params)
         with self._io_lock:
             master.mav.command_long_send(
                 self._target_system,
@@ -784,6 +999,30 @@ class ArduPilotAdapter(FlightControllerAdapter):
         outbound_start = 2
         return_start = outbound_start + len(outbound)
         landing_seq = return_start + len(effective_return_path)
+        takeoff_command = (
+            self._mavutil.mavlink.MAV_CMD_NAV_VTOL_TAKEOFF
+            if self._profile.is_vtol
+            else self._mavutil.mavlink.MAV_CMD_NAV_TAKEOFF
+        )
+        landing_command = (
+            self._mavutil.mavlink.MAV_CMD_NAV_VTOL_LAND
+            if self._profile.is_vtol
+            else self._mavutil.mavlink.MAV_CMD_NAV_LAND
+        )
+        mission_specs = [
+            {
+                "seq": home_seq,
+                "command": self._mavutil.mavlink.MAV_CMD_NAV_WAYPOINT,
+                "frame": self._mavutil.mavlink.MAV_FRAME_GLOBAL,
+                "alt": 0.0,
+            },
+            {
+                "seq": takeoff_seq,
+                "command": takeoff_command,
+                "frame": self._mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+                "alt": float(takeoff_alt_m),
+            },
+        ]
         mission_items = [
             master.mav.mission_item_int_encode(
                 self._target_system,
@@ -806,7 +1045,7 @@ class ArduPilotAdapter(FlightControllerAdapter):
                 self._target_component,
                 takeoff_seq,
                 self._mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
-                self._mavutil.mavlink.MAV_CMD_NAV_VTOL_TAKEOFF if self._profile.is_vtol else self._mavutil.mavlink.MAV_CMD_NAV_TAKEOFF,
+                takeoff_command,
                 0,
                 1,
                 0.0,
@@ -819,6 +1058,14 @@ class ArduPilotAdapter(FlightControllerAdapter):
             ),
         ]
         for offset, point in enumerate(outbound + effective_return_path, start=outbound_start):
+            mission_specs.append(
+                {
+                    "seq": offset,
+                    "command": self._mavutil.mavlink.MAV_CMD_NAV_WAYPOINT,
+                    "frame": self._mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+                    "alt": float(cruise_alt_m),
+                }
+            )
             mission_items.append(
                 master.mav.mission_item_int_encode(
                     self._target_system,
@@ -843,7 +1090,7 @@ class ArduPilotAdapter(FlightControllerAdapter):
                 self._target_component,
                 landing_seq,
                 self._mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
-                self._mavutil.mavlink.MAV_CMD_NAV_VTOL_LAND if self._profile.is_vtol else self._mavutil.mavlink.MAV_CMD_NAV_LAND,
+                landing_command,
                 0,
                 1,
                 0.0,
@@ -854,6 +1101,14 @@ class ArduPilotAdapter(FlightControllerAdapter):
                 int(home.lon * 1e7),
                 0.0,
             )
+        )
+        mission_specs.append(
+            {
+                "seq": landing_seq,
+                "command": landing_command,
+                "frame": self._mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,
+                "alt": 0.0,
+            }
         )
         # Fix 6: total timeout for entire upload (prevents indefinite blocking)
         total_timeout = min(len(mission_items) * self._command_timeout, 120.0)
@@ -880,14 +1135,11 @@ class ArduPilotAdapter(FlightControllerAdapter):
             remaining = upload_deadline - time.monotonic()
             ack_timeout = min(self._command_timeout, max(remaining, 1.0))
             ack = self._recv_expected_locked({"MISSION_ACK"}, ack_timeout)
-            with suppress(Exception):
-                master.waypoint_set_current_send(takeoff_seq)
-            with suppress(Exception):
-                self._log_uploaded_mission_locked(len(mission_items))
-        result = getattr(ack, "type", None)
-        accepted = self._mavutil.mavlink.MAV_MISSION_ACCEPTED
-        if result not in (None, accepted):
-            raise RuntimeError(f"Mission upload rejected with ack type={result}")
+            result = getattr(ack, "type", None)
+            accepted = self._mavutil.mavlink.MAV_MISSION_ACCEPTED
+            if result not in (None, accepted):
+                raise RuntimeError(f"Mission upload rejected with ack type={result}")
+            self._log_uploaded_mission_locked(mission_specs)
         logger.info(
             "Uploaded ArduPilot mission takeoff_seq=%s outbound_start=%s return_start=%s landing_start=%s count=%s",
             takeoff_seq,
@@ -902,28 +1154,80 @@ class ArduPilotAdapter(FlightControllerAdapter):
         self._mission_seq_landing_start = landing_seq
         self._mission_seq_end = len(mission_items)
 
-    def _log_uploaded_mission_locked(self, mission_count: int) -> None:
+    def _log_uploaded_mission_locked(self, mission_specs: list[dict[str, float | int]]) -> None:
         master = self._require_master()
-        master.waypoint_request_list_send()
-        count_msg = self._recv_expected_locked({"MISSION_COUNT"}, self._command_timeout)
-        vehicle_count = int(getattr(count_msg, "count", -1))
-        commands: list[str] = []
-        for seq in range(max(vehicle_count, 0)):
-            master.waypoint_request_send(seq)
-            item = self._recv_expected_locked({"MISSION_ITEM", "MISSION_ITEM_INT"}, self._command_timeout)
-            command = int(getattr(item, "command", -1))
-            frame = int(getattr(item, "frame", -1))
-            if item.get_type() == "MISSION_ITEM_INT":
-                alt = float(getattr(item, "z", 0.0))
-            else:
-                alt = float(getattr(item, "z", 0.0))
-            commands.append(f"{seq}:{command}@frame{frame}:alt{alt:.1f}")
-        logger.info(
-            "Vehicle mission readback requested_count=%s vehicle_count=%s items=%s",
-            mission_count,
-            vehicle_count,
-            commands,
-        )
+        deadline = time.monotonic() + self._command_timeout
+        probe_timeout = min(max(self._command_timeout / 3.0, 1.0), 3.0)
+        last_exc: Exception | None = None
+        while time.monotonic() < deadline:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                break
+            try:
+                self._send_gcs_heartbeat_locked()
+                master.mav.mission_request_list_send(
+                    self._target_system,
+                    self._target_component,
+                )
+                count_msg = self._recv_expected_locked({"MISSION_COUNT"}, min(probe_timeout, remaining))
+                vehicle_count = int(getattr(count_msg, "count", -1))
+                if vehicle_count != len(mission_specs):
+                    raise RuntimeError(
+                        f"Mission readback count mismatch expected={len(mission_specs)} vehicle={vehicle_count}"
+                    )
+                commands: list[str] = []
+                readback_specs: list[dict[str, float | int]] = []
+                for seq in range(max(vehicle_count, 0)):
+                    item_remaining = deadline - time.monotonic()
+                    if item_remaining <= 0:
+                        raise TimeoutError("Mission readback timed out while fetching mission items")
+                    self._send_gcs_heartbeat_locked()
+                    if hasattr(master.mav, "mission_request_int_send"):
+                        master.mav.mission_request_int_send(
+                            self._target_system,
+                            self._target_component,
+                            seq,
+                        )
+                    else:
+                        master.waypoint_request_send(seq)
+                    item = self._recv_expected_locked({"MISSION_ITEM", "MISSION_ITEM_INT"}, min(self._command_timeout, item_remaining))
+                    command = int(getattr(item, "command", -1))
+                    frame = int(getattr(item, "frame", -1))
+                    alt = float(getattr(item, "z", 0.0))
+                    readback_specs.append({"seq": seq, "command": command, "frame": frame, "alt": alt})
+                    commands.append(f"{seq}:{command}@frame{frame}:alt{alt:.1f}")
+                for expected, actual in zip(mission_specs, readback_specs, strict=True):
+                    if (
+                        int(expected["seq"]) != int(actual["seq"])
+                        or int(expected["command"]) != int(actual["command"])
+                        or int(expected["frame"]) != int(actual["frame"])
+                    ):
+                        raise RuntimeError(
+                            "Mission readback mismatch "
+                            f"expected={expected} actual={actual}"
+                        )
+                    expected_alt = float(expected["alt"])
+                    actual_alt = float(actual["alt"])
+                    # ArduPilot normalizes the first home waypoint in global frame to its current absolute altitude.
+                    if int(expected["frame"]) == self._mavutil.mavlink.MAV_FRAME_GLOBAL:
+                        continue
+                    if abs(expected_alt - actual_alt) > 0.5:
+                        raise RuntimeError(
+                            "Mission readback altitude mismatch "
+                            f"expected={expected} actual={actual}"
+                        )
+                logger.info(
+                    "Vehicle mission readback requested_count=%s vehicle_count=%s items=%s",
+                    len(mission_specs),
+                    vehicle_count,
+                    commands,
+                )
+                return
+            except Exception as exc:
+                last_exc = exc
+                logger.warning("Mission readback probe failed: %s", exc)
+                time.sleep(0.25)
+        raise RuntimeError(f"Mission readback verification failed: {last_exc or 'unknown error'}")
 
     def _recv_expected_locked(self, msg_types: set[str], timeout_seconds: float) -> Any:
         deadline = time.time() + timeout_seconds
@@ -939,9 +1243,7 @@ class ArduPilotAdapter(FlightControllerAdapter):
             now = time.time()
             if now - last_emit >= 1.0 / self._telemetry_hz:
                 snapshot = self.get_snapshot()
-                for cb in list(self._telemetry_callbacks):
-                    with suppress(Exception):
-                        cb(snapshot)
+                self._emit_telemetry_snapshot(snapshot)
                 last_emit = now
             if msg.get_type() in msg_types:
                 return msg
@@ -977,6 +1279,12 @@ class ArduPilotAdapter(FlightControllerAdapter):
                 result, _ack_time = ack
                 accepted = self._mavutil.mavlink.MAV_RESULT_ACCEPTED
                 in_progress = self._mavutil.mavlink.MAV_RESULT_IN_PROGRESS
+                self._emit_event(
+                    "command_ack",
+                    command=command,
+                    description=description,
+                    result=result,
+                )
                 if result not in {accepted, in_progress}:
                     raise RuntimeError(
                         f"{description} rejected result={result} statustext={self._last_statustext or 'n/a'}"
@@ -987,9 +1295,128 @@ class ArduPilotAdapter(FlightControllerAdapter):
             time.sleep(0.05)
         raise TimeoutError(f"Timed out waiting for {description} ack statustext={self._last_statustext or 'n/a'}")
 
+    def _emit_telemetry_snapshot(self, snapshot: TelemetrySnapshot) -> None:
+        if self._control_plane_fault:
+            return
+        for callback in list(self._telemetry_callbacks):
+            try:
+                callback(snapshot)
+            except Exception as exc:
+                self._mark_control_plane_fault(
+                    "telemetry_callback_fault",
+                    f"{type(exc).__name__}: {exc}",
+                )
+                logger.exception("Telemetry callback failed: %s", exc)
+                raise RuntimeError("Telemetry callback failed") from exc
+
     def _set_vtol_hint(self, value: str) -> None:
         with self._state_lock:
             self._state.vtol_state = value
+
+    def _telemetry_state_for_age(self, age_s: float | None) -> str:
+        if age_s is None:
+            return "lost"
+        if age_s >= self._link_profile.telemetry_lost_after_s:
+            return "lost"
+        if age_s >= self._link_profile.telemetry_degraded_after_s:
+            return "degraded"
+        return "fresh"
+
+    def _send_gcs_heartbeat_locked(self) -> None:
+        if self._master is None:
+            raise RuntimeError("Cannot send GCS heartbeat without an active MAVLink connection")
+        self._master.mav.heartbeat_send(
+            self._mavutil.mavlink.MAV_TYPE_GCS,
+            self._mavutil.mavlink.MAV_AUTOPILOT_INVALID,
+            0,
+            0,
+            0,
+        )
+
+    def _start_gcs_heartbeat_worker(self) -> None:
+        if not self._link_profile.gcs_heartbeat_enabled:
+            return
+        if self._gcs_heartbeat_thread is not None and self._gcs_heartbeat_thread.is_alive():
+            return
+        self._gcs_heartbeat_stop.clear()
+        self._gcs_heartbeat_thread = threading.Thread(
+            target=self._gcs_heartbeat_loop,
+            name="arrakis-ardupilot-gcs-heartbeat",
+            daemon=True,
+        )
+        self._gcs_heartbeat_thread.start()
+        self._emit_event("gcs_heartbeat_started", period_s=self._link_profile.gcs_heartbeat_period_s)
+
+    def _gcs_heartbeat_loop(self) -> None:
+        while self._running and not self._gcs_heartbeat_stop.is_set():
+            if self._control_plane_fault or self._master is None:
+                break
+            try:
+                with self._io_lock:
+                    self._send_gcs_heartbeat_locked()
+            except Exception as exc:
+                self._mark_control_plane_fault("gcs_heartbeat_failure", f"{type(exc).__name__}: {exc}")
+                logger.exception("GCS heartbeat worker failed: %s", exc)
+                break
+            time.sleep(self._link_profile.gcs_heartbeat_period_s)
+        self._emit_event("gcs_heartbeat_stopped", control_plane_fault=self._control_plane_fault)
+
+    def _stop_runtime_workers(self) -> None:
+        self._gcs_heartbeat_stop.set()
+        self._running = False
+        current = threading.current_thread()
+        for thread in (self._gcs_heartbeat_thread, self._telemetry_thread, self._video_thread):
+            if thread is not None and thread.is_alive() and thread is not current:
+                thread.join(timeout=2.0)
+        self._gcs_heartbeat_thread = None
+        self._telemetry_thread = None
+        self._video_thread = None
+        if self._capture is not None:
+            with suppress(Exception):
+                self._capture.release()
+            self._capture = None
+        if self._master is not None:
+            with suppress(Exception):
+                self._master.close()
+
+    def _reset_connection_state_for_reconnect(self) -> None:
+        self._master = None
+        self._heartbeat_received = False
+        self._connection_lost = False
+        self._consecutive_empty_reads = 0
+        self._last_telemetry_at = None
+        self._last_heartbeat_at = None
+        self._last_mode_at = None
+        self._last_position_at = None
+        self._last_home_at = None
+        self._last_telemetry_mono = None
+        self._last_heartbeat_mono = None
+        self._last_gps_sensor_mono = None
+
+    def _mark_control_plane_fault(self, kind: str, reason: str) -> None:
+        already_faulted = self._control_plane_fault and self._fault_kind == kind and self._fault_reason == reason
+        self._control_plane_fault = True
+        self._fault_kind = kind
+        self._fault_reason = reason
+        self._fault_at = time.time()
+        self._gcs_heartbeat_stop.set()
+        if not already_faulted:
+            self._emit_event(
+                "control_plane_fault",
+                fault_kind=kind,
+                fault_reason=reason,
+                fault_at=self._fault_at,
+            )
+
+    def _clear_control_plane_fault(self, reason: str) -> None:
+        self._control_plane_fault = False
+        self._fault_kind = None
+        self._fault_reason = reason
+        self._fault_at = None
+
+    def _emit_event(self, event_type: str, **fields: Any) -> None:
+        if self._event_sink is not None:
+            self._event_sink(event_type, fields)
 
     def _require_master(self):
         if self._master is None:

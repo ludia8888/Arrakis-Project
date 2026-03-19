@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 import threading
 import time
-from contextlib import suppress
 
 from airframe_profile import AirframeProfile
 from flight_adapters.base import FlightControllerAdapter
@@ -36,6 +35,8 @@ class MissionExecutor:
         execution_style = self.adapter.mission_execution_style()
         if cancel_event.is_set():
             logger.info("Mission cancelled before start")
+            return
+        if not self._ensure_control_plane_available("mission start"):
             return
         self.state_machine.mark_phase("ARMING", reason="mission executor started arming sequence")
         self.adapter.arm()
@@ -81,6 +82,8 @@ class MissionExecutor:
         while True:
             if cancel_event.is_set() or self.state_machine.phase in INTERRUPT_PHASES:
                 logger.info("Mission interrupted during outbound/return loop phase=%s", self.state_machine.phase)
+                return
+            if not self._ensure_control_plane_available("route progression"):
                 return
             current_leg = self.adapter.current_leg()
             telemetry = self.telemetry_hub.telemetry_snapshot()
@@ -176,6 +179,8 @@ class MissionExecutor:
             if cancel_event.is_set() or self.state_machine.phase in INTERRUPT_PHASES:
                 logger.info("Mission interrupted during outbound/return loop phase=%s", self.state_machine.phase)
                 return
+            if not self._ensure_control_plane_available("mission-oriented route progression"):
+                return
             current_leg = self.adapter.current_leg()
             telemetry = self.telemetry_hub.telemetry_snapshot()
             # Fix 11: GPS health gate — suspend position-based decisions when GPS invalid
@@ -228,6 +233,8 @@ class MissionExecutor:
             if cancel_event.is_set():
                 logger.info("Recovery wait cancelled")
                 return False
+            if not self._ensure_control_plane_available("recovery wait"):
+                return False
             telemetry = self.telemetry_hub.telemetry_snapshot()
             if telemetry.geofence_breached:
                 self.state_machine.abort("ABORT_GEOFENCE", "route-derived geofence breached")
@@ -265,6 +272,8 @@ class MissionExecutor:
         while True:
             if cancel_event.is_set():
                 logger.info("Mission cancelled during LANDING")
+                return False
+            if not self._ensure_control_plane_available("landing wait"):
                 return False
             telemetry = self.telemetry_hub.telemetry_snapshot()
             if not telemetry.armed:
@@ -331,10 +340,23 @@ class MissionExecutor:
                 self.state_machine.phase,
             )
             self.state_machine.abort("RTL_BATTERY", "battery threshold reached during transition")
-            with suppress(Exception):
-                self.adapter.return_to_home()
+            self.adapter.return_to_home()
             return False
         return True
+
+    def _ensure_control_plane_available(self, context: str) -> bool:
+        bootstrap = self.adapter.bootstrap_status()
+        if not bootstrap.control_plane_fault:
+            return True
+        logger.error(
+            "Control plane fault detected during %s kind=%s reason=%s",
+            context,
+            bootstrap.fault_kind,
+            bootstrap.fault_reason,
+        )
+        self.state_machine.abort("RTL_LINK_LOSS", bootstrap.fault_reason or "control plane fault during flight")
+        self.adapter.return_to_home()
+        return False
 
     def _sleep_with_cancel(self, cancel_event: threading.Event, duration_seconds: float, step_seconds: float = 0.1) -> bool:
         deadline = time.time() + duration_seconds

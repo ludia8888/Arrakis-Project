@@ -8,6 +8,7 @@ from __future__ import annotations
 import sys
 import threading
 import time
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -148,7 +149,11 @@ class TestGPSDenialScenarios:
         from arrakis_core import telemetry_hub as telemetry_hub_module
         from flight_adapters.instrumented import InstrumentedFlightAdapter
 
-        monkeypatch.setattr(telemetry_hub_module, "_POSITION_LOSS_RTL_TIMEOUT_S", 0.8)
+        monkeypatch.setattr(
+            telemetry_hub_module,
+            "ARRAKIS_LINK_PROFILE",
+            replace(telemetry_hub_module.ARRAKIS_LINK_PROFILE, position_loss_rtl_timeout_s=0.8),
+        )
 
         profile = load_profile("default-vtol")
         adapter = InstrumentedFlightAdapter(MockAdapter(profile), logger_name="test")

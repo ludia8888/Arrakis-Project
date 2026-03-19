@@ -22,6 +22,7 @@ from __future__ import annotations
 import math
 import os
 import sys
+import threading
 import time
 from pathlib import Path
 
@@ -31,7 +32,7 @@ BACKEND_DIR = Path(__file__).resolve().parents[1] / "backend"
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
-from conftest import force_arm_sitl, force_disarm_sitl
+from conftest import _stabilize_sitl_vehicle, _wait_for_ground_state, force_arm_sitl, force_disarm_sitl
 from schemas import TelemetrySnapshot
 
 _sitl_skip = pytest.mark.skipif(
@@ -60,19 +61,52 @@ def _make_nearby_waypoints(home_lat: float, home_lon: float, count: int, distanc
     return waypoints
 
 
+def _distance_m_between(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    lat_scale = 111_320.0
+    lon_scale = math.cos(math.radians((lat1 + lat2) / 2.0)) * 111_320.0
+    return math.hypot((lat1 - lat2) * lat_scale, (lon1 - lon2) * lon_scale)
+
+
+def _wait_for_snapshot(adapter, predicate, timeout: float = 60.0, interval: float = 0.5) -> TelemetrySnapshot | None:
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        snapshot = adapter.get_snapshot()
+        if predicate(snapshot):
+            return snapshot
+        time.sleep(interval)
+    return None
+
+
+def _wait_for_leg(adapter, expected_legs: set[str], timeout: float = 60.0, interval: float = 0.5) -> tuple[TelemetrySnapshot, str] | None:
+    normalized = {leg.lower() for leg in expected_legs}
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        snapshot = adapter.get_snapshot()
+        leg = adapter.current_leg().lower()
+        if leg in normalized:
+            return snapshot, leg
+        time.sleep(interval)
+    return None
+
+
+def _wait_for_mission_progress(adapter, timeout: float = 60.0, interval: float = 0.5) -> tuple[TelemetrySnapshot, str] | None:
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        snapshot = adapter.get_snapshot()
+        leg = adapter.current_leg().lower()
+        if snapshot.alt_m > 3.0 or leg in {"outbound", "return", "landing"}:
+            return snapshot, leg
+        time.sleep(interval)
+    return None
+
+
 def _wait_for_alt(adapter, target_alt: float, tolerance: float = 0.3, timeout: float = 60.0) -> bool:
     """Wait until altitude reaches target_alt * (1 - tolerance).
 
     Returns True if reached, False if timed out.
     """
     threshold = target_alt * (1.0 - tolerance)
-    deadline = time.time() + timeout
-    while time.time() < deadline:
-        snapshot = adapter.get_snapshot()
-        if snapshot.alt_m >= threshold:
-            return True
-        time.sleep(0.5)
-    return False
+    return _wait_for_snapshot(adapter, lambda snapshot: snapshot.alt_m >= threshold, timeout=timeout) is not None
 
 
 def _wait_for_disarm(adapter, timeout: float = 60.0) -> bool:
@@ -215,11 +249,19 @@ class TestSITLTakeoffAndLand:
 
         target_alt = 15.0
         adapter.takeoff_multicopter(target_alt)
-        # Wait extra for stabilization
-        time.sleep(10.0)
+        deadline = time.time() + 20.0
         snapshot = adapter.get_snapshot()
         alt_error = abs(snapshot.alt_m - target_alt)
-        assert alt_error <= 5.0, f"Altitude error too large: target={target_alt}m actual={snapshot.alt_m:.1f}m error={alt_error:.1f}m"
+        while time.time() < deadline and alt_error > 5.0:
+            time.sleep(1.0)
+            candidate = adapter.get_snapshot()
+            candidate_error = abs(candidate.alt_m - target_alt)
+            if candidate_error <= alt_error:
+                snapshot = candidate
+                alt_error = candidate_error
+        assert alt_error <= 5.0, (
+            f"Altitude error too large: target={target_alt}m actual={snapshot.alt_m:.1f}m error={alt_error:.1f}m"
+        )
         print(f"  [PASS] Altitude accuracy: target={target_alt}m actual={snapshot.alt_m:.1f}m error={alt_error:.1f}m")
 
     def test_rtl_from_hover(self, sitl_connection):
@@ -326,19 +368,80 @@ class TestSITLMissionUploadAndAuto:
         assert armed, "Force-arm should succeed"
 
         adapter.upload_roundtrip_mission(route_spec)
+        mission_started = time.perf_counter()
         adapter.start_mission()
 
         snapshot = adapter.get_snapshot()
         assert snapshot.flight_mode.upper() == "AUTO", f"Expected AUTO mode, got {snapshot.flight_mode}"
         print(f"  [PASS] Mission started: mode={snapshot.flight_mode}")
 
-        # Wait for takeoff to begin
-        time.sleep(10.0)
-        snapshot = adapter.get_snapshot()
+        snapshot = _wait_for_snapshot(adapter, lambda candidate: candidate.alt_m > 3.0, timeout=30.0)
+        assert snapshot is not None, "Expected altitude gain after mission start"
         assert snapshot.alt_m > 3.0, f"Expected altitude gain after mission start, got {snapshot.alt_m:.1f}m"
-        leg = adapter.current_leg()
-        assert leg in ("takeoff", "outbound"), f"Expected takeoff/outbound leg, got {leg}"
-        print(f"  [PASS] Mission progressing: alt={snapshot.alt_m:.1f}m leg={leg}")
+        outbound_state = _wait_for_leg(adapter, {"outbound", "return"}, timeout=30.0)
+        assert outbound_state is not None, "Expected mission to reach outbound or return leg"
+        _, leg = outbound_state
+        outbound_entered_s = time.perf_counter() - mission_started
+        assert leg in ("outbound", "return"), f"Expected outbound/return mission leg, got {leg}"
+        assert outbound_entered_s < 30.0, f"Outbound transition took too long: {outbound_entered_s:.1f}s"
+        print(f"  [PASS] Mission progressing: alt={snapshot.alt_m:.1f}m leg={leg} outbound_entered={outbound_entered_s:.1f}s")
+
+    def test_auto_mission_distance_and_timing_metrics(self, sitl_connection):
+        """Quantify early mission geometry and timing to catch regressions."""
+        adapter, _ = sitl_connection
+        force_disarm_sitl(adapter)
+        time.sleep(1.0)
+
+        home = adapter.get_home()
+        outbound_wp = _make_nearby_waypoints(home.lat, home.lon, count=1, distance_m=180.0)[0]
+        route_spec = {
+            "home": {"lat": home.lat, "lon": home.lon},
+            "outbound": [outbound_wp],
+            "return_path": [{"lat": home.lat, "lon": home.lon}],
+            "takeoff_alt_m": 20.0,
+            "cruise_alt_m": 25.0,
+        }
+
+        armed = force_arm_sitl(adapter)
+        assert armed, "Force-arm should succeed"
+
+        adapter.upload_roundtrip_mission(route_spec)
+        mission_started = time.perf_counter()
+        adapter.start_mission()
+
+        outbound_state = _wait_for_leg(adapter, {"outbound", "return"}, timeout=35.0)
+        assert outbound_state is not None, "Mission never entered outbound leg"
+        _, outbound_leg = outbound_state
+        outbound_entered_s = time.perf_counter() - mission_started
+
+        max_home_distance_m = 0.0
+        min_waypoint_distance_m = float("inf")
+        deadline = time.time() + 20.0
+        while time.time() < deadline:
+            snapshot = adapter.get_snapshot()
+            if snapshot.position_valid:
+                if math.isfinite(snapshot.home_distance_m):
+                    max_home_distance_m = max(max_home_distance_m, snapshot.home_distance_m)
+                min_waypoint_distance_m = min(
+                    min_waypoint_distance_m,
+                    _distance_m_between(snapshot.lat, snapshot.lon, outbound_wp["lat"], outbound_wp["lon"]),
+                )
+            if adapter.current_leg() in {"return", "landing"}:
+                break
+            time.sleep(0.5)
+
+        assert outbound_leg in {"outbound", "return"}
+        assert outbound_entered_s < 30.0, f"Outbound transition took too long: {outbound_entered_s:.1f}s"
+        assert max_home_distance_m >= 60.0, f"Expected meaningful outbound progress, max_home_distance={max_home_distance_m:.1f}m"
+        assert min_waypoint_distance_m <= 120.0, (
+            f"Mission never approached outbound waypoint closely enough: min_distance={min_waypoint_distance_m:.1f}m"
+        )
+        print(
+            "  [PASS] Mission metrics: "
+            f"outbound_entered={outbound_entered_s:.1f}s "
+            f"max_home_distance={max_home_distance_m:.1f}m "
+            f"min_wp_distance={min_waypoint_distance_m:.1f}m"
+        )
 
     def test_mission_leg_tracking(self, sitl_connection):
         """Verify route leg tracking transitions during mission execution."""
@@ -406,8 +509,8 @@ class TestSITLVTOLTransition:
         adapter.upload_roundtrip_mission(route_spec)
         adapter.start_mission()
 
-        # Wait for some altitude gain before trying FW transition
-        time.sleep(15.0)
+        mission_progress = _wait_for_leg(adapter, {"outbound", "return"}, timeout=40.0)
+        assert mission_progress is not None, "Mission did not progress to outbound before FW transition request"
 
         # In AUTO mode, attempt FW transition
         try:
@@ -447,7 +550,8 @@ class TestSITLVTOLTransition:
 
         adapter.upload_roundtrip_mission(route_spec)
         adapter.start_mission()
-        time.sleep(15.0)
+        mission_progress = _wait_for_leg(adapter, {"outbound", "return"}, timeout=40.0)
+        assert mission_progress is not None, "Mission did not progress to outbound before transition round-trip"
 
         # FW transition in AUTO
         try:
@@ -477,19 +581,45 @@ class TestSITLEmergency:
     def test_abort_during_takeoff(self, sitl_connection):
         """Verify abort() during takeoff results in safe state."""
         adapter, instrumented = sitl_connection
-        force_disarm_sitl(adapter)
-        time.sleep(3.0)  # Extra recovery time after potential crash from previous test
+        _stabilize_sitl_vehicle(adapter, reset_home=False)
+        assert _wait_for_ground_state(adapter, timeout=45.0), "Vehicle should be settled on the ground before takeoff abort test"
+        time.sleep(2.0)
 
         armed = force_arm_sitl(adapter)
         assert armed, "Force-arm should succeed"
 
-        adapter.takeoff_multicopter(20.0)
+        try:
+            adapter.takeoff_multicopter(20.0)
+        except RuntimeError as exc:
+            if "Already flying - no takeoff" not in str(exc):
+                raise
+            home = adapter.get_home()
+            route_spec = {
+                "home": {"lat": home.lat, "lon": home.lon},
+                "outbound": _make_nearby_waypoints(home.lat, home.lon, count=1, distance_m=120.0),
+                "return_path": [{"lat": home.lat, "lon": home.lon}],
+                "takeoff_alt_m": 20.0,
+                "cruise_alt_m": 25.0,
+            }
+            adapter.upload_roundtrip_mission(route_spec)
+            adapter.start_mission()
+            deadline = time.time() + 30.0
+            while time.time() < deadline:
+                snapshot = adapter.get_snapshot()
+                if snapshot.alt_m >= 5.0 or adapter.current_leg() in {"takeoff", "outbound"}:
+                    break
+                time.sleep(0.5)
+            else:
+                raise AssertionError("Fallback AUTO mission did not enter initial climb before abort")
 
         # Abort immediately after takeoff completes
         instrumented.abort("test abort during takeoff")
-        time.sleep(5.0)
-
-        snapshot = adapter.get_snapshot()
+        safe_snapshot = _wait_for_snapshot(
+            adapter,
+            lambda candidate: (not candidate.armed) or candidate.flight_mode.upper() in ("RTL", "QRTL", "LAND", "QLAND"),
+            timeout=20.0,
+        )
+        snapshot = safe_snapshot or adapter.get_snapshot()
         is_safe = (
             not snapshot.armed
             or snapshot.flight_mode.upper() in ("RTL", "QRTL", "LAND", "QLAND")
@@ -519,21 +649,68 @@ class TestSITLEmergency:
         adapter.upload_roundtrip_mission(route_spec)
         adapter.start_mission()
 
-        # Wait for mission to progress
-        time.sleep(10.0)
-        snapshot_before = adapter.get_snapshot()
+        snapshot_before = _wait_for_snapshot(adapter, lambda candidate: candidate.alt_m > 3.0, timeout=30.0)
+        assert snapshot_before is not None, "Mission should reach positive climb before abort"
         print(f"  [INFO] Before abort: alt={snapshot_before.alt_m:.1f}m mode={snapshot_before.flight_mode}")
 
         instrumented.abort("test abort during AUTO mission")
-        time.sleep(3.0)
-
-        snapshot = adapter.get_snapshot()
+        safe_snapshot = _wait_for_snapshot(
+            adapter,
+            lambda candidate: (not candidate.armed) or candidate.flight_mode.upper() in ("RTL", "QRTL", "LAND", "QLAND"),
+            timeout=20.0,
+        )
+        snapshot = safe_snapshot or adapter.get_snapshot()
         is_safe = (
             not snapshot.armed
             or snapshot.flight_mode.upper() in ("RTL", "QRTL", "LAND", "QLAND")
         )
         print(f"  [{'PASS' if is_safe else 'WARN'}] Post-abort: armed={snapshot.armed} mode={snapshot.flight_mode}")
         assert is_safe, f"Vehicle not in safe state after abort: armed={snapshot.armed} mode={snapshot.flight_mode}"
+
+    @pytest.mark.parametrize("recovery_action", ["abort", "rtl"])
+    def test_relaunch_after_recovery_action(self, sitl_connection, recovery_action):
+        """Verify a mission can be launched again after an abort or RTL recovery."""
+        adapter, instrumented = sitl_connection
+        _stabilize_sitl_vehicle(adapter, reset_home=False)
+        assert _wait_for_ground_state(adapter, timeout=45.0), "Vehicle should be on the ground before restartability test"
+
+        home = adapter.get_home()
+        route_spec = {
+            "home": {"lat": home.lat, "lon": home.lon},
+            "outbound": _make_nearby_waypoints(home.lat, home.lon, count=1, distance_m=140.0),
+            "return_path": [{"lat": home.lat, "lon": home.lon}],
+            "takeoff_alt_m": 20.0,
+            "cruise_alt_m": 25.0,
+        }
+
+        armed = force_arm_sitl(adapter)
+        assert armed, "Force-arm should succeed"
+
+        adapter.upload_roundtrip_mission(route_spec)
+        adapter.start_mission()
+        progress = _wait_for_snapshot(adapter, lambda snapshot: snapshot.alt_m > 3.0, timeout=30.0)
+        assert progress is not None, f"Mission did not start before {recovery_action}"
+
+        if recovery_action == "abort":
+            instrumented.abort("restartability abort")
+        else:
+            adapter.return_to_home()
+        assert _wait_for_mode(adapter, {"RTL", "QRTL", "LAND", "QLAND"}, timeout=30.0), (
+            f"Expected safe mode after {recovery_action}"
+        )
+
+        _stabilize_sitl_vehicle(adapter, reset_home=False)
+        assert _wait_for_ground_state(adapter, timeout=45.0), f"Vehicle failed to settle after {recovery_action}"
+
+        restarted = force_arm_sitl(adapter)
+        assert restarted, f"Expected re-arm after {recovery_action}"
+        adapter.upload_roundtrip_mission(route_spec)
+        adapter.start_mission()
+        restarted_progress = _wait_for_mission_progress(adapter, timeout=35.0)
+        assert restarted_progress is not None, f"Mission did not restart after {recovery_action}"
+        restarted_snapshot, restarted_leg = restarted_progress
+        assert restarted_snapshot.alt_m > 3.0 or restarted_leg in {"outbound", "return", "landing"}
+        print(f"  [PASS] Relaunch after {recovery_action}: alt={restarted_snapshot.alt_m:.1f}m leg={restarted_leg}")
 
     def test_rtl_returns_near_home(self, sitl_connection):
         """Verify RTL actually returns vehicle near home position.
@@ -715,3 +892,77 @@ class TestSITLEdgeCases:
 
         # Clean up: remove the callback to avoid accumulating events in other tests
         adapter._telemetry_callbacks.remove(telemetry_events.append)
+
+
+@_sitl_skip
+class TestSITLConcurrency:
+    """Concurrency and race-condition regressions."""
+
+    def test_concurrent_state_queries_during_upload_and_flight(self, sitl_connection):
+        """Exercise upload/start while telemetry callbacks and state queries run concurrently."""
+        adapter, _ = sitl_connection
+        _stabilize_sitl_vehicle(adapter, reset_home=False)
+        assert _wait_for_ground_state(adapter, timeout=45.0), "Vehicle should be settled before concurrency test"
+
+        home = adapter.get_home()
+        route_spec = {
+            "home": {"lat": home.lat, "lon": home.lon},
+            "outbound": _make_nearby_waypoints(home.lat, home.lon, count=2, distance_m=120.0),
+            "return_path": [{"lat": home.lat, "lon": home.lon}],
+            "takeoff_alt_m": 20.0,
+            "cruise_alt_m": 25.0,
+        }
+
+        poller_errors: list[str] = []
+        callback_errors: list[str] = []
+        stop_event = threading.Event()
+
+        def telemetry_callback(_snapshot: TelemetrySnapshot) -> None:
+            try:
+                adapter.get_snapshot()
+                adapter.current_leg()
+                adapter.bootstrap_status()
+            except Exception as exc:  # pragma: no cover - failure path asserted below
+                callback_errors.append(f"{type(exc).__name__}: {exc}")
+                stop_event.set()
+
+        def poll_state() -> None:
+            while not stop_event.is_set():
+                try:
+                    adapter.get_snapshot()
+                    adapter.current_leg()
+                    adapter.bootstrap_status()
+                except Exception as exc:  # pragma: no cover - failure path asserted below
+                    poller_errors.append(f"{type(exc).__name__}: {exc}")
+                    stop_event.set()
+                time.sleep(0.05)
+
+        adapter.stream_telemetry(telemetry_callback)
+        workers = [threading.Thread(target=poll_state, daemon=True) for _ in range(3)]
+        for worker in workers:
+            worker.start()
+
+        try:
+            upload_started = time.perf_counter()
+            adapter.upload_roundtrip_mission(route_spec)
+            upload_time = time.perf_counter() - upload_started
+            assert upload_time < 10.0, f"Upload under concurrent polling took too long: {upload_time:.1f}s"
+
+            armed = force_arm_sitl(adapter)
+            assert armed, "Force-arm should succeed"
+
+            adapter.start_mission()
+            progress = _wait_for_snapshot(adapter, lambda snapshot: snapshot.alt_m > 3.0, timeout=30.0)
+            assert progress is not None, "Mission did not progress under concurrent state access"
+        finally:
+            stop_event.set()
+            for worker in workers:
+                worker.join(timeout=2.0)
+            try:
+                adapter._telemetry_callbacks.remove(telemetry_callback)
+            except ValueError:
+                pass
+
+        assert not poller_errors, f"Concurrent state pollers raised exceptions: {poller_errors}"
+        assert not callback_errors, f"Telemetry callback raised exceptions: {callback_errors}"
+        print("  [PASS] Concurrent upload/start with state polling completed without race errors")

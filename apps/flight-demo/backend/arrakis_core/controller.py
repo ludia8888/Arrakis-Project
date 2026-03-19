@@ -2,14 +2,17 @@ from __future__ import annotations
 
 import logging
 import threading
-from contextlib import suppress
+import time
+import uuid
 from typing import Callable
 
 from airframe_profile import AirframeProfile
+from config import ARRAKIS_LINK_PROFILE
 from arrakis_core.route_planner import build_route_preview
 from flight_adapters.base import FlightControllerAdapter, VideoFrame, validate_adapter_contract
 from schemas import RoutePreview, RouteRequest, TelemetrySnapshot
 
+from .flight_event_recorder import FlightEventRecorder
 from .mission_executor import MissionExecutor
 from .mission_state_machine import INTERRUPT_PHASES, MissionStateMachine
 from .state_payload_assembler import StatePayloadAssembler
@@ -34,17 +37,31 @@ class ArrakisController:
         # Fix 14: concurrent abort protection
         self._abort_lock = threading.Lock()
         self._abort_in_progress = False
+        self._last_telemetry_state: str | None = None
+        self.snapshot_recorder = StateSnapshotRecorder()
+        self.event_recorder = FlightEventRecorder(link_profile=ARRAKIS_LINK_PROFILE.name)
+        self.adapter.set_event_sink(self.event_recorder.record_event)
+        self.event_recorder.record_event(
+            "session_start",
+            adapter=self.adapter.__class__.__name__,
+            airframe_profile=profile.name,
+        )
 
         logger.info("Initializing controller with adapter=%s profile=%s", adapter.__class__.__name__, profile.name)
         try:
             self.adapter.connect()
         except Exception as exc:
             self.startup_error = f"{type(exc).__name__}: {exc}"
+            self.event_recorder.record_event(
+                "exception",
+                source="controller.connect",
+                exception_class=type(exc).__name__,
+                message=str(exc),
+            )
             logger.exception("Adapter connect failed during controller initialization: %s", exc)
         self.video_service = VideoService()
         self.telemetry_hub = TelemetryHub(self.adapter.get_snapshot(), self.video_service, profile)
         self.state_payload_assembler = StatePayloadAssembler(self.video_service)
-        self.snapshot_recorder = StateSnapshotRecorder()
         self.transition_diagnostics = TransitionDiagnosticsTracker()
         self.mission_executor = MissionExecutor(
             adapter=self.adapter,
@@ -54,6 +71,9 @@ class ArrakisController:
         )
         self.adapter.stream_telemetry(self._on_telemetry)
         self.adapter.stream_video(self._on_video)
+        bootstrap = self.adapter.bootstrap_status()
+        self.event_recorder.record_event("bootstrap_status", bootstrap=bootstrap.model_dump(mode="json"))
+        self.event_recorder.update_manifest(link_profile=bootstrap.link_profile)
         logger.info("Controller initialized and adapter streams subscribed startup_error=%s", self.startup_error)
 
     def set_route(self, preview: RoutePreview) -> RoutePreview:
@@ -67,6 +87,10 @@ class ArrakisController:
 
     def build_route_preview(self, request: RouteRequest) -> RoutePreview:
         bootstrap = self.adapter.bootstrap_status()
+        if bootstrap.control_plane_fault:
+            raise RuntimeError(
+                f"Vehicle control plane fault is active. Recover before setting route ({bootstrap.reason or 'unknown reason'})."
+            )
         if not (bootstrap.telemetry_fresh and bootstrap.position_ready and bootstrap.home_ready):
             raise RuntimeError(
                 f"Vehicle home/telemetry not ready. Wait before setting route ({bootstrap.reason or 'unknown reason'})."
@@ -85,12 +109,23 @@ class ArrakisController:
 
     def start_mission(self) -> None:
         bootstrap = self.adapter.bootstrap_status()
+        if bootstrap.control_plane_fault:
+            raise RuntimeError(
+                f"Vehicle control plane fault is active. Recover before mission start ({bootstrap.reason or 'unknown reason'})."
+            )
         if not bootstrap.mission_ready:
             raise RuntimeError(
                 f"Vehicle telemetry bootstrap incomplete. Mission start is blocked ({bootstrap.reason or 'unknown reason'})."
             )
         self.state_machine.start_mission(self._mission_active())
         self.transition_diagnostics.reset()
+        mission_id = uuid.uuid4().hex
+        self.event_recorder.set_mission_id(mission_id)
+        self.event_recorder.record_event(
+            "mission_start_requested",
+            mission_phase=self.state_machine.phase,
+            bootstrap=bootstrap.model_dump(mode="json"),
+        )
         cancel_event = threading.Event()
         mission_thread = threading.Thread(
             target=self._run_mission,
@@ -105,6 +140,7 @@ class ArrakisController:
 
     def abort(self, reason: str = "manual operator abort") -> None:
         logger.warning("Abort requested: %s", reason)
+        self.event_recorder.record_event("abort_requested", reason=reason, mission_phase=self.state_machine.phase)
         if not self._guarded_abort("ABORT_MANUAL", reason, lambda: self.adapter.abort(reason)):
             logger.info("Abort already in progress, skipping duplicate abort for: %s", reason)
             return
@@ -112,15 +148,25 @@ class ArrakisController:
 
     def rtl(self) -> None:
         logger.warning("RTL requested")
+        self.event_recorder.record_event("rtl_requested", mission_phase=self.state_machine.phase)
         self.state_machine.abort("RTL_BATTERY", "manual rtl requested")
         self.adapter.return_to_home()
         self._cancel_active_mission(join_timeout=1.5)
 
     def reset(self) -> None:
         logger.info("Reset requested")
+        self.event_recorder.record_event("mission_reset_requested", mission_phase=self.state_machine.phase)
         if self._mission_active():
-            with suppress(Exception):
+            try:
                 self.adapter.abort("reset requested")
+            except Exception as exc:
+                self.event_recorder.record_event(
+                    "exception",
+                    source="controller.reset.abort",
+                    exception_class=type(exc).__name__,
+                    message=str(exc),
+                )
+                logger.exception("Adapter abort failed during reset: %s", exc)
             self._cancel_active_mission(join_timeout=3.0)
         self.adapter.reset()
         self.video_service.reset()
@@ -130,13 +176,39 @@ class ArrakisController:
         # Fix 14: reset abort flag
         with self._abort_lock:
             self._abort_in_progress = False
+        self.event_recorder.set_mission_id(None)
         logger.info("Reset complete")
 
     def shutdown(self) -> None:
         logger.info("Controller shutdown requested")
-        with suppress(Exception):
+        try:
             self.reset()
+        except Exception as exc:
+            self.event_recorder.record_event(
+                "exception",
+                source="controller.shutdown.reset",
+                exception_class=type(exc).__name__,
+                message=str(exc),
+            )
+            logger.exception("Controller reset failed during shutdown: %s", exc)
+        onboard_metadata = self._collect_postflight_log_metadata()
+        self.event_recorder.record_event("session_end", mission_phase=self.state_machine.phase)
+        self.event_recorder.close(onboard_log_metadata=onboard_metadata)
         self.snapshot_recorder.close()
+
+    def recover_control_plane(self):
+        self.event_recorder.record_event("control_plane_recover_requested", mission_phase=self.state_machine.phase)
+        bootstrap = self.adapter.recover_control_plane()
+        self.telemetry_hub.reset(self.adapter.get_snapshot())
+        self.transition_diagnostics.reset()
+        self.event_recorder.record_event("control_plane_recover_result", bootstrap=bootstrap.model_dump(mode="json"))
+        return bootstrap
+
+    def log_status(self) -> dict[str, str | None]:
+        return {
+            "event_log_path": self.event_recorder.event_log_path,
+            "session_manifest_path": self.event_recorder.manifest_path,
+        }
 
     def state_payload(self):
         payload = self._assemble_state_payload()
@@ -151,23 +223,37 @@ class ArrakisController:
     def _on_telemetry(self, snapshot: TelemetrySnapshot) -> None:
         route_preview = self.state_machine.route_preview
         phase = self.state_machine.phase
+        if snapshot.telemetry_state != self._last_telemetry_state:
+            self.event_recorder.record_event(
+                "telemetry_state_transition",
+                previous_state=self._last_telemetry_state,
+                telemetry_state=snapshot.telemetry_state,
+                telemetry_age_s=snapshot.telemetry_age_s,
+                mission_phase=phase,
+            )
+            self._last_telemetry_state = snapshot.telemetry_state
         decision = self.telemetry_hub.on_telemetry(snapshot, route_preview, phase)
         # Fix 14: safety triggers use _guarded_abort to prevent concurrent abort race conditions
         if decision.trigger_battery_rtl and phase not in self._SAFETY_SUPPRESS_PHASES:
             logger.warning("Battery RTL triggered at %.1f%% during phase=%s", snapshot.battery_percent, phase)
+            self.event_recorder.record_event("safety_trigger", trigger="battery_rtl", mission_phase=phase)
             self._guarded_abort("RTL_BATTERY", "battery threshold reached", lambda: self.adapter.return_to_home())
         elif decision.trigger_position_loss_rtl and phase not in self._SAFETY_SUPPRESS_PHASES:
             logger.warning("GPS position lost during phase=%s, triggering RTL", phase)
+            self.event_recorder.record_event("safety_trigger", trigger="position_loss_rtl", mission_phase=phase)
             self._guarded_abort("RTL_GPS_LOSS", "gps position lost during flight", lambda: self.adapter.return_to_home())
         elif decision.trigger_navigation_degraded_rtl and phase not in self._SAFETY_SUPPRESS_PHASES:
             logger.warning("Navigation degraded during phase=%s, triggering RTL", phase)
+            self.event_recorder.record_event("safety_trigger", trigger="navigation_degraded_rtl", mission_phase=phase)
             self._guarded_abort("RTL_NAV_DEGRADED", "navigation degraded during flight", lambda: self.adapter.return_to_home())
         elif decision.trigger_geofence_abort and phase not in self._SAFETY_SUPPRESS_PHASES:
             logger.warning("Geofence abort triggered during phase=%s", phase)
+            self.event_recorder.record_event("safety_trigger", trigger="geofence_abort", mission_phase=phase)
             self._guarded_abort("ABORT_GEOFENCE", "route-derived geofence breached", lambda: self.adapter.abort("geofence breach"))
         elif decision.trigger_telemetry_lost and phase not in self._SAFETY_SUPPRESS_PHASES:
             logger.warning("Telemetry lost during phase=%s, triggering RTL", phase)
-            self._guarded_abort("RTL_BATTERY", "telemetry data lost during flight", lambda: self.adapter.return_to_home())
+            self.event_recorder.record_event("safety_trigger", trigger="telemetry_lost_rtl", mission_phase=phase)
+            self._guarded_abort("RTL_LINK_LOSS", "telemetry data lost during flight", lambda: self.adapter.return_to_home())
         self.transition_diagnostics.observe(
             self.state_machine.phase,
             self.telemetry_hub.telemetry_snapshot(),
@@ -189,13 +275,22 @@ class ArrakisController:
             self._abort_in_progress = True
         try:
             self.state_machine.abort(phase, reason)
-            with suppress(Exception):
-                action()
+            self.event_recorder.record_event("abort_phase_entered", target_phase=phase, reason=reason)
+            action()
+        except Exception as exc:
+            self.event_recorder.record_event(
+                "exception",
+                source="controller._guarded_abort",
+                target_phase=phase,
+                reason=reason,
+                exception_class=type(exc).__name__,
+                message=str(exc),
+            )
+            raise
         finally:
             # Auto-reset after 2 seconds (allow next abort if needed)
             def _reset_abort_flag():
-                import time as _time
-                _time.sleep(2.0)
+                time.sleep(2.0)
                 with self._abort_lock:
                     self._abort_in_progress = False
             threading.Thread(target=_reset_abort_flag, daemon=True).start()
@@ -223,13 +318,47 @@ class ArrakisController:
             self.mission_executor.run_roundtrip_mission(cancel_event)
         except Exception as exc:
             logger.exception("Mission executor crashed: %s", exc)
-            if self.state_machine.phase not in {"ABORT_MANUAL", "ABORT_GEOFENCE", "RTL_BATTERY", "RTL_GPS_LOSS", "RTL_NAV_DEGRADED", "COMPLETE"}:
-                with suppress(Exception):
+            self.event_recorder.record_event(
+                "exception",
+                source="controller._run_mission",
+                exception_class=type(exc).__name__,
+                message=str(exc),
+            )
+            if self.state_machine.phase not in {"ABORT_MANUAL", "ABORT_GEOFENCE", "RTL_BATTERY", "RTL_LINK_LOSS", "RTL_GPS_LOSS", "RTL_NAV_DEGRADED", "COMPLETE"}:
+                try:
                     self.adapter.return_to_home()
+                except Exception as rtl_exc:
+                    self.event_recorder.record_event(
+                        "exception",
+                        source="controller._run_mission.return_to_home",
+                        exception_class=type(rtl_exc).__name__,
+                        message=str(rtl_exc),
+                    )
+                    logger.exception("Mission fallback RTL failed: %s", rtl_exc)
                 self.state_machine.abort("ABORT_MANUAL", f"mission executor failed: {exc}")
         finally:
             logger.info("Mission executor finished")
             self._clear_mission_thread(threading.current_thread())
+
+    def _collect_postflight_log_metadata(self) -> dict[str, object] | None:
+        wrapped = getattr(self.adapter, "wrapped", self.adapter)
+        collector = getattr(wrapped, "postflight_log_metadata", None)
+        if not callable(collector):
+            return None
+        try:
+            metadata = collector()
+            if metadata is not None:
+                self.event_recorder.update_manifest(onboard_log_metadata=metadata)
+            return metadata
+        except Exception as exc:
+            self.event_recorder.record_event(
+                "exception",
+                source="controller.postflight_log_metadata",
+                exception_class=type(exc).__name__,
+                message=str(exc),
+            )
+            logger.exception("Post-flight log metadata collection failed: %s", exc)
+            return {"attempted": True, "status": "failed", "reason": str(exc)}
 
     def _mission_active(self) -> bool:
         with self._mission_lock:

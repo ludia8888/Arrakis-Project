@@ -105,17 +105,24 @@ def get_health(request: Request) -> dict[str, object]:
     stress = controller.telemetry_hub.stress_envelope()
     detector = controller.video_service.detector_state()
     simulator = controller.video_service.simulator_state(telemetry.sim_rtf)
+    bootstrap = controller.adapter.bootstrap_status()
     adapter_health = (
         controller.adapter.health_status()
         if hasattr(controller.adapter, "health_status")
         else {"adapter": controller.adapter.__class__.__name__, "connected": True}
     )
     memory = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-    degraded = bool(controller.startup_error or not adapter_health.get("connected", True))
+    degraded = bool(
+        controller.startup_error
+        or not adapter_health.get("connected", True)
+        or bootstrap.control_plane_fault
+        or telemetry.telemetry_state != "fresh"
+    )
     return {
         "status": "degraded" if degraded else "ok",
         "startup_error": controller.startup_error,
         "adapter": adapter_health,
+        "bootstrap": bootstrap.model_dump(),
         "detector": {
             "enabled": detector.enabled,
             "mode": detector.mode,
@@ -126,9 +133,12 @@ def get_health(request: Request) -> dict[str, object]:
             "flight_mode": telemetry.flight_mode,
             "vtol_state": telemetry.vtol_state,
             "battery_percent": telemetry.battery_percent,
+            "telemetry_age_s": telemetry.telemetry_age_s,
+            "telemetry_state": telemetry.telemetry_state,
         },
         "stress": stress.model_dump(),
         "simulator": simulator.model_dump(),
+        "logs": controller.log_status(),
         "memory": {
             "ru_maxrss": memory,
         },
@@ -183,6 +193,17 @@ def reset_mission(request: Request) -> dict[str, str]:
     logger.info("HTTP reset_mission called")
     controller.reset()
     return {"status": "reset"}
+
+
+@app.post("/api/control/recover")
+def recover_control_plane(request: Request) -> dict[str, object]:
+    controller = get_controller_from_scope(request)
+    logger.info("HTTP recover_control_plane called")
+    try:
+        bootstrap = controller.recover_control_plane()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    return {"status": "recovered" if not bootstrap.control_plane_fault else "faulted", "bootstrap": bootstrap.model_dump()}
 
 
 @app.get("/api/state")

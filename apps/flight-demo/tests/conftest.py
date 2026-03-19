@@ -9,6 +9,7 @@ from __future__ import annotations
 import os
 import sys
 import time
+from contextlib import suppress
 from pathlib import Path
 
 import pytest
@@ -74,6 +75,15 @@ def force_arm_sitl(adapter) -> bool:
     Sends MAV_CMD_COMPONENT_ARM_DISARM with param2=21196.0 (force arm magic).
     Returns True if armed within 15s, False otherwise.
     """
+    deadline = time.time() + 20.0
+    while time.time() < deadline:
+        snapshot = adapter.get_snapshot()
+        if not snapshot.armed and snapshot.alt_m <= 1.0:
+            break
+        time.sleep(0.5)
+    with suppress(Exception):
+        pre_arm_mode = "QLOITER" if getattr(getattr(adapter, "_profile", None), "is_vtol", False) else "LOITER"
+        adapter._set_mode(pre_arm_mode)
     mavutil = adapter._mavutil
     with adapter._io_lock:
         adapter._require_master().mav.command_long_send(
@@ -165,6 +175,82 @@ def get_sitl_param(adapter, param_name: str,
 
 
 # ---------------------------------------------------------------------------
+# SITL stabilization helpers
+# ---------------------------------------------------------------------------
+
+def _wait_for_ground_state(adapter, timeout: float = 45.0) -> bool:
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        snapshot = adapter.get_snapshot()
+        if not snapshot.armed and snapshot.alt_m <= 1.0 and snapshot.groundspeed_mps <= 1.5:
+            return True
+        time.sleep(0.5)
+    return False
+
+
+def _clear_sitl_fence(adapter) -> None:
+    try:
+        adapter._send_command_with_retry(
+            adapter._mavutil.mavlink.MAV_CMD_DO_FENCE_ENABLE,
+            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            "fence disable",
+        )
+    except Exception:
+        pass
+    try:
+        set_sitl_param(adapter, "FENCE_TOTAL", 0.0)
+    except Exception:
+        pass
+
+
+def _sync_home_to_current(adapter, timeout: float = 15.0) -> bool:
+    snapshot = adapter.get_snapshot()
+    if not snapshot.position_valid:
+        return False
+    if not hasattr(adapter, "set_home_to_current"):
+        return False
+    try:
+        adapter.set_home_to_current(timeout=timeout)
+    except Exception:
+        return False
+    return True
+
+
+def _stabilize_sitl_vehicle(adapter, *, reset_home: bool) -> None:
+    try:
+        force_disarm_sitl(adapter)
+    except Exception:
+        return
+    _wait_for_ground_state(adapter, timeout=45.0)
+    with suppress(Exception):
+        adapter.reset()
+    with suppress(Exception):
+        pre_arm_mode = "QLOITER" if getattr(getattr(adapter, "_profile", None), "is_vtol", False) else "LOITER"
+        adapter._set_mode(pre_arm_mode)
+    _clear_sitl_fence(adapter)
+    with suppress(Exception):
+        set_sitl_param(adapter, "SIM_RC_FAIL", 0.0)
+    if reset_home:
+        _sync_home_to_current(adapter, timeout=15.0)
+    time.sleep(1.0)
+
+
+def _wait_for_bootstrap_ready(adapter, instrumented, timeout: float = 180.0):
+    deadline = time.time() + timeout
+    next_home_sync_at = 0.0
+    while time.time() < deadline:
+        bs = instrumented.bootstrap_status()
+        if bs.mission_ready:
+            return bs
+        now = time.time()
+        if bs.position_ready and not bs.home_ready and now >= next_home_sync_at:
+            _sync_home_to_current(adapter, timeout=8.0)
+            next_home_sync_at = now + 2.0
+        time.sleep(1.0)
+    return instrumented.bootstrap_status()
+
+
+# ---------------------------------------------------------------------------
 # Session-scoped SITL adapter (shared across ALL SITL test files)
 # ---------------------------------------------------------------------------
 
@@ -186,29 +272,7 @@ def sitl_connection():
     adapter = ArduPilotAdapter(AirframeProfile())
     instrumented = InstrumentedFlightAdapter(adapter, logger_name="test.sitl.session")
     instrumented.connect()
-
-    # Wait for full bootstrap readiness (EKF convergence + GPS + home)
-    deadline = time.time() + 90.0
-    while time.time() < deadline:
-        bs = instrumented.bootstrap_status()
-        if bs.mission_ready:
-            break
-        time.sleep(1.0)
-
-    # Extra stabilization: after mission_ready, wait for EKF3 to become
-    # active and for the firmware to be ready to accept missions.
-    # Fresh SITL starts with EKF2 and transitions to EKF3 after ~60-120s.
-    bs = instrumented.bootstrap_status()
-    if not bs.mission_ready:
-        # If still not ready, wait longer (total 180s from connect)
-        deadline2 = time.time() + 120.0
-        while time.time() < deadline2:
-            bs = instrumented.bootstrap_status()
-            if bs.mission_ready:
-                break
-            time.sleep(2.0)
-
-    bs = instrumented.bootstrap_status()
+    bs = _wait_for_bootstrap_ready(adapter, instrumented, timeout=180.0)
     print(f"\n[SITL fixture] mission_ready={bs.mission_ready}")
 
     # Fresh SITL with -w (param wipe) needs ARMING_CHECK=0
@@ -256,14 +320,7 @@ def sitl_deep_connection():
     adapter._connection = secondary  # Override to secondary port
     instrumented = InstrumentedFlightAdapter(adapter, logger_name="test.sitl.deep")
     instrumented.connect()
-
-    # Wait for bootstrap readiness
-    deadline = time.time() + 90.0
-    while time.time() < deadline:
-        bs = instrumented.bootstrap_status()
-        if bs.mission_ready:
-            break
-        time.sleep(1.0)
+    _wait_for_bootstrap_ready(adapter, instrumented, timeout=120.0)
 
     yield adapter, instrumented
 
@@ -292,6 +349,13 @@ def _ensure_disarmed_after_sitl_test(request):
     Runs force_disarm + waits for ground contact after each test to
     leave vehicle in a clean state for the next test.
     """
+    adapter = None
+    if "sitl_connection" in request.fixturenames:
+        adapter, _ = request.getfixturevalue("sitl_connection")
+    elif "sitl_deep_connection" in request.fixturenames:
+        adapter, _ = request.getfixturevalue("sitl_deep_connection")
+    if adapter is not None:
+        _stabilize_sitl_vehicle(adapter, reset_home=True)
     yield
     # Only act on tests that actually use a SITL connection
     if ("sitl_connection" not in request.fixturenames
@@ -299,24 +363,8 @@ def _ensure_disarmed_after_sitl_test(request):
         return
     try:
         # Try session-scoped first, then function-scoped
-        adapter = None
-        if "sitl_connection" in request.fixturenames:
-            adapter, _ = request.getfixturevalue("sitl_connection")
-        elif "sitl_deep_connection" in request.fixturenames:
-            adapter, _ = request.getfixturevalue("sitl_deep_connection")
         if adapter is None:
             return
-        snapshot = adapter.get_snapshot()
-        if snapshot.armed:
-            force_disarm_sitl(adapter)
-        # Wait for vehicle to reach ground (after force-disarm from flight)
-        if snapshot.alt_m > 2.0:
-            deadline = time.time() + 15.0
-            while time.time() < deadline:
-                s = adapter.get_snapshot()
-                if s.alt_m <= 1.0:
-                    break
-                time.sleep(0.5)
-        time.sleep(1.0)
+        _stabilize_sitl_vehicle(adapter, reset_home=False)
     except Exception:
         pass

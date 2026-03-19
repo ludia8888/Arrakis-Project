@@ -8,6 +8,7 @@ import os
 import sys
 import threading
 import time
+from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -20,11 +21,36 @@ if str(BACKEND_DIR) not in sys.path:
 from airframe_profile import AirframeProfile
 from arrakis_core.controller import ArrakisController
 from arrakis_core.mission_state_machine import INTERRUPT_PHASES, MissionStateMachine
+from arrakis_core.route_planner import build_route_preview
 from arrakis_core.telemetry_hub import SafetyDecision, TelemetryHub
 from arrakis_core.mission_executor import MissionExecutor
 from flight_adapters.mock import MockAdapter
 from flight_adapters.instrumented import InstrumentedFlightAdapter
 from schemas import LatLon, MissionPhase, RouteRequest, TelemetrySnapshot
+
+
+def _build_preview(profile: AirframeProfile, *, distance_scale: float = 1.0):
+    return build_route_preview(
+        RouteRequest(
+            home=LatLon(lat=37.5665, lon=126.9780),
+            waypoints=[
+                LatLon(lat=37.5700 + 0.002 * distance_scale, lon=126.9800 + 0.002 * distance_scale),
+                LatLon(lat=37.5750 + 0.002 * distance_scale, lon=126.9850 + 0.002 * distance_scale),
+            ],
+            cruise_alt_m=profile.altitudes.cruise_m,
+        ),
+        profile,
+    )
+
+
+def _wait_for_phase(controller: ArrakisController, phases: set[str], timeout: float = 8.0) -> str | None:
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        phase = controller.state_machine.phase
+        if phase in phases:
+            return phase
+        time.sleep(0.1)
+    return None
 
 
 # ---------------------------------------------------------------------------
@@ -76,6 +102,27 @@ class TestSchemaValidation:
                 cruise_alt_m=501.0,  # too high
             )
 
+    def test_negative_cruise_alt_rejected(self):
+        """Negative altitude requests must be rejected before route planning."""
+        with pytest.raises(Exception):
+            RouteRequest(
+                home=LatLon(lat=37.0, lon=127.0),
+                waypoints=[LatLon(lat=37.01, lon=127.01), LatLon(lat=37.02, lon=127.02)],
+                cruise_alt_m=-10.0,
+            )
+
+    def test_route_request_rejects_out_of_range_waypoint(self):
+        """Waypoint coordinates outside legal latitude/longitude bounds must be rejected."""
+        with pytest.raises(Exception):
+            RouteRequest(
+                home=LatLon(lat=37.0, lon=127.0),
+                waypoints=[
+                    LatLon(lat=37.01, lon=127.01),
+                    LatLon(lat=95.0, lon=127.02),
+                ],
+                cruise_alt_m=60.0,
+            )
+
 
 # ---------------------------------------------------------------------------
 # C-6: MissionStateMachine sets STARTING phase
@@ -110,12 +157,15 @@ class TestTelemetryLostDetection:
     """C-4: trigger_telemetry_lost fires on fresh→stale transition."""
 
     def _make_snapshot(self, fresh=True, **kwargs):
+        telemetry_state = kwargs.pop("telemetry_state", "fresh" if fresh else "lost")
+        telemetry_age_s = kwargs.pop("telemetry_age_s", 0.0 if fresh else 9.0)
         defaults = dict(
             timestamp=time.time(), lat=37.5665, lon=126.9780,
             alt_m=50.0, airspeed_mps=10.0, groundspeed_mps=10.0,
             battery_percent=80.0, armed=True, flight_mode="AUTO",
             vtol_state="FW", mission_index=2, home_distance_m=500.0,
             geofence_breached=False, sim_rtf=1.0, telemetry_fresh=fresh,
+            telemetry_age_s=telemetry_age_s, telemetry_state=telemetry_state,
             mode_valid=True, position_valid=True, gps_sensor_valid=True, home_valid=True,
         )
         defaults.update(kwargs)
@@ -136,26 +186,30 @@ class TestTelemetryLostDetection:
         assert decision2.trigger_telemetry_lost, "Should trigger on fresh→stale"
 
     def test_no_trigger_on_stale_to_stale(self):
-        """C-4: stale→stale should NOT trigger."""
+        """Only the first lost transition should trigger; repeated lost samples should not."""
         from arrakis_core.video_service import VideoService
         vs = VideoService()
-        hub = TelemetryHub(self._make_snapshot(fresh=False), vs, AirframeProfile())
+        hub = TelemetryHub(self._make_snapshot(fresh=True), vs, AirframeProfile())
 
-        # Stale → stale: no trigger
-        decision = hub.on_telemetry(self._make_snapshot(fresh=False), None, "OUTBOUND")
-        assert not decision.trigger_telemetry_lost
+        first = hub.on_telemetry(self._make_snapshot(fresh=False), None, "OUTBOUND")
+        second = hub.on_telemetry(self._make_snapshot(fresh=False), None, "OUTBOUND")
+        assert first.trigger_telemetry_lost
+        assert not second.trigger_telemetry_lost
 
 
 class TestPositionLossDetection:
     """Sustained GPS loss should escalate from hold to RTL."""
 
     def _make_snapshot(self, valid=True, **kwargs):
+        telemetry_state = kwargs.pop("telemetry_state", "fresh")
+        telemetry_age_s = kwargs.pop("telemetry_age_s", 0.0)
         defaults = dict(
             timestamp=time.time(), lat=37.5665, lon=126.9780,
             alt_m=50.0, airspeed_mps=10.0, groundspeed_mps=10.0,
             battery_percent=80.0, armed=True, flight_mode="AUTO",
             vtol_state="FW", mission_index=2, home_distance_m=500.0,
             geofence_breached=False, sim_rtf=1.0, telemetry_fresh=True,
+            telemetry_age_s=telemetry_age_s, telemetry_state=telemetry_state,
             mode_valid=True, position_valid=valid, gps_sensor_valid=valid, home_valid=True,
         )
         defaults.update(kwargs)
@@ -179,18 +233,24 @@ class TestPositionLossDetection:
 
         hub = TelemetryHub(self._make_snapshot(valid=True), VideoService(), AirframeProfile())
 
-        decision1 = hub.on_telemetry(self._make_snapshot(valid=False), None, "OUTBOUND")
-        decision2 = hub.on_telemetry(self._make_snapshot(valid=False), None, "OUTBOUND")
-        decision3 = hub.on_telemetry(self._make_snapshot(valid=False), None, "OUTBOUND")
+        degraded = self._make_snapshot(valid=False, gps_sensor_valid=True)
+        decision1 = hub.on_telemetry(degraded, None, "OUTBOUND")
+        decision2 = hub.on_telemetry(degraded, None, "OUTBOUND")
+        decision3 = hub.on_telemetry(degraded, None, "OUTBOUND")
 
         assert not decision1.trigger_position_loss_rtl
         assert not decision2.trigger_position_loss_rtl
         assert decision3.trigger_position_loss_rtl
 
-    def test_raw_gps_loss_triggers_even_with_dead_reckoned_position(self, monkeypatch):
+    def test_raw_gps_loss_routes_to_navigation_degraded(self, monkeypatch):
         from arrakis_core import telemetry_hub as telemetry_hub_module
         from arrakis_core.video_service import VideoService
 
+        monkeypatch.setattr(
+            telemetry_hub_module,
+            "ARRAKIS_LINK_PROFILE",
+            replace(telemetry_hub_module.ARRAKIS_LINK_PROFILE, gps_degraded_rtl_timeout_s=6.0),
+        )
         monotonic_values = iter((100.0, 103.0, 107.0))
         last_value = {"value": 107.0}
 
@@ -212,7 +272,8 @@ class TestPositionLossDetection:
 
         assert not decision1.trigger_position_loss_rtl
         assert not decision2.trigger_position_loss_rtl
-        assert decision3.trigger_position_loss_rtl
+        assert not decision3.trigger_position_loss_rtl
+        assert decision3.trigger_navigation_degraded_rtl
 
     def test_position_loss_timer_resets_after_valid_fix(self, monkeypatch):
         from arrakis_core import telemetry_hub as telemetry_hub_module
@@ -232,11 +293,11 @@ class TestPositionLossDetection:
 
         hub = TelemetryHub(self._make_snapshot(valid=True), VideoService(), AirframeProfile())
 
-        hub.on_telemetry(self._make_snapshot(valid=False), None, "OUTBOUND")
-        hub.on_telemetry(self._make_snapshot(valid=False), None, "OUTBOUND")
+        hub.on_telemetry(self._make_snapshot(valid=False, gps_sensor_valid=True), None, "OUTBOUND")
+        hub.on_telemetry(self._make_snapshot(valid=False, gps_sensor_valid=True), None, "OUTBOUND")
         hub.on_telemetry(self._make_snapshot(valid=True), None, "OUTBOUND")
-        decision = hub.on_telemetry(self._make_snapshot(valid=False), None, "OUTBOUND")
-        decision_after = hub.on_telemetry(self._make_snapshot(valid=False), None, "OUTBOUND")
+        decision = hub.on_telemetry(self._make_snapshot(valid=False, gps_sensor_valid=True), None, "OUTBOUND")
+        decision_after = hub.on_telemetry(self._make_snapshot(valid=False, gps_sensor_valid=True), None, "OUTBOUND")
 
         assert not decision.trigger_position_loss_rtl
         assert not decision_after.trigger_position_loss_rtl
@@ -661,7 +722,7 @@ class TestIoLockTelemetryEmission:
         import inspect
         from flight_adapters.ardupilot import ArduPilotAdapter
         source = inspect.getsource(ArduPilotAdapter._recv_expected_locked)
-        assert "_telemetry_callbacks" in source, "C-2: should emit telemetry in recv loop"
+        assert "_emit_telemetry_snapshot" in source, "C-2: should emit telemetry in recv loop"
         assert "get_snapshot" in source, "C-2: should get snapshot for emission"
 
 
@@ -716,6 +777,109 @@ class TestControllerLifecycle:
         assert payload.stress.reasons == []
 
         controller.shutdown()
+
+
+class TestControllerDefensiveOperations:
+    """Defensive controller behavior around operator mistakes and races."""
+
+    def test_set_route_rejected_while_mission_is_active(self):
+        profile = AirframeProfile()
+        adapter = InstrumentedFlightAdapter(MockAdapter(profile), logger_name="test.route_active")
+        controller = ArrakisController(adapter, profile)
+
+        try:
+            controller.set_route(_build_preview(profile, distance_scale=2.0))
+            controller.start_mission()
+            phase = _wait_for_phase(controller, {"TAKEOFF_MC", "TRANSITION_FW", "OUTBOUND", "RETURN"})
+            assert phase is not None, "Mission should become active before route replacement attempt"
+
+            with pytest.raises(RuntimeError, match="Mission is active"):
+                controller.set_route(_build_preview(profile, distance_scale=3.0))
+        finally:
+            controller.abort("cleanup route-active test")
+            controller.shutdown()
+
+    def test_start_and_abort_race_leaves_consistent_interrupt_state(self):
+        profile = AirframeProfile()
+        adapter = InstrumentedFlightAdapter(MockAdapter(profile), logger_name="test.start_abort_race")
+        controller = ArrakisController(adapter, profile)
+        entered = threading.Event()
+
+        def _blocked_run(cancel_event):
+            entered.set()
+            cancel_event.wait(2.0)
+
+        controller.mission_executor.run_roundtrip_mission = _blocked_run
+
+        start_errors: list[str] = []
+        abort_errors: list[str] = []
+        barrier = threading.Barrier(2)
+
+        def _start() -> None:
+            try:
+                barrier.wait()
+                controller.start_mission()
+            except Exception as exc:  # pragma: no cover - asserted below
+                start_errors.append(f"{type(exc).__name__}: {exc}")
+
+        def _abort() -> None:
+            try:
+                barrier.wait()
+                assert entered.wait(2.0), "Mission thread never entered blocked executor"
+                controller.abort("race abort")
+            except Exception as exc:  # pragma: no cover - asserted below
+                abort_errors.append(f"{type(exc).__name__}: {exc}")
+
+        try:
+            controller.set_route(_build_preview(profile))
+            start_thread = threading.Thread(target=_start)
+            abort_thread = threading.Thread(target=_abort)
+            start_thread.start()
+            abort_thread.start()
+            start_thread.join(timeout=5.0)
+            abort_thread.join(timeout=5.0)
+
+            phase = _wait_for_phase(controller, {"ABORT_MANUAL"}, timeout=3.0)
+            assert not start_errors, f"start_mission raised during race: {start_errors}"
+            assert not abort_errors, f"abort raised during race: {abort_errors}"
+            assert phase == "ABORT_MANUAL", f"Expected ABORT_MANUAL after start/abort race, got {controller.state_machine.phase}"
+        finally:
+            controller.shutdown()
+
+    def test_abort_is_idempotent_under_repeated_requests(self):
+        profile = AirframeProfile()
+        adapter = InstrumentedFlightAdapter(MockAdapter(profile), logger_name="test.abort_spam")
+        controller = ArrakisController(adapter, profile)
+        entered = threading.Event()
+        abort_calls = {"count": 0}
+
+        def _blocked_run(cancel_event):
+            entered.set()
+            cancel_event.wait(2.0)
+
+        wrapped_abort = adapter.wrapped.abort
+
+        def _counting_abort(reason: str) -> None:
+            abort_calls["count"] += 1
+            wrapped_abort(reason)
+
+        controller.mission_executor.run_roundtrip_mission = _blocked_run
+        adapter.wrapped.abort = _counting_abort
+
+        try:
+            controller.set_route(_build_preview(profile))
+            controller.start_mission()
+            assert entered.wait(2.0), "Mission thread never entered blocked executor"
+
+            controller.abort("panic button 1")
+            controller.abort("panic button 2")
+            controller.abort("panic button 3")
+
+            phase = _wait_for_phase(controller, {"ABORT_MANUAL"}, timeout=3.0)
+            assert phase == "ABORT_MANUAL", f"Expected ABORT_MANUAL after repeated aborts, got {controller.state_machine.phase}"
+            assert abort_calls["count"] == 1, f"Expected exactly one adapter abort call, got {abort_calls['count']}"
+        finally:
+            controller.shutdown()
 
 
 class TestApiHealth:

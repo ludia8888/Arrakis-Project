@@ -17,12 +17,15 @@ MissionPhase = Literal[
     "TRANSITION_MC",
     "LANDING",
     "RTL_BATTERY",
+    "RTL_LINK_LOSS",
     "RTL_GPS_LOSS",
     "RTL_NAV_DEGRADED",
     "ABORT_GEOFENCE",
     "ABORT_MANUAL",
     "COMPLETE",
 ]
+
+TelemetryState = Literal["fresh", "degraded", "lost"]
 
 
 class LatLon(BaseModel):
@@ -63,6 +66,7 @@ class AdapterBootstrapStatus(BaseModel):
     connected: bool
     heartbeat_received: bool
     telemetry_fresh: bool
+    telemetry_state: TelemetryState = "fresh"
     mode_ready: bool
     position_ready: bool
     home_ready: bool
@@ -77,6 +81,11 @@ class AdapterBootstrapStatus(BaseModel):
     mode_age_s: float | None = None
     position_age_s: float | None = None
     home_age_s: float | None = None
+    control_plane_fault: bool = False
+    fault_kind: str | None = None
+    fault_reason: str | None = None
+    recovering: bool = False
+    link_profile: str = "sitl"
     reason: str | None
 
 
@@ -96,6 +105,8 @@ class TelemetrySnapshot(BaseModel):
     geofence_breached: bool
     sim_rtf: float
     telemetry_fresh: bool = False
+    telemetry_age_s: float | None = None
+    telemetry_state: TelemetryState = "fresh"
     mode_valid: bool = False
     position_valid: bool = False
     gps_sensor_valid: bool = True

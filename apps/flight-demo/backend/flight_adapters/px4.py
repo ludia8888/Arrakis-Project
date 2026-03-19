@@ -18,6 +18,7 @@ class PX4Adapter(FlightControllerAdapter):
         raise NotImplementedError("PX4Adapter is intentionally not implemented in the ArduPilot-first v1 demo.")
 
     def connect(self) -> None: raise NotImplementedError
+    def set_event_sink(self, callback) -> None: raise NotImplementedError
     def arm(self) -> None: raise NotImplementedError
     def takeoff_multicopter(self, target_alt_m: float) -> None: raise NotImplementedError
     def upload_roundtrip_mission(self, route_spec: dict[str, object]) -> None: raise NotImplementedError
@@ -35,3 +36,4 @@ class PX4Adapter(FlightControllerAdapter):
     def stream_video(self, callback): raise NotImplementedError
     def get_home(self) -> LatLon: raise NotImplementedError
     def bootstrap_status(self) -> AdapterBootstrapStatus: raise NotImplementedError
+    def recover_control_plane(self) -> AdapterBootstrapStatus: raise NotImplementedError

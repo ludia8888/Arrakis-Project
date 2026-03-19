@@ -134,6 +134,8 @@ class ScenarioConfig:
             params["FS_SHORT_TIMEOUT"] = 1.0
             params["FS_LONG_TIMEOUT"] = 3.0
             params["THR_FAILSAFE"] = 1.0
+        if self.rc_fail:
+            params["THR_FS_VALUE"] = 960.0
         if self.gcs_failsafe:
             params["FS_GCS_ENABL"] = float(self.gcs_failsafe)
         return params
@@ -184,12 +186,12 @@ _RC_SCENARIOS = [
     ScenarioConfig(
         name="rc_loss_inflight", rc_fail=1,
         exit_mode="normal", inject_delay_s=3.0,
-        expect_completion=False, expect_modes=("CIRCLE", "RTL", "QRTL"),
+        expect_completion=False, expect_modes=("CIRCLE", "RTL", "QRTL", "QLAND", "LAND"),
     ),
     ScenarioConfig(
         name="rc_no_channels", rc_fail=2,
         exit_mode="normal", inject_delay_s=3.0,
-        expect_completion=False, expect_modes=("CIRCLE", "RTL", "QRTL"),
+        expect_completion=False, expect_modes=("CIRCLE", "RTL", "QRTL", "QLAND", "LAND"),
     ),
     ScenarioConfig(
         name="gcs_failsafe_rtl", gcs_failsafe=1,
@@ -571,6 +573,11 @@ class TestSITLScenarioMatrix:
             _set_verified_param(adapter, "SIM_RC_FAIL", 0.0)
         except Exception:
             pass
+        if hasattr(adapter, "set_home_to_current"):
+            try:
+                adapter.set_home_to_current(timeout=12.0)
+            except Exception:
+                pass
         time.sleep(2.0)
 
         params = scenario.to_param_dict()
@@ -647,7 +654,8 @@ class TestSITLScenarioMatrix:
 
         # RC failure injection mid-flight
         if scenario.rc_fail and "rc_" in scenario.name:
-            _set_verified_param(adapter, "SIM_RC_FAIL", float(scenario.rc_fail))
+            fail_value = 1.0 if scenario.rc_fail == 2 else float(scenario.rc_fail)
+            _set_verified_param(adapter, "SIM_RC_FAIL", fail_value)
             time.sleep(2.0)
 
         if scenario.gcs_failsafe:

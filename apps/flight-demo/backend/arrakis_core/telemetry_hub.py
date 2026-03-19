@@ -6,6 +6,7 @@ import time
 from dataclasses import dataclass
 
 from airframe_profile import AirframeProfile
+from config import ARRAKIS_LINK_PROFILE
 from schemas import MissionPhase, RoutePreview, StressEnvelope, TelemetrySnapshot
 
 from .safety_manager import geofence_contains, should_trigger_battery_rtl
@@ -13,8 +14,6 @@ from .video_service import VideoService
 
 
 logger = logging.getLogger("arrakis.telemetry")
-
-_POSITION_LOSS_RTL_TIMEOUT_S = 6.0
 _monotonic = time.monotonic
 
 
@@ -30,9 +29,11 @@ class TelemetryHub:
     def __init__(self, initial_snapshot: TelemetrySnapshot, video_service: VideoService, profile: AirframeProfile) -> None:
         self.video_service = video_service
         self.profile = profile
+        self._link_profile = ARRAKIS_LINK_PROFILE
         self._lock = threading.Lock()
         self._telemetry = initial_snapshot
-        self._was_telemetry_fresh = False
+        self._telemetry_lost_samples = 0
+        self._telemetry_lost_active = False
         self._position_invalid_since_mono: float | None = None
         self._position_loss_triggered = False
         self._navigation_degraded_since_mono: float | None = None
@@ -47,7 +48,8 @@ class TelemetryHub:
         with self._lock:
             self._telemetry = snapshot
             self._stress = self._build_stress_envelope(snapshot, "IDLE")
-            self._was_telemetry_fresh = False
+            self._telemetry_lost_samples = 0
+            self._telemetry_lost_active = False
             self._position_invalid_since_mono = None
             self._position_loss_triggered = False
             self._navigation_degraded_since_mono = None
@@ -98,25 +100,39 @@ class TelemetryHub:
         if battery_rtl:
             logger.warning("Battery threshold crossed at %.1f%%", updated.battery_percent)
 
-        # Detect telemetry freshness loss: was fresh, now stale
-        telemetry_lost = self._was_telemetry_fresh and not snapshot.telemetry_fresh
-        self._was_telemetry_fresh = snapshot.telemetry_fresh
+        telemetry_lost = False
+        if updated.telemetry_state == "lost":
+            self._telemetry_lost_samples += 1
+            if (
+                self._telemetry_lost_samples >= self._link_profile.telemetry_stale_debounce
+                and not self._telemetry_lost_active
+            ):
+                self._telemetry_lost_active = True
+                telemetry_lost = True
+        else:
+            self._telemetry_lost_samples = 0
+            self._telemetry_lost_active = False
         if telemetry_lost:
-            logger.warning("Telemetry freshness lost during phase=%s", phase)
+            logger.warning(
+                "Telemetry lost during phase=%s age=%.2fs profile=%s",
+                phase,
+                updated.telemetry_age_s or -1.0,
+                self._link_profile.name,
+            )
 
         position_loss_rtl = False
         if (
             updated.telemetry_fresh
             and updated.mode_valid
             and updated.armed
-            and (not updated.position_valid or not updated.gps_sensor_valid)
+            and not updated.position_valid
         ):
             now_mono = _monotonic()
             if self._position_invalid_since_mono is None:
                 self._position_invalid_since_mono = now_mono
             elif (
                 not self._position_loss_triggered
-                and now_mono - self._position_invalid_since_mono >= _POSITION_LOSS_RTL_TIMEOUT_S
+                and now_mono - self._position_invalid_since_mono >= self._link_profile.position_loss_rtl_timeout_s
             ):
                 self._position_loss_triggered = True
                 position_loss_rtl = True
@@ -246,16 +262,16 @@ class TelemetryHub:
         safety = self.profile.safety
         timeouts = []
         if "gps_quality" in reasons:
-            timeouts.append(safety.gps_degraded_rtl_timeout_seconds)
+            timeouts.append(self._link_profile.gps_degraded_rtl_timeout_s)
         if "progress_stalled" in reasons:
             timeouts.append(safety.progress_stall_timeout_seconds)
         if "sensor_inconsistent" in reasons:
             timeouts.append(safety.sensor_inconsistency_timeout_seconds)
-        return min(timeouts) if timeouts else safety.gps_degraded_rtl_timeout_seconds
+        return min(timeouts) if timeouts else self._link_profile.gps_degraded_rtl_timeout_s
 
     def _gps_quality_degraded(self, snapshot: TelemetrySnapshot) -> bool:
         if not snapshot.gps_sensor_valid:
-            return False
+            return True
         fix_type = snapshot.gps_fix_type
         satellites = snapshot.gps_satellites
         if fix_type is not None and fix_type < self.profile.safety.min_gps_fix_type:
@@ -267,8 +283,10 @@ class TelemetryHub:
     def _gps_degradation_score(self, snapshot: TelemetrySnapshot) -> float:
         if not snapshot.telemetry_fresh or not snapshot.mode_valid:
             return 0.0
-        if not snapshot.position_valid or not snapshot.gps_sensor_valid:
+        if not snapshot.position_valid:
             return 1.0
+        if not snapshot.gps_sensor_valid:
+            return 0.65
         fix_type = snapshot.gps_fix_type or self.profile.safety.min_gps_fix_type
         satellites = snapshot.gps_satellites or self.profile.safety.min_gps_satellites
         fix_gap = max(self.profile.safety.min_gps_fix_type - fix_type, 0)
